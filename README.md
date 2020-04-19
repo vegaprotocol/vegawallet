@@ -1,6 +1,6 @@
 # Vega Wallet
 
-`vegawallet` is the command line interface for running a Wallet service, implemented in Go. It is uses to sign transactions for use on [Vega](#about-vega)
+`vegawallet` is the command line interface for running a Wallet service, implemented in Go. It is uses to sign transactions for use on [Vega](#about-vega).
 
 ## Running
 ### Configuration
