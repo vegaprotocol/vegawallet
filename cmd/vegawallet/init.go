@@ -1,9 +1,13 @@
-package cmd
+package main
 
 import (
 	"fmt"
 
+	"code.vegaprotocol.io/go-wallet/fsutil"
+	"code.vegaprotocol.io/go-wallet/wallet"
+
 	"github.com/spf13/cobra"
+	"go.uber.org/zap"
 )
 
 var (
@@ -14,20 +18,26 @@ var (
 // initCmd represents the init command
 var initCmd = &cobra.Command{
 	Use:   "init",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("init called")
-	},
+	Short: "Generate the configuration",
+	Long: "Generate the configuration for the wallet service",
+	RunE: runServiceInit,
 }
 
 func init() {
 	serviceCmd.AddCommand(initCmd)
 	initCmd.Flags().BoolVarP(&force, "force", "f", false, "Erase exiting wallet service configuration at the specified path")
 	initCmd.Flags().BoolVarP(&genRsaKey, "genrsakey", "g", false, "Generate rsa keys for the jwt tokens")
+}
+
+func runServiceInit(cmd *cobra.Command, args []string) error {
+	if ok, err := fsutil.PathExists(rootPath); !ok {
+		return fmt.Errorf("invalid root directory path: %v", err)
+	}
+
+	log, err := zap.NewProduction()
+	if err != nil {
+		return err
+	}
+
+	return wallet.GenConfig(log, rootPath, force, genRsaKey)
 }
