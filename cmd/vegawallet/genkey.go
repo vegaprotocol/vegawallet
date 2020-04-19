@@ -33,7 +33,13 @@ func runGenkey(cmd *cobra.Command, args []string) error {
 	}
 
 	if ok, err := fsutil.PathExists(rootPath); !ok {
-		return fmt.Errorf("invalid root directory path: %v", err)
+		if _, ok := err.(*fsutil.PathNotFound); !ok {
+			return fmt.Errorf("invalid root directory path: %v", err)
+		}
+		// create the folder
+		if err := fsutil.EnsureDir(rootPath); err != nil {
+			return fmt.Errorf("error creating root directory: %v", err)
+		}
 	}
 
 	if err := wallet.EnsureBaseFolder(rootPath); err != nil {
