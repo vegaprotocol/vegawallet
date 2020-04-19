@@ -28,13 +28,7 @@ jobs:
       run: go test -v ./...
 
     - name: Build
-      run: |
-        GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o build/vegawallet-linux-amd64 ./cmd/vegawallet
-        GOOS=linux GOARCH=386 CGO_ENABLED=0 go build -o build/vegawallet-linux-386 ./cmd/vegawallet
-        GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -o build/vegawallet-windows-amd64 ./cmd/vegawallet
-        GOOS=windows GOARCH=386 CGO_ENABLED=0 go build -o build/vegawallet-windows-386 ./cmd/vegawallet
-        GOOS=darwin GOARCH=amd64 CGO_ENABLED=0 go build -o build/vegawallet-darwin-amd64 ./cmd/vegawallet
-        GOOS=darwin GOARCH=386 CGO_ENABLED=0 go build -o build/vegawallet-darwin-386 ./cmd/vegawallet
+      run: make release
 
     - name: Release
       uses: softprops/action-gh-release@v1
