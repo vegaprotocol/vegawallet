@@ -24,7 +24,7 @@ jobs:
           xgo_version: latest
           go_version: ${{ matrix.go_version }}
           dest: build
-          pkg: ./cmd/vegawallet
+          pkg: cmd/vegawallet
           prefix: vegawallet
           targets: windows/386,windows/amd64,linux/386,linux/amd64,darwin/386,darwin/amd64
           v: true
