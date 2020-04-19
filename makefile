@@ -4,22 +4,13 @@ ifeq ($(CI),)
 	VERSION_HASH := $(shell git rev-parse HEAD | cut -b1-8)
 else
 	# In CI
-	ifneq ($(DRONE),)
-		# In Drone: https://docker-runner.docs.drone.io/configuration/environment/variables/
-
-		ifneq ($(DRONE_TAG),)
-			VERSION := $(DRONE_TAG)
-		else
-			# No tag, so make one
-			VERSION := $(shell git describe --tags 2>/dev/null)
-		endif
-		VERSION_HASH := $(shell echo "$(CI_COMMIT_SHA)" | cut -b1-8)
-
+	ifneq ($(GITHUB_REF),)
+		VERSION := $(GITHUB_REF)
 	else
-		# In an unknown CI
-		VERSION := unknown-CI
-		VERSION_HASH := unknown-CI
+		# No tag, so make one
+		VERSION := $(shell git describe --tags 2>/dev/null)
 	endif
+	VERSION_HASH := $(shell echo "$(GITHUB_SHA)" | cut -b1-8)
 endif
 
 install:
