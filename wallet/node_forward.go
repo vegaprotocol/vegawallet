@@ -7,8 +7,8 @@ import (
 	"code.vegaprotocol.io/go-wallet/proto"
 
 	"github.com/cenkalti/backoff/v4"
-	"google.golang.org/grpc"
 	"go.uber.org/zap"
+	"google.golang.org/grpc"
 )
 
 type nodeForward struct {

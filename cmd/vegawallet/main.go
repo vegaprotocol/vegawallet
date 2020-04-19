@@ -12,15 +12,15 @@ var (
 	rootPath    string
 	walletOwner string
 	passphrase  string
-	pubkey string
-	data string
+	pubkey      string
+	data        string
 )
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "vegawallet",
 	Short: "The vega wallet",
-	Long: `The vega wallet`,
+	Long:  `The vega wallet`,
 }
 
 func main() {

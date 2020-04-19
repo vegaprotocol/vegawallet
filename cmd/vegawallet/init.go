@@ -19,8 +19,8 @@ var (
 var initCmd = &cobra.Command{
 	Use:   "init",
 	Short: "Generate the configuration",
-	Long: "Generate the configuration for the wallet service",
-	RunE: runServiceInit,
+	Long:  "Generate the configuration for the wallet service",
+	RunE:  runServiceInit,
 }
 
 func init() {

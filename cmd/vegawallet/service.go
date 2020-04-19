@@ -8,7 +8,7 @@ import (
 var serviceCmd = &cobra.Command{
 	Use:   "service",
 	Short: "The wallet service",
-	Long: "Run or initialize the wallet service",
+	Long:  "Run or initialize the wallet service",
 }
 
 func init() {

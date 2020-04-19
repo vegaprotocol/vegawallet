@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strings"
 
-	"code.vegaprotocol.io/go-wallet/wallet"
 	"code.vegaprotocol.io/go-wallet/fsutil"
+	"code.vegaprotocol.io/go-wallet/wallet"
 
 	"github.com/spf13/cobra"
 )
@@ -31,7 +31,7 @@ func init() {
 	metaCmd.Flags().StringVarP(&metas, "metas", "m", "", `A list of metadata e.g: "primary:true;asset;BTC"`)
 }
 
-func  runMeta(cmd *cobra.Command, args []string) error {
+func runMeta(cmd *cobra.Command, args []string) error {
 	if len(walletOwner) <= 0 {
 		return errors.New("wallet name is required")
 	}

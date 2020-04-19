@@ -4,17 +4,17 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/spf13/cobra"
-	"code.vegaprotocol.io/go-wallet/wallet"
 	"code.vegaprotocol.io/go-wallet/fsutil"
+	"code.vegaprotocol.io/go-wallet/wallet"
+	"github.com/spf13/cobra"
 )
 
 // taintCmd represents the taint command
 var taintCmd = &cobra.Command{
 	Use:   "taint",
 	Short: "Taint a public key",
-	Long: "Taint a public key",
-	RunE: runTaint,
+	Long:  "Taint a public key",
+	RunE:  runTaint,
 }
 
 func init() {
@@ -24,7 +24,7 @@ func init() {
 	taintCmd.Flags().StringVarP(&pubkey, "pubkey", "k", "", "Public key to be used (hex)")
 }
 
-func  runTaint(cmd *cobra.Command, args []string) error {
+func runTaint(cmd *cobra.Command, args []string) error {
 	if len(walletOwner) <= 0 {
 		return errors.New("wallet name is required")
 	}

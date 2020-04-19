@@ -17,8 +17,8 @@ import (
 var runCmd = &cobra.Command{
 	Use:   "run",
 	Short: "Start the vega wallet service",
-	Long: "Start a vega wallet service behind an http server",
-	RunE: runServiceRun,
+	Long:  "Start a vega wallet service behind an http server",
+	RunE:  runServiceRun,
 }
 
 func init() {
@@ -38,7 +38,6 @@ func runServiceRun(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-
 
 	srv, err := wallet.NewService(log, cfg, rootPath)
 	if err != nil {

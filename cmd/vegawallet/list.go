@@ -1,21 +1,21 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
-	"encoding/json"
 
-	"github.com/spf13/cobra"
-	"code.vegaprotocol.io/go-wallet/wallet"
 	"code.vegaprotocol.io/go-wallet/fsutil"
+	"code.vegaprotocol.io/go-wallet/wallet"
+	"github.com/spf13/cobra"
 )
 
 // listCmd represents the list command
 var listCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List keypairs of a wallet",
-	Long: "List all the keypairs for a given wallet",
-	RunE: runList,
+	Long:  "List all the keypairs for a given wallet",
+	RunE:  runList,
 }
 
 func init() {
@@ -25,7 +25,7 @@ func init() {
 
 }
 
-func  runList(cmd *cobra.Command, args []string) error {
+func runList(cmd *cobra.Command, args []string) error {
 	if len(walletOwner) <= 0 {
 		return errors.New("wallet name is required")
 	}

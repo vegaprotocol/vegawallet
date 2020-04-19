@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 
-	"code.vegaprotocol.io/go-wallet/wallet"
 	"code.vegaprotocol.io/go-wallet/fsutil"
+	"code.vegaprotocol.io/go-wallet/wallet"
 	"code.vegaprotocol.io/go-wallet/wallet/crypto"
 
 	"github.com/spf13/cobra"
@@ -16,8 +16,8 @@ import (
 var signCmd = &cobra.Command{
 	Use:   "sign",
 	Short: "Sign a blob of data",
-	Long: "Sign a blob of dara base64 encoded",
-	RunE: runSign,
+	Long:  "Sign a blob of dara base64 encoded",
+	RunE:  runSign,
 }
 
 func init() {

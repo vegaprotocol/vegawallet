@@ -12,8 +12,8 @@ import (
 
 	"github.com/dgrijalva/jwt-go/v4"
 	"github.com/julienschmidt/httprouter"
-	"golang.org/x/crypto/sha3"
 	"go.uber.org/zap"
+	"golang.org/x/crypto/sha3"
 )
 
 var (

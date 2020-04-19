@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 
-	"code.vegaprotocol.io/go-wallet/wallet"
 	"code.vegaprotocol.io/go-wallet/fsutil"
+	"code.vegaprotocol.io/go-wallet/wallet"
 	"code.vegaprotocol.io/go-wallet/wallet/crypto"
 
 	"github.com/spf13/cobra"
@@ -20,8 +20,8 @@ var (
 var verifyCmd = &cobra.Command{
 	Use:   "verify",
 	Short: "Verify the signature",
-	Long: "Verify the signature for a blob of data",
-	RunE: runVerify,
+	Long:  "Verify the signature for a blob of data",
+	RunE:  runVerify,
 }
 
 func init() {

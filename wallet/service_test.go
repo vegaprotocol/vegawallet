@@ -10,9 +10,9 @@ import (
 	"os"
 	"testing"
 
-	"code.vegaprotocol.io/go-wallet/wallet"
 	"code.vegaprotocol.io/go-wallet/go-wallet/crypto"
 	"code.vegaprotocol.io/go-wallet/go-wallet/mocks"
+	"code.vegaprotocol.io/go-wallet/wallet"
 
 	"github.com/golang/mock/gomock"
 	"github.com/julienschmidt/httprouter"
