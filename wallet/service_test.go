@@ -10,8 +10,8 @@ import (
 	"os"
 	"testing"
 
-	"code.vegaprotocol.io/go-wallet/go-wallet/crypto"
-	"code.vegaprotocol.io/go-wallet/go-wallet/mocks"
+	"code.vegaprotocol.io/go-wallet/wallet/crypto"
+	"code.vegaprotocol.io/go-wallet/wallet/mocks"
 	"code.vegaprotocol.io/go-wallet/wallet"
 
 	"github.com/golang/mock/gomock"
@@ -35,7 +35,7 @@ func getTestService(t *testing.T) *testService {
 	handler := mocks.NewMockWalletHandler(ctrl)
 	nodeForward := mocks.NewMockNodeForward(ctrl)
 	// no needs of the conf or path as we do not run an actual service
-	s, _ := wallet.NewServiceWith(logging.NewTestLogger(), nil, "", handler, nodeForward)
+	s, _ := wallet.NewServiceWith(zap.NewNop(), nil, "", handler, nodeForward)
 	return &testService{
 		Service:     s,
 		ctrl:        ctrl,
