@@ -19,8 +19,8 @@ var (
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "vegawallet",
-	Short: "The vega wallet",
-	Long:  `The vega wallet`,
+	Short: "The Vega wallet",
+	Long:  `The Vega wallet`,
 }
 
 func main() {
@@ -30,5 +30,5 @@ func main() {
 }
 
 func init() {
-	rootCmd.PersistentFlags().StringVar(&rootPath, "root-path", fsutil.DefaultVegaDir(), "Root directory of the vegawalle configuration")
+	rootCmd.PersistentFlags().StringVar(&rootPath, "root-path", fsutil.DefaultVegaDir(), "Root directory for the Vega wallet configuration")
 }
