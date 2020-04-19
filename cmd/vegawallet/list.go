@@ -7,6 +7,7 @@ import (
 
 	"code.vegaprotocol.io/go-wallet/fsutil"
 	"code.vegaprotocol.io/go-wallet/wallet"
+
 	"github.com/spf13/cobra"
 )
 
