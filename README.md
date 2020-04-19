@@ -36,7 +36,7 @@ vegawallet service run
 	{"level":"info","ts":1587317545.61634,"logger":"wallet","caller":"wallet/service.go:147","msg":"starting wallet http server","address":"0.0.0.0:1789"}
 ```
 
-Using the API is documented [here](./wallet/README.md)
+Using the API is documented [here](./wallet/README.md).
 
 ## Building
 ```console
@@ -47,4 +47,4 @@ make
 # About Vega
  [Vega](https://vega.xyz) is a protocol for creating and trading derivatives on a fully decentralised network. The network, secured with proof-of-stake, will facilitate fully automated, end-to-end margin trading and execution of complex financial products. Anyone will be able to build decentralised markets using the protocol.
 
-Read more at [https://vega.xyz](https://vega.xyz)
+Read more at [https://vega.xyz](https://vega.xyz).
