@@ -17,6 +17,7 @@ import (
 )
 
 var (
+	// ErrSessionNotFound ...
 	ErrSessionNotFound = errors.New("session not found")
 )
 
@@ -31,6 +32,7 @@ type auth struct {
 	mu sync.Mutex
 }
 
+//
 func NewAuth(log *zap.Logger, rootPath string, tokenExpiry time.Duration) (*auth, error) {
 	// get rsa keys
 	pubBuf, privBuf, err := readRsaKeys(rootPath)

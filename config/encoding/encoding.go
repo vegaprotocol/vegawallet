@@ -42,9 +42,7 @@ func (l *LogLevel) Get() zapcore.Level {
 
 // UnmarshalText unmarshal a loglevel from bytes
 func (l *LogLevel) UnmarshalText(text []byte) error {
-	var err error
-	err = l.Level.UnmarshalText(text)
-	return err
+	return l.Level.UnmarshalText(text)
 }
 
 // MarshalText marshal a loglevel into bytes
