@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package vega;
+option go_package = "code.vegaprotocol.io/go-wallet/proto";
+
+service trading {
+  // Submit a signed transaction
+  rpc SubmitTransaction(SubmitTransactionRequest) returns (SubmitTransactionResponse);
+}
+
+message SubmitTransactionRequest {
+  SignedBundle tx = 1;
+}
+
+message SubmitTransactionResponse {
+  bool success = 1;
+}
+
+message SignedBundle {
+  bytes data = 1;
+  bytes sig = 2;
+  oneof auth {
+    bytes address = 101;
+    bytes pubKey = 102;
+  }
+}
