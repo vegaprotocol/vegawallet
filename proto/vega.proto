@@ -16,11 +16,38 @@ message SubmitTransactionResponse {
   bool success = 1;
 }
 
-message SignedBundle {
-  bytes data = 1;
-  bytes sig = 2;
-  oneof auth {
-    bytes address = 101;
-    bytes pubKey = 102;
+// A transaction to be sent to vega
+message Transaction {
+  // one of all the possible command, proto marshalled
+  bytes inputData = 1;
+  // a random number used to provided uniqueness and prevents
+  // against replay attack
+  uint64 nonce = 2;
+  // the sender of the transction
+  // any of the following would be valid
+  oneof from {
+    // the address of the sender
+    bytes address = 1001;
+    // the public key of the sender
+    bytes pubKey = 1002;
   }
+}
+
+// A signature to be authenticate a transaction
+// and to be verified by the vega network
+message Signature {
+  // The bytes of the signature
+  bytes sig = 1;
+  // The algorithm used to create the signature
+  string algo = 2;
+  // The version of the signature used to create the signature
+  uint64 version = 3;
+}
+
+// A bundle of a transaction, proto marshalled and it's signature
+message SignedBundle {
+  // the transaction, proto marshalled
+  bytes tx = 1;
+  // the signature authenticating the transaction
+  Signature sig = 2;
 }
