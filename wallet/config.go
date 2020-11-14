@@ -37,6 +37,12 @@ type Config struct {
 	IP          string
 	Node        NodeConfig
 	RsaKey      string
+	Console     ConsoleConfig
+}
+
+type ConsoleConfig struct {
+	URL       string
+	LocalPort int
 }
 
 type NodeConfig struct {
@@ -52,13 +58,17 @@ func NewDefaultConfig() Config {
 		Level:       encoding.LogLevel{Level: zap.InfoLevel},
 		TokenExpiry: encoding.Duration{Duration: tokenExpiry},
 		Node: NodeConfig{
-			IP:      "127.0.0.1",
+			IP:      "n08.testnet.vega.xyz",
 			Port:    3002,
 			Retries: 5,
 		},
-		IP:     "0.0.0.0",
+		IP:     "localhost",
 		Port:   1789,
 		RsaKey: rsaKeyPath,
+		Console: ConsoleConfig{
+			URL:       "testnet.vega.trading",
+			LocalPort: 8080,
+		},
 	}
 }
 
@@ -67,7 +77,7 @@ func LoadConfig(path string) (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
-	cfg := Config{}
+	cfg := NewDefaultConfig()
 	if _, err := toml.Decode(string(buf), &cfg); err != nil {
 		return nil, err
 	}

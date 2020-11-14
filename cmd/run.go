@@ -3,26 +3,35 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 
 	"code.vegaprotocol.io/go-wallet/wallet"
 
+	"github.com/skratchdot/open-golang/open"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 )
 
-// runCmd represents the run command
-var runCmd = &cobra.Command{
-	Use:   "run",
-	Short: "Start the vega wallet service",
-	Long:  "Start a vega wallet service behind an http server",
-	RunE:  runServiceRun,
-}
+var (
+	runArgs struct {
+		consoleProxy bool
+	}
+
+	// runCmd represents the run command
+	runCmd = &cobra.Command{
+		Use:   "run",
+		Short: "Start the vega wallet service",
+		Long:  "Start a vega wallet service behind an http server",
+		RunE:  runServiceRun,
+	}
+)
 
 func init() {
 	serviceCmd.AddCommand(runCmd)
+	runCmd.Flags().BoolVarP(&runArgs.consoleProxy, "console-proxy", "c", false, "Start the vega console proxy")
 }
 
 func runServiceRun(cmd *cobra.Command, args []string) error {
@@ -46,10 +55,30 @@ func runServiceRun(cmd *cobra.Command, args []string) error {
 	go func() {
 		defer cancel()
 		err := srv.Start()
-		if err != nil {
+		if err != nil && err != http.ErrServerClosed {
 			log.Error("error starting wallet http server", zap.Error(err))
 		}
 	}()
+
+	var cproxy *consoleProxy
+
+	if runArgs.consoleProxy {
+		cproxy = newConsoleProxy(log, cfg.Console.LocalPort, cfg.Console.URL)
+		go func() {
+			defer cancel()
+			err := cproxy.Start()
+			if err != nil && err != http.ErrServerClosed {
+				log.Error("error starting console proxy server", zap.Error(err))
+			}
+		}()
+
+		// then we open the console for the user straight at the right runServiceRun
+		err := open.Run(cproxy.GetBrowserURL())
+		if err != nil {
+			log.Error("unable to open the console in the default browser",
+				zap.Error(err))
+		}
+	}
 
 	waitSig(ctx, log)
 
@@ -58,6 +87,15 @@ func runServiceRun(cmd *cobra.Command, args []string) error {
 		log.Error("error stopping wallet http server", zap.Error(err))
 	} else {
 		log.Info("wallet http server stopped with success")
+	}
+
+	if runArgs.consoleProxy {
+		err = cproxy.Stop()
+		if err != nil {
+			log.Error("error stopping console proxy server", zap.Error(err))
+		} else {
+			log.Info("console proxy server stopped with success")
+		}
 	}
 
 	return nil

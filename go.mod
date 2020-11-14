@@ -10,6 +10,7 @@ require (
 	github.com/julienschmidt/httprouter v1.3.0
 	github.com/pkg/errors v0.8.1 // indirect
 	github.com/rs/cors v1.7.0
+	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
 	github.com/spf13/cobra v1.0.0
 	github.com/stretchr/testify v1.4.0
 	github.com/zannen/toml v0.3.2
