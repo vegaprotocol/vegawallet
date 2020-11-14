@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	Ed25519 string = "ed25519"
+	Ed25519 string = "vega/ed25519"
 )
 
 var (
@@ -23,6 +23,7 @@ type signatureAlgorithmImpl interface {
 	Sign(priv crypto.PrivateKey, buf []byte) ([]byte, error)
 	Verify(pub crypto.PublicKey, message, sig []byte) (bool, error)
 	Name() string
+	Version() uint64
 }
 
 func NewEd25519() SignatureAlgorithm {
@@ -55,6 +56,10 @@ func (s *SignatureAlgorithm) Verify(pub crypto.PublicKey, message, sig []byte) (
 
 func (s *SignatureAlgorithm) Name() string {
 	return s.impl.Name()
+}
+
+func (s *SignatureAlgorithm) Version() uint64 {
+	return s.impl.Version()
 }
 
 func (s *SignatureAlgorithm) MarshalJSON() ([]byte, error) {

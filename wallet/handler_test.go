@@ -2,6 +2,7 @@ package wallet_test
 
 import (
 	"encoding/base64"
+	"encoding/hex"
 	"errors"
 	"os"
 	"testing"
@@ -366,6 +367,8 @@ func testSignTxSuccess(t *testing.T) {
 
 	message := "hello world."
 
+	keyBytes, _ := hex.DecodeString(key)
+
 	signedBundle, err := h.SignTx(tok, base64.StdEncoding.EncodeToString([]byte(message)), key)
 	assert.NoError(t, err)
 
@@ -373,7 +376,7 @@ func testSignTxSuccess(t *testing.T) {
 	alg, err := crypto.NewSignatureAlgorithm(crypto.Ed25519)
 	assert.NoError(t, err)
 
-	v, err := alg.Verify(signedBundle.PubKey, []byte(message), signedBundle.Sig)
+	v, err := alg.Verify(keyBytes, signedBundle.Tx, signedBundle.Sig.Sig)
 	assert.NoError(t, err)
 	assert.True(t, v)
 

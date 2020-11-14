@@ -3,24 +3,44 @@ syntax = "proto3";
 package vega;
 option go_package = "code.vegaprotocol.io/go-wallet/proto";
 
-service trading {
-  // Submit a signed transaction
-  rpc SubmitTransaction(SubmitTransactionRequest) returns (SubmitTransactionResponse);
-}
 
-message SubmitTransactionRequest {
-  SignedBundle tx = 1;
-}
+// Represents a transaction to be sent to Vega.
+message Transaction {
+  // One of the set of Vega commands (proto marshalled).
+  bytes inputData = 1;
+  // A random number used to provided uniqueness and prevents
+  // against replay attack.
+  uint64 nonce = 2;
 
-message SubmitTransactionResponse {
-  bool success = 1;
-}
-
-message SignedBundle {
-  bytes data = 1;
-  bytes sig = 2;
-  oneof auth {
-    bytes address = 101;
-    bytes pubKey = 102;
+  // The block height associated to the transaction.
+  // This should always be current height of the node at the time of sending the Tx.
+  // BlockHeight is used as a mechanism for replay protection.
+  uint64 blockHeight = 3;
+  // The sender of the transaction.
+  // Any of the following would be valid:
+  oneof from {
+    // The address of the sender.
+    bytes address = 1001;
+    // The public key of the sender.
+    bytes pubKey = 1002;
   }
+}
+
+// A signature to be authenticate a transaction
+// and to be verified by the vega network
+message Signature {
+  // The bytes of the signature
+  bytes sig = 1;
+  // The algorithm used to create the signature
+  string algo = 2;
+  // The version of the signature used to create the signature
+  uint64 version = 3;
+}
+
+// A bundle of a transaction and it's signature.
+message SignedBundle {
+  // Transaction payload (proto marshalled).
+  bytes tx = 1;
+  // The signature authenticating the transaction.
+  Signature sig = 2;
 }

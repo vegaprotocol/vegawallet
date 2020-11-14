@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"code.vegaprotocol.io/go-wallet/proto"
+	"code.vegaprotocol.io/go-wallet/proto/api"
 
 	"github.com/cenkalti/backoff/v4"
 	"go.uber.org/zap"
@@ -14,7 +14,7 @@ import (
 type nodeForward struct {
 	log     *zap.Logger
 	nodeCfg NodeConfig
-	clt     proto.TradingClient
+	clt     api.TradingClient
 	conn    *grpc.ClientConn
 }
 
@@ -25,7 +25,7 @@ func NewNodeForward(log *zap.Logger, nodeConfig NodeConfig) (*nodeForward, error
 		return nil, err
 	}
 
-	client := proto.NewTradingClient(conn)
+	client := api.NewTradingClient(conn)
 	return &nodeForward{
 		log:     log,
 		nodeCfg: nodeConfig,
@@ -40,7 +40,7 @@ func (n *nodeForward) Stop() error {
 }
 
 func (n *nodeForward) Send(ctx context.Context, tx *SignedBundle) error {
-	req := proto.SubmitTransactionRequest{
+	req := api.SubmitTransactionRequest{
 		Tx: tx.IntoProto(),
 	}
 	return backoff.Retry(
