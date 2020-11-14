@@ -49,5 +49,9 @@ func (e *ed25519Sig) Verify(pub crypto.PublicKey, message, sig []byte) (bool, er
 }
 
 func (e *ed25519Sig) Name() string {
-	return "ed25519"
+	return "vega/ed25519"
+}
+
+func (e *ed25519Sig) Version() uint64 {
+	return 1
 }

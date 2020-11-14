@@ -1,4 +1,4 @@
-package main
+package cmd
 
 import (
 	"context"
@@ -26,7 +26,7 @@ func init() {
 }
 
 func runServiceRun(cmd *cobra.Command, args []string) error {
-	cfg, err := wallet.LoadConfig(rootPath)
+	cfg, err := wallet.LoadConfig(rootArgs.rootPath)
 	if err != nil {
 		return err
 	}
@@ -39,7 +39,7 @@ func runServiceRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	srv, err := wallet.NewService(log, cfg, rootPath)
+	srv, err := wallet.NewService(log, cfg, rootArgs.rootPath)
 	if err != nil {
 		return err
 	}
