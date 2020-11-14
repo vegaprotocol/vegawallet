@@ -2,11 +2,14 @@ package wallet
 
 import (
 	"context"
+	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 
+	"github.com/golang/protobuf/proto"
 	"github.com/julienschmidt/httprouter"
 	"github.com/rs/cors"
 	"go.uber.org/zap"
@@ -58,7 +61,9 @@ type KeysResponse struct {
 
 // SignTxResponse describes the response for SignTx.
 type SignTxResponse struct {
-	SignedTx SignedBundle `json:"signedTx"`
+	SignedTx     SignedBundle `json:"signedTx"`
+	HexBundle    string       `json:"hexBundle"`
+	Base64Bundle string       `json:"base64Bundle"`
 }
 
 // SuccessResponse describes the response to a request that returns a simple true/false answer.
@@ -175,6 +180,7 @@ func (s *Service) CreateWallet(w http.ResponseWriter, r *http.Request, _ httprou
 		writeError(w, newError(err.Error()), http.StatusForbidden)
 		return
 	}
+
 	writeSuccess(w, TokenResponse{token}, http.StatusOK)
 }
 
@@ -307,12 +313,28 @@ func (s *Service) SignTx(t string, w http.ResponseWriter, r *http.Request, _ htt
 	if req.Propagate {
 		err := s.nodeForward.Send(r.Context(), &sb)
 		if err != nil {
+			s.log.Error("cannot forward transaction", zap.Error(err))
 			writeError(w, newError(err.Error()), http.StatusInternalServerError)
 			return
 		}
 	}
 
-	writeSuccess(w, SignTxResponse{SignedTx: sb}, http.StatusOK)
+	rawBundle, err := proto.Marshal(sb.IntoProto())
+	if err != nil {
+		writeError(w, newError(err.Error()), http.StatusInternalServerError)
+		return
+	}
+
+	hexBundle := hex.EncodeToString(rawBundle)
+	base64Bundle := base64.StdEncoding.EncodeToString(rawBundle)
+
+	res := SignTxResponse{
+		SignedTx:     sb,
+		HexBundle:    hexBundle,
+		Base64Bundle: base64Bundle,
+	}
+
+	writeSuccess(w, res, http.StatusOK)
 }
 
 func (s *Service) TaintKey(t string, w http.ResponseWriter, r *http.Request, ps httprouter.Params) {

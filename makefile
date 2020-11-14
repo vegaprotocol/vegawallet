@@ -14,15 +14,17 @@ else
 endif
 
 install:
-	go install -v -ldflags "-X main.Version=${VERSION} -X main.VersionHash=${VERSION_HASH}" ./...
+	go install -v -ldflags "-X code.vegaprotocol.io/go-wallet/cmd.Version=${VERSION} -X code.vegaprotocol.io/go-wallet/cmd.VersionHash=${VERSION_HASH}"
 
 proto:
 	protoc --go_out=paths=source_relative,plugins=grpc:. ./proto/*.proto
+	protoc --go_out=paths=source_relative,plugins=grpc:. ./proto/api/*.proto
 
 release:
-	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o build/vegawallet-linux-amd64 -ldflags "-X main.Version=${VERSION} -X main.VersionHash=${VERSION_HASH}" ./cmd/vegawallet
-	GOOS=linux GOARCH=386 CGO_ENABLED=0 go build -o build/vegawallet-linux-386 -ldflags "-X main.Version=${VERSION} -X main.VersionHash=${VERSION_HASH}" ./cmd/vegawallet
-	GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -o build/vegawallet-windows-amd64 -ldflags "-X main.Version=${VERSION} -X main.VersionHash=${VERSION_HASH}" ./cmd/vegawallet
-	GOOS=windows GOARCH=386 CGO_ENABLED=0 go build -o build/vegawallet-windows-386 -ldflags "-X main.Version=${VERSION} -X main.VersionHash=${VERSION_HASH}" ./cmd/vegawallet
-	GOOS=darwin GOARCH=amd64 CGO_ENABLED=0 go build -o build/vegawallet-darwin-amd64 -ldflags "-X main.Version=${VERSION} -X main.VersionHash=${VERSION_HASH}" ./cmd/vegawallet
-	GOOS=darwin GOARCH=386 CGO_ENABLED=0 go build -o build/vegawallet-darwin-386 -ldflags "-X main.Version=${VERSION} -X main.VersionHash=${VERSION_HASH}" ./cmd/vegawallet
+	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o build/vegawallet-linux-amd64 -ldflags "-X code.vegaprotocol.io/go-wallet/cmd.Version=${VERSION} -X code.vegaprotocol.io/go-wallet/cmd.VersionHash=${VERSION_HASH}"
+	GOOS=linux GOARCH=386 CGO_ENABLED=0 go build -o build/vegawallet-linux-386 -ldflags "-X code.vegaprotocol.io/go-wallet/cmd.Version=${VERSION} -X code.vegaprotocol.io/go-wallet/cmd.VersionHash=${VERSION_HASH}"
+	GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -o build/vegawallet-windows-amd64 -ldflags "-X code.vegaprotocol.io/go-wallet/cmd.Version=${VERSION} -X code.vegaprotocol.io/go-wallet/cmd.VersionHash=${VERSION_HASH}"
+	GOOS=windows GOARCH=386 CGO_ENABLED=0 go build -o build/vegawallet-windows-386 -ldflags "-X code.vegaprotocol.io/go-wallet/cmd.Version=${VERSION} -X code.vegaprotocol.io/go-wallet/cmd.VersionHash=${VERSION_HASH}"
+	GOOS=darwin GOARCH=amd64 CGO_ENABLED=0 go build -o build/vegawallet-darwin-amd64 -ldflags "-X code.vegaprotocol.io/go-wallet/cmd.Version=${VERSION} -X code.vegaprotocol.io/go-wallet/cmd.VersionHash=${VERSION_HASH}"
+
+.PHONY: proto

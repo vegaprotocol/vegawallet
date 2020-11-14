@@ -2,7 +2,6 @@ package wallet
 
 import (
 	"encoding/base64"
-	"encoding/hex"
 	"encoding/json"
 
 	types "code.vegaprotocol.io/go-wallet/proto"
@@ -17,33 +16,47 @@ import (
 // as it's a format commonly used by address in the blockchain
 // world, and also is easier to read etc.
 
-type SignedBundle struct {
-	Data   []byte `json:"data"`
-	Sig    []byte `json:"sig"`
-	PubKey []byte `json:"pubKey"`
+type Signature struct {
+	Sig     []byte `json:"sig"`
+	Algo    string `json:"algo"`
+	Version uint64 `json:"version"`
 }
 
-type signedBundleStrings struct {
-	Data   string `json:"data"`
-	Sig    string `json:"sig"`
-	PubKey string `json:"pubKey"`
+type signatureMarshalled struct {
+	Sig     string `json:"sig"`
+	Algo    string `json:"algo"`
+	Version uint64 `json:"version"`
+}
+
+type SignedBundle struct {
+	Tx  []byte    `json:"tx"`
+	Sig Signature `json:"sig"`
+}
+
+type signedBundleMarshalled struct {
+	Tx  string              `json:"tx"`
+	Sig signatureMarshalled `json:"sig"`
 }
 
 func (s SignedBundle) MarshalJSON() ([]byte, error) {
-	stringBundle := signedBundleStrings{
-		Data:   base64.StdEncoding.EncodeToString(s.Data),
-		Sig:    base64.StdEncoding.EncodeToString(s.Sig),
-		PubKey: hex.EncodeToString(s.PubKey),
+	stringBundle := signedBundleMarshalled{
+		Tx: base64.StdEncoding.EncodeToString(s.Tx),
+		Sig: signatureMarshalled{
+			Sig:     base64.StdEncoding.EncodeToString(s.Sig.Sig),
+			Algo:    s.Sig.Algo,
+			Version: s.Sig.Version,
+		},
 	}
 	return json.Marshal(stringBundle)
 }
 
 func (s *SignedBundle) IntoProto() *types.SignedBundle {
 	return &types.SignedBundle{
-		Data: s.Data,
-		Sig:  s.Sig,
-		Auth: &types.SignedBundle_PubKey{
-			PubKey: s.PubKey,
+		Tx: s.Tx,
+		Sig: &types.Signature{
+			Sig:     s.Sig.Sig,
+			Algo:    s.Sig.Algo,
+			Version: s.Sig.Version,
 		},
 	}
 
