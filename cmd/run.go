@@ -10,6 +10,7 @@ import (
 
 	"code.vegaprotocol.io/go-wallet/wallet"
 
+	"github.com/skratchdot/open-golang/open"
 	"github.com/spf13/cobra"
 	"github.com/webview/webview"
 	"go.uber.org/zap"
@@ -18,6 +19,7 @@ import (
 var (
 	runArgs struct {
 		consoleProxy bool
+		consoleUI    bool
 	}
 
 	// runCmd represents the run command
@@ -31,7 +33,8 @@ var (
 
 func init() {
 	serviceCmd.AddCommand(runCmd)
-	runCmd.Flags().BoolVarP(&runArgs.consoleProxy, "console-proxy", "c", false, "Start the vega console proxy")
+	runCmd.Flags().BoolVarP(&runArgs.consoleProxy, "console-proxy", "p", false, "Start the vega console proxy and open the console in the default browser")
+	runCmd.Flags().BoolVarP(&runArgs.consoleUI, "console-ui", "u", false, "Start the vega console proxy and open the console in the native UI")
 }
 
 func runServiceRun(cmd *cobra.Command, args []string) error {
@@ -62,8 +65,7 @@ func runServiceRun(cmd *cobra.Command, args []string) error {
 
 	var cproxy *consoleProxy
 
-	var w webview.WebView
-	if runArgs.consoleProxy {
+	if runArgs.consoleProxy || runArgs.consoleUI {
 		cproxy = newConsoleProxy(log, cfg.Console.LocalPort, cfg.Console.URL)
 		go func() {
 			defer cancel()
@@ -72,20 +74,23 @@ func runServiceRun(cmd *cobra.Command, args []string) error {
 				log.Error("error starting console proxy server", zap.Error(err))
 			}
 		}()
+	}
 
+	var w webview.WebView
+	if runArgs.consoleProxy {
 		// then we open the console for the user straight at the right runServiceRun
-		// err := open.Run(cproxy.GetBrowserURL())
-		// if err != nil {
-		// 	log.Error("unable to open the console in the default browser",
-		// 		zap.Error(err))
-		// }
+		err := open.Run(cproxy.GetBrowserURL())
+		if err != nil {
+			log.Error("unable to open the console in the default browser",
+				zap.Error(err))
+		}
 
-		debug := false
-		w = webview.New(debug)
+	} else if runArgs.consoleUI {
+		w = webview.New(false)
 		defer w.Destroy()
 		w.SetTitle("Vega Console")
 		w.SetSize(800, 600, webview.HintNone)
-		w.Navigate("http://localhost:8080")
+		w.Navigate(cproxy.GetBrowserURL())
 	}
 
 	go waitSig(ctx, cancel, log, w)

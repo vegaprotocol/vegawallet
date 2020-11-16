@@ -9,7 +9,7 @@ on:
 jobs:
 
   build-linux:
-    name: Build
+    name: Linux build
     runs-on: ubuntu-latest
     steps:
 
@@ -30,14 +30,11 @@ jobs:
     - name: Build
       run: go build -v ./...
 
-    - name: Build release
-      run: make release-linux
-
     - name: Tests
       run: go test -v ./...
 
   build-macos:
-    name: Build
+    name: MacOS build
     runs-on: macos-latest
     steps:
 
@@ -57,14 +54,11 @@ jobs:
     - name: Build
       run: go build -v ./...
 
-    - name: Build release
-      run: make release-macos
-
     - name: Tests
       run: go test -v ./...
 
   build-windows:
-    name: Build
+    name: Windows Build
     runs-on: windows-latest
     steps:
 
@@ -83,9 +77,6 @@ jobs:
 
     - name: Build
       run: go build -v ./...
-
-    - name: Build release
-      run: make release-windows
 
     - name: Tests
       run: go test -v ./...
