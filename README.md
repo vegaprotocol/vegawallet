@@ -37,7 +37,7 @@ This would have generated a new default configuration into `path/wallet-service-
 
 
 #### Running the service
-The service can be run in 3 different ways
+The service can be run in 3 different ways.
 
 Just as an API, to do so run the following command:
 ```console
@@ -56,10 +56,9 @@ This will proxy the Vega Console to localhost:8080 (you can edit this in the ser
 As an API, but also starting the Vega Console in a native browser window:
 ```console
 wallet@vega:~$ vegawallet service run --console-ui
-{"level":"info","ts":1605554589.694528,"caller":"cmd/console.go:41","msg":"starting console proxy","proxy.address":"localhost:8080","address":"dev.vega.trading"}
+{"level":"info","ts":1605554589.694528,"caller":"cmd/console.go:41","msg":"starting console proxy","proxy.address":"localhost:8080","address":"testnet.vega.trading"}
 {"level":"info","ts":1587317545.61634,"logger":"wallet","caller":"wallet/service.go:147","msg":"starting wallet http server","address":"0.0.0.0:1789"}
 ```
-
 
 Using the API is documented [here](./wallet/README.md).
 
