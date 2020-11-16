@@ -34,8 +34,12 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&rootArgs.rootPath, "root-path", fsutil.DefaultVegaDir(), "Root directory for the Vega wallet configuration")
 }
 
-func promptForPassphrase() (string, error) {
-	fmt.Printf("please enter passphrase:")
+func promptForPassphrase(msg ...string) (string, error) {
+	if len(msg) <= 0 {
+		fmt.Print("please enter passphrase:")
+	} else {
+		fmt.Print(msg[0])
+	}
 	password, err := terminal.ReadPassword(0)
 	if err != nil {
 		return "", err

@@ -36,10 +36,30 @@ func runGenkey(cmd *cobra.Command, args []string) error {
 		return errors.New("wallet name is required")
 	}
 	if len(genkeyArgs.passphrase) <= 0 {
-		var err error
+		var (
+			err          error
+			confirmation string
+		)
 		genkeyArgs.passphrase, err = promptForPassphrase()
 		if err != nil {
 			return fmt.Errorf("could not get passphrase: %v", err)
+		}
+
+		// if wallet does not exists
+		// ask for passphrase confirmation + check it's not empty
+		if !wallet.WalletFileExists(rootArgs.rootPath, genkeyArgs.walletOwner) {
+			confirmation, err = promptForPassphrase("please confirm passphrase:")
+			if err != nil {
+				return fmt.Errorf("could not get passphrase: %v", err)
+			}
+
+			if genkeyArgs.passphrase != confirmation {
+				return fmt.Errorf("passphrases do not match")
+			}
+
+			if len(genkeyArgs.passphrase) <= 0 {
+				return fmt.Errorf("passphrase cannot be empty")
+			}
 		}
 	}
 
