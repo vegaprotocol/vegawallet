@@ -87,7 +87,6 @@ func runServiceRun(cmd *cobra.Command, args []string) error {
 
 	} else if runArgs.consoleUI {
 		w = webview.New(false)
-		defer w.Destroy()
 		w.SetTitle("Vega Console")
 		w.SetSize(800, 600, webview.HintNone)
 		w.Navigate(cproxy.GetBrowserURL())
