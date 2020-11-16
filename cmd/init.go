@@ -28,7 +28,7 @@ var (
 func init() {
 	serviceCmd.AddCommand(initCmd)
 	initCmd.Flags().BoolVarP(&initArgs.force, "force", "f", false, "Erase exiting wallet service configuration at the specified path")
-	initCmd.Flags().BoolVarP(&initArgs.genRsaKey, "genrsakey", "g", false, "Generate rsa keys for the jwt tokens")
+	initCmd.Flags().BoolVarP(&initArgs.genRsaKey, "no-genrsakey", "g", false, "Do not generate rsa keys for the jwt tokens by default")
 }
 
 func runServiceInit(cmd *cobra.Command, args []string) error {
@@ -47,5 +47,5 @@ func runServiceInit(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return wallet.GenConfig(log, rootArgs.rootPath, initArgs.force, initArgs.genRsaKey)
+	return wallet.GenConfig(log, rootArgs.rootPath, initArgs.force, !initArgs.genRsaKey)
 }
