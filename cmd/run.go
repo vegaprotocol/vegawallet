@@ -12,12 +12,14 @@ import (
 
 	"github.com/skratchdot/open-golang/open"
 	"github.com/spf13/cobra"
+	"github.com/webview/webview"
 	"go.uber.org/zap"
 )
 
 var (
 	runArgs struct {
 		consoleProxy bool
+		consoleUI    bool
 	}
 
 	// runCmd represents the run command
@@ -31,7 +33,8 @@ var (
 
 func init() {
 	serviceCmd.AddCommand(runCmd)
-	runCmd.Flags().BoolVarP(&runArgs.consoleProxy, "console-proxy", "c", false, "Start the vega console proxy")
+	runCmd.Flags().BoolVarP(&runArgs.consoleProxy, "console-proxy", "p", false, "Start the vega console proxy and open the console in the default browser")
+	runCmd.Flags().BoolVarP(&runArgs.consoleUI, "console-ui", "u", false, "Start the vega console proxy and open the console in the native UI")
 }
 
 func runServiceRun(cmd *cobra.Command, args []string) error {
@@ -62,7 +65,7 @@ func runServiceRun(cmd *cobra.Command, args []string) error {
 
 	var cproxy *consoleProxy
 
-	if runArgs.consoleProxy {
+	if runArgs.consoleProxy || runArgs.consoleUI {
 		cproxy = newConsoleProxy(log, cfg.Console.LocalPort, cfg.Console.URL)
 		go func() {
 			defer cancel()
@@ -71,16 +74,32 @@ func runServiceRun(cmd *cobra.Command, args []string) error {
 				log.Error("error starting console proxy server", zap.Error(err))
 			}
 		}()
+	}
 
+	var w webview.WebView
+	if runArgs.consoleProxy {
 		// then we open the console for the user straight at the right runServiceRun
 		err := open.Run(cproxy.GetBrowserURL())
 		if err != nil {
 			log.Error("unable to open the console in the default browser",
 				zap.Error(err))
 		}
+
+	} else if runArgs.consoleUI {
+		w = webview.New(false)
+		w.SetTitle("Vega Console")
+		w.SetSize(800, 600, webview.HintNone)
+		w.Navigate(cproxy.GetBrowserURL())
 	}
 
-	waitSig(ctx, log)
+	go waitSig(ctx, cancel, log, w)
+
+	if w != nil {
+		w.Run()
+		w.Destroy()
+	}
+
+	<-ctx.Done()
 
 	err = srv.Stop()
 	if err != nil {
@@ -102,14 +121,19 @@ func runServiceRun(cmd *cobra.Command, args []string) error {
 }
 
 // waitSig will wait for a sigterm or sigint interrupt.
-func waitSig(ctx context.Context, log *zap.Logger) {
+func waitSig(ctx context.Context, cfunc func(), log *zap.Logger, w webview.WebView) {
 	var gracefulStop = make(chan os.Signal, 1)
 	signal.Notify(gracefulStop, syscall.SIGTERM)
 	signal.Notify(gracefulStop, syscall.SIGINT)
+	signal.Notify(gracefulStop, syscall.SIGQUIT)
 
 	select {
 	case sig := <-gracefulStop:
 		log.Info("Caught signal", zap.String("name", fmt.Sprintf("%+v", sig)))
+		if w != nil {
+			w.Terminate()
+		}
+		cfunc()
 	case <-ctx.Done():
 		// nothing to do
 	}
