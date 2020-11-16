@@ -109,6 +109,13 @@ func EnsureBaseFolder(root string) error {
 	return fsutil.EnsureDir(filepath.Join(root, walletBaseFolder))
 }
 
+func WalletFileExists(root, file string) bool {
+	if ok, _ := fsutil.PathExists(filepath.Join(root, walletBaseFolder, file)); ok {
+		return true
+	}
+	return false
+}
+
 func CreateWalletFile(walletpath, owner, passphrase string) (*Wallet, error) {
 	w := Wallet{
 		Owner: owner,
