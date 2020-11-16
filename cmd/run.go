@@ -10,8 +10,8 @@ import (
 
 	"code.vegaprotocol.io/go-wallet/wallet"
 
-	"github.com/skratchdot/open-golang/open"
 	"github.com/spf13/cobra"
+	"github.com/webview/webview"
 	"go.uber.org/zap"
 )
 
@@ -62,6 +62,7 @@ func runServiceRun(cmd *cobra.Command, args []string) error {
 
 	var cproxy *consoleProxy
 
+	var w webview.WebView
 	if runArgs.consoleProxy {
 		cproxy = newConsoleProxy(log, cfg.Console.LocalPort, cfg.Console.URL)
 		go func() {
@@ -73,14 +74,28 @@ func runServiceRun(cmd *cobra.Command, args []string) error {
 		}()
 
 		// then we open the console for the user straight at the right runServiceRun
-		err := open.Run(cproxy.GetBrowserURL())
-		if err != nil {
-			log.Error("unable to open the console in the default browser",
-				zap.Error(err))
-		}
+		// err := open.Run(cproxy.GetBrowserURL())
+		// if err != nil {
+		// 	log.Error("unable to open the console in the default browser",
+		// 		zap.Error(err))
+		// }
+
+		debug := false
+		w = webview.New(debug)
+		defer w.Destroy()
+		w.SetTitle("Vega Console")
+		w.SetSize(800, 600, webview.HintNone)
+		w.Navigate("http://localhost:8080")
 	}
 
-	waitSig(ctx, log)
+	go waitSig(ctx, cancel, log, w)
+
+	if w != nil {
+		w.Run()
+		w.Destroy()
+	}
+
+	<-ctx.Done()
 
 	err = srv.Stop()
 	if err != nil {
@@ -102,14 +117,19 @@ func runServiceRun(cmd *cobra.Command, args []string) error {
 }
 
 // waitSig will wait for a sigterm or sigint interrupt.
-func waitSig(ctx context.Context, log *zap.Logger) {
+func waitSig(ctx context.Context, cfunc func(), log *zap.Logger, w webview.WebView) {
 	var gracefulStop = make(chan os.Signal, 1)
 	signal.Notify(gracefulStop, syscall.SIGTERM)
 	signal.Notify(gracefulStop, syscall.SIGINT)
+	signal.Notify(gracefulStop, syscall.SIGQUIT)
 
 	select {
 	case sig := <-gracefulStop:
 		log.Info("Caught signal", zap.String("name", fmt.Sprintf("%+v", sig)))
+		if w != nil {
+			w.Terminate()
+		}
+		cfunc()
 	case <-ctx.Done():
 		// nothing to do
 	}
