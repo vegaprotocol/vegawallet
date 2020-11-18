@@ -110,17 +110,9 @@ If you want to trade using the APIs, use the command
 ./vegawallet service run
 ```
 
-Otherwise, you can connect to a Console proxy so you can trade via the UI 
+Otherwise, you can connect to a Console proxy so you can trade via the UI.
 
-Start the vega console proxy and open the console in the native UI:
-
-```
-./vegawallet service run -u
-``` 
-
-OR
-
-Start the vega console proxy and open the console in the default browser:
+Start the Vega console proxy and open the console in the default browser:
 
 ```
 ./vegawallet service run -p
