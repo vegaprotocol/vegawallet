@@ -121,14 +121,16 @@ Start the Vega console proxy and open the console in the default browser:
 Then deposit funds! (instructions tbd) 
 
 
+## Support
 
+[Documentation](https://docs.testnet.vega.xyz) 
+Get API reference documentation, learn more about how Vega works, and explore sample scripts for API trading
 
-If you're having any trouble, you can [raise an issue on Nolt](https://vega-testnet.nolt.io/) to share bugs you've found, or ask us on [Discord](https://discord.gg/bkAF3Tu), and we'll help you get to the bottom of it. On Discord, you can also get details about our open office hours, where members of the team will be able to help. 
+[Nolt](https://vega-testnet.nolt.io/)
+Raise issues, see what others have raised. 
 
-
-
-
-
+[Discord](https://discord.gg/bkAF3Tu) 
+Ask us for help, find out about scheduled open office hours, and keep up with Vega generally 
 
 
 
