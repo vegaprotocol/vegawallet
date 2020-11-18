@@ -123,7 +123,7 @@ Then deposit funds! (instructions tbd)
 
 
 
-
+If you're having any trouble, you can [raise an issue on Nolt](https://vega-testnet.nolt.io/) to share bugs you've found, or ask us on [Discord](https://discord.gg/bkAF3Tu), and we'll help you get to the bottom of it. On Discord, you can also get details about our open office hours, where members of the team will be able to help. 
 
 
 
