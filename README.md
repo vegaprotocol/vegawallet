@@ -28,8 +28,7 @@ You need to have the `gtk+-3.0` and `webkit2gtk-4.0` dependencies installed.
 
 And if you want to add an example (this would be a different command in different linux distribution). For Ubuntu specifically, the command would be `sudo apt-get install gtk+-3.0 webkit2gtk-4.0`. 
 
-——
-These instructions are written to be used in Terminal.  
+These instructions are written to be used in a terminal.  (this will probably be worded more elegantly)
 
 Find the wallet file on your system using the command 
 
