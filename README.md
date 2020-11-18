@@ -6,7 +6,8 @@
 
 Download the executable file from Releases: https://github.com/vegaprotocol/go-wallet/releases 
 
-If you’re using a Mac: 
+**If you’re using a Mac:**
+
 Download `vegawallet-darwin-amd64`
 
 It’s likely that you’ll need to change your system preferences for this specific instance, in order to run Vega Wallet. If you open the file from downloads, you may get a message saying “vegawallet-darwin-amd64” cannot be opened because it is from an unidentified developer.
@@ -15,10 +16,12 @@ Click on the (?) help button, which will open a window that links you to the Sys
 
 You’ll then need to try to open it again, and go to System Preferences > Security & Privacy > General, and choose “Open Anyway”. 
 
-If you’re using Windows:
+**If you’re using Windows:**
+
 Download `vegawallet-windows-amd64`
 
-If you’re using Linux: 
+**If you’re using Linux:** 
+
 Download `vegawallet-linux-amd64`
 
 You need to have the `gtk+-3.0` and `webkit2gtk-4.0` dependencies installed.
@@ -30,9 +33,9 @@ These instructions are written to be used in Terminal.
 
 Find the wallet file on your system using the command 
 
-Mac: `./vegawallet-darwin-amd64`
-Linux: `./vegawallet-linux-amd64`
-Windows: `./vegawallet-windows-amd64`
+**Mac:** `./vegawallet-darwin-amd64`
+**Linux:** `./vegawallet-linux-amd64`
+**Windows:** `./vegawallet-windows-amd64`
 
 To be able to run the file, you'll need to make it executable. 
 
@@ -40,34 +43,53 @@ Tip: On a Mac, you might then get the message that this is a security issue. The
 
 Make the file executable
 
-Mac: 
-`chmod +x vegawallet-darwin-amd64`
+**Mac:** 
 
-Linux: 
-`chmod +x vegawallet-linux-amd64`
+```
+chmod +x vegawallet-darwin-amd64
+```
 
-Windows: 
-`chmod +x vegawallet-windows-amd64`
+**Linux:** 
 
-Tip: You can use the tab key to auto-fill the name of the file, after you type the first few characters. 
+```
+chmod +x vegawallet-linux-amd64
+```
+
+**Windows:** 
+
+```
+chmod +x vegawallet-windows-amd64
+```
+
+*Tip:* You can use the tab key to auto-fill the name of the file, after you type the first few characters. 
 
 Rename the file. (This is optional, but all instructions from here will assume you’ve renamed it to vegawallet.) 
 
-Mac: 
-`mv vegawallet-darwin-amd64 vegawallet`
+**Mac:** 
+```
+mv vegawallet-darwin-amd64 vegawallet
+```
 
-Linux: 
-`mv vegawallet-linux-amd64 vegawallet`
+**Linux:** 
+```
+mv vegawallet-linux-amd64 vegawallet
+```
 
-Windows:
-`mv vegawallet-windows-amd64 vegawallet`
+**Windows:**
+```
+mv vegawallet-windows-amd64 vegawallet
+```
 
-Tip: You can see a list of available commands by running
-`./vegawallet -h`
+*Tip:* You can see a list of available commands by running
+```
+./vegawallet -h
+```
 
 Next, create a user name and password for your Wallet, and create a public and private key (genkey):
 
-`./vegawallet genkey —name pick-a-username` 
+```
+./vegawallet genkey --name pick-a-username
+``` 
 
 It will then ask you to input a password, and then confirm that password. 
 
@@ -75,27 +97,35 @@ The genkey command in that instruction will generate public and private keys for
 
 You’ll see an output with your public and private key. DO NOT SHARE YOUR PRIVATE KEY. You don’t need to save this information anywhere, as you’ll be able to retrieve it from your Wallet in the future. 
 
-Now, connect your Wallet to the Testnet nodes and UI. The ‘init’ command will initialise the configuration. A configuration file will be stored in your home folder, in a folder called `.vega`.
+Now, connect your Wallet to the Testnet nodes and UI. The ‘init’ command (below) will initialise the configuration. A configuration file will be stored in your home folder, in a folder called `.vega`.
 
-`./vegawallet service init`
+```
+./vegawallet service init
+```
 
-Tip: If you want to specify a root-path, it will not go into the default path, but a folder you choose to create. If you want to create a new config for a new wallet, or test or isolate it, you should specify the root path
+*Tip:* If you want to specify a root-path, it will not go into the default path, but a folder you choose to create. If you want to create a new config for a new wallet, or test or isolate it, you should specify the root path.
 
 If you want to trade using the APIs, use the command 
 
-`./vegawallet service run`
+```
+./vegawallet service run
+```
 
-Otherwise, you can connect to a Console proxy so you can trade via the UI: 
+Otherwise, you can connect to a Console proxy so you can trade via the UI 
 
-Start the vega console proxy and open the console in the native UI
+Start the vega console proxy and open the console in the native UI:
 
-`./vegawallet service run -u` 
+```
+./vegawallet service run -u
+``` 
 
 OR
 
-Start the vega console proxy and open the console in the default browser
+Start the vega console proxy and open the console in the default browser:
 
-`./vegawallet service run -p` 
+```
+./vegawallet service run -p
+```
 
 Then deposit funds! (instructions tbd) 
 
