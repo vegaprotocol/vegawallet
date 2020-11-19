@@ -127,12 +127,15 @@ Then deposit funds! (instructions tbd)
 ## Support
 
 [Documentation](https://docs.testnet.vega.xyz) 
+
 Get API reference documentation, learn more about how Vega works, and explore sample scripts for API trading
 
 [Nolt](https://vega-testnet.nolt.io/)
+
 Raise issues, see what others have raised. 
 
 [Discord](https://discord.gg/bkAF3Tu) 
+
 Ask us for help, find out about scheduled open office hours, and keep up with Vega generally 
 
 
