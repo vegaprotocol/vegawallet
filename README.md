@@ -6,7 +6,8 @@
 
 Download the executable file from Releases: https://github.com/vegaprotocol/go-wallet/releases 
 
-After you've set up the Vega wallet, you can access it by opening the executable file, and running the commands you need. 
+After you've set up the Vega wallet, you can access it via terminal with the command
+```./vegawallet run```
 
 **If you’re using a Mac:**
 
