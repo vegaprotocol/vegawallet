@@ -73,7 +73,7 @@ You’ll see an output with your public and private key. DO NOT SHARE YOUR PRIVA
 
 ## Run Wallet
 
-Now, connect your Wallet to the Testnet nodes and UI. The ‘init’ command (below) will initialise the configuration. A configuration file will be stored in your home folder, in a folder called `.vega`.
+Now, connect your Wallet to the Testnet nodes and UI. The `init` command (below) will initialise the configuration. A configuration file will be stored in your home folder, in a folder called `.vega`.
 
 ```console
 wallet@vega:~$ vegawallet service init
