@@ -23,7 +23,7 @@ proto:
 
 release-windows:
 	GOOS=windows GOARCH=amd64 CGO_ENABLED=1 go build -o build/vegawallet -ldflags "-X code.vegaprotocol.io/go-wallet/cmd.Version=${VERSION} -X code.vegaprotocol.io/go-wallet/cmd.VersionHash=${VERSION_HASH}"
-	cd build && zip vegawallet-windows-amd64.zip vegawallet
+	cd build && tar.exe -cf vegawallet-windows-amd64.zip vegawallet
 
 release-macos:
 	GOOS=darwin GOARCH=amd64 CGO_ENABLED=1 go build -o build/vegawallet -ldflags "-X code.vegaprotocol.io/go-wallet/cmd.Version=${VERSION} -X code.vegaprotocol.io/go-wallet/cmd.VersionHash=${VERSION_HASH}"
