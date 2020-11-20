@@ -4,8 +4,8 @@ ifeq ($(CI),)
 	VERSION_HASH := $(shell git rev-parse HEAD | cut -b1-8)
 else
 	# In CI
-	ifneq ($(GITHUB_REF),)
-		VERSION := $(GITHUB_REF)
+	ifneq ($(RELEASE_VERSION),)
+		VERSION := $(RELEASE_VERSION)
 	else
 		# No tag, so make one
 		VERSION := $(shell git describe --tags 2>/dev/null)

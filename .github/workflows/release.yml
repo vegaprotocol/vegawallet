@@ -28,7 +28,13 @@ jobs:
     - name: Tests
       run: go test -v ./...
 
+    - name: Set release version
+      id: vars
+      run: echo ::set-output name=tag::${GITHUB_REF#refs/*/}
+
     - name: Build
+      env:
+        RELEASE_VERSION: ${{ steps.vars.outputs.tag }}
       run: make release-linux
 
     - name: Release
@@ -58,7 +64,13 @@ jobs:
     - name: Tests
       run: go test -v ./...
 
+    - name: Set release version
+      id: vars
+      run: echo ::set-output name=tag::${GITHUB_REF#refs/*/}
+
     - name: Build
+      env:
+        RELEASE_VERSION: ${{ steps.vars.outputs.tag }}
       run: make release-macos
 
     - name: Release
@@ -88,7 +100,13 @@ jobs:
     - name: Tests
       run: go test -v ./...
 
+    - name: Set release version
+      id: vars
+      run: echo ::set-output name=tag::${GITHUB_REF#refs/*/}
+
     - name: Build
+      env:
+        RELEASE_VERSION: ${{ steps.vars.outputs.tag }}
       run: make release-windows
 
     - name: Release
