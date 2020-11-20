@@ -8,7 +8,7 @@ These instructions are written to be used in command line. Below, in the snippet
 
 ### Download 
 
-Download the zip file from Releases to the location on your computer you want to run it from: https://github.com/vegaprotocol/go-wallet/releases 
+Download and save the zip file from Releases to the location on your computer you want to run it from: https://github.com/vegaprotocol/go-wallet/releases 
 
 **If you’re using MacOS:**
 
