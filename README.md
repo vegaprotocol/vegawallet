@@ -4,14 +4,11 @@
 
 ## How to install and run Vega Wallet 
 
-These instructions are written to be used in command line. 
-
-Download the zip file from Releases to the location on your computer you want to run it from: https://github.com/vegaprotocol/go-wallet/releases 
-
-After you've set up the Vega wallet, you can access it via terminal with the command
-```./vegawallet run```
+These instructions are written to be used in command line. Below, in the snippets, you'll see commands in black text. You can copy those command line instructions, and paste them into your command line interface. 
 
 ### Download 
+
+Download the zip file from Releases to the location on your computer you want to run it from: https://github.com/vegaprotocol/go-wallet/releases 
 
 **If you’re using MacOS:**
 
@@ -35,7 +32,7 @@ Click on the (More info) text, which will reveal a button to "Run anyway".
 
 Download `vegawallet-linux-amd64.zip`
 
-### Create a key and user name/password
+### Generate key pair and credentials
 
 **MacOS & Linux**
 In command line, type
@@ -50,7 +47,7 @@ to execute the program.
 In command line, type
 
 ```console
-wallet@vega:~$ vegawallet.exe
+wallet@vega:~$ ./vegawallet.exe
 ```
 to execute the program. 
 
@@ -71,7 +68,7 @@ The genkey command in that instruction will generate public and private keys for
 
 You’ll see an output with your public and private key. DO NOT SHARE YOUR PRIVATE KEY. You don’t need to save this information anywhere, as you’ll be able to retrieve it from your Wallet in the future. 
 
-## Run Wallet
+## Run the Wallet service
 
 Now, connect your Wallet to the Testnet nodes and UI. The `init` command (below) will initialise the configuration. A configuration file will be stored in your home folder, in a folder called `.vega`.
 
@@ -83,7 +80,7 @@ wallet@vega:~$ ./vegawallet service init
 
 *Tip:* If you want to specify a root-path, it will not go into the default path, but a folder you choose to create. If you want to create a new config for a new wallet, or test or isolate it, you should specify the root path.
 
-If you want to trade using the APIs, use the command 
+You'll need collateral to trade, but once you want to trade using the APIs, use the command 
 
 ```console
 wallet@vega:~$ ./vegawallet service run
@@ -132,6 +129,6 @@ wallet@vega:~$ cd go-wallet && make
 ```
 
 # About Vega
- [Vega](https://vega.xyz) is a protocol for creating and trading derivatives on a fully decentralised network. The network, secured with proof-of-stake, will facilitate fully automated, end-to-end margin trading and execution of complex financial products. Anyone will be able to build decentralised markets using the protocol.
+[Vega](https://vega.xyz) is a protocol for creating and trading derivatives on a fully decentralised network. The network, secured with proof-of-stake, will facilitate fully automated, end-to-end margin trading and execution of complex financial products. Anyone will be able to build decentralised markets using the protocol.
 
 Read more at [https://vega.xyz](https://vega.xyz).
