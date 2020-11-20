@@ -40,7 +40,7 @@ jobs:
     - name: Release
       uses: softprops/action-gh-release@v1
       with:
-        files: build/*
+        files: build/*.zip
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -76,7 +76,7 @@ jobs:
     - name: Release
       uses: softprops/action-gh-release@v1
       with:
-        files: build/*
+        files: build/*.zip
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -112,6 +112,6 @@ jobs:
     - name: Release
       uses: softprops/action-gh-release@v1
       with:
-        files: build/*
+        files: build/*.zip
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
