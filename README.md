@@ -56,7 +56,7 @@ to execute the program.
 Next, create a user name and password for your Wallet, and create a public and private key (genkey):
 
 ```console
-wallet@vega:~$ vegawallet genkey -n choose-a-username
+wallet@vega:~$ ./vegawallet genkey -n [choose-a-username]
 
 new generated keys:
 public: 473…5e
