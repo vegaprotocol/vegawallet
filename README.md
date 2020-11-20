@@ -53,7 +53,7 @@ to execute the program.
 
 *Tip:* You can use the tab key to auto-fill the name of the file, after you type the first few characters. 
 
-Next, create a user name and password for your Wallet, and create a public and private key (genkey):
+Next, create a user name and passphrase for your Wallet, and create a public and private key (genkey):
 
 ```console
 wallet@vega:~$ ./vegawallet genkey -n [choose-a-username]
@@ -63,7 +63,7 @@ public: 473…5e
 private: 1…e
 ``` 
 
-It will then prompt you to input a password, and then confirm that password. 
+It will then prompt you to input a passphrase, and then confirm that passphrase. 
 
 The genkey command in that instruction will generate public and private keys for the wallet, at the same time as creating a user name. 
 
