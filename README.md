@@ -76,7 +76,7 @@ You’ll see an output with your public and private key. DO NOT SHARE YOUR PRIVA
 Now, connect your Wallet to the Testnet nodes and UI. The `init` command (below) will initialise the configuration. A configuration file will be stored in your home folder, in a folder called `.vega`.
 
 ```console
-wallet@vega:~$ vegawallet service init
+wallet@vega:~$ ./vegawallet service init
 {"level":"info","ts":1605554344.734188,"caller":"wallet/config.go:125","msg":"wallet service configuration generated successfully","path":"path/wallet-service-config.toml"}
 {"level":"info","ts":1605554347.727988,"caller":"wallet/config.go:173","msg":"wallet rsa key generated successfully","path":"path/wallet_rsa"}
 ```
@@ -86,7 +86,7 @@ wallet@vega:~$ vegawallet service init
 If you want to trade using the APIs, use the command 
 
 ```console
-wallet@vega:~$ vegawallet service run
+wallet@vega:~$ ./vegawallet service run
 {"level":"info","ts":1587317545.61634,"logger":"wallet","caller":"wallet/service.go:147","msg":"starting wallet http server","address":"0.0.0.0:1789"}
 ```
 
@@ -95,7 +95,7 @@ Otherwise, you can connect to a Console proxy so you can trade via the UI.
 Start the Vega console proxy and open the console in the default browser:
 
 ```console
-wallet@vega:~$ vegawallet service run --console-proxy
+wallet@vega:~$ ./vegawallet service run --console-proxy
 {"level":"info","ts":1605554589.694528,"caller":"cmd/console.go:41","msg":"starting console proxy","proxy.address":"localhost:8080","address":"dev.vega.trading"}
 {"level":"info","ts":1587317545.61634,"logger":"wallet","caller":"wallet/service.go:147","msg":"starting wallet http server","address":"0.0.0.0:1789"}
 ```
