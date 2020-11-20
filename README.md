@@ -67,6 +67,11 @@ The genkey command in that instruction will generate public and private keys for
 
 You’ll see an output with your public and private key. DO NOT SHARE YOUR PRIVATE KEY. You don’t need to save this information anywhere, as you’ll be able to retrieve it from your Wallet in the future. 
 
+*Tip:* You can see a list of available commands by running
+```console
+wallet@vega:~$ ./vegawallet -h
+```
+
 ## Run the Wallet service
 
 Now, connect your Wallet to the Testnet nodes and UI. The `init` command (below) will initialise the configuration. A configuration file will be stored in your home folder, in a folder called `.vega`.
@@ -99,10 +104,8 @@ wallet@vega:~$ ./vegawallet service run -p
 {"level":"info","ts":1587317545.61634,"logger":"wallet","caller":"wallet/service.go:147","msg":"starting wallet http server","address":"0.0.0.0:1789"}
 ```
 
-*Tip:* You can see a list of available commands by running
-```console
-wallet@vega:~$ ./vegawallet -h
-```
+*Tip:* To terminate the process, such as if you want to run other commands in Wallet, use ctrl+c. 
+
 ### Deposit funds
 Then deposit funds! 
 (instructions tbd) Visit Vega documentation to find out how to deposit funds, or use the readme file on the (bridge repo). 
