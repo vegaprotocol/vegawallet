@@ -14,7 +14,7 @@ Download and save the zip file from Releases to the location on your computer yo
 
 Download `vegawallet-darwin-amd64.zip`
 
-It’s likely that you’ll need to change your system preferences for this specific instance, in order to run Vega Wallet. If you open the file from downloads, you may get a message saying “vegawallet-darwin-amd64” cannot be opened because it is from an unidentified developer.
+When you open the file, it’s likely that you’ll need to change your system preferences for this specific instance, in order to run Vega Wallet. If you open the file from downloads, you may get a message saying “vegawallet-darwin-amd64” cannot be opened because it is from an unidentified developer.
 
 Click on the (?) help button, which will open a window that links you to the System Preferences, and instructs you how to allow this software to run. 
 
