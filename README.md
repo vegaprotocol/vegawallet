@@ -58,9 +58,7 @@ Next, create a user name and passphrase for your Wallet, and create a public and
 ```console
 wallet@vega:~$ ./vegawallet genkey -n [choose-a-username]
 
-new generated keys:
-public: 473…5e
-private: 1…e
+please enter passphrase:
 ``` 
 
 It will then prompt you to input a passphrase, and then confirm that passphrase. 
