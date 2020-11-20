@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 )
 
 const (
@@ -27,6 +28,14 @@ func (err *PathNotFound) Error() string {
 // binary is in /usr/local/bin/ -> look for /usr/local/etc/vega/config.toml
 // otherwise, look for $HOME/.vega/config.toml
 func DefaultVegaDir() string {
+	if runtime.GOOS == "windows" {
+		// shortcut for windows
+		p, err := os.UserHomeDir()
+		if err == nil {
+			return filepath.Join(p, ".vega")
+		}
+	}
+
 	ex, err := os.Executable()
 	if err != nil {
 		panic(err)
