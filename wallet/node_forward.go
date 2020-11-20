@@ -39,9 +39,10 @@ func (n *nodeForward) Stop() error {
 	return n.conn.Close()
 }
 
-func (n *nodeForward) Send(ctx context.Context, tx *SignedBundle) error {
+func (n *nodeForward) Send(ctx context.Context, tx *SignedBundle, ty api.SubmitTransactionRequest_Type) error {
 	req := api.SubmitTransactionRequest{
-		Tx: tx.IntoProto(),
+		Tx:   tx.IntoProto(),
+		Type: ty,
 	}
 	return backoff.Retry(
 		func() error {
