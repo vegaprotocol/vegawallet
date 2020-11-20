@@ -44,3 +44,13 @@ message SignedBundle {
   // The signature authenticating the transaction.
   Signature sig = 2;
 }
+
+// Represents Vega domain specific error information over gRPC/Protobuf.
+message ErrorDetail {
+  // A Vega API domain specific unique error code, useful for client side mappings. e.g. 10004
+  int32 code = 1;
+  // A message that describes the error in more detail, should describe the problem encountered.
+  string message = 2;
+  // Any inner error information that could add more context, or be helpful for error reporting.
+  string inner = 3;
+}

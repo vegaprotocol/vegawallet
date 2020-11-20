@@ -9,10 +9,14 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	vproto "code.vegaprotocol.io/go-wallet/proto"
+	"code.vegaprotocol.io/go-wallet/proto/api"
+
 	"github.com/golang/protobuf/proto"
 	"github.com/julienschmidt/httprouter"
 	"github.com/rs/cors"
 	"go.uber.org/zap"
+	"google.golang.org/grpc/status"
 )
 
 type Service struct {
@@ -94,7 +98,7 @@ type WalletHandler interface {
 // NodeForward ...
 //go:generate go run github.com/golang/mock/mockgen -destination mocks/node_forward_mock.go -package mocks code.vegaprotocol.io/go-wallet/wallet NodeForward
 type NodeForward interface {
-	Send(context.Context, *SignedBundle) error
+	Send(context.Context, *SignedBundle, api.SubmitTransactionRequest_Type) error
 }
 
 func NewServiceWith(log *zap.Logger, cfg *Config, rootPath string, h WalletHandler, n NodeForward) (*Service, error) {
@@ -119,6 +123,8 @@ func NewServiceWith(log *zap.Logger, cfg *Config, rootPath string, h WalletHandl
 	s.PUT("/api/v1/keys/:keyid/taint", ExtractToken(s.TaintKey))
 	s.PUT("/api/v1/keys/:keyid/metadata", ExtractToken(s.UpdateMeta))
 	s.POST("/api/v1/messages", ExtractToken(s.SignTx))
+	s.POST("/api/v1/messages/sync", ExtractToken(s.SignTxSync))
+	s.POST("/api/v1/messages/commit", ExtractToken(s.SignTxCommit))
 	s.GET("/api/v1/wallets", ExtractToken(s.DownloadWallet))
 
 	return s, nil
@@ -289,7 +295,19 @@ func (s *Service) ListPublicKeys(t string, w http.ResponseWriter, r *http.Reques
 	writeSuccess(w, KeysResponse{Keys: keys}, http.StatusOK)
 }
 
-func (s *Service) SignTx(t string, w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (s *Service) SignTxSync(t string, w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	s.signTx(t, w, r, p, api.SubmitTransactionRequest_TYPE_SYNC)
+}
+
+func (s *Service) SignTxCommit(t string, w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	s.signTx(t, w, r, p, api.SubmitTransactionRequest_TYPE_COMMIT)
+}
+
+func (s *Service) SignTx(t string, w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	s.signTx(t, w, r, p, api.SubmitTransactionRequest_TYPE_ASYNC)
+}
+
+func (s *Service) signTx(t string, w http.ResponseWriter, r *http.Request, _ httprouter.Params, ty api.SubmitTransactionRequest_Type) {
 	req := SignTxRequest{}
 	if err := unmarshalBody(r, &req); err != nil {
 		writeError(w, newError(err.Error()), http.StatusBadRequest)
@@ -311,10 +329,18 @@ func (s *Service) SignTx(t string, w http.ResponseWriter, r *http.Request, _ htt
 	}
 
 	if req.Propagate {
-		err := s.nodeForward.Send(r.Context(), &sb)
-		if err != nil {
+		if err := s.nodeForward.Send(r.Context(), &sb, ty); err != nil {
 			s.log.Error("cannot forward transaction", zap.Error(err))
-			writeError(w, newError(err.Error()), http.StatusInternalServerError)
+			if s, ok := status.FromError(err); ok {
+				details := []string{}
+				for _, v := range s.Details() {
+					v := v.(*vproto.ErrorDetail)
+					details = append(details, v.Message)
+				}
+				writeError(w, newErrorWithDetails(err.Error(), details), http.StatusInternalServerError)
+			} else {
+				writeError(w, newError(err.Error()), http.StatusInternalServerError)
+			}
 			return
 		}
 	}
@@ -420,7 +446,8 @@ var (
 )
 
 type HTTPError struct {
-	ErrorStr string `json:"error"`
+	ErrorStr string   `json:"error"`
+	Details  []string `json:"details"`
 }
 
 func (e HTTPError) Error() string {
@@ -430,5 +457,12 @@ func (e HTTPError) Error() string {
 func newError(e string) HTTPError {
 	return HTTPError{
 		ErrorStr: e,
+	}
+}
+
+func newErrorWithDetails(e string, details []string) HTTPError {
+	return HTTPError{
+		ErrorStr: e,
+		Details:  details,
 	}
 }
