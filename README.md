@@ -35,7 +35,7 @@ Download `vegawallet-linux-amd64.zip`
 ### Generate key pair and credentials
 
 **MacOS & Linux**
-In command line, type
+Open a new terminal. Type
 
 ```console
 wallet@vega:~$ ./vegawallet
@@ -44,7 +44,7 @@ to execute the program.
 
 **Windows**
 
-In command line, type
+Open a new command prompt. Type
 
 ```console
 wallet@vega:~$ ./vegawallet.exe
