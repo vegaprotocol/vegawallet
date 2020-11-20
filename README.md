@@ -56,13 +56,13 @@ to execute the program.
 Next, create a user name and password for your Wallet, and create a public and private key (genkey):
 
 ```console
-wallet@vega:~$ vegawallet genkey -n pick-a-username
+wallet@vega:~$ vegawallet genkey -n choose-a-username
 new generated keys:
 public: 473…5e
 private: 1…e
 ``` 
 
-It will then ask you to input a password, and then confirm that password. 
+It will then prompt you to input a password, and then confirm that password. 
 
 The genkey command in that instruction will generate public and private keys for the wallet, at the same time as creating a user name. 
 
@@ -92,7 +92,7 @@ Otherwise, you can connect to a Console proxy so you can trade via the UI.
 Start the Vega console proxy and open the console in the default browser:
 
 ```console
-wallet@vega:~$ ./vegawallet service run --console-proxy
+wallet@vega:~$ ./vegawallet service run -p
 {"level":"info","ts":1605554589.694528,"caller":"cmd/console.go:41","msg":"starting console proxy","proxy.address":"localhost:8080","address":"dev.vega.trading"}
 {"level":"info","ts":1587317545.61634,"logger":"wallet","caller":"wallet/service.go:147","msg":"starting wallet http server","address":"0.0.0.0:1789"}
 ```
