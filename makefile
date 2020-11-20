@@ -4,8 +4,8 @@ ifeq ($(CI),)
 	VERSION_HASH := $(shell git rev-parse HEAD | cut -b1-8)
 else
 	# In CI
-	ifneq ($(GITHUB_REF),)
-		VERSION := $(GITHUB_REF)
+	ifneq ($(RELEASE_VERSION),)
+		VERSION := $(RELEASE_VERSION)
 	else
 		# No tag, so make one
 		VERSION := $(shell git describe --tags 2>/dev/null)
@@ -22,13 +22,16 @@ proto:
 
 
 release-windows:
-	GOOS=windows GOARCH=amd64 CGO_ENABLED=1 go build -o build/vegawallet-windows-amd64 -ldflags "-X code.vegaprotocol.io/go-wallet/cmd.Version=${VERSION} -X code.vegaprotocol.io/go-wallet/cmd.VersionHash=${VERSION_HASH}"
+	GOOS=windows GOARCH=amd64 CGO_ENABLED=1 go build -o build/vegawallet -ldflags "-X code.vegaprotocol.io/go-wallet/cmd.Version=${VERSION} -X code.vegaprotocol.io/go-wallet/cmd.VersionHash=${VERSION_HASH}"
+	cd build && zip vegawallet-windows-amd64.zip vegawallet
 
 release-macos:
-	GOOS=darwin GOARCH=amd64 CGO_ENABLED=1 go build -o build/vegawallet-darwin-amd64 -ldflags "-X code.vegaprotocol.io/go-wallet/cmd.Version=${VERSION} -X code.vegaprotocol.io/go-wallet/cmd.VersionHash=${VERSION_HASH}"
+	GOOS=darwin GOARCH=amd64 CGO_ENABLED=1 go build -o build/vegawallet -ldflags "-X code.vegaprotocol.io/go-wallet/cmd.Version=${VERSION} -X code.vegaprotocol.io/go-wallet/cmd.VersionHash=${VERSION_HASH}"
+	cd build && zip vegawallet-darwin-amd64.zip vegawallet
 
 release-linux:
-	GOOS=linux GOARCH=amd64 CGO_ENABLED=1 go build -o build/vegawallet-linux-amd64 -ldflags "-X code.vegaprotocol.io/go-wallet/cmd.Version=${VERSION} -X code.vegaprotocol.io/go-wallet/cmd.VersionHash=${VERSION_HASH}"
+	GOOS=linux GOARCH=amd64 CGO_ENABLED=1 go build -o build/vegawallet -ldflags "-X code.vegaprotocol.io/go-wallet/cmd.Version=${VERSION} -X code.vegaprotocol.io/go-wallet/cmd.VersionHash=${VERSION_HASH}"
+	cd build && zip vegawallet-linux-amd64.zip vegawallet
 
 
 .PHONY: proto
