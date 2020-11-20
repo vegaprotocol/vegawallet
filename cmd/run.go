@@ -61,9 +61,8 @@ func runServiceRun(cmd *cobra.Command, args []string) error {
 	}()
 
 	var cproxy *consoleProxy
-
 	if runArgs.consoleProxy {
-		cproxy = newConsoleProxy(log, cfg.Console.LocalPort, cfg.Console.URL)
+		cproxy = newConsoleProxy(log, cfg.Console.LocalPort, cfg.Console.URL, cfg.Node.IP, Version)
 		go func() {
 			defer cancel()
 			err := cproxy.Start()
