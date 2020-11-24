@@ -95,7 +95,7 @@ wallet@vega:~$ ./vegawallet service run
 
 Otherwise, you can connect to a Console proxy so you can trade via the UI.
 
-Start the Vega console proxy and open the console in the default browser:
+Start the Vega Console proxy and open Console in the default browser:
 
 ```console
 wallet@vega:~$ ./vegawallet service run -p
@@ -106,27 +106,31 @@ wallet@vega:~$ ./vegawallet service run -p
 
 *Tip:* To terminate the process, such as if you want to run other commands in Wallet, use ctrl+c. 
 
-### Deposit funds
-Then deposit funds! 
-(instructions tbd) Visit Vega documentation to find out how to deposit funds, or use the readme file on the (bridge repo). 
+### Create and deposit testnet tokens
+Now you'll need to deposit Ropsten Ethereum-based tokens to start trading. 
 
+You can create and deposit assets directly through the proxy Console via Wallet. 
+
+If you'd like more information or guidance, there are instructions in the [Vega documentation](https://docs.testnet.vega.xyz/docs/wallet/).
+
+If you'd prefer to request tokens from the contracts directly, there are instructions in the [testnet bridge tools repo readme](https://github.com/vegaprotocol/Public_Test_Bridge_Tools/blob/master/docs/mew.md). 
 
 ### Use the wallet API
 Using the API is documented [here](./wallet/README.md).
 
 ## Support
 
-[Documentation](https://docs.testnet.vega.xyz) 
+**[Documentation](https://docs.testnet.vega.xyz)**
 
 Get API reference documentation, learn more about how Vega works, and explore sample scripts for API trading
 
-[Nolt](https://vega-testnet.nolt.io/)
+**[Nolt](https://vega-testnet.nolt.io/)**
 
-Raise issues, see what others have raised. 
+Raise issues and see what others have raised. 
 
-[Discord](https://discord.gg/bkAF3Tu) 
+**[Discord](https://discord.gg/bkAF3Tu)** 
 
-Ask us for help, find out about scheduled open office hours, and keep up with Vega generally 
+Ask us for help, find out about scheduled open office hours, and keep up with Vega generally. 
 
 ## Building
 ```console
