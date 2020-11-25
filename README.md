@@ -3,11 +3,9 @@
 `vegawallet` is the command line interface for running a Wallet service, implemented in Go. It is used to sign transactions for use on [Vega](#about-vega). Vega Wallet creates and manages ed25519 keypairs for one or more wallets.
 
 ## How to install and run Vega Wallet 
-
 These instructions are written to be used in command line. Below, in the snippets, you'll see commands in black text. You can copy those command line instructions, and paste them into your command line interface. 
 
 ### Download 
-
 Download and save the zip file from Releases to the location on your computer you want to run it from: https://github.com/vegaprotocol/go-wallet/releases 
 
 **If you’re using MacOS:**
@@ -32,7 +30,11 @@ Click on the (More info) text, which will reveal a button to "Run anyway".
 
 Download `vegawallet-linux-amd64.zip`
 
-### Generate key pair and credentials
+## Generate key pair and credentials
+
+### Execute the program
+
+*Tip:* You can use the tab key to auto-fill the name of the file, after you type the first few characters. 
 
 **MacOS & Linux**
 Open a new terminal. Type
@@ -51,8 +53,7 @@ wallet@vega:~$ ./vegawallet.exe
 ```
 to execute the program. 
 
-*Tip:* You can use the tab key to auto-fill the name of the file, after you type the first few characters. 
-
+### Create name and passphrase
 Next, create a user name and passphrase for your Wallet, and create a public and private key (genkey):
 
 ```console
@@ -73,7 +74,6 @@ wallet@vega:~$ ./vegawallet -h
 ```
 
 ## Run the Wallet service
-
 Now, connect your Wallet to the Testnet nodes and UI. The `init` command (below) will initialise the configuration. A configuration file will be stored in your home folder, in a folder called `.vega`.
 
 ```console
