@@ -53,7 +53,7 @@ wallet@vega:~$ ./vegawallet.exe
 ```
 to execute the program. 
 
-### Create name and password
+### Create name and passphrase
 Next, create a user name and passphrase for your Wallet, and create a public and private key (genkey):
 
 ```console
