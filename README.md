@@ -128,7 +128,7 @@ Get API reference documentation, learn more about how Vega works, and explore sa
 
 Raise issues and see what others have raised. 
 
-**[Discord](https://discord.gg/bkAF3Tu)** 
+**[Discord](https://vega.xyz/discord)** 
 
 Ask us for help, find out about scheduled open office hours, and keep up with Vega generally. 
 
