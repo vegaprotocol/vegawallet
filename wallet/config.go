@@ -34,7 +34,7 @@ type Config struct {
 	Level       encoding.LogLevel
 	TokenExpiry encoding.Duration
 	Port        int
-	IP          string
+	Host        string
 	Node        NodeConfig
 	RsaKey      string
 	Console     ConsoleConfig
@@ -47,7 +47,7 @@ type ConsoleConfig struct {
 
 type NodeConfig struct {
 	Port    int
-	IP      string
+	Host    string
 	Retries uint64
 }
 
@@ -58,16 +58,16 @@ func NewDefaultConfig() Config {
 		Level:       encoding.LogLevel{Level: zap.InfoLevel},
 		TokenExpiry: encoding.Duration{Duration: tokenExpiry},
 		Node: NodeConfig{
-			IP:      "n08.testnet.vega.xyz",
+			Host:    "n08.testnet.vega.xyz",
 			Port:    3002,
 			Retries: 5,
 		},
-		IP:     "localhost",
+		Host:   "localhost",
 		Port:   1789,
 		RsaKey: rsaKeyPath,
 		Console: ConsoleConfig{
 			URL:       "testnet.vega.trading",
-			LocalPort: 8080,
+			LocalPort: 1847,
 		},
 	}
 }
