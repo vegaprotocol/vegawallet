@@ -39,8 +39,7 @@ Download `vegawallet-linux-amd64.zip`
 **MacOS & Linux**
 Open a new terminal. Type
 
-```console
-wallet@vega:~$ ./vegawallet
+```./vegawallet
 ```
 to execute the program. 
 
@@ -48,21 +47,16 @@ to execute the program.
 
 Open a new command prompt. Type
 
-```console
-wallet@vega:~$ ./vegawallet.exe
+```./vegawallet.exe
 ```
 to execute the program. 
 
 ### Create name and passphrase
 Next, create a user name and passphrase for your Wallet, and create a public and private key (genkey):
 
-```console
-wallet@vega:~$ ./vegawallet genkey -n [choose-a-username]
-
-please enter passphrase:
-``` 
-
-It will then prompt you to input a passphrase, and then confirm that passphrase. 
+```/vegawallet genkey -n create-username
+```
+It will then prompt you to **input a passphrase**, and then **confirm that passphrase**. You'll use this username and passphrase to login to Vega Console. (Instructions on that below.)
 
 The genkey command in that instruction will generate public and private keys for the wallet, at the same time as creating a user name. 
 
@@ -76,32 +70,21 @@ wallet@vega:~$ ./vegawallet -h
 ## Run the Wallet service
 Now, connect your Wallet to the Testnet nodes and UI. The `init` command (below) will initialise the configuration. A configuration file will be stored in your home folder, in a folder called `.vega`.
 
-```console
-wallet@vega:~$ ./vegawallet service init
-
-{"level":"info","ts":1605554344.734188,"caller":"wallet/config.go:125","msg":"wallet service configuration generated successfully","path":"path/wallet-service-config.toml"}
-{"level":"info","ts":1605554347.727988,"caller":"wallet/config.go:173","msg":"wallet rsa key generated successfully","path":"path/wallet_rsa"}
+```./vegawallet service init
 ```
 
 *Tip:* If you want to specify a root-path, it will not go into the default path, but a folder you choose to create. If you want to create a new config for a new wallet, or test or isolate it, you should specify the root path.
 
-You'll need collateral to trade, but once you want to trade using the APIs, use the command 
+Connect to a Console proxy so you can trade via the UI. (You'll need collateral to trade, and you can deposit it through Vega Console, once you're connected.) 
 
-```console
-wallet@vega:~$ ./vegawallet service run
+Start the Vega Console proxy and open Console in the default browser with the command
 
-{"level":"info","ts":1587317545.61634,"logger":"wallet","caller":"wallet/service.go:147","msg":"starting wallet http server","address":"0.0.0.0:1789"}
+```./vegawallet service run -p
 ```
 
-Otherwise, you can connect to a Console proxy so you can trade via the UI.
+Otherwise, if you prefer to trade using the APIs, use the command below. You'll need to deposit assets to trade, find a link to instructions below. 
 
-Start the Vega Console proxy and open Console in the default browser:
-
-```console
-wallet@vega:~$ ./vegawallet service run -p
-
-{"level":"info","ts":1605554589.694528,"caller":"cmd/console.go:41","msg":"starting console proxy","proxy.address":"localhost:8080","address":"dev.vega.trading"}
-{"level":"info","ts":1587317545.61634,"logger":"wallet","caller":"wallet/service.go:147","msg":"starting wallet http server","address":"0.0.0.0:1789"}
+```./vegawallet service run
 ```
 
 *Tip:* To terminate the process, such as if you want to run other commands in Wallet, use ctrl+c. 
