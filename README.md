@@ -3,7 +3,7 @@
 `vegawallet` is the command line interface for running a Wallet service, implemented in Go. It is used to sign transactions for use on [Vega](#about-vega). Vega Wallet creates and manages ed25519 keypairs for one or more wallets.
 
 ## How to install and run Vega Wallet
-These instructions are written to be used in command line. Below, in the snippets, you'll see commands in black text. You can copy those command line instructions, and paste them into your command line interface.
+These instructions are written to be used in command line. Below, in the snippets, you'll see commands in blue text. Copy those instructions and paste them into your command line interface.
 
 ### Download
 Download and save the zip file from Releases to the location on your computer you want to run it from: 
@@ -13,7 +13,7 @@ https://github.com/vegaprotocol/go-wallet/releases
 
 Download `vegawallet-darwin-amd64.zip`
 
-When you open the file, it’s likely that you’ll need to change your system preferences for this specific instance, in order to run Vega Wallet. If you open the file from downloads, you may get a message saying “vegawallet-darwin-amd64” cannot be opened because it is from an unidentified developer.
+When you open the file, you may need to change your system preferences for this specific instance, in order to run Vega Wallet. If you open the file from downloads, you may get a message saying “vegawallet-darwin-amd64” cannot be opened because it is from an unidentified developer.
 
 Click on the (?) help button, which will open a window that links you to the System Preferences, and instructs you how to allow this software to run.
 
@@ -23,7 +23,7 @@ You’ll need to go to System Preferences > Security & Privacy > General, and ch
 
 Download `vegawallet-windows-amd64.zip`
 
-It’s likely that you’ll need to change your system preferences for this specific instance, in order to run Vega Wallet. If you open the file from downloads, you may get a message from Windows Defender saying “vegawallet-darwin-amd64” cannot be opened because it is from an unidentified developer.
+You may need to change your system preferences for this specific instance, in order to run Vega Wallet. If you open the file from downloads, you may get a message from Windows Defender saying “vegawallet-darwin-amd64” cannot be opened because it is from an unidentified developer.
 
 Click on the (More info) text, which will reveal a button to "Run anyway".
 
