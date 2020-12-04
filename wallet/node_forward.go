@@ -19,7 +19,7 @@ type nodeForward struct {
 }
 
 func NewNodeForward(log *zap.Logger, nodeConfig NodeConfig) (*nodeForward, error) {
-	nodeAddr := fmt.Sprintf("%v:%v", nodeConfig.IP, nodeConfig.Port)
+	nodeAddr := fmt.Sprintf("%v:%v", nodeConfig.Host, nodeConfig.Port)
 	conn, err := grpc.Dial(nodeAddr, grpc.WithInsecure())
 	if err != nil {
 		return nil, err
@@ -35,7 +35,7 @@ func NewNodeForward(log *zap.Logger, nodeConfig NodeConfig) (*nodeForward, error
 }
 
 func (n *nodeForward) Stop() error {
-	n.log.Info("closing grpc client", zap.String("address", fmt.Sprintf("%v:%v", n.nodeCfg.IP, n.nodeCfg.Port)))
+	n.log.Info("closing grpc client", zap.String("address", fmt.Sprintf("%v:%v", n.nodeCfg.Host, n.nodeCfg.Port)))
 	return n.conn.Close()
 }
 

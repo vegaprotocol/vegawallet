@@ -151,7 +151,7 @@ func NewService(log *zap.Logger, cfg *Config, rootPath string) (*Service, error)
 
 func (s *Service) Start() error {
 	s.s = &http.Server{
-		Addr:    fmt.Sprintf("%s:%v", s.cfg.IP, s.cfg.Port),
+		Addr:    fmt.Sprintf("%s:%v", s.cfg.Host, s.cfg.Port),
 		Handler: cors.AllowAll().Handler(s), // middlewar with cors
 	}
 
