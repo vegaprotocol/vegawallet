@@ -66,7 +66,7 @@ The genkey command in that instruction will generate public and private keys for
 
 You’ll see an output with your public and private key. DO NOT SHARE YOUR PRIVATE KEY. You don’t need to save this information anywhere, as you’ll be able to retrieve it from your Wallet in the future.
 
-    *Tip: You can see a list of available commands by running* 
+> Tip: You can see a list of available commands by running
     ```console
     ./vegawallet -h
     ```
@@ -78,7 +78,7 @@ Now, **connect your Wallet to the Testnet nodes**. The `init` command (below) w
 ./vegawallet service init
 ```
 
-    *Tip: If you want to specify a root-path, it will not go into the default path, but a folder you choose to create. If you want to create a new config for a new wallet, or test or isolate it, you should specify the root path.*
+> Tip: If you want to specify a root-path, it will not go into the default path, but a folder you choose to create. If you want to create a new config for a new wallet, or test or isolate it, you should specify the root path.
 
 Connect to a Console proxy so you can trade via the UI. (You'll need collateral to trade, and you can deposit it through Vega Console, once you're connected.)
 
@@ -94,7 +94,7 @@ Otherwise, if you prefer to **trade using the APIs**, use the command below. You
 ./vegawallet service run
 ```
 
-    *Tip: To terminate the process, such as if you want to run other commands in Wallet, use ctrl+c.*
+> Tip: To terminate the process, such as if you want to run other commands in Wallet, use ctrl+c.
 
 ### Create and deposit testnet tokens
 Now you'll need to **deposit Ropsten Ethereum-based tokens** to start trading.
