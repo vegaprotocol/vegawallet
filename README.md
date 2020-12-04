@@ -6,7 +6,8 @@
 These instructions are written to be used in command line. Below, in the snippets, you'll see commands in black text. You can copy those command line instructions, and paste them into your command line interface.
 
 ### Download
-Download and save the zip file from Releases to the location on your computer you want to run it from: https://github.com/vegaprotocol/go-wallet/releases
+Download and save the zip file from Releases to the location on your computer you want to run it from: 
+https://github.com/vegaprotocol/go-wallet/releases
 
 **If you’re using MacOS:**
 
@@ -34,7 +35,7 @@ Download `vegawallet-linux-amd64.zip`
 
 ### Execute the program
 
-*Tip:* You can use the tab key to auto-fill the name of the file, after you type the first few characters.
+    *Tip: You can use the tab key to auto-fill the name of the file, after you type the first few characters.*
 
 **MacOS & Linux**
 Open a new terminal. Type
@@ -54,49 +55,49 @@ Open a new command prompt. Type
 to execute the program.
 
 ### Create name and passphrase
-Next, create a user name and passphrase for your Wallet, and create a public and private key (genkey):
+Next, **create a user name and passphrase** for your Wallet, and **create a public and private key** (genkey):
 
 ```console
 ./vegawallet genkey -n create-username
 ```
-It will then prompt you to **input a passphrase**, and then **confirm that passphrase**. You'll use this username and passphrase to login to Vega Console. (Instructions on that below.)
+It will then prompt you to **input a passphrase**, and then **confirm that passphrase**. You'll use this username and passphrase to login to Vega Console. (Instructions on connecting to Console are below.)
 
 The genkey command in that instruction will generate public and private keys for the wallet, at the same time as creating a user name.
 
 You’ll see an output with your public and private key. DO NOT SHARE YOUR PRIVATE KEY. You don’t need to save this information anywhere, as you’ll be able to retrieve it from your Wallet in the future.
 
-*Tip:* You can see a list of available commands by running
-```console
-./vegawallet -h
-```
+    *Tip: You can see a list of available commands by running* 
+    ```console
+    ./vegawallet -h
+    ```
 
 ## Run the Wallet service
-Now, connect your Wallet to the Testnet nodes and UI. The `init` command (below) will initialise the configuration. A configuration file will be stored in your home folder, in a folder called `.vega`.
+Now, **connect your Wallet to the Testnet nodes**. The `init` command (below) will initialise the configuration. A configuration file will be stored in your home folder, in a folder called `.vega`.
 
 ```console
 ./vegawallet service init
 ```
 
-*Tip:* If you want to specify a root-path, it will not go into the default path, but a folder you choose to create. If you want to create a new config for a new wallet, or test or isolate it, you should specify the root path.
+    *Tip: If you want to specify a root-path, it will not go into the default path, but a folder you choose to create. If you want to create a new config for a new wallet, or test or isolate it, you should specify the root path.*
 
 Connect to a Console proxy so you can trade via the UI. (You'll need collateral to trade, and you can deposit it through Vega Console, once you're connected.)
 
-Start the Vega Console proxy and open Console in the default browser with the command
+**Start the Vega Console proxy** and open Console in the default browser with the command
 
 ```console
 ./vegawallet service run -p
 ```
 
-Otherwise, if you prefer to trade using the APIs, use the command below. You'll need to deposit assets to trade, find a link to instructions below.
+Otherwise, if you prefer to **trade using the APIs**, use the command below. You'll need to deposit assets to trade, find a link to instructions below.
 
 ```console
 ./vegawallet service run
 ```
 
-*Tip:* To terminate the process, such as if you want to run other commands in Wallet, use ctrl+c.
+    *Tip: To terminate the process, such as if you want to run other commands in Wallet, use ctrl+c.*
 
 ### Create and deposit testnet tokens
-Now you'll need to deposit Ropsten Ethereum-based tokens to start trading.
+Now you'll need to **deposit Ropsten Ethereum-based tokens** to start trading.
 
 You can create and deposit assets directly through the proxy Console via Wallet.
 
