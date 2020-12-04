@@ -35,7 +35,7 @@ Download `vegawallet-linux-amd64.zip`
 
 ### Execute the program
 
-    *Tip: You can use the tab key to auto-fill the name of the file, after you type the first few characters.*
+> Tip: You can use the tab key to auto-fill the name of the file, after you type the first few characters.
 
 **MacOS & Linux**
 Open a new terminal. Type
