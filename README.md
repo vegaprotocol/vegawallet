@@ -57,10 +57,10 @@ to execute the program.
 ### Create name and passphrase
 Next, **create a user name and passphrase** for your Wallet, and **create a public and private key** (genkey). 
 
-Insert your chosen username where it says create-username below:
+Replace "YOUR_CUSTOM_USERNAME" (below) with your chosen username:
 
 ```console
-./vegawallet genkey -n create-username
+./vegawallet genkey -n "YOUR_CUSTOM_USERNAME"
 ```
 It will then prompt you to **input a passphrase**, and then **confirm that passphrase**. You'll use this username and passphrase to login to Vega Console. (Instructions on connecting to Console are below.)
 
@@ -69,6 +69,7 @@ The genkey command in that instruction will generate public and private keys for
 You’ll see an output with your public and private key. DO NOT SHARE YOUR PRIVATE KEY. You don’t need to save this information anywhere, as you’ll be able to retrieve it from your Wallet in the future.
 
 > Tip: You can see a list of available commands by running
+
     ```console
     ./vegawallet -h
     ```
@@ -82,18 +83,10 @@ Now, **connect your Wallet to the Testnet nodes**. The `init` command (below) w
 
 > Tip: If you want to specify a root-path, it will not go into the default path, but a folder you choose to create. If you want to create a new config for a new wallet, or test or isolate it, you should specify the root path.
 
-Connect to a Console proxy so you can trade via the UI. (You'll need collateral to trade, and you can deposit it through Vega Console, once you're connected.)
-
-To trade, **start the Vega Console proxy** and open Console in the default browser with the command
+Next: To trade, run the wallet and **start the Vega Console** with the command below. (You'll need collateral to trade, and you can deposit it through Vega Console, once you're connected.)
 
 ```console
 ./vegawallet service run -p
-```
-
-Otherwise, if you prefer to **trade using the APIs**, use the command below. You'll need to deposit assets to trade, find a link to instructions below.
-
-```console
-./vegawallet service run
 ```
 
 > Tip: To terminate the process, such as if you want to run other commands in Wallet, use ctrl+c.
