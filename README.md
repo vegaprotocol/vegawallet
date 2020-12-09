@@ -55,7 +55,9 @@ Open a new command prompt. Type
 to execute the program.
 
 ### Create name and passphrase
-Next, **create a user name and passphrase** for your Wallet, and **create a public and private key** (genkey):
+Next, **create a user name and passphrase** for your Wallet, and **create a public and private key** (genkey). 
+
+Insert your chosen username where it says create-username below:
 
 ```console
 ./vegawallet genkey -n create-username
@@ -82,7 +84,7 @@ Now, **connect your Wallet to the Testnet nodes**. The `init` command (below) w
 
 Connect to a Console proxy so you can trade via the UI. (You'll need collateral to trade, and you can deposit it through Vega Console, once you're connected.)
 
-**Start the Vega Console proxy** and open Console in the default browser with the command
+To trade, **start the Vega Console proxy** and open Console in the default browser with the command
 
 ```console
 ./vegawallet service run -p
