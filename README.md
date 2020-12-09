@@ -35,7 +35,7 @@ Download `vegawallet-linux-amd64.zip`
 
 ### Execute the program
 
-> Tip: You'll need to run the commands from the directory you've saved the wallet file in. Use the command 'pwd' to find out where your terminal is looking in the file system. Use the command 'cd' and the path/to/wallet/directory to tell the command line where to find the file. 
+> Tip: You'll need to run the commands from the directory you've saved the wallet file in. Use the command `pwd` to find out where your terminal is looking in the file system. Use the command `cd` and the path/to/wallet/directory to tell the command line where to find the file. 
 
 > Tip: You can use the tab key to auto-fill the name of the file, after you type the first few characters.
 
@@ -70,11 +70,7 @@ The genkey command in that instruction will generate public and private keys for
 
 You’ll see an output with your public and private key. DO NOT SHARE YOUR PRIVATE KEY. You don’t need to save this information anywhere, as you’ll be able to retrieve it from your Wallet in the future.
 
-> Tip: You can see a list of available commands by running
-
-    ```console
-    ./vegawallet -h
-    ```
+> Tip: You can see a list of available commands by running  ```./vegawallet -h```
 
 ## Run the Wallet service
 Now, **connect your Wallet to the Testnet nodes**. The `init` command (below) will initialise the configuration. A configuration file will be stored in your home folder, in a folder called `.vega`.
