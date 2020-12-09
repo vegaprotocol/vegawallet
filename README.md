@@ -6,7 +6,7 @@
 These instructions are written to be used in command line. Below, in the snippets, you'll see commands in blue text. Copy those instructions and paste them into your command line interface.
 
 ### Download
-Download and save the zip file from Releases. We suggest you save it to your home/profile folder, because that's where the command line interface will look for it. 
+Download and save the zip file from Releases. We suggest you keep track of where you've saved the file, because that's where the command line interface will look for it. 
 https://github.com/vegaprotocol/go-wallet/releases
 
 **If you’re using MacOS:**
@@ -35,9 +35,9 @@ Download `vegawallet-linux-amd64.zip`
 
 ### Execute the program
 
-> Tip: You can use the tab key to auto-fill the name of the file, after you type the first few characters.
+> Tip: You'll need to run the commands from the directory you've saved the wallet file in. Use the command 'pwd' to find out where your terminal is looking in the file system. Use the command 'cd' and the path/to/wallet/directory to tell the command line where to find the file. 
 
-You'll need to run the commands from the directory you've saved the wallet file in. If it's not in your home/profile folder, you may need to run commands to find it in your file system. 
+> Tip: You can use the tab key to auto-fill the name of the file, after you type the first few characters.
 
 **MacOS & Linux**
 Open a new terminal. Type
