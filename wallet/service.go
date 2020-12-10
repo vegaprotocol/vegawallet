@@ -141,7 +141,7 @@ func NewService(log *zap.Logger, cfg *Config, rootPath string) (*Service, error)
 	if err != nil {
 		return nil, err
 	}
-	nodeForward, err := NewNodeForward(log, cfg.Node)
+	nodeForward, err := NewNodeForward(log, cfg.Nodes)
 	if err != nil {
 		return nil, err
 	}
