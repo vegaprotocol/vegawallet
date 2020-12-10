@@ -87,6 +87,8 @@ Next: To trade, run the wallet and **start the Vega Console** with the command b
 ./vegawallet service run -p
 ```
 
+> Tip: If you're running an ad/tracker blocker, and you're getting errors, it may be blocking the node from connecting. Try allowlisting lb.testnet.vega.xyz and refreshing.
+
 > Tip: To terminate the process, such as if you want to run other commands in Wallet, use ctrl+c.
 
 ### Create and deposit testnet tokens
