@@ -18,6 +18,7 @@ import (
 var (
 	runArgs struct {
 		consoleProxy bool
+		noBrowser    bool
 	}
 
 	// runCmd represents the run command
@@ -32,6 +33,7 @@ var (
 func init() {
 	serviceCmd.AddCommand(runCmd)
 	runCmd.Flags().BoolVarP(&runArgs.consoleProxy, "console-proxy", "p", false, "Start the vega console proxy and open the console in the default browser")
+	runCmd.Flags().BoolVarP(&runArgs.noBrowser, "no-browser", "n", false, "Do not open the default browser if the console proxy is stated")
 }
 
 func runServiceRun(cmd *cobra.Command, args []string) error {
@@ -61,9 +63,8 @@ func runServiceRun(cmd *cobra.Command, args []string) error {
 	}()
 
 	var cproxy *consoleProxy
-
 	if runArgs.consoleProxy {
-		cproxy = newConsoleProxy(log, cfg.Console.LocalPort, cfg.Console.URL)
+		cproxy = newConsoleProxy(log, cfg.Console.LocalPort, cfg.Console.URL, cfg.Node.Host, Version)
 		go func() {
 			defer cancel()
 			err := cproxy.Start()
@@ -72,11 +73,13 @@ func runServiceRun(cmd *cobra.Command, args []string) error {
 			}
 		}()
 
-		// then we open the console for the user straight at the right runServiceRun
-		err := open.Run(cproxy.GetBrowserURL())
-		if err != nil {
-			log.Error("unable to open the console in the default browser",
-				zap.Error(err))
+		if !runArgs.noBrowser {
+			// then we open the console for the user straight at the right runServiceRun
+			err := open.Run(cproxy.GetBrowserURL())
+			if err != nil {
+				log.Error("unable to open the console in the default browser",
+					zap.Error(err))
+			}
 		}
 	}
 

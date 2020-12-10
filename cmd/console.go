@@ -13,20 +13,29 @@ type consoleProxy struct {
 	log        *zap.Logger
 	port       int
 	consoleURL string
+	nodeURL    string
 	s          *http.Server
+	version    string
 }
 
-func newConsoleProxy(log *zap.Logger, port int, consoleURL string) *consoleProxy {
+func newConsoleProxy(log *zap.Logger, port int, consoleURL, nodeURL, version string) *consoleProxy {
 	return &consoleProxy{
 		log:        log,
 		port:       port,
 		consoleURL: consoleURL,
+		nodeURL:    nodeURL,
+		version:    version,
 	}
 }
 
 func (c *consoleProxy) Start() error {
 	proxy := httputil.ReverseProxy{
 		Director: func(req *http.Request) {
+			req.Header.Set("Referer", c.nodeURL)
+			req.Header.Set(
+				"User-Agent",
+				fmt.Sprintf("%v VegaWallet/%v", req.Header.Get("User-Agent"), c.version),
+			)
 			req.URL.Scheme = "https"
 			req.URL.Host = c.consoleURL
 			req.Host = c.consoleURL
