@@ -35,7 +35,7 @@ type Config struct {
 	TokenExpiry encoding.Duration
 	Port        int
 	Host        string
-	Node        NodeConfig
+	Nodes       NodesConfig
 	RsaKey      string
 	Console     ConsoleConfig
 }
@@ -45,9 +45,8 @@ type ConsoleConfig struct {
 	LocalPort int
 }
 
-type NodeConfig struct {
-	Port    int
-	Host    string
+type NodesConfig struct {
+	Hosts   []string
 	Retries uint64
 }
 
@@ -57,9 +56,17 @@ func NewDefaultConfig() Config {
 	return Config{
 		Level:       encoding.LogLevel{Level: zap.InfoLevel},
 		TokenExpiry: encoding.Duration{Duration: tokenExpiry},
-		Node: NodeConfig{
-			Host:    "n08.testnet.vega.xyz",
-			Port:    3002,
+		Nodes: NodesConfig{
+			Hosts: []string{
+				"n01.testnet.vega.xyz:3002",
+				"n02.testnet.vega.xyz:3002",
+				"n03.testnet.vega.xyz:3002",
+				"n04.testnet.vega.xyz:3002",
+				"n05.testnet.vega.xyz:3002",
+				"n06.testnet.vega.xyz:3002",
+				"n07.testnet.vega.xyz:3002",
+				"n09.testnet.vega.xyz:3002",
+			},
 			Retries: 5,
 		},
 		Host:   "localhost",
