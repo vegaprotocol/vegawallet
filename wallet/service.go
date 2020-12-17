@@ -155,7 +155,7 @@ func (s *Service) Start() error {
 		Handler: cors.AllowAll().Handler(s), // middlewar with cors
 	}
 
-	s.log.Info("starting wallet http server", zap.String("address", s.s.Addr))
+	// s.log.Info("starting wallet http server", zap.String("address", s.s.Addr))
 	return s.s.ListenAndServe()
 }
 
