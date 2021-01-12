@@ -56,17 +56,17 @@ Open a new command prompt. Type
 ```
 to execute the program.
 
-### Create name and passphrase
-Next, **create a user name and passphrase** for your Wallet, and **create a public and private key** (genkey). 
+### Create wallet ID and passphrase
+Next, **create a wallet ID and passphrase** for your Wallet, and **create a public and private key** (genkey). 
 
-Replace "YOUR_CUSTOM_USERNAME" (below) with your chosen username:
+Replace "YOUR_CUSTOM_ID" (below) with your chosen wallet ID (username):
 
 ```console
-./vegawallet genkey -n "YOUR_CUSTOM_USERNAME"
+./vegawallet genkey -n "YOUR_CUSTOM_ID"
 ```
-It will then prompt you to **input a passphrase**, and then **confirm that passphrase**. You'll use this username and passphrase to login to Vega Console. (Instructions on connecting to Console are below.)
+It will then prompt you to **input a passphrase**, and then **confirm that passphrase**. You'll use this wallet ID and passphrase to login to Vega Console. (Instructions on connecting to Console are below.)
 
-The genkey command in that instruction will generate public and private keys for the wallet, at the same time as creating a user name.
+The genkey command in that instruction will generate public and private keys for the wallet, at the same time as creating a wallet ID.
 
 You’ll see an output with your public and private key. DO NOT SHARE YOUR PRIVATE KEY. You don’t need to save this information anywhere, as you’ll be able to retrieve it from your Wallet in the future.
 
