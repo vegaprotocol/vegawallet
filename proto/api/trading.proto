@@ -4,9 +4,9 @@ option go_package = "code.vegaprotocol.io/go-wallet/proto/api";
 
 import "proto/vega.proto";
 
-package api;
+package api.v1;
 
-service trading {
+service TradingService {
   // Submit a signed transaction
   rpc SubmitTransaction(SubmitTransactionRequest) returns (SubmitTransactionResponse);
 }

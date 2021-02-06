@@ -7,7 +7,7 @@ option go_package = "code.vegaprotocol.io/go-wallet/proto";
 // Represents a transaction to be sent to Vega.
 message Transaction {
   // One of the set of Vega commands (proto marshalled).
-  bytes inputData = 1;
+  bytes input_data = 1;
   // A random number used to provided uniqueness and prevents
   // against replay attack.
   uint64 nonce = 2;
@@ -15,7 +15,7 @@ message Transaction {
   // The block height associated to the transaction.
   // This should always be current height of the node at the time of sending the Tx.
   // BlockHeight is used as a mechanism for replay protection.
-  uint64 blockHeight = 3;
+  uint64 block_height = 3;
   // The sender of the transaction.
   // Any of the following would be valid:
   oneof from {
