@@ -5,11 +5,12 @@
 package mocks
 
 import (
-	api "code.vegaprotocol.io/go-wallet/proto/api"
-	wallet "code.vegaprotocol.io/go-wallet/wallet"
 	context "context"
-	gomock "github.com/golang/mock/gomock"
 	reflect "reflect"
+
+	wallet "code.vegaprotocol.io/go-wallet/wallet"
+	gomock "github.com/golang/mock/gomock"
+	api "github.com/vegaprotocol/api-clients/go/generated/code.vegaprotocol.io/vega/proto/api"
 )
 
 // MockNodeForward is a mock of NodeForward interface

@@ -5,9 +5,8 @@ import (
 	"errors"
 	"sync/atomic"
 
-	"code.vegaprotocol.io/go-wallet/proto/api"
-
 	"github.com/cenkalti/backoff/v4"
+	"github.com/vegaprotocol/api-clients/go/generated/code.vegaprotocol.io/vega/proto/api"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 )
