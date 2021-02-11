@@ -52,7 +52,7 @@ to execute the program.
 Open a new command prompt. Type
 
 ```console
-./vegawallet.exe
+vegawallet.exe
 ```
 to execute the program.
 
