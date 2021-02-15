@@ -7,10 +7,10 @@ import (
 	"math/big"
 	"sync"
 
-	types "code.vegaprotocol.io/go-wallet/proto"
 	"code.vegaprotocol.io/go-wallet/wallet/crypto"
 
 	"github.com/golang/protobuf/proto"
+	types "github.com/vegaprotocol/api-clients/go/generated/code.vegaprotocol.io/vega/proto"
 	"go.uber.org/zap"
 )
 

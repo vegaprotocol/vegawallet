@@ -5,9 +5,8 @@ import (
 	"errors"
 	"sync/atomic"
 
-	"code.vegaprotocol.io/go-wallet/proto/api"
-
 	"github.com/cenkalti/backoff/v4"
+	"github.com/vegaprotocol/api-clients/go/generated/code.vegaprotocol.io/vega/proto/api"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 )
@@ -15,7 +14,7 @@ import (
 type nodeForward struct {
 	log      *zap.Logger
 	nodeCfgs NodesConfig
-	clts     []api.TradingClient
+	clts     []api.TradingServiceClient
 	conns    []*grpc.ClientConn
 	next     uint64
 }
@@ -26,7 +25,7 @@ func NewNodeForward(log *zap.Logger, nodeConfigs NodesConfig) (*nodeForward, err
 	}
 
 	var (
-		clts  []api.TradingClient
+		clts  []api.TradingServiceClient
 		conns []*grpc.ClientConn
 	)
 	for _, v := range nodeConfigs.Hosts {
@@ -35,7 +34,7 @@ func NewNodeForward(log *zap.Logger, nodeConfigs NodesConfig) (*nodeForward, err
 			return nil, err
 		}
 		conns = append(conns, conn)
-		clts = append(clts, api.NewTradingClient(conn))
+		clts = append(clts, api.NewTradingServiceClient(conn))
 	}
 
 	return &nodeForward{
@@ -75,7 +74,7 @@ func (n *nodeForward) Send(ctx context.Context, tx *SignedBundle, ty api.SubmitT
 	)
 }
 
-func (r *nodeForward) nextClt() api.TradingClient {
+func (r *nodeForward) nextClt() api.TradingServiceClient {
 	n := atomic.AddUint64(&r.next, 1)
 	r.log.Info("sending transaction to vega node",
 		zap.String("host", r.nodeCfgs.Hosts[(int(n)-1)%len(r.clts)]))
