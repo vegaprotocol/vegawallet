@@ -40,7 +40,7 @@ func promptForPassphrase(msg ...string) (string, error) {
 	} else {
 		fmt.Print(msg[0])
 	}
-	password, err := terminal.ReadPassword(0)
+	password, err := terminal.ReadPassword(int(os.Stdin.Fd()))
 	if err != nil {
 		return "", err
 	}
