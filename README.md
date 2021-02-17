@@ -80,6 +80,19 @@ The genkey command in that instruction will generate public and private keys for
 
 You’ll see an output with your public and private key. DO NOT SHARE YOUR PRIVATE KEY. You don’t need to save this information anywhere, as you’ll be able to retrieve it from your Wallet in the future.
 
+> Tip: You can give each new key a nickname/alias. 
+> When creating a key, run 
+> 
+> MacOS & Linux: `./vegawallet genkey -name="YOUR_CUSTOM_USERNAME" --metas="primary:true;name:CHOOSE_CUSTOM_ALIAS_FOR_KEY"`. 
+> 
+> Windows: `vegawallet genkey -name="YOUR_CUSTOM_USERNAME" --metas="primary:true;name:CHOOSE_CUSTOM_ALIAS_FOR_KEY"`
+
+> Tip: To give an existing key a nickname/alias, run 
+> 
+> MacOS & Linux: `./vegawallet meta --metas="name:CHOOSE_CUSTOM_ALIAS_FOR_KEY" --name="YOUR_CUSTOM_USERNAME" --pubkey="REPLACE_THIS_WITH_YOUR_PUBLIC_KEY"`. 
+> 
+> Windows: `vegawallet meta --metas="name:CHOOSE_CUSTOM_ALIAS_FOR_KEY" --name="YOUR_CUSTOM_USERNAME" --pubkey="REPLACE_THIS_WITH_YOUR_PUBLIC_KEY"`
+
 > Tip: You can see a list of available commands by running  ```./vegawallet -h``` on MacOS and Linux, or ```vegawallet -h``` on Windows.
 
 ## Run the Wallet service
