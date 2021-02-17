@@ -3,6 +3,7 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"code.vegaprotocol.io/go-wallet/fsutil"
 	"code.vegaprotocol.io/go-wallet/wallet"
@@ -14,6 +15,7 @@ var (
 	genkeyArgs struct {
 		walletOwner string
 		passphrase  string
+		metas       string
 	}
 
 	// genkeyCmd represents the genkey command
@@ -29,6 +31,7 @@ func init() {
 	rootCmd.AddCommand(genkeyCmd)
 	genkeyCmd.Flags().StringVarP(&genkeyArgs.walletOwner, "name", "n", "", "Name of the wallet to use")
 	genkeyCmd.Flags().StringVarP(&genkeyArgs.passphrase, "passphrase", "p", "", "Passphrase to access the wallet")
+	genkeyCmd.Flags().StringVarP(&genkeyArgs.metas, "metas", "m", "", `A list of metadata e.g: "primary:true;asset:BTC"`)
 }
 
 func runGenkey(cmd *cobra.Command, args []string) error {
@@ -98,6 +101,21 @@ func runGenkey(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return fmt.Errorf("unable to generate new key pair: %v", err)
 	}
+
+	var meta []wallet.Meta
+	if len(genkeyArgs.metas) > 0 {
+		// expect ; separated metas
+		metasSplit := strings.Split(genkeyArgs.metas, ";")
+		for _, v := range metasSplit {
+			metaVal := strings.Split(v, ":")
+			if len(metaVal) != 2 {
+				return fmt.Errorf("invalid meta format")
+			}
+			meta = append(meta, wallet.Meta{Key: metaVal[0], Value: metaVal[1]})
+		}
+	}
+
+	kp.Meta = meta
 
 	// now updating the wallet and saving it
 	_, err = wallet.AddKeypair(kp, rootArgs.rootPath, genkeyArgs.walletOwner, genkeyArgs.passphrase)
