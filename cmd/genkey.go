@@ -80,14 +80,14 @@ func runGenkey(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("unable to initialization root folder: %v", err)
 	}
 
-	_, err := wallet.Read(rootArgs.rootPath, genkeyArgs.walletOwner, genkeyArgs.passphrase)
+	wal, err := wallet.Read(rootArgs.rootPath, genkeyArgs.walletOwner, genkeyArgs.passphrase)
 	if err != nil {
 		if err != wallet.ErrWalletDoesNotExists {
 			// this an invalid key, returning error
 			return fmt.Errorf("unable to decrypt wallet: %v", err)
 		}
 		// wallet do not exit, let's try to create it
-		_, err = wallet.Create(rootArgs.rootPath, genkeyArgs.walletOwner, genkeyArgs.passphrase)
+		wal, err = wallet.Create(rootArgs.rootPath, genkeyArgs.walletOwner, genkeyArgs.passphrase)
 		if err != nil {
 			return fmt.Errorf("unable to create wallet: %v", err)
 		}
@@ -102,7 +102,6 @@ func runGenkey(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("unable to generate new key pair: %v", err)
 	}
 
-	var meta []wallet.Meta
 	if len(genkeyArgs.metas) > 0 {
 		// expect ; separated metas
 		metasSplit := strings.Split(genkeyArgs.metas, ";")
@@ -111,11 +110,21 @@ func runGenkey(cmd *cobra.Command, args []string) error {
 			if len(metaVal) != 2 {
 				return fmt.Errorf("invalid meta format")
 			}
-			meta = append(meta, wallet.Meta{Key: metaVal[0], Value: metaVal[1]})
+			kp.Meta = append(kp.Meta, wallet.Meta{Key: metaVal[0], Value: metaVal[1]})
 		}
 	}
 
-	kp.Meta = meta
+	// the user did not specify any metas
+	// we'll create a default one for them
+	if len(kp.Meta) <= 0 {
+		kp.Meta = append(
+			kp.Meta,
+			wallet.Meta{
+				Key:   "name",
+				Value: fmt.Sprintf("%v's key %v", genkeyArgs.walletOwner, len(wal.Keypairs)+1),
+			},
+		)
+	}
 
 	// now updating the wallet and saving it
 	_, err = wallet.AddKeypair(kp, rootArgs.rootPath, genkeyArgs.walletOwner, genkeyArgs.passphrase)
