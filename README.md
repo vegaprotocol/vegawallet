@@ -40,6 +40,7 @@ Download `vegawallet-linux-amd64.zip`
 > Tip: You can use the tab key to auto-fill the name of the file, after you type the first few characters.
 
 **MacOS & Linux**
+
 Open a new terminal. Type
 
 ```console
@@ -52,7 +53,7 @@ to execute the program.
 Open a new command prompt. Type
 
 ```console
-vegawallet.exe
+vegawallet
 ```
 to execute the program.
 
@@ -61,30 +62,53 @@ Next, **create a user name and passphrase** for your Wallet, and **create a publ
 
 Replace "YOUR_CUSTOM_USERNAME" (below) with your chosen username:
 
+**MacOS & Linux**
+
 ```console
 ./vegawallet genkey -n "YOUR_CUSTOM_USERNAME"
 ```
+
+**Windows**
+
+```console
+vegawallet genkey -n "YOUR_CUSTOM_USERNAME"
+```
+
 It will then prompt you to **input a passphrase**, and then **confirm that passphrase**. You'll use this username and passphrase to login to Vega Console. (Instructions on connecting to Console are below.)
 
 The genkey command in that instruction will generate public and private keys for the wallet, at the same time as creating a user name.
 
 You’ll see an output with your public and private key. DO NOT SHARE YOUR PRIVATE KEY. You don’t need to save this information anywhere, as you’ll be able to retrieve it from your Wallet in the future.
 
-> Tip: You can see a list of available commands by running  ```./vegawallet -h```
+> Tip: You can see a list of available commands by running  ```./vegawallet -h``` on MacOS and Linux, or ```vegawallet -h``` on Windows.
 
 ## Run the Wallet service
 Now, **connect your Wallet to the Testnet nodes**. The `init` command (below) will initialise the configuration. A configuration file will be stored in your home folder, in a folder called `.vega`.
 
+**MacOS & Linux**
+
 ```console
 ./vegawallet service init
+```
+**Windows**
+
+```console
+vegawallet service init
 ```
 
 > Tip: If you want to specify a root-path, it will not go into the default path, but a folder you choose to create. If you want to create a new config for a new wallet, or test or isolate it, you should specify the root path.
 
 Next: To trade, run the wallet and **start the Vega Console** with the command below. (You'll need collateral to trade, and you can deposit it through Vega Console, once you're connected.)
 
+**MacOS & Linux**
+
 ```console
 ./vegawallet service run -p
+```
+**Windows**
+
+```console
+vegawallet service run -p
 ```
 
 > Tip: If you're running an ad/tracker blocker, and you're getting errors, it may be blocking the node from connecting. Try allowlisting lb.testnet.vega.xyz and refreshing.
