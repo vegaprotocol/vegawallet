@@ -40,6 +40,7 @@ Download `vegawallet-linux-amd64.zip`
 > Tip: You can use the tab key to auto-fill the name of the file, after you type the first few characters.
 
 **MacOS & Linux**
+
 Open a new terminal. Type
 
 ```console
@@ -48,6 +49,7 @@ Open a new terminal. Type
 to execute the program.
 
 **Windows**
+
 Open a new command prompt. Type
 
 ```console
@@ -61,11 +63,13 @@ Next, **create a user name and passphrase** for your Wallet, and **create a publ
 Replace "YOUR_CUSTOM_USERNAME" (below) with your chosen username:
 
 **MacOS & Linux**
+
 ```console
 ./vegawallet genkey -n "YOUR_CUSTOM_USERNAME"
 ```
 
 **Windows**
+
 ```console
 vegawallet genkey -n "YOUR_CUSTOM_USERNAME"
 ```
@@ -82,10 +86,12 @@ You’ll see an output with your public and private key. DO NOT SHARE YOUR PRIVA
 Now, **connect your Wallet to the Testnet nodes**. The `init` command (below) will initialise the configuration. A configuration file will be stored in your home folder, in a folder called `.vega`.
 
 **MacOS & Linux**
+
 ```console
 ./vegawallet service init
 ```
 **Windows**
+
 ```console
 vegawallet service init
 ```
@@ -95,10 +101,12 @@ vegawallet service init
 Next: To trade, run the wallet and **start the Vega Console** with the command below. (You'll need collateral to trade, and you can deposit it through Vega Console, once you're connected.)
 
 **MacOS & Linux**
+
 ```console
 ./vegawallet service run -p
 ```
 **Windows**
+
 ```console
 vegawallet service run -p
 ```
