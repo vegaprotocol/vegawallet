@@ -3,6 +3,7 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"code.vegaprotocol.io/go-wallet/fsutil"
 	"code.vegaprotocol.io/go-wallet/wallet"
@@ -14,6 +15,7 @@ var (
 	genkeyArgs struct {
 		walletOwner string
 		passphrase  string
+		metas       string
 	}
 
 	// genkeyCmd represents the genkey command
@@ -29,6 +31,7 @@ func init() {
 	rootCmd.AddCommand(genkeyCmd)
 	genkeyCmd.Flags().StringVarP(&genkeyArgs.walletOwner, "name", "n", "", "Name of the wallet to use")
 	genkeyCmd.Flags().StringVarP(&genkeyArgs.passphrase, "passphrase", "p", "", "Passphrase to access the wallet")
+	genkeyCmd.Flags().StringVarP(&genkeyArgs.metas, "metas", "m", "", `A list of metadata e.g: "primary:true;asset:BTC"`)
 }
 
 func runGenkey(cmd *cobra.Command, args []string) error {
@@ -77,14 +80,14 @@ func runGenkey(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("unable to initialization root folder: %v", err)
 	}
 
-	_, err := wallet.Read(rootArgs.rootPath, genkeyArgs.walletOwner, genkeyArgs.passphrase)
+	wal, err := wallet.Read(rootArgs.rootPath, genkeyArgs.walletOwner, genkeyArgs.passphrase)
 	if err != nil {
 		if err != wallet.ErrWalletDoesNotExists {
 			// this an invalid key, returning error
 			return fmt.Errorf("unable to decrypt wallet: %v", err)
 		}
 		// wallet do not exit, let's try to create it
-		_, err = wallet.Create(rootArgs.rootPath, genkeyArgs.walletOwner, genkeyArgs.passphrase)
+		wal, err = wallet.Create(rootArgs.rootPath, genkeyArgs.walletOwner, genkeyArgs.passphrase)
 		if err != nil {
 			return fmt.Errorf("unable to create wallet: %v", err)
 		}
@@ -97,6 +100,30 @@ func runGenkey(cmd *cobra.Command, args []string) error {
 	kp, err := wallet.GenKeypair(algo.Name())
 	if err != nil {
 		return fmt.Errorf("unable to generate new key pair: %v", err)
+	}
+
+	if len(genkeyArgs.metas) > 0 {
+		// expect ; separated metas
+		metasSplit := strings.Split(genkeyArgs.metas, ";")
+		for _, v := range metasSplit {
+			metaVal := strings.Split(v, ":")
+			if len(metaVal) != 2 {
+				return fmt.Errorf("invalid meta format")
+			}
+			kp.Meta = append(kp.Meta, wallet.Meta{Key: metaVal[0], Value: metaVal[1]})
+		}
+	}
+
+	// the user did not specify any metas
+	// we'll create a default one for them
+	if len(kp.Meta) <= 0 {
+		kp.Meta = append(
+			kp.Meta,
+			wallet.Meta{
+				Key:   "name",
+				Value: fmt.Sprintf("%v's key %v", genkeyArgs.walletOwner, len(wal.Keypairs)+1),
+			},
+		)
 	}
 
 	// now updating the wallet and saving it
