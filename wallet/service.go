@@ -12,8 +12,8 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/julienschmidt/httprouter"
 	"github.com/rs/cors"
-	vproto "github.com/vegaprotocol/api-clients/go/generated/code.vegaprotocol.io/vega/proto"
-	"github.com/vegaprotocol/api-clients/go/generated/code.vegaprotocol.io/vega/proto/api"
+	vproto "github.com/vegaprotocol/api/go/generated/code.vegaprotocol.io/vega/proto"
+	"github.com/vegaprotocol/api/go/generated/code.vegaprotocol.io/vega/proto/api"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/status"
 )
