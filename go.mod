@@ -15,7 +15,7 @@ require (
 	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
 	github.com/spf13/cobra v1.0.0
 	github.com/stretchr/testify v1.6.1
-	github.com/vegaprotocol/api-clients v0.30.3-0.20210209095344-3a9425de980a
+	github.com/vegaprotocol/api v0.0.0-20210316103830-9dda2b5cf44b
 	github.com/zannen/toml v0.3.2
 	go.uber.org/zap v1.13.0
 	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
