@@ -10,9 +10,9 @@ import (
 	"os"
 	"testing"
 
+	"code.vegaprotocol.io/go-wallet/wallet"
 	"code.vegaprotocol.io/go-wallet/wallet/crypto"
 	"code.vegaprotocol.io/go-wallet/wallet/mocks"
-	"code.vegaprotocol.io/go-wallet/wallet"
 
 	"github.com/golang/mock/gomock"
 	"github.com/julienschmidt/httprouter"
@@ -60,6 +60,7 @@ func TestService(t *testing.T) {
 	t.Run("get keypair fail invalid request", testServiceGetPublicKeyFailInvalidRequest)
 	t.Run("get keypair fail key not found", testServiceGetPublicKeyFailKeyNotFound)
 	t.Run("get keypair fail misc error", testServiceGetPublicKeyFailMiscError)
+	t.Run("sign any", testServiceSignAnyOK)
 	t.Run("sign ok", testServiceSignOK)
 	t.Run("sign fail invalid request", testServiceSignFailInvalidRequest)
 	t.Run("taint ok", testServiceTaintOK)
@@ -409,6 +410,24 @@ func testServiceGetPublicKeyFailMiscError(t *testing.T) {
 
 	resp := w.Result()
 	assert.Equal(t, http.StatusForbidden, resp.StatusCode)
+}
+
+func testServiceSignAnyOK(t *testing.T) {
+	s := getTestService(t)
+	defer s.ctrl.Finish()
+
+	s.handler.EXPECT().SignAny(gomock.Any(), gomock.Any(), gomock.Any()).
+		Times(1).Return([]byte("some sig"), nil)
+	payload := `{"inputData": "some data", "pubKey": "asdasasdasd"}`
+	r := httptest.NewRequest("POST", "scheme://host/path", bytes.NewBufferString(payload))
+	r.Header.Set("Authorization", "Bearer eyXXzA")
+
+	w := httptest.NewRecorder()
+
+	wallet.ExtractToken(s.SignAny)(w, r, nil)
+
+	resp := w.Result()
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
 }
 
 func testServiceSignOK(t *testing.T) {
