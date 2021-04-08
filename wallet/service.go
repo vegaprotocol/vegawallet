@@ -12,8 +12,8 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/julienschmidt/httprouter"
 	"github.com/rs/cors"
-	vproto "github.com/vegaprotocol/api/go/generated/code.vegaprotocol.io/vega/proto"
-	"github.com/vegaprotocol/api/go/generated/code.vegaprotocol.io/vega/proto/api"
+	vproto "github.com/vegaprotocol/api/grpc/clients/go/generated/code.vegaprotocol.io/vega/proto"
+	"github.com/vegaprotocol/api/grpc/clients/go/generated/code.vegaprotocol.io/vega/proto/api"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/status"
 )
@@ -52,6 +52,12 @@ type SignTxRequest struct {
 	Propagate bool   `json:"propagate"`
 }
 
+// SignAnyRequest describes the request for SignAny.
+type SignAnyRequest struct {
+	InputData string `json:"inputData"`
+	PubKey    string `json:"pubKey"`
+}
+
 // KeyResponse describes the response to a request that returns a single key.
 type KeyResponse struct {
 	Key Keypair `json:"key"`
@@ -67,6 +73,12 @@ type SignTxResponse struct {
 	SignedTx     SignedBundle `json:"signedTx"`
 	HexBundle    string       `json:"hexBundle"`
 	Base64Bundle string       `json:"base64Bundle"`
+}
+
+// SignAnyResponse describes the response for SignAny.
+type SignAnyResponse struct {
+	HexSignature    string `json:"hexSignature"`
+	Base64Signature string `json:"base64Signature"`
 }
 
 // SuccessResponse describes the response to a request that returns a simple true/false answer.
@@ -89,6 +101,7 @@ type WalletHandler interface {
 	GetPublicKey(token, pubKey string) (*Keypair, error)
 	ListPublicKeys(token string) ([]Keypair, error)
 	SignTx(token, tx, pubkey string) (SignedBundle, error)
+	SignAny(token, inputData, pubkey string) ([]byte, error)
 	TaintKey(token, pubkey, passphrase string) error
 	UpdateMeta(token, pubkey, passphrase string, meta []Meta) error
 	WalletPath(token string) (string, error)
@@ -121,6 +134,7 @@ func NewServiceWith(log *zap.Logger, cfg *Config, rootPath string, h WalletHandl
 	s.GET("/api/v1/keys/:keyid", ExtractToken(s.GetPublicKey))
 	s.PUT("/api/v1/keys/:keyid/taint", ExtractToken(s.TaintKey))
 	s.PUT("/api/v1/keys/:keyid/metadata", ExtractToken(s.UpdateMeta))
+	s.POST("/api/v1/sign", ExtractToken(s.SignAny))
 	s.POST("/api/v1/messages", ExtractToken(s.SignTx))
 	s.POST("/api/v1/messages/sync", ExtractToken(s.SignTxSync))
 	s.POST("/api/v1/messages/commit", ExtractToken(s.SignTxCommit))
@@ -357,6 +371,35 @@ func (s *Service) signTx(t string, w http.ResponseWriter, r *http.Request, _ htt
 		SignedTx:     sb,
 		HexBundle:    hexBundle,
 		Base64Bundle: base64Bundle,
+	}
+
+	writeSuccess(w, res, http.StatusOK)
+}
+
+func (s *Service) SignAny(t string, w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	req := SignAnyRequest{}
+	if err := unmarshalBody(r, &req); err != nil {
+		writeError(w, newError(err.Error()), http.StatusBadRequest)
+		return
+	}
+	if len(req.InputData) <= 0 {
+		writeError(w, newError("missing inputData field"), http.StatusBadRequest)
+		return
+	}
+	if len(req.PubKey) <= 0 {
+		writeError(w, newError("missing pubKey field"), http.StatusBadRequest)
+		return
+	}
+
+	signature, err := s.handler.SignAny(t, req.InputData, req.PubKey)
+	if err != nil {
+		writeError(w, newError(err.Error()), http.StatusForbidden)
+		return
+	}
+
+	res := SignAnyResponse{
+		HexSignature:    hex.EncodeToString(signature),
+		Base64Signature: base64.StdEncoding.EncodeToString(signature),
 	}
 
 	writeSuccess(w, res, http.StatusOK)

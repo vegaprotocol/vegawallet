@@ -6,7 +6,7 @@ import (
 	"sync/atomic"
 
 	"github.com/cenkalti/backoff/v4"
-	"github.com/vegaprotocol/api/go/generated/code.vegaprotocol.io/vega/proto/api"
+	"github.com/vegaprotocol/api/grpc/clients/go/generated/code.vegaprotocol.io/vega/proto/api"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 )

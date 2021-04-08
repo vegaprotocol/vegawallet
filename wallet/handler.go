@@ -10,7 +10,7 @@ import (
 	"code.vegaprotocol.io/go-wallet/wallet/crypto"
 
 	"github.com/golang/protobuf/proto"
-	types "github.com/vegaprotocol/api/go/generated/code.vegaprotocol.io/vega/proto"
+	types "github.com/vegaprotocol/api/grpc/clients/go/generated/code.vegaprotocol.io/vega/proto"
 	"go.uber.org/zap"
 )
 
@@ -189,6 +189,54 @@ func (h *Handler) ListPublicKeys(token string) ([]Keypair, error) {
 	}
 
 	return out, nil
+}
+
+func (h *Handler) SignAny(token, inputData, pubkey string) ([]byte, error) {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+
+	// first the transaction would be in base64, let's decode
+	rawInputData, err := base64.StdEncoding.DecodeString(inputData)
+	if err != nil {
+		return nil, err
+	}
+
+	// then get the wallet name out of the token
+	wname, err := h.auth.VerifyToken(token)
+	if err != nil {
+		return nil, err
+	}
+
+	w, ok := h.store[wname]
+	if !ok {
+		// this should never happen as we cannot have a valid session
+		// without the actual wallet being loaded in memory but...
+		return nil, ErrWalletDoesNotExists
+	}
+
+	// let's retrieve the private key from the public key
+	var kp *Keypair
+	for i := range w.Keypairs {
+		if w.Keypairs[i].Pub == pubkey {
+			kp = &w.Keypairs[i]
+			break
+		}
+	}
+	// we did not find this pub key
+	if kp == nil {
+		return nil, ErrPubKeyDoesNotExist
+	}
+
+	if kp.Tainted {
+		return nil, ErrPubKeyIsTainted
+	}
+
+	// then lets sign the stuff and return it
+	signature, err := kp.Algorithm.Sign(kp.privBytes, rawInputData)
+	if err != nil {
+		return nil, err
+	}
+	return signature, nil
 }
 
 func (h *Handler) SignTx(token, tx, pubkey string) (SignedBundle, error) {

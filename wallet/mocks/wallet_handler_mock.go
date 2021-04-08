@@ -122,6 +122,21 @@ func (mr *MockWalletHandlerMockRecorder) RevokeToken(arg0 interface{}) *gomock.C
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RevokeToken", reflect.TypeOf((*MockWalletHandler)(nil).RevokeToken), arg0)
 }
 
+// SignAny mocks base method
+func (m *MockWalletHandler) SignAny(arg0, arg1, arg2 string) ([]byte, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SignAny", arg0, arg1, arg2)
+	ret0, _ := ret[0].([]byte)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SignAny indicates an expected call of SignAny
+func (mr *MockWalletHandlerMockRecorder) SignAny(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SignAny", reflect.TypeOf((*MockWalletHandler)(nil).SignAny), arg0, arg1, arg2)
+}
+
 // SignTx mocks base method
 func (m *MockWalletHandler) SignTx(arg0, arg1, arg2 string) (wallet.SignedBundle, error) {
 	m.ctrl.T.Helper()
