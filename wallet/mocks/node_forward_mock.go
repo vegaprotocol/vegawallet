@@ -8,7 +8,7 @@ import (
 	wallet "code.vegaprotocol.io/go-wallet/wallet"
 	context "context"
 	gomock "github.com/golang/mock/gomock"
-	api "github.com/vegaprotocol/api/go/generated/code.vegaprotocol.io/vega/proto/api"
+	api "github.com/vegaprotocol/api/grpc/clients/go/generated/code.vegaprotocol.io/vega/proto/api"
 	reflect "reflect"
 )
 
