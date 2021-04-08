@@ -1,6 +1,6 @@
 module code.vegaprotocol.io/go-wallet
 
-go 1.12
+go 1.16
 
 require (
 	github.com/cenkalti/backoff/v4 v4.0.2
@@ -15,7 +15,7 @@ require (
 	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
 	github.com/spf13/cobra v1.0.0
 	github.com/stretchr/testify v1.6.1
-	github.com/vegaprotocol/api v0.33.0
+	github.com/vegaprotocol/api v0.34.0
 	github.com/zannen/toml v0.3.2
 	go.uber.org/zap v1.13.0
 	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9

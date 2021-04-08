@@ -10,7 +10,7 @@ import (
 	"code.vegaprotocol.io/go-wallet/wallet/crypto"
 
 	"github.com/golang/protobuf/proto"
-	types "github.com/vegaprotocol/api/go/generated/code.vegaprotocol.io/vega/proto"
+	types "github.com/vegaprotocol/api/grpc/clients/go/generated/code.vegaprotocol.io/vega/proto"
 	"go.uber.org/zap"
 )
 
