@@ -35,6 +35,20 @@ func (m *MockNodeForward) EXPECT() *MockNodeForwardMockRecorder {
 	return m.recorder
 }
 
+// HealthCheck mocks base method
+func (m *MockNodeForward) HealthCheck(arg0 context.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "HealthCheck", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// HealthCheck indicates an expected call of HealthCheck
+func (mr *MockNodeForwardMockRecorder) HealthCheck(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HealthCheck", reflect.TypeOf((*MockNodeForward)(nil).HealthCheck), arg0)
+}
+
 // Send mocks base method
 func (m *MockNodeForward) Send(arg0 context.Context, arg1 *wallet.SignedBundle, arg2 api.SubmitTransactionRequest_Type) error {
 	m.ctrl.T.Helper()
