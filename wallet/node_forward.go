@@ -15,6 +15,7 @@ type nodeForward struct {
 	log      *zap.Logger
 	nodeCfgs NodesConfig
 	clts     []api.TradingServiceClient
+	cltDatas []api.TradingDataServiceClient
 	conns    []*grpc.ClientConn
 	next     uint64
 }
@@ -25,8 +26,9 @@ func NewNodeForward(log *zap.Logger, nodeConfigs NodesConfig) (*nodeForward, err
 	}
 
 	var (
-		clts  []api.TradingServiceClient
-		conns []*grpc.ClientConn
+		clts     []api.TradingServiceClient
+		cltDatas []api.TradingDataServiceClient
+		conns    []*grpc.ClientConn
 	)
 	for _, v := range nodeConfigs.Hosts {
 		conn, err := grpc.Dial(v, grpc.WithInsecure())
@@ -35,12 +37,14 @@ func NewNodeForward(log *zap.Logger, nodeConfigs NodesConfig) (*nodeForward, err
 		}
 		conns = append(conns, conn)
 		clts = append(clts, api.NewTradingServiceClient(conn))
+		cltDatas = append(cltDatas, api.NewTradingDataServiceClient(conn))
 	}
 
 	return &nodeForward{
 		log:      log,
 		nodeCfgs: nodeConfigs,
 		clts:     clts,
+		cltDatas: cltDatas,
 		conns:    conns,
 	}, nil
 }
@@ -53,6 +57,23 @@ func (n *nodeForward) Stop() error {
 		}
 	}
 	return nil
+}
+
+func (n *nodeForward) HealthCheck(ctx context.Context) error {
+	req := api.GetVegaTimeRequest{}
+	return backoff.Retry(
+		func() error {
+			clt := n.nextCltData()
+			resp, err := clt.GetVegaTime(ctx, &req)
+			if err != nil {
+				return err
+			}
+			n.log.Debug("response from GetVegaTime", zap.Int64("timestamp", resp.Timestamp))
+			return nil
+		},
+		backoff.WithMaxRetries(backoff.NewExponentialBackOff(), n.nodeCfgs.Retries),
+	)
+
 }
 
 func (n *nodeForward) Send(ctx context.Context, tx *SignedBundle, ty api.SubmitTransactionRequest_Type) error {
@@ -74,9 +95,16 @@ func (n *nodeForward) Send(ctx context.Context, tx *SignedBundle, ty api.SubmitT
 	)
 }
 
-func (r *nodeForward) nextClt() api.TradingServiceClient {
-	n := atomic.AddUint64(&r.next, 1)
-	r.log.Info("sending transaction to vega node",
-		zap.String("host", r.nodeCfgs.Hosts[(int(n)-1)%len(r.clts)]))
-	return r.clts[(int(n)-1)%len(r.clts)]
+func (n *nodeForward) nextClt() api.TradingServiceClient {
+	i := atomic.AddUint64(&n.next, 1)
+	n.log.Info("sending transaction to vega node",
+		zap.String("host", n.nodeCfgs.Hosts[(int(i)-1)%len(n.clts)]))
+	return n.clts[(int(i)-1)%len(n.clts)]
+}
+
+func (n *nodeForward) nextCltData() api.TradingDataServiceClient {
+	i := atomic.AddUint64(&n.next, 1)
+	n.log.Info("sending healthcheck to vega node",
+		zap.String("host", n.nodeCfgs.Hosts[(int(i)-1)%len(n.clts)]))
+	return n.cltDatas[(int(i)-1)%len(n.clts)]
 }
