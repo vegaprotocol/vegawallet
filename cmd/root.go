@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"code.vegaprotocol.io/go-wallet/fsutil"
+	"code.vegaprotocol.io/go-wallet/version"
 	"golang.org/x/crypto/ssh/terminal"
 
 	"github.com/spf13/cobra"
@@ -24,6 +25,15 @@ var (
 )
 
 func Execute() {
+	v, err := version.Check(Version)
+	if err != nil {
+		fmt.Printf("could not check vega wallet version updates: %v\n", err)
+	}
+	if v != nil {
+		fmt.Printf("A new version %v of vega wallet is available, you can download it at %v.\n",
+			v, version.GetReleaseURL(v))
+	}
+
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Printf("%v\n", err)
 		os.Exit(1)
