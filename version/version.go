@@ -17,7 +17,7 @@ const (
 )
 
 // returns a newer version, or an error or nil for both
-// if no error happened, an no updates are needed
+// if no error happened, and no updates are needed
 func Check(currentVersion string) (*semver.Version, error) {
 	req, err := http.NewRequest("GET", ReleaseAPI, nil)
 	if err != nil {
