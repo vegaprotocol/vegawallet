@@ -111,6 +111,7 @@ type WalletHandler interface {
 //go:generate go run github.com/golang/mock/mockgen -destination mocks/node_forward_mock.go -package mocks code.vegaprotocol.io/go-wallet/wallet NodeForward
 type NodeForward interface {
 	Send(context.Context, *SignedBundle, api.SubmitTransactionRequest_Type) error
+	HealthCheck(context.Context) error
 }
 
 func NewServiceWith(log *zap.Logger, cfg *Config, rootPath string, h WalletHandler, n NodeForward) (*Service, error) {
@@ -168,7 +169,6 @@ func (s *Service) Start() error {
 		Handler: cors.AllowAll().Handler(s), // middlewar with cors
 	}
 
-	// s.log.Info("starting wallet http server", zap.String("address", s.s.Addr))
 	return s.s.ListenAndServe()
 }
 
@@ -456,6 +456,9 @@ func (s *Service) UpdateMeta(t string, w http.ResponseWriter, r *http.Request, p
 }
 
 func (s *Service) health(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	if err := s.nodeForward.HealthCheck(r.Context()); err != nil {
+		writeSuccess(w, SuccessResponse{Success: false}, http.StatusFailedDependency)
+	}
 	writeSuccess(w, SuccessResponse{Success: true}, http.StatusOK)
 }
 

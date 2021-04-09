@@ -15,9 +15,9 @@ Available endpoints:
  - create wallet:   POST   http://{{.WalletServiceLocalAddress}}/api/v1/wallets
  - create key:      POST   http://{{.WalletServiceLocalAddress}}/api/v1/keys
  - list keys:       GET    http://{{.WalletServiceLocalAddress}}/api/v1/keys
- - get key:         GET    http://{{.WalletServiceLocalAddress}}/api/v1/keys:keyid
- - taint key:       PUT    http://{{.WalletServiceLocalAddress}}/api/v1/keys:keyid/taint
- - update meta:     PUT    http://{{.WalletServiceLocalAddress}}/api/v1/keys:keyid/metadata
+ - get key:         GET    http://{{.WalletServiceLocalAddress}}/api/v1/keys/:keyid
+ - taint key:       PUT    http://{{.WalletServiceLocalAddress}}/api/v1/keys/:keyid/taint
+ - update meta:     PUT    http://{{.WalletServiceLocalAddress}}/api/v1/keys/:keyid/metadata
  - sign data:       POST   http://{{.WalletServiceLocalAddress}}/api/v1/sign
  - sign:            POST   http://{{.WalletServiceLocalAddress}}/api/v1/messages
  - sign sync:       POST   http://{{.WalletServiceLocalAddress}}/api/v1/messages/sync
