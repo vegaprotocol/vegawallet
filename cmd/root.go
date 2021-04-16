@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"code.vegaprotocol.io/go-wallet/fsutil"
+	"code.vegaprotocol.io/go-wallet/version"
 	"golang.org/x/crypto/ssh/terminal"
 
 	"github.com/spf13/cobra"
@@ -12,18 +13,34 @@ import (
 
 var (
 	rootArgs struct {
-		rootPath string
+		rootPath       string
+		noVersionCheck bool
 	}
 
 	// rootCmd represents the base command when called without any subcommands
 	rootCmd = &cobra.Command{
-		Use:   "vegawallet",
-		Short: "The Vega wallet",
-		Long:  `The Vega wallet`,
+		Use:              "vegawallet",
+		Short:            "The Vega wallet",
+		Long:             `The Vega wallet`,
+		PersistentPreRun: checkVersion,
 	}
 )
 
+func checkVersion(cmd *cobra.Command, args []string) {
+	if !rootArgs.noVersionCheck {
+		v, err := version.Check(Version)
+		if err != nil {
+			fmt.Printf("could not check vega wallet version updates: %v\n", err)
+		}
+		if v != nil {
+			fmt.Printf("A new version %v of vega wallet is available, you can download it at %v.\n",
+				v, version.GetReleaseURL(v))
+		}
+	}
+}
+
 func Execute() {
+
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Printf("%v\n", err)
 		os.Exit(1)
@@ -32,6 +49,7 @@ func Execute() {
 
 func init() {
 	rootCmd.PersistentFlags().StringVar(&rootArgs.rootPath, "root-path", fsutil.DefaultVegaDir(), "Root directory for the Vega wallet configuration")
+	rootCmd.PersistentFlags().BoolVar(&rootArgs.noVersionCheck, "no-version-check", false, "Do not check for new version of the Vega wallet")
 }
 
 func promptForPassphrase(msg ...string) (string, error) {
