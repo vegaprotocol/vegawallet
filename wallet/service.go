@@ -458,6 +458,7 @@ func (s *Service) UpdateMeta(t string, w http.ResponseWriter, r *http.Request, p
 func (s *Service) health(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	if err := s.nodeForward.HealthCheck(r.Context()); err != nil {
 		writeSuccess(w, SuccessResponse{Success: false}, http.StatusFailedDependency)
+		return
 	}
 	writeSuccess(w, SuccessResponse{Success: true}, http.StatusOK)
 }
