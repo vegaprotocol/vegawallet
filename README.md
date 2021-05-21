@@ -23,7 +23,7 @@ You’ll need to go to System Preferences > Security & Privacy > General, and ch
 
 Download `vegawallet-windows-amd64.zip`
 
-You may need to change your system preferences for this specific instance, in order to run Vega Wallet. If you open the file from downloads, you may get a message from Windows Defender saying “vegawallet-darwin-amd64” cannot be opened because it is from an unidentified developer.
+You may need to change your system preferences for this specific instance, in order to run Vega Wallet. If you open the file from downloads, you may get a message from Windows Defender saying “vegawallet-windows-amd64” cannot be opened because it is from an unidentified developer.
 
 Click on the (More info) text, which will reveal a button to "Run anyway".
 
