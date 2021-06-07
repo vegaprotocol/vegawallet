@@ -79,7 +79,7 @@ func NewDefaultConfig() Config {
 			},
 			Retries: 5,
 		},
-		Host:   "localhost",
+		Host:   "127.0.0.1",
 		Port:   1789,
 		RsaKey: rsaKeyPath,
 		Console: ConsoleConfig{

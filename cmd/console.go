@@ -41,7 +41,7 @@ func (c *consoleProxy) Start() error {
 			req.Host = c.consoleURL
 		},
 	}
-	consoleProxyAddr := fmt.Sprintf("localhost:%v", c.port)
+	consoleProxyAddr := fmt.Sprintf("127.0.0.1:%v", c.port)
 	c.s = &http.Server{
 		Addr:    consoleProxyAddr,
 		Handler: &proxy,
@@ -59,5 +59,5 @@ func (c *consoleProxy) Stop() error {
 }
 
 func (c *consoleProxy) GetBrowserURL() string {
-	return fmt.Sprintf("http://localhost:%v", c.port)
+	return fmt.Sprintf("http://127.0.0.1:%v", c.port)
 }
