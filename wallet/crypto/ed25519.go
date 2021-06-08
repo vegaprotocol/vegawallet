@@ -52,6 +52,6 @@ func (e *ed25519Sig) Name() string {
 	return "vega/ed25519"
 }
 
-func (e *ed25519Sig) Version() uint64 {
+func (e *ed25519Sig) Version() uint32 {
 	return 1
 }

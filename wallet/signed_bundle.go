@@ -19,13 +19,13 @@ import (
 type Signature struct {
 	Sig     []byte `json:"sig"`
 	Algo    string `json:"algo"`
-	Version uint64 `json:"version"`
+	Version uint32 `json:"version"`
 }
 
 type signatureMarshalled struct {
 	Sig     string `json:"sig"`
 	Algo    string `json:"algo"`
-	Version uint64 `json:"version"`
+	Version uint32 `json:"version"`
 }
 
 type SignedBundle struct {
