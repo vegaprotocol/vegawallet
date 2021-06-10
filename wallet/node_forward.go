@@ -73,7 +73,26 @@ func (n *nodeForward) HealthCheck(ctx context.Context) error {
 		},
 		backoff.WithMaxRetries(backoff.NewExponentialBackOff(), n.nodeCfgs.Retries),
 	)
+}
 
+func (n *nodeForward) LastBlockHeight(ctx context.Context) (uint64, error) {
+	req := api.LastBlockHeightRequest{}
+	var height uint64
+	return backoff.Retry(
+		func() error {
+			clt := n.nextCltData()
+			resp, err := n.clt.LastBlockHeight(ctx, &req)
+			if err != nil {
+				n.log.Debug("could not get last block", zap.Error(err))
+				return err
+			}
+			height = resp.Height
+			return nil
+		},
+		backoff.WithMaxRetries(backoff.NewExponentialBackOff(), n.nodeCfgs.Retries),
+	)
+
+	return height, nil
 }
 
 func (n *nodeForward) Send(ctx context.Context, tx *SignedBundle, ty api.SubmitTransactionRequest_Type) error {
