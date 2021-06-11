@@ -7,9 +7,11 @@ import (
 	"time"
 
 	"github.com/cenkalti/backoff/v4"
+	vproto "github.com/vegaprotocol/api/grpc/clients/go/generated/code.vegaprotocol.io/vega/proto"
 	"github.com/vegaprotocol/api/grpc/clients/go/generated/code.vegaprotocol.io/vega/proto/api"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/status"
 )
 
 type nodeForward struct {
@@ -105,6 +107,19 @@ func (n *nodeForward) LastBlockHeight(ctx context.Context) (uint64, error) {
 	return height, err
 }
 
+func logError(log *zap.Logger, err error) {
+	if st, ok := status.FromError(err); ok {
+		details := []string{}
+		for _, v := range st.Details() {
+			v := v.(*vproto.ErrorDetail)
+			details = append(details, v.Message)
+		}
+		log.Info("could not submit transaction", zap.Strings("error", details))
+	} else {
+		log.Info("could not submit transaction", zap.String("error", err.Error()))
+	}
+}
+
 func (n *nodeForward) Send(ctx context.Context, tx *SignedBundle, ty api.SubmitTransactionRequest_Type) error {
 	req := api.SubmitTransactionRequest{
 		Tx:   tx.IntoProto(),
@@ -115,6 +130,7 @@ func (n *nodeForward) Send(ctx context.Context, tx *SignedBundle, ty api.SubmitT
 			clt := n.nextClt()
 			resp, err := clt.SubmitTransaction(ctx, &req)
 			if err != nil {
+				logError(n.log, err)
 				return err
 			}
 			n.log.Debug("response from SubmitTransaction", zap.Bool("success", resp.Success))
