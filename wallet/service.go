@@ -100,7 +100,7 @@ type WalletHandler interface {
 	GenerateKeypair(token, passphrase string) (string, error)
 	GetPublicKey(token, pubKey string) (*Keypair, error)
 	ListPublicKeys(token string) ([]Keypair, error)
-	SignTx(token, tx, pubkey string) (SignedBundle, error)
+	SignTx(token, tx, pubkey string, height uint64) (SignedBundle, error)
 	SignAny(token, inputData, pubkey string) ([]byte, error)
 	TaintKey(token, pubkey, passphrase string) error
 	UpdateMeta(token, pubkey, passphrase string, meta []Meta) error
@@ -112,6 +112,7 @@ type WalletHandler interface {
 type NodeForward interface {
 	Send(context.Context, *SignedBundle, api.SubmitTransactionRequest_Type) error
 	HealthCheck(context.Context) error
+	LastBlockHeight(context.Context) (uint64, error)
 }
 
 func NewServiceWith(log *zap.Logger, cfg *Config, rootPath string, h WalletHandler, n NodeForward) (*Service, error) {
@@ -335,7 +336,13 @@ func (s *Service) signTx(t string, w http.ResponseWriter, r *http.Request, _ htt
 		return
 	}
 
-	sb, err := s.handler.SignTx(t, req.Tx, req.PubKey)
+	height, err := s.nodeForward.LastBlockHeight(r.Context())
+	if err != nil {
+		writeError(w, newError("could not get last block height"), http.StatusInternalServerError)
+		return
+	}
+
+	sb, err := s.handler.SignTx(t, req.Tx, req.PubKey, height)
 	if err != nil {
 		writeError(w, newError(err.Error()), http.StatusForbidden)
 		return

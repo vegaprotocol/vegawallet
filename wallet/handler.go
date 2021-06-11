@@ -239,7 +239,7 @@ func (h *Handler) SignAny(token, inputData, pubkey string) ([]byte, error) {
 	return signature, nil
 }
 
-func (h *Handler) SignTx(token, tx, pubkey string) (SignedBundle, error) {
+func (h *Handler) SignTx(token, tx, pubkey string, blockHeight uint64) (SignedBundle, error) {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
 
@@ -281,8 +281,9 @@ func (h *Handler) SignTx(token, tx, pubkey string) (SignedBundle, error) {
 
 	// we build the transaction payload
 	txTy := &types.Transaction{
-		InputData: rawtx,
-		Nonce:     makeNonce(),
+		InputData:   rawtx,
+		Nonce:       makeNonce(),
+		BlockHeight: blockHeight,
 		From: &types.Transaction_PubKey{
 			PubKey: kp.pubBytes,
 		},
