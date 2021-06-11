@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"sync/atomic"
+	"time"
 
 	"github.com/cenkalti/backoff/v4"
 	"github.com/vegaprotocol/api/grpc/clients/go/generated/code.vegaprotocol.io/vega/proto/api"
@@ -73,7 +74,35 @@ func (n *nodeForward) HealthCheck(ctx context.Context) error {
 		},
 		backoff.WithMaxRetries(backoff.NewExponentialBackOff(), n.nodeCfgs.Retries),
 	)
+}
 
+func (n *nodeForward) LastBlockHeight(ctx context.Context) (uint64, error) {
+	req := api.LastBlockHeightRequest{}
+	var height uint64
+	err := backoff.Retry(
+		func() error {
+			clt := n.nextCltData()
+			resp, err := clt.LastBlockHeight(ctx, &req)
+			if err != nil {
+				n.log.Debug("could not get last block", zap.Error(err))
+				return err
+			}
+			height = resp.Height
+			return nil
+		},
+		backoff.WithMaxRetries(backoff.NewExponentialBackOff(), n.nodeCfgs.Retries),
+	)
+
+	if err != nil {
+		n.log.Error("could not get last block", zap.Error(err))
+	} else {
+		n.log.Debug("last block when sending transaction",
+			zap.Time("request.time", time.Now()),
+			zap.Uint64("block.height", height),
+		)
+	}
+
+	return height, err
 }
 
 func (n *nodeForward) Send(ctx context.Context, tx *SignedBundle, ty api.SubmitTransactionRequest_Type) error {
