@@ -49,6 +49,21 @@ func (mr *MockNodeForwardMockRecorder) HealthCheck(arg0 interface{}) *gomock.Cal
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HealthCheck", reflect.TypeOf((*MockNodeForward)(nil).HealthCheck), arg0)
 }
 
+// LastBlockHeight mocks base method
+func (m *MockNodeForward) LastBlockHeight(arg0 context.Context) (uint64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "LastBlockHeight", arg0)
+	ret0, _ := ret[0].(uint64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// LastBlockHeight indicates an expected call of LastBlockHeight
+func (mr *MockNodeForwardMockRecorder) LastBlockHeight(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LastBlockHeight", reflect.TypeOf((*MockNodeForward)(nil).LastBlockHeight), arg0)
+}
+
 // Send mocks base method
 func (m *MockNodeForward) Send(arg0 context.Context, arg1 *wallet.SignedBundle, arg2 api.SubmitTransactionRequest_Type) error {
 	m.ctrl.T.Helper()

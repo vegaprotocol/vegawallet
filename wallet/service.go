@@ -100,7 +100,7 @@ type WalletHandler interface {
 	GenerateKeypair(token, passphrase string) (string, error)
 	GetPublicKey(token, pubKey string) (*Keypair, error)
 	ListPublicKeys(token string) ([]Keypair, error)
-	SignTx(token, tx, pubkey string) (SignedBundle, error)
+	SignTx(token, tx, pubkey string, height uint64) (SignedBundle, error)
 	SignAny(token, inputData, pubkey string) ([]byte, error)
 	TaintKey(token, pubkey, passphrase string) error
 	UpdateMeta(token, pubkey, passphrase string, meta []Meta) error
