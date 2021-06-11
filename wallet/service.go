@@ -138,7 +138,7 @@ func NewServiceWith(log *zap.Logger, cfg *Config, rootPath string, h WalletHandl
 	s.PUT("/api/v1/keys/:keyid/metadata", ExtractToken(s.UpdateMeta))
 	s.POST("/api/v1/sign", ExtractToken(s.SignAny))
 	s.POST("/api/v1/messages", ExtractToken(s.SignTx))
-	s.POST("/api/v1/messages/sync", ExtractToken(s.SignTxSync))
+	s.POST("/api/v1/messages/async", ExtractToken(s.SignTxAsync))
 	s.POST("/api/v1/messages/commit", ExtractToken(s.SignTxCommit))
 	s.GET("/api/v1/wallets", ExtractToken(s.DownloadWallet))
 
@@ -309,8 +309,8 @@ func (s *Service) ListPublicKeys(t string, w http.ResponseWriter, r *http.Reques
 	writeSuccess(w, KeysResponse{Keys: keys}, http.StatusOK)
 }
 
-func (s *Service) SignTxSync(t string, w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	s.signTx(t, w, r, p, api.SubmitTransactionRequest_TYPE_SYNC)
+func (s *Service) SignTxAsync(t string, w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	s.signTx(t, w, r, p, api.SubmitTransactionRequest_TYPE_ASYNC)
 }
 
 func (s *Service) SignTxCommit(t string, w http.ResponseWriter, r *http.Request, p httprouter.Params) {
@@ -318,7 +318,7 @@ func (s *Service) SignTxCommit(t string, w http.ResponseWriter, r *http.Request,
 }
 
 func (s *Service) SignTx(t string, w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	s.signTx(t, w, r, p, api.SubmitTransactionRequest_TYPE_ASYNC)
+	s.signTx(t, w, r, p, api.SubmitTransactionRequest_TYPE_SYNC)
 }
 
 func (s *Service) signTx(t string, w http.ResponseWriter, r *http.Request, _ httprouter.Params, ty api.SubmitTransactionRequest_Type) {
@@ -350,15 +350,16 @@ func (s *Service) signTx(t string, w http.ResponseWriter, r *http.Request, _ htt
 
 	if req.Propagate {
 		if err := s.nodeForward.Send(r.Context(), &sb, ty); err != nil {
-			s.log.Error("cannot forward transaction", zap.Error(err))
-			if s, ok := status.FromError(err); ok {
+			if st, ok := status.FromError(err); ok {
 				details := []string{}
-				for _, v := range s.Details() {
+				for _, v := range st.Details() {
 					v := v.(*vproto.ErrorDetail)
 					details = append(details, v.Message)
 				}
+				s.log.Error("cannot forward transaction", zap.Strings("error", details))
 				writeError(w, newErrorWithDetails(err.Error(), details), http.StatusInternalServerError)
 			} else {
+				s.log.Error("cannot forward transaction", zap.String("error", err.Error()))
 				writeError(w, newError(err.Error()), http.StatusInternalServerError)
 			}
 			return
