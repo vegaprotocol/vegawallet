@@ -4,11 +4,14 @@ import (
 	"context"
 	"errors"
 	"sync/atomic"
+	"time"
 
 	"github.com/cenkalti/backoff/v4"
+	vproto "github.com/vegaprotocol/api/grpc/clients/go/generated/code.vegaprotocol.io/vega/proto"
 	"github.com/vegaprotocol/api/grpc/clients/go/generated/code.vegaprotocol.io/vega/proto/api"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/status"
 )
 
 type nodeForward struct {
@@ -73,7 +76,48 @@ func (n *nodeForward) HealthCheck(ctx context.Context) error {
 		},
 		backoff.WithMaxRetries(backoff.NewExponentialBackOff(), n.nodeCfgs.Retries),
 	)
+}
 
+func (n *nodeForward) LastBlockHeight(ctx context.Context) (uint64, error) {
+	req := api.LastBlockHeightRequest{}
+	var height uint64
+	err := backoff.Retry(
+		func() error {
+			clt := n.nextCltData()
+			resp, err := clt.LastBlockHeight(ctx, &req)
+			if err != nil {
+				n.log.Debug("could not get last block", zap.Error(err))
+				return err
+			}
+			height = resp.Height
+			return nil
+		},
+		backoff.WithMaxRetries(backoff.NewExponentialBackOff(), n.nodeCfgs.Retries),
+	)
+
+	if err != nil {
+		n.log.Error("could not get last block", zap.Error(err))
+	} else {
+		n.log.Debug("last block when sending transaction",
+			zap.Time("request.time", time.Now()),
+			zap.Uint64("block.height", height),
+		)
+	}
+
+	return height, err
+}
+
+func logError(log *zap.Logger, err error) {
+	if st, ok := status.FromError(err); ok {
+		details := []string{}
+		for _, v := range st.Details() {
+			v := v.(*vproto.ErrorDetail)
+			details = append(details, v.Message)
+		}
+		log.Info("could not submit transaction", zap.Strings("error", details))
+	} else {
+		log.Info("could not submit transaction", zap.String("error", err.Error()))
+	}
 }
 
 func (n *nodeForward) Send(ctx context.Context, tx *SignedBundle, ty api.SubmitTransactionRequest_Type) error {
@@ -86,6 +130,7 @@ func (n *nodeForward) Send(ctx context.Context, tx *SignedBundle, ty api.SubmitT
 			clt := n.nextClt()
 			resp, err := clt.SubmitTransaction(ctx, &req)
 			if err != nil {
+				logError(n.log, err)
 				return err
 			}
 			n.log.Debug("response from SubmitTransaction", zap.Bool("success", resp.Success))

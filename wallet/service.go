@@ -100,7 +100,7 @@ type WalletHandler interface {
 	GenerateKeypair(token, passphrase string) (string, error)
 	GetPublicKey(token, pubKey string) (*Keypair, error)
 	ListPublicKeys(token string) ([]Keypair, error)
-	SignTx(token, tx, pubkey string) (SignedBundle, error)
+	SignTx(token, tx, pubkey string, height uint64) (SignedBundle, error)
 	SignAny(token, inputData, pubkey string) ([]byte, error)
 	TaintKey(token, pubkey, passphrase string) error
 	UpdateMeta(token, pubkey, passphrase string, meta []Meta) error
@@ -112,6 +112,7 @@ type WalletHandler interface {
 type NodeForward interface {
 	Send(context.Context, *SignedBundle, api.SubmitTransactionRequest_Type) error
 	HealthCheck(context.Context) error
+	LastBlockHeight(context.Context) (uint64, error)
 }
 
 func NewServiceWith(log *zap.Logger, cfg *Config, rootPath string, h WalletHandler, n NodeForward) (*Service, error) {
@@ -137,7 +138,7 @@ func NewServiceWith(log *zap.Logger, cfg *Config, rootPath string, h WalletHandl
 	s.PUT("/api/v1/keys/:keyid/metadata", ExtractToken(s.UpdateMeta))
 	s.POST("/api/v1/sign", ExtractToken(s.SignAny))
 	s.POST("/api/v1/messages", ExtractToken(s.SignTx))
-	s.POST("/api/v1/messages/sync", ExtractToken(s.SignTxSync))
+	s.POST("/api/v1/messages/async", ExtractToken(s.SignTxAsync))
 	s.POST("/api/v1/messages/commit", ExtractToken(s.SignTxCommit))
 	s.GET("/api/v1/wallets", ExtractToken(s.DownloadWallet))
 
@@ -308,8 +309,8 @@ func (s *Service) ListPublicKeys(t string, w http.ResponseWriter, r *http.Reques
 	writeSuccess(w, KeysResponse{Keys: keys}, http.StatusOK)
 }
 
-func (s *Service) SignTxSync(t string, w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	s.signTx(t, w, r, p, api.SubmitTransactionRequest_TYPE_SYNC)
+func (s *Service) SignTxAsync(t string, w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	s.signTx(t, w, r, p, api.SubmitTransactionRequest_TYPE_ASYNC)
 }
 
 func (s *Service) SignTxCommit(t string, w http.ResponseWriter, r *http.Request, p httprouter.Params) {
@@ -317,7 +318,7 @@ func (s *Service) SignTxCommit(t string, w http.ResponseWriter, r *http.Request,
 }
 
 func (s *Service) SignTx(t string, w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	s.signTx(t, w, r, p, api.SubmitTransactionRequest_TYPE_ASYNC)
+	s.signTx(t, w, r, p, api.SubmitTransactionRequest_TYPE_SYNC)
 }
 
 func (s *Service) signTx(t string, w http.ResponseWriter, r *http.Request, _ httprouter.Params, ty api.SubmitTransactionRequest_Type) {
@@ -335,7 +336,13 @@ func (s *Service) signTx(t string, w http.ResponseWriter, r *http.Request, _ htt
 		return
 	}
 
-	sb, err := s.handler.SignTx(t, req.Tx, req.PubKey)
+	height, err := s.nodeForward.LastBlockHeight(r.Context())
+	if err != nil {
+		writeError(w, newError("could not get last block height"), http.StatusInternalServerError)
+		return
+	}
+
+	sb, err := s.handler.SignTx(t, req.Tx, req.PubKey, height)
 	if err != nil {
 		writeError(w, newError(err.Error()), http.StatusForbidden)
 		return
@@ -343,15 +350,16 @@ func (s *Service) signTx(t string, w http.ResponseWriter, r *http.Request, _ htt
 
 	if req.Propagate {
 		if err := s.nodeForward.Send(r.Context(), &sb, ty); err != nil {
-			s.log.Error("cannot forward transaction", zap.Error(err))
-			if s, ok := status.FromError(err); ok {
+			if st, ok := status.FromError(err); ok {
 				details := []string{}
-				for _, v := range s.Details() {
+				for _, v := range st.Details() {
 					v := v.(*vproto.ErrorDetail)
 					details = append(details, v.Message)
 				}
+				s.log.Error("cannot forward transaction", zap.Strings("error", details))
 				writeError(w, newErrorWithDetails(err.Error(), details), http.StatusInternalServerError)
 			} else {
+				s.log.Error("cannot forward transaction", zap.String("error", err.Error()))
 				writeError(w, newError(err.Error()), http.StatusInternalServerError)
 			}
 			return

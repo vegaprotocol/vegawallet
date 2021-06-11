@@ -23,7 +23,7 @@ type signatureAlgorithmImpl interface {
 	Sign(priv crypto.PrivateKey, buf []byte) ([]byte, error)
 	Verify(pub crypto.PublicKey, message, sig []byte) (bool, error)
 	Name() string
-	Version() uint64
+	Version() uint32
 }
 
 func NewEd25519() SignatureAlgorithm {
@@ -58,7 +58,7 @@ func (s *SignatureAlgorithm) Name() string {
 	return s.impl.Name()
 }
 
-func (s *SignatureAlgorithm) Version() uint64 {
+func (s *SignatureAlgorithm) Version() uint32 {
 	return s.impl.Version()
 }
 

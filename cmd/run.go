@@ -85,7 +85,7 @@ func runServiceRun(cmd *cobra.Command, args []string) error {
 
 	printStartupMessage(
 		cfg.Console.URL,
-		fmt.Sprintf("localhost:%v", cfg.Console.LocalPort),
+		fmt.Sprintf("127.0.0.1:%v", cfg.Console.LocalPort),
 		fmt.Sprintf("%v:%v", cfg.Host, cfg.Port),
 	)
 
