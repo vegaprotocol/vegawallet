@@ -13,6 +13,6 @@ jobs:
     steps:
       - uses: alex-page/github-project-automation-plus@50502d399cbb98cefe7ce1f99f93f78c6756562e
         with:
-          project: Current Sprints
+          project: Core (Team Board)
           column: Incoming to triage
           repo-token: ${{ secrets.GH_NEW_CARD_TO_PROJECT }}
