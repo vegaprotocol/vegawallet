@@ -9,6 +9,7 @@ import (
 	"github.com/cenkalti/backoff/v4"
 	vproto "github.com/vegaprotocol/api/grpc/clients/go/generated/code.vegaprotocol.io/vega/proto"
 	"github.com/vegaprotocol/api/grpc/clients/go/generated/code.vegaprotocol.io/vega/proto/api"
+	commandspb "github.com/vegaprotocol/api/grpc/clients/go/generated/code.vegaprotocol.io/vega/proto/commands/v1"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/status"
@@ -107,19 +108,6 @@ func (n *nodeForward) LastBlockHeight(ctx context.Context) (uint64, error) {
 	return height, err
 }
 
-func logError(log *zap.Logger, err error) {
-	if st, ok := status.FromError(err); ok {
-		details := []string{}
-		for _, v := range st.Details() {
-			v := v.(*vproto.ErrorDetail)
-			details = append(details, v.Message)
-		}
-		log.Info("could not submit transaction", zap.Strings("error", details))
-	} else {
-		log.Info("could not submit transaction", zap.String("error", err.Error()))
-	}
-}
-
 func (n *nodeForward) Send(ctx context.Context, tx *SignedBundle, ty api.SubmitTransactionRequest_Type) error {
 	req := api.SubmitTransactionRequest{
 		Tx:   tx.IntoProto(),
@@ -140,6 +128,25 @@ func (n *nodeForward) Send(ctx context.Context, tx *SignedBundle, ty api.SubmitT
 	)
 }
 
+func (n *nodeForward) SendTxV2(ctx context.Context, tx *commandspb.Transaction, ty api.SubmitTransactionV2Request_Type) error {
+	req := api.SubmitTransactionV2Request{
+		Tx:   tx,
+		Type: ty,
+	}
+	return backoff.Retry(
+		func() error {
+			clt := n.nextClt()
+			resp, err := clt.SubmitTransactionV2(ctx, &req)
+			if err != nil {
+				return err
+			}
+			n.log.Debug("response from SubmitTransactionV2", zap.Bool("success", resp.Success))
+			return nil
+		},
+		backoff.WithMaxRetries(backoff.NewExponentialBackOff(), n.nodeCfgs.Retries),
+	)
+}
+
 func (n *nodeForward) nextClt() api.TradingServiceClient {
 	i := atomic.AddUint64(&n.next, 1)
 	n.log.Info("sending transaction to vega node",
@@ -152,4 +159,17 @@ func (n *nodeForward) nextCltData() api.TradingDataServiceClient {
 	n.log.Info("sending healthcheck to vega node",
 		zap.String("host", n.nodeCfgs.Hosts[(int(i)-1)%len(n.clts)]))
 	return n.cltDatas[(int(i)-1)%len(n.clts)]
+}
+
+func logError(log *zap.Logger, err error) {
+	if st, ok := status.FromError(err); ok {
+		details := []string{}
+		for _, v := range st.Details() {
+			v := v.(*vproto.ErrorDetail)
+			details = append(details, v.Message)
+		}
+		log.Info("could not submit transaction", zap.Strings("error", details))
+	} else {
+		log.Info("could not submit transaction", zap.String("error", err.Error()))
+	}
 }

@@ -7,6 +7,8 @@ package mocks
 import (
 	wallet "code.vegaprotocol.io/go-wallet/wallet"
 	gomock "github.com/golang/mock/gomock"
+	v1 "github.com/vegaprotocol/api/grpc/clients/go/generated/code.vegaprotocol.io/vega/proto/commands/v1"
+	v10 "github.com/vegaprotocol/api/grpc/clients/go/generated/code.vegaprotocol.io/vega/proto/wallet/v1"
 	reflect "reflect"
 )
 
@@ -76,6 +78,36 @@ func (m *MockWalletHandler) GetPublicKey(arg0, arg1 string) (*wallet.Keypair, er
 func (mr *MockWalletHandlerMockRecorder) GetPublicKey(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPublicKey", reflect.TypeOf((*MockWalletHandler)(nil).GetPublicKey), arg0, arg1)
+}
+
+// GetWalletName mocks base method
+func (m *MockWalletHandler) GetWalletName(arg0 string) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetWalletName", arg0)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetWalletName indicates an expected call of GetWalletName
+func (mr *MockWalletHandlerMockRecorder) GetWalletName(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetWalletName", reflect.TypeOf((*MockWalletHandler)(nil).GetWalletName), arg0)
+}
+
+// GetWalletPath mocks base method
+func (m *MockWalletHandler) GetWalletPath(arg0 string) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetWalletPath", arg0)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetWalletPath indicates an expected call of GetWalletPath
+func (mr *MockWalletHandlerMockRecorder) GetWalletPath(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetWalletPath", reflect.TypeOf((*MockWalletHandler)(nil).GetWalletPath), arg0)
 }
 
 // ListPublicKeys mocks base method
@@ -152,6 +184,21 @@ func (mr *MockWalletHandlerMockRecorder) SignTx(arg0, arg1, arg2, arg3 interface
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SignTx", reflect.TypeOf((*MockWalletHandler)(nil).SignTx), arg0, arg1, arg2, arg3)
 }
 
+// SignTxV2 mocks base method
+func (m *MockWalletHandler) SignTxV2(arg0 string, arg1 v10.SubmitTransactionRequest, arg2 uint64) (*v1.Transaction, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SignTxV2", arg0, arg1, arg2)
+	ret0, _ := ret[0].(*v1.Transaction)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SignTxV2 indicates an expected call of SignTxV2
+func (mr *MockWalletHandlerMockRecorder) SignTxV2(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SignTxV2", reflect.TypeOf((*MockWalletHandler)(nil).SignTxV2), arg0, arg1, arg2)
+}
+
 // TaintKey mocks base method
 func (m *MockWalletHandler) TaintKey(arg0, arg1, arg2 string) error {
 	m.ctrl.T.Helper()
@@ -178,19 +225,4 @@ func (m *MockWalletHandler) UpdateMeta(arg0, arg1, arg2 string, arg3 []wallet.Me
 func (mr *MockWalletHandlerMockRecorder) UpdateMeta(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateMeta", reflect.TypeOf((*MockWalletHandler)(nil).UpdateMeta), arg0, arg1, arg2, arg3)
-}
-
-// WalletPath mocks base method
-func (m *MockWalletHandler) WalletPath(arg0 string) (string, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "WalletPath", arg0)
-	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// WalletPath indicates an expected call of WalletPath
-func (mr *MockWalletHandlerMockRecorder) WalletPath(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WalletPath", reflect.TypeOf((*MockWalletHandler)(nil).WalletPath), arg0)
 }

@@ -1,9 +1,7 @@
 package wallet
 
 import (
-	"encoding/hex"
 	"encoding/json"
-	"errors"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -12,55 +10,15 @@ import (
 	"code.vegaprotocol.io/go-wallet/wallet/crypto"
 )
 
-var (
-	ErrWalletAlreadyExists = errors.New("a wallet with the same name already exists")
-	ErrWalletDoesNotExists = errors.New("wallet does not exist")
-)
-
-const (
-	walletBaseFolder = "wallets"
-)
-
 type Wallet struct {
 	Owner    string
-	Keypairs []Keypair
+	Keypairs KeyRing
 }
 
-type Keypair struct {
-	Pub       string                    `json:"pub"`
-	Priv      string                    `json:"priv,omitempty"`
-	Algorithm crypto.SignatureAlgorithm `json:"algo"`
-	Tainted   bool                      `json:"tainted"`
-	Meta      []Meta                    `json:"meta"`
-
-	// byte version of the public and private keys
-	// not being marshalled/sent over the network
-	// or saved into the wallet file.
-	pubBytes  []byte
-	privBytes []byte
-}
-
-func (k *Keypair) MarshalJSON() ([]byte, error) {
-	k.Pub = hex.EncodeToString(k.pubBytes)
-	k.Priv = hex.EncodeToString(k.privBytes)
-	type alias Keypair
-	aliasKeypair := (*alias)(k)
-	return json.Marshal(aliasKeypair)
-}
-
-func (k *Keypair) UnmarshalJSON(data []byte) error {
-	type alias Keypair
-	aliasKeypair := (*alias)(k)
-	if err := json.Unmarshal(data, aliasKeypair); err != nil {
-		return err
+func NewWallet(name string) *Wallet {
+	return &Wallet{
+		Owner: name,
 	}
-	var err error
-	k.pubBytes, err = hex.DecodeString(k.Pub)
-	if err != nil {
-		return err
-	}
-	k.privBytes, err = hex.DecodeString(k.Priv)
-	return err
 }
 
 type Meta struct {
@@ -71,37 +29,7 @@ type Meta struct {
 func New(owner string) Wallet {
 	return Wallet{
 		Owner:    owner,
-		Keypairs: []Keypair{},
-	}
-}
-
-func GenKeypair(algorithm string) (*Keypair, error) {
-	algo, err := crypto.NewSignatureAlgorithm(algorithm)
-	if err != nil {
-		return nil, err
-	}
-	pub, priv, err := algo.GenKey()
-	if err != nil {
-		return nil, err
-	}
-
-	privBytes := priv.([]byte)
-	pubBytes := pub.([]byte)
-	return &Keypair{
-		Priv:      hex.EncodeToString(privBytes),
-		Pub:       hex.EncodeToString(pubBytes),
-		Algorithm: algo,
-		privBytes: privBytes,
-		pubBytes:  pubBytes,
-	}, err
-
-}
-
-func NewKeypair(algo crypto.SignatureAlgorithm, pub, priv []byte) Keypair {
-	return Keypair{
-		Algorithm: algo,
-		pubBytes:  pub,
-		privBytes: priv,
+		Keypairs: NewKeyRing(),
 	}
 }
 
@@ -132,15 +60,6 @@ func Create(root, owner, passphrase string) (*Wallet, error) {
 	// build walletpath
 	walletpath := filepath.Join(root, walletBaseFolder, owner)
 	return CreateWalletFile(walletpath, owner, passphrase)
-}
-
-// WalletPath get the path to the wallet file, check if actually is a file
-func WalletPath(root, owner string) (string, error) {
-	path := filepath.Join(root, walletBaseFolder, owner)
-	if ok, err := fsutil.FileExists(path); !ok || err != nil {
-		return "", ErrWalletDoesNotExists
-	}
-	return path, nil
 }
 
 func AddKeypair(kp *Keypair, root, owner, passphrase string) (*Wallet, error) {

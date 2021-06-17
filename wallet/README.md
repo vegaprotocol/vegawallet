@@ -197,6 +197,14 @@ Sign a transaction using the specified keypair.
     }
   }
   ```
+
+### Propagate
+
+As you can see the request payload has a field `propagate` (optional) if set to true, then the wallet service, if
+configured with a correct vega node address will try to send the transaction on your behalf to the node after signing it
+successfully. The node address can be configured via the wallet service configuration file, by default it will point to
+a local instance of a vega node.
+
 ## Taint a key
 
 * Request:
