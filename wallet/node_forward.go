@@ -138,6 +138,7 @@ func (n *nodeForward) SendTxV2(ctx context.Context, tx *commandspb.Transaction, 
 			clt := n.nextClt()
 			resp, err := clt.SubmitTransactionV2(ctx, &req)
 			if err != nil {
+				n.log.Error("failed to send transaction v2", zap.Error(err))
 				return err
 			}
 			n.log.Debug("response from SubmitTransactionV2", zap.Bool("success", resp.Success))
