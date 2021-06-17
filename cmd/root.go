@@ -6,8 +6,8 @@ import (
 
 	"code.vegaprotocol.io/go-wallet/fsutil"
 	"code.vegaprotocol.io/go-wallet/version"
-	"golang.org/x/crypto/ssh/terminal"
 
+	"golang.org/x/crypto/ssh/terminal"
 	"github.com/spf13/cobra"
 )
 

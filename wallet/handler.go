@@ -1,95 +1,90 @@
 package wallet
 
 import (
-	"crypto/rand"
 	"encoding/base64"
 	"errors"
-	"math/big"
+	"fmt"
 	"sync"
 
+	"code.vegaprotocol.io/go-wallet/commands"
 	"code.vegaprotocol.io/go-wallet/wallet/crypto"
+	commandspb "github.com/vegaprotocol/api/grpc/clients/go/generated/code.vegaprotocol.io/vega/proto/commands/v1"
+	walletpb "github.com/vegaprotocol/api/grpc/clients/go/generated/code.vegaprotocol.io/vega/proto/wallet/v1"
 
 	"github.com/golang/protobuf/proto"
-	types "github.com/vegaprotocol/api/grpc/clients/go/generated/code.vegaprotocol.io/vega/proto"
-	"go.uber.org/zap"
 )
 
 var (
-	ErrPubKeyDoesNotExist   = errors.New("public key does not exist")
-	ErrPubKeyAlreadyTainted = errors.New("public key is already tainted")
 	ErrPubKeyIsTainted      = errors.New("public key is tainted")
 )
 
 // Auth ...
 //go:generate go run github.com/golang/mock/mockgen -destination mocks/auth_mock.go -package mocks code.vegaprotocol.io/go-wallet/wallet Auth
 type Auth interface {
-	NewSession(walletname string) (string, error)
+	NewSession(name string) (string, error)
 	VerifyToken(token string) (string, error)
 	Revoke(token string) error
 }
 
+// Store abstracts the underlying storage for wallet data.
+type Store interface {
+	SaveWallet(w Wallet, passphrase string) error
+	GetWallet(name, passphrase string) (Wallet, error)
+	GetWalletPath(name string) string
+}
+
 type Handler struct {
-	log      *zap.Logger
-	auth     Auth
-	rootPath string
+	auth          Auth
+	store         Store
+	loggedWallets wallets
 
-	// wallet name -> wallet
-	store map[string]Wallet
-
-	// just to make sure we do not access same file conccurently or the map
+	// just to make sure we do not access same file concurrently or the map
 	mu sync.RWMutex
 }
 
-func NewHandler(log *zap.Logger, auth Auth, rootPath string) *Handler {
+func NewHandler(auth Auth, store Store) *Handler {
 	return &Handler{
-		log:      log,
-		auth:     auth,
-		rootPath: rootPath,
-		store:    map[string]Wallet{},
+		auth:          auth,
+		store:         store,
+		loggedWallets: newWallets(),
 	}
 }
 
-// CreateWallet return the actual token
-func (h *Handler) CreateWallet(wallet, passphrase string) (string, error) {
+// CreateWallet returns the token
+func (h *Handler) CreateWallet(name, passphrase string) (string, error) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 
-	if _, ok := h.store[wallet]; ok {
+	_, err := h.store.GetWallet(name, passphrase)
+	if err != nil && err != ErrWalletDoesNotExists {
+		return "", err
+	} else if err == nil {
 		return "", ErrWalletAlreadyExists
 	}
 
-	w, err := Create(h.rootPath, wallet, passphrase)
+	w := NewWallet(name)
+
+	err = h.saveWallet(*w, passphrase)
 	if err != nil {
 		return "", err
 	}
 
-	h.store[wallet] = *w
-	return h.auth.NewSession(wallet)
+	return h.auth.NewSession(name)
 }
 
-func (h *Handler) LoginWallet(wallet, passphrase string) (string, error) {
+// LoginWallet returns the token
+func (h *Handler) LoginWallet(name, passphrase string) (string, error) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
-	// first check if the user own the wallet
-	w, err := Read(h.rootPath, wallet, passphrase)
+
+	w, err := h.store.GetWallet(name, passphrase)
 	if err != nil {
 		return "", ErrWalletDoesNotExists
 	}
 
-	// then store it in the memory store then
-	if _, ok := h.store[wallet]; !ok {
-		h.store[wallet] = *w
-	}
+	h.loggedWallets.Add(w)
 
-	return h.auth.NewSession(wallet)
-}
-
-func (h *Handler) WalletPath(token string) (string, error) {
-	wallet, err := h.auth.VerifyToken(token)
-	if err != nil {
-		return "", err
-	}
-	return WalletPath(h.rootPath, wallet)
+	return h.auth.NewSession(name)
 }
 
 func (h *Handler) RevokeToken(token string) error {
@@ -100,22 +95,14 @@ func (h *Handler) GenerateKeypair(token, passphrase string) (string, error) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 
-	wname, err := h.auth.VerifyToken(token)
+	name, err := h.auth.VerifyToken(token)
 	if err != nil {
 		return "", err
 	}
 
-	// validate passphrase
-	_, err = Read(h.rootPath, wname, passphrase)
+	w, err := h.store.GetWallet(name, passphrase)
 	if err != nil {
 		return "", err
-	}
-
-	w, ok := h.store[wname]
-	if !ok {
-		// this should never happen as we cannot have a valid session
-		// without the actual wallet being loaded in memory but...
-		return "", ErrWalletDoesNotExists
 	}
 
 	kp, err := GenKeypair(crypto.Ed25519)
@@ -123,13 +110,13 @@ func (h *Handler) GenerateKeypair(token, passphrase string) (string, error) {
 		return "", err
 	}
 
-	w.Keypairs = append(w.Keypairs, *kp)
-	_, err = writeWallet(&w, h.rootPath, wname, passphrase)
+	w.Keypairs.Upsert(*kp)
+
+	err = h.saveWallet(w, passphrase)
 	if err != nil {
 		return "", err
 	}
 
-	h.store[wname] = w
 	return kp.Pub, nil
 }
 
@@ -137,277 +124,244 @@ func (h *Handler) GetPublicKey(token, pubKey string) (*Keypair, error) {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
 
-	wname, err := h.auth.VerifyToken(token)
+	kp, err := h.getKeyPair(token, pubKey)
 	if err != nil {
 		return nil, err
 	}
 
-	w, ok := h.store[wname]
-	if !ok {
-		// this should never happen as we cannot have a valid session
-		// without the actual wallet being loaded in memory but...
-		return nil, ErrWalletDoesNotExists
-	}
+	secureKeyPair := kp.SecureCopy()
 
-	// copy the key so we do not propagate private keys
-	for _, v := range w.Keypairs {
-		if v.Pub != pubKey {
-			continue
-		}
-		out := v
-		out.Priv = ""
-		out.privBytes = []byte{}
-		return &out, nil
-	}
+	return &secureKeyPair, nil
+}
 
-	return nil, ErrPubKeyDoesNotExist
+func (h *Handler) GetWalletName(token string) (string, error) {
+	return h.auth.VerifyToken(token)
 }
 
 func (h *Handler) ListPublicKeys(token string) ([]Keypair, error) {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
 
-	wname, err := h.auth.VerifyToken(token)
+	name, err := h.auth.VerifyToken(token)
 	if err != nil {
 		return nil, err
 	}
 
-	w, ok := h.store[wname]
-	if !ok {
-		// this should never happen as we cannot have a valid session
-		// without the actual wallet being loaded in memory but...
-		return nil, ErrWalletDoesNotExists
+	w, err := h.loggedWallets.Get(name)
+	if err != nil {
+		return nil, err
 	}
 
-	// copy all keys so we do not propagate private keys
-	out := make([]Keypair, 0, len(w.Keypairs))
-	for _, v := range w.Keypairs {
-		kp := v
-		kp.Priv = ""
-		kp.privBytes = []byte{}
-		out = append(out, kp)
-	}
-
-	return out, nil
+	return w.Keypairs.GetPubKeys(), nil
 }
 
-func (h *Handler) SignAny(token, inputData, pubkey string) ([]byte, error) {
+func (h *Handler) SignAny(token, inputData, pubKey string) ([]byte, error) {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
 
-	// first the transaction would be in base64, let's decode
 	rawInputData, err := base64.StdEncoding.DecodeString(inputData)
 	if err != nil {
 		return nil, err
 	}
 
-	// then get the wallet name out of the token
-	wname, err := h.auth.VerifyToken(token)
+	kp, err := h.getKeyPair(token, pubKey)
 	if err != nil {
 		return nil, err
-	}
-
-	w, ok := h.store[wname]
-	if !ok {
-		// this should never happen as we cannot have a valid session
-		// without the actual wallet being loaded in memory but...
-		return nil, ErrWalletDoesNotExists
-	}
-
-	// let's retrieve the private key from the public key
-	var kp *Keypair
-	for i := range w.Keypairs {
-		if w.Keypairs[i].Pub == pubkey {
-			kp = &w.Keypairs[i]
-			break
-		}
-	}
-	// we did not find this pub key
-	if kp == nil {
-		return nil, ErrPubKeyDoesNotExist
 	}
 
 	if kp.Tainted {
 		return nil, ErrPubKeyIsTainted
 	}
 
-	// then lets sign the stuff and return it
-	signature, err := kp.Algorithm.Sign(kp.privBytes, rawInputData)
-	if err != nil {
-		return nil, err
-	}
-	return signature, nil
+	return kp.Algorithm.Sign(kp.privBytes, rawInputData)
 }
 
-func (h *Handler) SignTx(token, tx, pubkey string, blockHeight uint64) (SignedBundle, error) {
+func (h *Handler) SignTxV2(token string, req walletpb.SubmitTransactionRequest, height uint64) (*commandspb.Transaction, error) {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
 
-	// first the transaction would be in base64, let's decode
-	rawtx, err := base64.StdEncoding.DecodeString(tx)
+	keyPair, err := h.getKeyPair(token, req.GetPubKey())
 	if err != nil {
-		return SignedBundle{}, err
+		return nil, err
+	}
+	if keyPair.Tainted {
+		return nil, ErrPubKeyIsTainted
 	}
 
-	// then get the wallet name out of the token
-	wname, err := h.auth.VerifyToken(token)
+	data := commands.NewInputData(height)
+	wrapRequestCommandIntoInputData(data, req)
+	marshalledData, err := proto.Marshal(data)
 	if err != nil {
-		return SignedBundle{}, err
+		return nil, err
 	}
 
-	w, ok := h.store[wname]
-	if !ok {
-		// this should never happen as we cannot have a valid session
-		// without the actual wallet being loaded in memory but...
-		return SignedBundle{}, ErrWalletDoesNotExists
-	}
-
-	// let's retrieve the private key from the public key
-	var kp *Keypair
-	for i := range w.Keypairs {
-		if w.Keypairs[i].Pub == pubkey {
-			kp = &w.Keypairs[i]
-			break
-		}
-	}
-	// we did not find this pub key
-	if kp == nil {
-		return SignedBundle{}, ErrPubKeyDoesNotExist
-	}
-
-	if kp.Tainted {
-		return SignedBundle{}, ErrPubKeyIsTainted
-	}
-
-	// we build the transaction payload
-	txTy := &types.Transaction{
-		InputData:   rawtx,
-		Nonce:       makeNonce(),
-		BlockHeight: blockHeight,
-		From: &types.Transaction_PubKey{
-			PubKey: kp.pubBytes,
-		},
-	}
-
-	rawTxTy, err := proto.Marshal(txTy)
+	signature, err := keyPair.Sign(marshalledData)
 	if err != nil {
-		return SignedBundle{}, err
+		return nil, err
 	}
 
-	// then lets sign the stuff and return it
-	sig, err := kp.Algorithm.Sign(kp.privBytes, rawTxTy)
-	if err != nil {
-		return SignedBundle{}, err
-	}
-
-	return SignedBundle{
-		Tx: rawTxTy,
-		Sig: Signature{
-			Sig:     sig,
-			Algo:    kp.Algorithm.Name(),
-			Version: kp.Algorithm.Version(),
-		},
-	}, nil
+	return commands.NewTransaction(keyPair.pubBytes, marshalledData, signature), nil
 }
 
-func (h *Handler) TaintKey(token, pubkey, passphrase string) error {
+func (h *Handler) TaintKey(token, pubKey, passphrase string) error {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 
-	wname, err := h.auth.VerifyToken(token)
+	name, err := h.auth.VerifyToken(token)
 	if err != nil {
 		return err
 	}
 
-	_, err = Read(h.rootPath, wname, passphrase)
+	w, err := h.store.GetWallet(name, passphrase)
 	if err != nil {
 		return err
 	}
 
-	w, ok := h.store[wname]
-	if !ok {
-		// this should never happen as we cannot have a valid session
-		// without the actual wallet being loaded in memory but...
-		return ErrWalletDoesNotExists
-	}
-
-	// let's retrieve the private key from the public key
-	var kp *Keypair
-	for i := range w.Keypairs {
-		if w.Keypairs[i].Pub == pubkey {
-			kp = &w.Keypairs[i]
-			break
-		}
-	}
-	// we did not find this pub key
-	if kp == nil {
-		return ErrPubKeyDoesNotExist
-	}
-
-	if kp.Tainted {
-		return ErrPubKeyAlreadyTainted
-	}
-
-	kp.Tainted = true
-
-	_, err = writeWallet(&w, h.rootPath, wname, passphrase)
+	keyPair, err := w.Keypairs.FindPair(pubKey)
 	if err != nil {
 		return err
 	}
 
-	h.store[wname] = w
-	return nil
+	if err := keyPair.Taint(); err != nil {
+		return err
+	}
+
+	w.Keypairs.Upsert(keyPair)
+
+	return h.saveWallet(w, passphrase)
 }
 
-func (h *Handler) UpdateMeta(token, pubkey, passphrase string, meta []Meta) error {
+func (h *Handler) UpdateMeta(token, pubKey, passphrase string, meta []Meta) error {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 
-	wname, err := h.auth.VerifyToken(token)
+	name, err := h.auth.VerifyToken(token)
 	if err != nil {
 		return err
 	}
 
-	_, err = Read(h.rootPath, wname, passphrase)
+	w, err := h.store.GetWallet(name, passphrase)
 	if err != nil {
 		return err
 	}
 
-	w, ok := h.store[wname]
-	if !ok {
-		// this should never happen as we cannot have a valid session
-		// without the actual wallet being loaded in memory but...
-		return ErrWalletDoesNotExists
-	}
-
-	// let's retrieve the private key from the public key
-	var kp *Keypair
-	for i := range w.Keypairs {
-		if w.Keypairs[i].Pub == pubkey {
-			kp = &w.Keypairs[i]
-			break
-		}
-	}
-	// we did not find this pub key
-	if kp == nil {
-		return ErrPubKeyDoesNotExist
-	}
-
-	kp.Meta = meta
-
-	_, err = writeWallet(&w, h.rootPath, wname, passphrase)
+	keyPair, err := w.Keypairs.FindPair(pubKey)
 	if err != nil {
 		return err
 	}
 
-	h.store[wname] = w
+	keyPair.Meta = meta
+
+	w.Keypairs.Upsert(keyPair)
+
+	return h.saveWallet(w, passphrase)
+}
+
+func (h *Handler) GetWalletPath(token string) (string, error) {
+	name, err := h.auth.VerifyToken(token)
+	if err != nil {
+		return "", err
+	}
+
+	return h.store.GetWalletPath(name), nil
+}
+
+func (h *Handler) getKeyPair(token, pubKey string) (*Keypair, error) {
+	name, err := h.auth.VerifyToken(token)
+	if err != nil {
+		return nil, err
+	}
+
+	wallet, err := h.loggedWallets.Get(name)
+	if err != nil {
+		return nil, err
+	}
+
+	keyPair, err := wallet.Keypairs.FindPair(pubKey)
+
+	return &keyPair, err
+}
+
+func (h *Handler) saveWallet(w Wallet, passphrase string) error {
+	err := h.store.SaveWallet(w, passphrase)
+	if err != nil {
+		return err
+	}
+
+	h.loggedWallets.Add(w)
+
 	return nil
 }
 
-func makeNonce() uint64 {
-	max := &big.Int{}
-	// set it to the max value of the uint64
-	max.SetUint64(^uint64(0))
-	nonce, _ := rand.Int(rand.Reader, max)
-	return nonce.Uint64()
+func wrapRequestCommandIntoInputData(data *commandspb.InputData, req walletpb.SubmitTransactionRequest) {
+	switch cmd := req.Command.(type) {
+	case *walletpb.SubmitTransactionRequest_OrderSubmission:
+		data.Command = &commandspb.InputData_OrderSubmission{
+			OrderSubmission: req.GetOrderSubmission(),
+		}
+	case *walletpb.SubmitTransactionRequest_OrderCancellation:
+		data.Command = &commandspb.InputData_OrderCancellation{
+			OrderCancellation: req.GetOrderCancellation(),
+		}
+	case *walletpb.SubmitTransactionRequest_OrderAmendment:
+		data.Command = &commandspb.InputData_OrderAmendment{
+			OrderAmendment: req.GetOrderAmendment(),
+		}
+	case *walletpb.SubmitTransactionRequest_VoteSubmission:
+		data.Command = &commandspb.InputData_VoteSubmission{
+			VoteSubmission: req.GetVoteSubmission(),
+		}
+	case *walletpb.SubmitTransactionRequest_WithdrawSubmission:
+		data.Command = &commandspb.InputData_WithdrawSubmission{
+			WithdrawSubmission: req.GetWithdrawSubmission(),
+		}
+	case *walletpb.SubmitTransactionRequest_LiquidityProvisionSubmission:
+		data.Command = &commandspb.InputData_LiquidityProvisionSubmission{
+			LiquidityProvisionSubmission: req.GetLiquidityProvisionSubmission(),
+		}
+	case *walletpb.SubmitTransactionRequest_ProposalSubmission:
+		data.Command = &commandspb.InputData_ProposalSubmission{
+			ProposalSubmission: req.GetProposalSubmission(),
+		}
+	case *walletpb.SubmitTransactionRequest_NodeRegistration:
+		data.Command = &commandspb.InputData_NodeRegistration{
+			NodeRegistration: req.GetNodeRegistration(),
+		}
+	case *walletpb.SubmitTransactionRequest_NodeVote:
+		data.Command = &commandspb.InputData_NodeVote{
+			NodeVote: req.GetNodeVote(),
+		}
+	case *walletpb.SubmitTransactionRequest_NodeSignature:
+		data.Command = &commandspb.InputData_NodeSignature{
+			NodeSignature: req.GetNodeSignature(),
+		}
+	case *walletpb.SubmitTransactionRequest_ChainEvent:
+		data.Command = &commandspb.InputData_ChainEvent{
+			ChainEvent: req.GetChainEvent(),
+		}
+	case *walletpb.SubmitTransactionRequest_OracleDataSubmission:
+		data.Command = &commandspb.InputData_OracleDataSubmission{
+			OracleDataSubmission: req.GetOracleDataSubmission(),
+		}
+	default:
+		panic(fmt.Errorf("command %v is not supported", cmd))
+	}
+}
+
+type wallets map[string]Wallet
+
+func newWallets() wallets {
+	return map[string]Wallet{}
+}
+
+func (w wallets) Add(wallet Wallet) {
+	w[wallet.Owner] = wallet
+}
+
+func (w wallets) Get(owner string) (Wallet, error) {
+	wallet, ok := w[owner]
+	if !ok {
+		return Wallet{}, ErrWalletDoesNotExists
+	}
+	return wallet, nil
 }

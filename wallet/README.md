@@ -197,6 +197,14 @@ Sign a transaction using the specified keypair.
     }
   }
   ```
+
+### Propagate
+
+As you can see the request payload has a field `propagate` (optional) if set to true, then the wallet service, if
+configured with a correct vega node address will try to send the transaction on your behalf to the node after signing it
+successfully. The node address can be configured via the wallet service configuration file, by default it will point to
+a local instance of a vega node.
+
 ## Taint a key
 
 * Request:
@@ -248,5 +256,42 @@ Overwrite all existing metadata with the new metadata.
   ```json
   {
     "success": true
+  }
+  ```
+
+## Issue a transaction
+
+* Request:
+
+  ```json
+  {
+    "pubKey": "8d06a20eb717938b746e0332686257ae39fa3d90847eb8ee0da3463732e968ba",
+    "propagate": true,
+    "orderCancellation": {
+      "marketId": "YESYESYES"
+    }
+  }
+  ```
+* Command:
+
+  ```shell
+  curl -s -XPOST -H "Authorization: Bearer verylongJWT" -d 'requestjson' http://127.0.0.1:1789/api/v1/command
+  ```
+* Response:
+
+  ```json
+  {
+    "transaction": {
+      "inputData": "dGVzdGRhdG9837420b4b3yb23ybc4o1ui23yEK",
+      "signature": {
+        "value": "7f6g9sf8f8s76dfa867fda",
+        "algo": "vega/ed25519",
+        "version": 1
+      },
+      "from": {
+        "pubKey": "1122aabb..."
+      },
+      "version": 1
+    }
   }
   ```

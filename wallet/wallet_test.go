@@ -1,15 +1,12 @@
 package wallet_test
 
 import (
-	"crypto/rand"
-	"math/big"
 	"os"
-	"path/filepath"
 	"testing"
 
 	"code.vegaprotocol.io/go-wallet/fsutil"
 	"code.vegaprotocol.io/go-wallet/wallet"
-	"code.vegaprotocol.io/go-wallet/wallet/crypto"
+	wcrypto "code.vegaprotocol.io/go-wallet/wallet/crypto"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -18,19 +15,13 @@ var (
 	rootDirPath = "/tmp/vegatests/wallet/"
 )
 
-func rootDir() string {
-	path := filepath.Join(rootDirPath, randSeq(10))
-	os.MkdirAll(path, os.ModePerm)
-	return path
-}
-
 func TestWallet(t *testing.T) {
 	t.Run("create a wallet success", testCreateWallet)
 	t.Run("create a wallet failure", testCreateWalletFailure)
 	t.Run("read a wallet success", testReadWallet)
 	t.Run("read a wallet failure invalid passphrase", testReadWalletFailureInvalidPassphrase)
 	t.Run("read a wallet failure does not exist", testReadWalletFailureDoesNotExist)
-	t.Run("add a keypair to a wallet", testAddKeyPairtoWallet)
+	t.Run("add a keypair to a wallet", testAddKeyPairToWallet)
 }
 
 func testCreateWallet(t *testing.T) {
@@ -109,7 +100,7 @@ func testReadWalletFailureInvalidPassphrase(t *testing.T) {
 	assert.NoError(t, os.RemoveAll(rootDir))
 }
 
-func testAddKeyPairtoWallet(t *testing.T) {
+func testAddKeyPairToWallet(t *testing.T) {
 	rootDir := rootDir()
 	fsutil.EnsureDir(rootDir)
 	wallet.EnsureBaseFolder(rootDir)
@@ -125,7 +116,7 @@ func testAddKeyPairtoWallet(t *testing.T) {
 	assert.Len(t, w1.Keypairs, 0)
 
 	// create the keypair
-	kp := wallet.NewKeypair(crypto.NewEd25519(), []byte{1, 2, 3, 255}, []byte{253, 3, 2, 1})
+	kp := wallet.NewKeypair(wcrypto.NewEd25519(), []byte{1, 2, 3, 255}, []byte{253, 3, 2, 1})
 
 	// now try to add the keypair to the wallet
 	w2, err2 := wallet.AddKeypair(&kp, rootDir, "jeremy", "thisisasecurepassphraseinnit")
@@ -142,15 +133,4 @@ func testAddKeyPairtoWallet(t *testing.T) {
 	assert.Equal(t, "fd030201", w3.Keypairs[0].Priv)
 
 	assert.NoError(t, os.RemoveAll(rootDir))
-}
-
-var chars = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
-
-func randSeq(n int) string {
-	b := make([]rune, n)
-	for i := range b {
-		v, _ := rand.Int(rand.Reader, big.NewInt(int64(len(chars))))
-		b[i] = chars[v.Int64()]
-	}
-	return string(b)
 }

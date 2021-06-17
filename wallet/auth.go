@@ -4,20 +4,19 @@ import (
 	"crypto/rsa"
 	"encoding/hex"
 	"errors"
-	"math/rand"
 	"net/http"
 	"strings"
 	"sync"
 	"time"
 
+	"code.vegaprotocol.io/go-wallet/crypto"
+
 	"github.com/dgrijalva/jwt-go/v4"
 	"github.com/julienschmidt/httprouter"
 	"go.uber.org/zap"
-	"golang.org/x/crypto/sha3"
 )
 
 var (
-	// ErrSessionNotFound ...
 	ErrSessionNotFound = errors.New("session not found")
 )
 
@@ -32,7 +31,6 @@ type auth struct {
 	mu sync.Mutex
 }
 
-//
 func NewAuth(log *zap.Logger, rootPath string, tokenExpiry time.Duration) (*auth, error) {
 	// get rsa keys
 	pubBuf, privBuf, err := readRsaKeys(rootPath)
@@ -93,7 +91,7 @@ func (a *auth) NewSession(walletname string) (string, error) {
 	return ss, nil
 }
 
-// VerifyToken returns the walletname associated for this session
+// VerifyToken returns the wallet name associated for this session
 func (a *auth) VerifyToken(token string) (string, error) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -165,17 +163,5 @@ func ExtractToken(f func(string, http.ResponseWriter, *http.Request, httprouter.
 }
 
 func genSession() string {
-	hasher := sha3.New256()
-	hasher.Write([]byte(randSeq(10)))
-	return hex.EncodeToString(hasher.Sum(nil))
-}
-
-var chars = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
-
-func randSeq(n int) string {
-	b := make([]rune, n)
-	for i := range b {
-		b[i] = chars[rand.Intn(len(chars))]
-	}
-	return string(b)
+	return hex.EncodeToString(crypto.Hash(crypto.RandomBytes(10)))
 }

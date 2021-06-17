@@ -5,15 +5,21 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 
+	"code.vegaprotocol.io/go-wallet/commands"
+	typespb "github.com/vegaprotocol/api/grpc/clients/go/generated/code.vegaprotocol.io/vega/proto"
+	"github.com/vegaprotocol/api/grpc/clients/go/generated/code.vegaprotocol.io/vega/proto/api"
+	commandspb "github.com/vegaprotocol/api/grpc/clients/go/generated/code.vegaprotocol.io/vega/proto/commands/v1"
+	walletpb "github.com/vegaprotocol/api/grpc/clients/go/generated/code.vegaprotocol.io/vega/proto/wallet/v1"
+
+	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/proto"
 	"github.com/julienschmidt/httprouter"
 	"github.com/rs/cors"
-	vproto "github.com/vegaprotocol/api/grpc/clients/go/generated/code.vegaprotocol.io/vega/proto"
-	"github.com/vegaprotocol/api/grpc/clients/go/generated/code.vegaprotocol.io/vega/proto/api"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/status"
 )
@@ -94,28 +100,50 @@ type TokenResponse struct {
 // WalletHandler ...
 //go:generate go run github.com/golang/mock/mockgen -destination mocks/wallet_handler_mock.go -package mocks code.vegaprotocol.io/go-wallet/wallet WalletHandler
 type WalletHandler interface {
-	CreateWallet(wallet, passphrase string) (string, error)
-	LoginWallet(wallet, passphrase string) (string, error)
+	CreateWallet(name, passphrase string) (string, error)
+	LoginWallet(name, passphrase string) (string, error)
 	RevokeToken(token string) error
 	GenerateKeypair(token, passphrase string) (string, error)
 	GetPublicKey(token, pubKey string) (*Keypair, error)
+	GetWalletName(token string) (string, error)
 	ListPublicKeys(token string) ([]Keypair, error)
-	SignTx(token, tx, pubkey string, height uint64) (SignedBundle, error)
-	SignAny(token, inputData, pubkey string) ([]byte, error)
-	TaintKey(token, pubkey, passphrase string) error
-	UpdateMeta(token, pubkey, passphrase string, meta []Meta) error
-	WalletPath(token string) (string, error)
+	SignTx(token, tx, pubKey string, height uint64) (SignedBundle, error)
+	SignTxV2(token string, req walletpb.SubmitTransactionRequest, height uint64) (*commandspb.Transaction, error)
+	SignAny(token, inputData, pubKey string) ([]byte, error)
+	TaintKey(token, pubKey, passphrase string) error
+	UpdateMeta(token, pubKey, passphrase string, meta []Meta) error
+	GetWalletPath(token string) (string, error)
 }
 
 // NodeForward ...
 //go:generate go run github.com/golang/mock/mockgen -destination mocks/node_forward_mock.go -package mocks code.vegaprotocol.io/go-wallet/wallet NodeForward
 type NodeForward interface {
 	Send(context.Context, *SignedBundle, api.SubmitTransactionRequest_Type) error
+	SendTxV2(context.Context, *commandspb.Transaction, api.SubmitTransactionV2Request_Type) error
 	HealthCheck(context.Context) error
 	LastBlockHeight(context.Context) (uint64, error)
 }
 
-func NewServiceWith(log *zap.Logger, cfg *Config, rootPath string, h WalletHandler, n NodeForward) (*Service, error) {
+func NewService(log *zap.Logger, cfg *Config, rootPath string) (*Service, error) {
+	log = log.Named(namedLogger)
+
+	fileStore, err := NewFileStoreV1(rootPath)
+	if err != nil {
+		return nil, err
+	}
+	auth, err := NewAuth(log, rootPath, cfg.TokenExpiry.Get())
+	if err != nil {
+		return nil, err
+	}
+	nodeForward, err := NewNodeForward(log, cfg.Nodes)
+	if err != nil {
+		return nil, err
+	}
+	handler := NewHandler(auth, fileStore)
+	return NewServiceWith(log, cfg, handler, nodeForward)
+}
+
+func NewServiceWith(log *zap.Logger, cfg *Config, h WalletHandler, n NodeForward) (*Service, error) {
 	s := &Service{
 		Router:      httprouter.New(),
 		log:         log,
@@ -123,8 +151,6 @@ func NewServiceWith(log *zap.Logger, cfg *Config, rootPath string, h WalletHandl
 		handler:     h,
 		nodeForward: n,
 	}
-
-	// all the endpoints are public for testing purpose
 
 	s.POST("/api/v1/auth/token", s.Login)
 	s.GET("/api/v1/status", s.health)
@@ -137,31 +163,17 @@ func NewServiceWith(log *zap.Logger, cfg *Config, rootPath string, h WalletHandl
 	s.PUT("/api/v1/keys/:keyid/taint", ExtractToken(s.TaintKey))
 	s.PUT("/api/v1/keys/:keyid/metadata", ExtractToken(s.UpdateMeta))
 	s.POST("/api/v1/sign", ExtractToken(s.SignAny))
+	s.POST("/api/v1/command", ExtractToken(s.SignTxV2))
+	s.POST("/api/v1/command/sync", ExtractToken(s.SignTxSyncV2))
+	s.POST("/api/v1/command/commit", ExtractToken(s.SignTxCommitV2))
+	s.GET("/api/v1/wallets", ExtractToken(s.DownloadWallet))
+
+	// DEPRECATED Use
 	s.POST("/api/v1/messages", ExtractToken(s.SignTx))
 	s.POST("/api/v1/messages/async", ExtractToken(s.SignTxAsync))
 	s.POST("/api/v1/messages/commit", ExtractToken(s.SignTxCommit))
-	s.GET("/api/v1/wallets", ExtractToken(s.DownloadWallet))
 
 	return s, nil
-}
-
-func NewService(log *zap.Logger, cfg *Config, rootPath string) (*Service, error) {
-	log = log.Named(namedLogger)
-
-	// ensure the folder exist
-	if err := EnsureBaseFolder(rootPath); err != nil {
-		return nil, err
-	}
-	auth, err := NewAuth(log, rootPath, cfg.TokenExpiry.Get())
-	if err != nil {
-		return nil, err
-	}
-	nodeForward, err := NewNodeForward(log, cfg.Nodes)
-	if err != nil {
-		return nil, err
-	}
-	handler := NewHandler(log, auth, rootPath)
-	return NewServiceWith(log, cfg, rootPath, handler, nodeForward)
 }
 
 func (s *Service) Start() error {
@@ -205,7 +217,7 @@ func (s *Service) CreateWallet(w http.ResponseWriter, r *http.Request, _ httprou
 }
 
 func (s *Service) DownloadWallet(token string, w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	path, err := s.handler.WalletPath(token)
+	path, err := s.handler.GetWalletPath(token)
 	if err != nil {
 		writeError(w, newError(err.Error()), http.StatusBadRequest)
 		return
@@ -309,110 +321,6 @@ func (s *Service) ListPublicKeys(t string, w http.ResponseWriter, r *http.Reques
 	writeSuccess(w, KeysResponse{Keys: keys}, http.StatusOK)
 }
 
-func (s *Service) SignTxAsync(t string, w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	s.signTx(t, w, r, p, api.SubmitTransactionRequest_TYPE_ASYNC)
-}
-
-func (s *Service) SignTxCommit(t string, w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	s.signTx(t, w, r, p, api.SubmitTransactionRequest_TYPE_COMMIT)
-}
-
-func (s *Service) SignTx(t string, w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	s.signTx(t, w, r, p, api.SubmitTransactionRequest_TYPE_SYNC)
-}
-
-func (s *Service) signTx(t string, w http.ResponseWriter, r *http.Request, _ httprouter.Params, ty api.SubmitTransactionRequest_Type) {
-	req := SignTxRequest{}
-	if err := unmarshalBody(r, &req); err != nil {
-		writeError(w, newError(err.Error()), http.StatusBadRequest)
-		return
-	}
-	if len(req.Tx) <= 0 {
-		writeError(w, newError("missing tx field"), http.StatusBadRequest)
-		return
-	}
-	if len(req.PubKey) <= 0 {
-		writeError(w, newError("missing pubKey field"), http.StatusBadRequest)
-		return
-	}
-
-	height, err := s.nodeForward.LastBlockHeight(r.Context())
-	if err != nil {
-		writeError(w, newError("could not get last block height"), http.StatusInternalServerError)
-		return
-	}
-
-	sb, err := s.handler.SignTx(t, req.Tx, req.PubKey, height)
-	if err != nil {
-		writeError(w, newError(err.Error()), http.StatusForbidden)
-		return
-	}
-
-	if req.Propagate {
-		if err := s.nodeForward.Send(r.Context(), &sb, ty); err != nil {
-			if st, ok := status.FromError(err); ok {
-				details := []string{}
-				for _, v := range st.Details() {
-					v := v.(*vproto.ErrorDetail)
-					details = append(details, v.Message)
-				}
-				s.log.Error("cannot forward transaction", zap.Strings("error", details))
-				writeError(w, newErrorWithDetails(err.Error(), details), http.StatusInternalServerError)
-			} else {
-				s.log.Error("cannot forward transaction", zap.String("error", err.Error()))
-				writeError(w, newError(err.Error()), http.StatusInternalServerError)
-			}
-			return
-		}
-	}
-
-	rawBundle, err := proto.Marshal(sb.IntoProto())
-	if err != nil {
-		writeError(w, newError(err.Error()), http.StatusInternalServerError)
-		return
-	}
-
-	hexBundle := hex.EncodeToString(rawBundle)
-	base64Bundle := base64.StdEncoding.EncodeToString(rawBundle)
-
-	res := SignTxResponse{
-		SignedTx:     sb,
-		HexBundle:    hexBundle,
-		Base64Bundle: base64Bundle,
-	}
-
-	writeSuccess(w, res, http.StatusOK)
-}
-
-func (s *Service) SignAny(t string, w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	req := SignAnyRequest{}
-	if err := unmarshalBody(r, &req); err != nil {
-		writeError(w, newError(err.Error()), http.StatusBadRequest)
-		return
-	}
-	if len(req.InputData) <= 0 {
-		writeError(w, newError("missing inputData field"), http.StatusBadRequest)
-		return
-	}
-	if len(req.PubKey) <= 0 {
-		writeError(w, newError("missing pubKey field"), http.StatusBadRequest)
-		return
-	}
-
-	signature, err := s.handler.SignAny(t, req.InputData, req.PubKey)
-	if err != nil {
-		writeError(w, newError(err.Error()), http.StatusForbidden)
-		return
-	}
-
-	res := SignAnyResponse{
-		HexSignature:    hex.EncodeToString(signature),
-		Base64Signature: base64.StdEncoding.EncodeToString(signature),
-	}
-
-	writeSuccess(w, res, http.StatusOK)
-}
-
 func (s *Service) TaintKey(t string, w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	req := PassphraseRequest{}
 	if err := unmarshalBody(r, &req); err != nil {
@@ -463,6 +371,116 @@ func (s *Service) UpdateMeta(t string, w http.ResponseWriter, r *http.Request, p
 	writeSuccess(w, SuccessResponse{Success: true}, http.StatusOK)
 }
 
+func (s *Service) SignAny(t string, w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	req := SignAnyRequest{}
+	if err := unmarshalBody(r, &req); err != nil {
+		writeError(w, newError(err.Error()), http.StatusBadRequest)
+		return
+	}
+	if len(req.InputData) <= 0 {
+		writeError(w, newError("missing inputData field"), http.StatusBadRequest)
+		return
+	}
+	if len(req.PubKey) <= 0 {
+		writeError(w, newError("missing pubKey field"), http.StatusBadRequest)
+		return
+	}
+
+	signature, err := s.handler.SignAny(t, req.InputData, req.PubKey)
+	if err != nil {
+		writeError(w, newError(err.Error()), http.StatusForbidden)
+		return
+	}
+
+	res := SignAnyResponse{
+		HexSignature:    hex.EncodeToString(signature),
+		Base64Signature: base64.StdEncoding.EncodeToString(signature),
+	}
+
+	writeSuccess(w, res, http.StatusOK)
+}
+
+func (s *Service) SignTxSyncV2(token string, w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	s.signTxV2(token, w, r, p, api.SubmitTransactionV2Request_TYPE_SYNC)
+}
+
+func (s *Service) SignTxCommitV2(token string, w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	s.signTxV2(token, w, r, p, api.SubmitTransactionV2Request_TYPE_COMMIT)
+}
+
+func (s *Service) SignTxV2(token string, w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	s.signTxV2(token, w, r, p, api.SubmitTransactionV2Request_TYPE_ASYNC)
+}
+
+func (s *Service) signTxV2(token string, w http.ResponseWriter, r *http.Request, _ httprouter.Params, ty api.SubmitTransactionV2Request_Type) {
+	defer r.Body.Close()
+
+	errs := commands.NewErrors()
+	req := walletpb.SubmitTransactionRequest{}
+
+	if err := jsonpb.Unmarshal(r.Body, &req); err != nil {
+		errs.Add(errors.New("couldn't parse the request"))
+		s.writeBadRequest(w, errs)
+		return
+	}
+
+	errs.Merge(CheckSubmitTransactionRequest(req))
+	if !errs.Empty() {
+		s.writeBadRequest(w, errs)
+		return
+	}
+
+	height, err := s.nodeForward.LastBlockHeight(r.Context())
+	if err != nil {
+		writeError(w, newError("could not get last block height"), http.StatusInternalServerError)
+		return
+	}
+
+	tx, err := s.handler.SignTxV2(token, req, height)
+	if err != nil {
+		writeError(w, newError(err.Error()), http.StatusForbidden)
+		return
+	}
+
+	if req.Propagate {
+		if err := s.nodeForward.SendTxV2(r.Context(), tx, ty); err != nil {
+			if s, ok := status.FromError(err); ok {
+				details := []string{}
+				for _, v := range s.Details() {
+					v := v.(*typespb.ErrorDetail)
+					details = append(details, v.Message)
+				}
+				writeError(w, newErrorWithDetails(err.Error(), details), http.StatusInternalServerError)
+			} else {
+				writeError(w, newError(err.Error()), http.StatusInternalServerError)
+			}
+			return
+		}
+	}
+
+	writeSuccessProto(w, tx, http.StatusOK)
+}
+
+type ErrorResponse struct {
+	Errors commands.Errors `json:"errors"`
+}
+
+func (s *Service) writeBadRequest(w http.ResponseWriter, errs commands.Errors) {
+	s.writeErrors(w, http.StatusBadRequest, errs)
+}
+
+func (s *Service) writeErrors(w http.ResponseWriter, statusCode int, errs commands.Errors) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(statusCode)
+	buf, _ := json.Marshal(ErrorResponse{Errors: errs})
+	if _, err := w.Write(buf); err != nil {
+		s.log.Error(fmt.Sprintf("couldn't marshal errors as JSON because of: %s", err.Error()),
+			zap.Error(errs),
+		)
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+}
+
 func (s *Service) health(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	if err := s.nodeForward.HealthCheck(r.Context()); err != nil {
 		writeSuccess(w, SuccessResponse{Success: false}, http.StatusFailedDependency)
@@ -492,6 +510,13 @@ func writeSuccess(w http.ResponseWriter, data interface{}, status int) {
 	w.WriteHeader(status)
 	buf, _ := json.Marshal(data)
 	w.Write(buf)
+}
+
+func writeSuccessProto(w http.ResponseWriter, data proto.Message, status int) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	marshaler := jsonpb.Marshaler{}
+	marshaler.Marshal(w, data)
 }
 
 var (
