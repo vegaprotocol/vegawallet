@@ -1,12 +1,12 @@
 package wallet
 
 import (
-	"crypto/rand"
 	"encoding/base64"
-	"math/big"
+
+	"code.vegaprotocol.io/go-wallet/crypto"
+	typespb "github.com/vegaprotocol/api/grpc/clients/go/generated/code.vegaprotocol.io/vega/proto"
 
 	"github.com/golang/protobuf/proto"
-	typespb "github.com/vegaprotocol/api/grpc/clients/go/generated/code.vegaprotocol.io/vega/proto"
 )
 
 func (h *Handler) SignTx(token, tx, pubKey string, blockHeight uint64) (SignedBundle, error) {
@@ -30,7 +30,7 @@ func (h *Handler) SignTx(token, tx, pubKey string, blockHeight uint64) (SignedBu
 
 	txTy := &typespb.Transaction{
 		InputData:   rawTx,
-		Nonce:       makeNonce(),
+		Nonce:       crypto.NewNonce(),
 		BlockHeight: blockHeight,
 		From: &typespb.Transaction_PubKey{
 			PubKey: kp.pubBytes,
@@ -56,12 +56,4 @@ func (h *Handler) SignTx(token, tx, pubKey string, blockHeight uint64) (SignedBu
 			Version: kp.Algorithm.Version(),
 		},
 	}, nil
-}
-
-func makeNonce() uint64 {
-	max := &big.Int{}
-	// set it to the max value of the uint64
-	max.SetUint64(^uint64(0))
-	nonce, _ := rand.Int(rand.Reader, max)
-	return nonce.Uint64()
 }
