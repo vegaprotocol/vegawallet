@@ -20,11 +20,10 @@ import (
 )
 
 const (
-	namedLogger    = "wallet"
 	configFile     = "wallet-service-config.toml"
-	rsaKeyPath     = "wallet_rsa"
-	pubRsaKeyName  = "public.pem"
-	privRsaKeyName = "private.pem"
+	RsaKeyPath     = "wallet_rsa"
+	PubRsaKeyName  = "public.pem"
+	PrivRsaKeyName = "private.pem"
 
 	//  7 days, needs to be in seconds for the token
 	tokenExpiry = time.Hour * 24 * 7
@@ -83,7 +82,7 @@ func NewDefaultConfig() Config {
 		},
 		Host:   "127.0.0.1",
 		Port:   1789,
-		RsaKey: rsaKeyPath,
+		RsaKey: RsaKeyPath,
 		Console: ConsoleConfig{
 			URL:       "console.fairground.wtf",
 			LocalPort: 1847,
@@ -153,7 +152,7 @@ func GenConfig(log *zap.Logger, path string, rewrite, genRsaKey bool) error {
 }
 
 func GenRsaKeyFiles(log *zap.Logger, path string, rewrite bool) error {
-	keyFolderPath := filepath.Join(path, rsaKeyPath)
+	keyFolderPath := filepath.Join(path, RsaKeyPath)
 	confPathExists, _ := fsutil.PathExists(keyFolderPath)
 	if confPathExists {
 		if rewrite {
@@ -165,7 +164,7 @@ func GenRsaKeyFiles(log *zap.Logger, path string, rewrite bool) error {
 			}
 		} else {
 			// file exist, but not allowed to rewrite, return an error
-			return fmt.Errorf("rsa keys already exists at path: %v", rsaKeyPath)
+			return fmt.Errorf("rsa keys already exists at path: %v", RsaKeyPath)
 		}
 	}
 
@@ -181,11 +180,11 @@ func GenRsaKeyFiles(log *zap.Logger, path string, rewrite bool) error {
 		return fmt.Errorf("unable to generate rsa keys: %v", err)
 	}
 
-	if err := savePEMKey(filepath.Join(keyFolderPath, privRsaKeyName), key); err != nil {
+	if err := savePEMKey(filepath.Join(keyFolderPath, PrivRsaKeyName), key); err != nil {
 		return fmt.Errorf("unable to write private key: %v", err)
 	}
 
-	if err := savePublicPEMKey(filepath.Join(keyFolderPath, pubRsaKeyName), key.PublicKey); err != nil {
+	if err := savePublicPEMKey(filepath.Join(keyFolderPath, PubRsaKeyName), key.PublicKey); err != nil {
 		return fmt.Errorf("unable to write private key: %v", err)
 	}
 
@@ -227,16 +226,4 @@ func savePublicPEMKey(fileName string, pubkey rsa.PublicKey) error {
 	defer pemfile.Close()
 
 	return pem.Encode(pemfile, pemkey)
-}
-
-func readRsaKeys(rootPath string) (pub []byte, priv []byte, err error) {
-	pub, err = ioutil.ReadFile(filepath.Join(rootPath, rsaKeyPath, pubRsaKeyName))
-	if err != nil {
-		return nil, nil, err
-	}
-	priv, err = ioutil.ReadFile(filepath.Join(rootPath, rsaKeyPath, privRsaKeyName))
-	if err != nil {
-		return nil, nil, err
-	}
-	return
 }

@@ -8,6 +8,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"code.vegaprotocol.io/go-wallet/service"
 	"code.vegaprotocol.io/go-wallet/wallet"
 
 	"github.com/skratchdot/open-golang/open"
@@ -50,7 +51,7 @@ func runServiceRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	srv, err := wallet.NewService(log, cfg, rootArgs.rootPath)
+	srv, err := service.NewService(log, cfg, rootArgs.rootPath)
 	if err != nil {
 		return err
 	}

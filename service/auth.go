@@ -1,16 +1,18 @@
-package wallet
+package service
 
 import (
 	"crypto/rsa"
 	"encoding/hex"
 	"errors"
+	"io/ioutil"
 	"net/http"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
 
 	"code.vegaprotocol.io/go-wallet/crypto"
-
+	"code.vegaprotocol.io/go-wallet/wallet"
 	"github.com/dgrijalva/jwt-go/v4"
 	"github.com/julienschmidt/httprouter"
 	"go.uber.org/zap"
@@ -164,4 +166,16 @@ func ExtractToken(f func(string, http.ResponseWriter, *http.Request, httprouter.
 
 func genSession() string {
 	return hex.EncodeToString(crypto.Hash(crypto.RandomBytes(10)))
+}
+
+func readRsaKeys(rootPath string) (pub []byte, priv []byte, err error) {
+	pub, err = ioutil.ReadFile(filepath.Join(rootPath, wallet.RsaKeyPath, wallet.PubRsaKeyName))
+	if err != nil {
+		return nil, nil, err
+	}
+	priv, err = ioutil.ReadFile(filepath.Join(rootPath, wallet.RsaKeyPath, wallet.PrivRsaKeyName))
+	if err != nil {
+		return nil, nil, err
+	}
+	return
 }

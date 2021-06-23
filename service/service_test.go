@@ -1,4 +1,4 @@
-package wallet_test
+package service_test
 
 import (
 	"bytes"
@@ -10,9 +10,10 @@ import (
 	"os"
 	"testing"
 
+	"code.vegaprotocol.io/go-wallet/service"
+	"code.vegaprotocol.io/go-wallet/service/mocks"
 	"code.vegaprotocol.io/go-wallet/wallet"
 	"code.vegaprotocol.io/go-wallet/wallet/crypto"
-	"code.vegaprotocol.io/go-wallet/wallet/mocks"
 	"github.com/stretchr/testify/require"
 	"github.com/vegaprotocol/api/grpc/clients/go/generated/code.vegaprotocol.io/vega/proto/api"
 	commandspb "github.com/vegaprotocol/api/grpc/clients/go/generated/code.vegaprotocol.io/vega/proto/commands/v1"
@@ -26,7 +27,7 @@ import (
 // this tests in general ensure request / response contracts are not broken for the service
 
 type testService struct {
-	*wallet.Service
+	*service.Service
 
 	ctrl        *gomock.Controller
 	handler     *mocks.MockWalletHandler
@@ -40,7 +41,7 @@ func getTestService(t *testing.T) *testService {
 	auth := mocks.NewMockAuth(ctrl)
 	nodeForward := mocks.NewMockNodeForward(ctrl)
 	// no needs of the conf or path as we do not run an actual service
-	s, _ := wallet.NewServiceWith(zap.NewNop(), nil, handler, auth, nodeForward)
+	s, _ := service.NewServiceWith(zap.NewNop(), nil, handler, auth, nodeForward)
 	return &testService{
 		Service:     s,
 		ctrl:        ctrl,
@@ -219,7 +220,7 @@ func testServiceRevokeTokenOK(t *testing.T) {
 
 	w := httptest.NewRecorder()
 
-	wallet.ExtractToken(s.Revoke)(w, r, nil)
+	service.ExtractToken(s.Revoke)(w, r, nil)
 
 	resp := w.Result()
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
@@ -235,7 +236,7 @@ func testServiceRevokeTokenFailInvalidRequest(t *testing.T) {
 
 	w := httptest.NewRecorder()
 
-	wallet.ExtractToken(s.Revoke)(w, r, nil)
+	service.ExtractToken(s.Revoke)(w, r, nil)
 
 	resp := w.Result()
 	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
@@ -244,7 +245,7 @@ func testServiceRevokeTokenFailInvalidRequest(t *testing.T) {
 	r = httptest.NewRequest("POST", "scheme://host/path", nil)
 	w = httptest.NewRecorder()
 
-	wallet.ExtractToken(s.Revoke)(w, r, nil)
+	service.ExtractToken(s.Revoke)(w, r, nil)
 
 	resp = w.Result()
 	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
@@ -264,7 +265,7 @@ func testServiceGenKeypairOK(t *testing.T) {
 
 	w := httptest.NewRecorder()
 
-	wallet.ExtractToken(s.GenerateKeypair)(w, r, nil)
+	service.ExtractToken(s.GenerateKeypair)(w, r, nil)
 
 	resp := w.Result()
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
@@ -280,7 +281,7 @@ func testServiceGenKeypairFailInvalidRequest(t *testing.T) {
 
 	w := httptest.NewRecorder()
 
-	wallet.ExtractToken(s.GenerateKeypair)(w, r, nil)
+	service.ExtractToken(s.GenerateKeypair)(w, r, nil)
 
 	resp := w.Result()
 	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
@@ -289,7 +290,7 @@ func testServiceGenKeypairFailInvalidRequest(t *testing.T) {
 	r = httptest.NewRequest("POST", "scheme://host/path", nil)
 	w = httptest.NewRecorder()
 
-	wallet.ExtractToken(s.GenerateKeypair)(w, r, nil)
+	service.ExtractToken(s.GenerateKeypair)(w, r, nil)
 
 	resp = w.Result()
 	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
@@ -299,7 +300,7 @@ func testServiceGenKeypairFailInvalidRequest(t *testing.T) {
 	w = httptest.NewRecorder()
 	r.Header.Add("Authorization", "Bearer eyXXzA")
 
-	wallet.ExtractToken(s.GenerateKeypair)(w, r, nil)
+	service.ExtractToken(s.GenerateKeypair)(w, r, nil)
 
 	resp = w.Result()
 	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
@@ -319,7 +320,7 @@ func testServiceListPublicKeysOK(t *testing.T) {
 
 	w := httptest.NewRecorder()
 
-	wallet.ExtractToken(s.ListPublicKeys)(w, r, nil)
+	service.ExtractToken(s.ListPublicKeys)(w, r, nil)
 
 	resp := w.Result()
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
@@ -335,7 +336,7 @@ func testServiceListPublicKeysFailInvalidRequest(t *testing.T) {
 
 	w := httptest.NewRecorder()
 
-	wallet.ExtractToken(s.ListPublicKeys)(w, r, nil)
+	service.ExtractToken(s.ListPublicKeys)(w, r, nil)
 
 	resp := w.Result()
 	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
@@ -344,7 +345,7 @@ func testServiceListPublicKeysFailInvalidRequest(t *testing.T) {
 	r = httptest.NewRequest("POST", "scheme://host/path", nil)
 	w = httptest.NewRecorder()
 
-	wallet.ExtractToken(s.ListPublicKeys)(w, r, nil)
+	service.ExtractToken(s.ListPublicKeys)(w, r, nil)
 
 	resp = w.Result()
 	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
@@ -370,7 +371,7 @@ func testServiceGetPublicKeyOK(t *testing.T) {
 
 	w := httptest.NewRecorder()
 
-	wallet.ExtractToken(s.GetPublicKey)(w, r, httprouter.Params{{Key: "keyid", Value: "apubkey"}})
+	service.ExtractToken(s.GetPublicKey)(w, r, httprouter.Params{{Key: "keyid", Value: "apubkey"}})
 
 	resp := w.Result()
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
@@ -386,7 +387,7 @@ func testServiceGetPublicKeyFailInvalidRequest(t *testing.T) {
 
 	w := httptest.NewRecorder()
 
-	wallet.ExtractToken(s.GetPublicKey)(w, r, nil)
+	service.ExtractToken(s.GetPublicKey)(w, r, nil)
 
 	resp := w.Result()
 	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
@@ -395,7 +396,7 @@ func testServiceGetPublicKeyFailInvalidRequest(t *testing.T) {
 	r = httptest.NewRequest("POST", "scheme://host/path", nil)
 	w = httptest.NewRecorder()
 
-	wallet.ExtractToken(s.GetPublicKey)(w, r, nil)
+	service.ExtractToken(s.GetPublicKey)(w, r, nil)
 
 	resp = w.Result()
 	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
@@ -414,7 +415,7 @@ func testServiceGetPublicKeyFailKeyNotFound(t *testing.T) {
 
 	w := httptest.NewRecorder()
 
-	wallet.ExtractToken(s.GetPublicKey)(w, r, httprouter.Params{{Key: "keyid", Value: "apubkey"}})
+	service.ExtractToken(s.GetPublicKey)(w, r, httprouter.Params{{Key: "keyid", Value: "apubkey"}})
 
 	resp := w.Result()
 	assert.Equal(t, http.StatusNotFound, resp.StatusCode)
@@ -433,7 +434,7 @@ func testServiceGetPublicKeyFailMiscError(t *testing.T) {
 
 	w := httptest.NewRecorder()
 
-	wallet.ExtractToken(s.GetPublicKey)(w, r, httprouter.Params{{Key: "keyid", Value: "apubkey"}})
+	service.ExtractToken(s.GetPublicKey)(w, r, httprouter.Params{{Key: "keyid", Value: "apubkey"}})
 
 	resp := w.Result()
 	assert.Equal(t, http.StatusForbidden, resp.StatusCode)
@@ -452,7 +453,7 @@ func testServiceTaintOK(t *testing.T) {
 
 	w := httptest.NewRecorder()
 
-	wallet.ExtractToken(s.TaintKey)(w, r, httprouter.Params{{Key: "keyid", Value: "asdasasdasd"}})
+	service.ExtractToken(s.TaintKey)(w, r, httprouter.Params{{Key: "keyid", Value: "asdasasdasd"}})
 
 	resp := w.Result()
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
@@ -468,7 +469,7 @@ func testServiceTaintFailInvalidRequest(t *testing.T) {
 
 	w := httptest.NewRecorder()
 
-	wallet.ExtractToken(s.TaintKey)(w, r, nil)
+	service.ExtractToken(s.TaintKey)(w, r, nil)
 
 	resp := w.Result()
 	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
@@ -477,7 +478,7 @@ func testServiceTaintFailInvalidRequest(t *testing.T) {
 	r = httptest.NewRequest("POST", "scheme://host/path", nil)
 	w = httptest.NewRecorder()
 
-	wallet.ExtractToken(s.TaintKey)(w, r, nil)
+	service.ExtractToken(s.TaintKey)(w, r, nil)
 
 	resp = w.Result()
 	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
@@ -488,7 +489,7 @@ func testServiceTaintFailInvalidRequest(t *testing.T) {
 	w = httptest.NewRecorder()
 	r.Header.Set("Authorization", "Bearer eyXXzA")
 
-	wallet.ExtractToken(s.TaintKey)(w, r, nil)
+	service.ExtractToken(s.TaintKey)(w, r, nil)
 
 	resp = w.Result()
 	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
@@ -498,7 +499,7 @@ func testServiceTaintFailInvalidRequest(t *testing.T) {
 	w = httptest.NewRecorder()
 	r.Header.Set("Authorization", "Bearer eyXXzA")
 
-	wallet.ExtractToken(s.TaintKey)(w, r, nil)
+	service.ExtractToken(s.TaintKey)(w, r, nil)
 
 	resp = w.Result()
 	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
@@ -518,7 +519,7 @@ func testServiceUpdateMetaOK(t *testing.T) {
 
 	w := httptest.NewRecorder()
 
-	wallet.ExtractToken(s.UpdateMeta)(w, r, httprouter.Params{{Key: "keyid", Value: "asdasasdasd"}})
+	service.ExtractToken(s.UpdateMeta)(w, r, httprouter.Params{{Key: "keyid", Value: "asdasasdasd"}})
 
 	resp := w.Result()
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
@@ -534,7 +535,7 @@ func testServiceUpdateMetaFailInvalidRequest(t *testing.T) {
 
 	w := httptest.NewRecorder()
 
-	wallet.ExtractToken(s.UpdateMeta)(w, r, nil)
+	service.ExtractToken(s.UpdateMeta)(w, r, nil)
 
 	resp := w.Result()
 	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
@@ -543,7 +544,7 @@ func testServiceUpdateMetaFailInvalidRequest(t *testing.T) {
 	r = httptest.NewRequest("POST", "scheme://host/path", nil)
 	w = httptest.NewRecorder()
 
-	wallet.ExtractToken(s.UpdateMeta)(w, r, nil)
+	service.ExtractToken(s.UpdateMeta)(w, r, nil)
 
 	resp = w.Result()
 	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
@@ -554,7 +555,7 @@ func testServiceUpdateMetaFailInvalidRequest(t *testing.T) {
 	w = httptest.NewRecorder()
 	r.Header.Set("Authorization", "Bearer eyXXzA")
 
-	wallet.ExtractToken(s.UpdateMeta)(w, r, nil)
+	service.ExtractToken(s.UpdateMeta)(w, r, nil)
 
 	resp = w.Result()
 	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
@@ -564,7 +565,7 @@ func testServiceUpdateMetaFailInvalidRequest(t *testing.T) {
 	w = httptest.NewRecorder()
 	r.Header.Set("Authorization", "Bearer eyXXzA")
 
-	wallet.ExtractToken(s.UpdateMeta)(w, r, nil)
+	service.ExtractToken(s.UpdateMeta)(w, r, nil)
 
 	resp = w.Result()
 	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
@@ -773,7 +774,7 @@ func testSigningAnythingSucceeds(t *testing.T) {
 
 	w := httptest.NewRecorder()
 
-	wallet.ExtractToken(s.SignAny)(w, r, nil)
+	service.ExtractToken(s.SignAny)(w, r, nil)
 
 	resp := w.Result()
 	assert.Equal(t, http.StatusOK, resp.StatusCode)

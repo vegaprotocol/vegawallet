@@ -1,16 +1,16 @@
-package wallet
+package service
 
 import (
 	"context"
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 
 	"code.vegaprotocol.io/go-wallet/commands"
+	"code.vegaprotocol.io/go-wallet/wallet"
 	typespb "github.com/vegaprotocol/api/grpc/clients/go/generated/code.vegaprotocol.io/vega/proto"
 	"github.com/vegaprotocol/api/grpc/clients/go/generated/code.vegaprotocol.io/vega/proto/api"
 	commandspb "github.com/vegaprotocol/api/grpc/clients/go/generated/code.vegaprotocol.io/vega/proto/commands/v1"
@@ -27,7 +27,7 @@ import (
 type Service struct {
 	*httprouter.Router
 
-	cfg         *Config
+	cfg         *wallet.Config
 	log         *zap.Logger
 	s           *http.Server
 	handler     WalletHandler
@@ -41,15 +41,109 @@ type CreateLoginWalletRequest struct {
 	Passphrase string `json:"passphrase"`
 }
 
-// PassphraseRequest describes the request for TaintKey.
-type PassphraseRequest struct {
+func ParseCreateLoginWalletRequest(r *http.Request) (*CreateLoginWalletRequest, commands.Errors) {
+	errs := commands.NewErrors()
+
+	req := &CreateLoginWalletRequest{}
+	if err := unmarshalBody(r, &req); err != nil {
+		return nil, errs.FinalAdd(err)
+	}
+
+	if len(req.Wallet) == 0 {
+		errs.AddForProperty("wallet", commands.ErrIsRequired)
+	}
+
+	if len(req.Passphrase) == 0 {
+		errs.AddForProperty("passphrase", commands.ErrIsRequired)
+	}
+
+	if !errs.Empty() {
+		return nil, errs
+	}
+
+	return req, errs
+}
+
+// TaintKeyRequest describes the request for TaintKey.
+type TaintKeyRequest struct {
 	Passphrase string `json:"passphrase"`
 }
 
-// PassphraseMetaRequest describes the request for GenerateKeypair, UpdateMeta.
-type PassphraseMetaRequest struct {
-	Passphrase string `json:"passphrase"`
-	Meta       []Meta `json:"meta"`
+func ParseTaintKeyRequest(r *http.Request, keyID string) (*TaintKeyRequest, commands.Errors) {
+	errs := commands.NewErrors()
+
+	if len(keyID) == 0 {
+		errs.AddForProperty("keyid", commands.ErrIsRequired)
+	}
+
+	req := &TaintKeyRequest{}
+	if err := unmarshalBody(r, &req); err != nil {
+		return nil, errs.FinalAdd(err)
+	}
+
+	if len(req.Passphrase) == 0 {
+		errs.AddForProperty("passphrase", commands.ErrIsRequired)
+	}
+
+	if !errs.Empty() {
+		return nil, errs
+	}
+
+	return req, errs
+}
+
+// GenKeyPairRequest describes the request for GenerateKeypair, UpdateMeta.
+type GenKeyPairRequest struct {
+	Passphrase string        `json:"passphrase"`
+	Meta       []wallet.Meta `json:"meta"`
+}
+
+func ParseGenKeyPairRequest(r *http.Request) (*GenKeyPairRequest, commands.Errors) {
+	errs := commands.NewErrors()
+
+	req := &GenKeyPairRequest{}
+	if err := unmarshalBody(r, &req); err != nil {
+		return nil, errs.FinalAdd(err)
+	}
+
+	if len(req.Passphrase) == 0 {
+		errs.AddForProperty("passphrase", commands.ErrIsRequired)
+	}
+
+	if !errs.Empty() {
+		return nil, errs
+	}
+
+	return req, errs
+}
+
+// UpdateMetaRequest describes the request for GenerateKeypair, UpdateMeta.
+type UpdateMetaRequest struct {
+	Passphrase string        `json:"passphrase"`
+	Meta       []wallet.Meta `json:"meta"`
+}
+
+func ParseUpdateMetaRequest(r *http.Request, keyID string) (*UpdateMetaRequest, commands.Errors) {
+	errs := commands.NewErrors()
+
+	if len(keyID) == 0 {
+		errs.AddForProperty("keyid", commands.ErrIsRequired)
+	}
+
+	req := &UpdateMetaRequest{}
+	if err := unmarshalBody(r, &req); err != nil {
+		return nil, errs.FinalAdd(err)
+	}
+
+	if len(req.Passphrase) == 0 {
+		errs.AddForProperty("passphrase", commands.ErrIsRequired)
+	}
+
+	if !errs.Empty() {
+		return nil, errs
+	}
+
+	return req, errs
 }
 
 // SignTxRequest describes the request for SignTx.
@@ -65,21 +159,59 @@ type SignAnyRequest struct {
 	PubKey    string `json:"pubKey"`
 }
 
+func ParseSignAnyRequest(r *http.Request) (*SignAnyRequest, commands.Errors) {
+	errs := commands.NewErrors()
+
+	req := &SignAnyRequest{}
+	if err := unmarshalBody(r, &req); err != nil {
+		return nil, errs.FinalAdd(err)
+	}
+
+	if len(req.InputData) == 0 {
+		errs.AddForProperty("input_data", commands.ErrIsRequired)
+	}
+
+	if len(req.PubKey) == 0 {
+		errs.AddForProperty("pub_key", commands.ErrIsRequired)
+	}
+
+	if !errs.Empty() {
+		return nil, errs
+	}
+
+	return req, errs
+}
+
+func ParseSubmitTransactionRequest(r *http.Request) (*walletpb.SubmitTransactionRequest, commands.Errors) {
+	errs := commands.NewErrors()
+
+	req := &walletpb.SubmitTransactionRequest{}
+	if err := jsonpb.Unmarshal(r.Body, req); err != nil {
+		return nil, errs.FinalAdd(err)
+	}
+
+	if errs = wallet.CheckSubmitTransactionRequest(req); !errs.Empty() {
+		return nil, errs
+	}
+
+	return req, nil
+}
+
 // KeyResponse describes the response to a request that returns a single key.
 type KeyResponse struct {
-	Key Keypair `json:"key"`
+	Key wallet.Keypair `json:"key"`
 }
 
 // KeysResponse describes the response to a request that returns a list of keys.
 type KeysResponse struct {
-	Keys []Keypair `json:"keys"`
+	Keys []wallet.Keypair `json:"keys"`
 }
 
 // SignTxResponse describes the response for SignTx.
 type SignTxResponse struct {
-	SignedTx     SignedBundle `json:"signedTx"`
-	HexBundle    string       `json:"hexBundle"`
-	Base64Bundle string       `json:"base64Bundle"`
+	SignedTx     wallet.SignedBundle `json:"signedTx"`
+	HexBundle    string              `json:"hexBundle"`
+	Base64Bundle string              `json:"base64Bundle"`
 }
 
 // SignAnyResponse describes the response for SignAny.
@@ -99,23 +231,23 @@ type TokenResponse struct {
 }
 
 // WalletHandler ...
-//go:generate go run github.com/golang/mock/mockgen -destination mocks/wallet_handler_mock.go -package mocks code.vegaprotocol.io/go-wallet/wallet WalletHandler
+//go:generate go run github.com/golang/mock/mockgen -destination mocks/wallet_handler_mock.go -package mocks code.vegaprotocol.io/go-wallet/service WalletHandler
 type WalletHandler interface {
 	CreateWallet(name, passphrase string) error
 	LoginWallet(name, passphrase string) error
 	GenerateKeypair(name, passphrase string) (string, error)
-	GetPublicKey(name, pubKey string) (*Keypair, error)
-	ListPublicKeys(name string) ([]Keypair, error)
-	SignTx(name, tx, pubKey string, height uint64) (SignedBundle, error)
+	GetPublicKey(name, pubKey string) (*wallet.Keypair, error)
+	ListPublicKeys(name string) ([]wallet.Keypair, error)
+	SignTx(name, tx, pubKey string, height uint64) (wallet.SignedBundle, error)
 	SignTxV2(name string, req walletpb.SubmitTransactionRequest, height uint64) (*commandspb.Transaction, error)
 	SignAny(name, inputData, pubKey string) ([]byte, error)
 	TaintKey(name, pubKey, passphrase string) error
-	UpdateMeta(name, pubKey, passphrase string, meta []Meta) error
+	UpdateMeta(name, pubKey, passphrase string, meta []wallet.Meta) error
 	GetWalletPath(name string) (string, error)
 }
 
 // Auth ...
-//go:generate go run github.com/golang/mock/mockgen -destination mocks/auth_mock.go -package mocks code.vegaprotocol.io/go-wallet/wallet Auth
+//go:generate go run github.com/golang/mock/mockgen -destination mocks/auth_mock.go -package mocks code.vegaprotocol.io/go-wallet/service Auth
 type Auth interface {
 	NewSession(name string) (string, error)
 	VerifyToken(token string) (string, error)
@@ -123,18 +255,18 @@ type Auth interface {
 }
 
 // NodeForward ...
-//go:generate go run github.com/golang/mock/mockgen -destination mocks/node_forward_mock.go -package mocks code.vegaprotocol.io/go-wallet/wallet NodeForward
+//go:generate go run github.com/golang/mock/mockgen -destination mocks/node_forward_mock.go -package mocks code.vegaprotocol.io/go-wallet/service NodeForward
 type NodeForward interface {
-	Send(context.Context, *SignedBundle, api.SubmitTransactionRequest_Type) error
+	Send(context.Context, *wallet.SignedBundle, api.SubmitTransactionRequest_Type) error
 	SendTxV2(context.Context, *commandspb.Transaction, api.SubmitTransactionV2Request_Type) error
 	HealthCheck(context.Context) error
 	LastBlockHeight(context.Context) (uint64, error)
 }
 
-func NewService(log *zap.Logger, cfg *Config, rootPath string) (*Service, error) {
-	log = log.Named(namedLogger)
+func NewService(log *zap.Logger, cfg *wallet.Config, rootPath string) (*Service, error) {
+	log = log.Named("wallet")
 
-	fileStore, err := NewFileStoreV1(rootPath)
+	fileStore, err := wallet.NewFileStoreV1(rootPath)
 	if err != nil {
 		return nil, err
 	}
@@ -142,15 +274,15 @@ func NewService(log *zap.Logger, cfg *Config, rootPath string) (*Service, error)
 	if err != nil {
 		return nil, err
 	}
-	nodeForward, err := NewNodeForward(log, cfg.Nodes)
+	nodeForward, err := wallet.NewNodeForward(log, cfg.Nodes)
 	if err != nil {
 		return nil, err
 	}
-	handler := NewHandler(fileStore)
+	handler := wallet.NewHandler(fileStore)
 	return NewServiceWith(log, cfg, handler, auth, nodeForward)
 }
 
-func NewServiceWith(log *zap.Logger, cfg *Config, h WalletHandler, a Auth, n NodeForward) (*Service, error) {
+func NewServiceWith(log *zap.Logger, cfg *wallet.Config, h WalletHandler, a Auth, n NodeForward) (*Service, error) {
 	s := &Service{
 		Router:      httprouter.New(),
 		log:         log,
@@ -187,7 +319,7 @@ func NewServiceWith(log *zap.Logger, cfg *Config, h WalletHandler, a Auth, n Nod
 func (s *Service) Start() error {
 	s.s = &http.Server{
 		Addr:    fmt.Sprintf("%s:%v", s.cfg.Host, s.cfg.Port),
-		Handler: cors.AllowAll().Handler(s), // middlewar with cors
+		Handler: cors.AllowAll().Handler(s),
 	}
 
 	return s.s.ListenAndServe()
@@ -198,24 +330,35 @@ func (s *Service) Stop() error {
 }
 
 func (s *Service) CreateWallet(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	// unmarshal request
-	req := CreateLoginWalletRequest{}
-	if err := unmarshalBody(r, &req); err != nil {
-		writeError(w, newError(err.Error()), http.StatusBadRequest)
-		return
-	}
-
-	// validation
-	if len(req.Wallet) <= 0 {
-		writeError(w, newError("missing wallet field"), http.StatusBadRequest)
-		return
-	}
-	if len(req.Passphrase) <= 0 {
-		writeError(w, newError("missing passphrase field"), http.StatusBadRequest)
+	req, errs := ParseCreateLoginWalletRequest(r)
+	if !errs.Empty() {
+		s.writeBadRequest(w, errs)
 		return
 	}
 
 	err := s.handler.CreateWallet(req.Wallet, req.Passphrase)
+	if err != nil {
+		writeError(w, newError(err.Error()), http.StatusForbidden)
+		return
+	}
+
+	token, err := s.auth.NewSession(req.Wallet)
+	if err != nil {
+		writeError(w, newError(err.Error()), http.StatusForbidden)
+		return
+	}
+
+	writeSuccess(w, TokenResponse{Token: token}, http.StatusOK)
+}
+
+func (s *Service) Login(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	req, errs := ParseCreateLoginWalletRequest(r)
+	if !errs.Empty() {
+		s.writeBadRequest(w, errs)
+		return
+	}
+
+	err := s.handler.LoginWallet(req.Wallet, req.Passphrase)
 	if err != nil {
 		writeError(w, newError(err.Error()), http.StatusForbidden)
 		return
@@ -242,39 +385,8 @@ func (s *Service) DownloadWallet(token string, w http.ResponseWriter, r *http.Re
 		writeError(w, newError(err.Error()), http.StatusBadRequest)
 		return
 	}
+
 	http.ServeFile(w, r, path)
-}
-
-func (s *Service) Login(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	req := CreateLoginWalletRequest{}
-	if err := unmarshalBody(r, &req); err != nil {
-		writeError(w, err, http.StatusBadRequest)
-		return
-	}
-
-	// validation
-	if len(req.Wallet) <= 0 {
-		writeError(w, newError("missing wallet field"), http.StatusBadRequest)
-		return
-	}
-	if len(req.Passphrase) <= 0 {
-		writeError(w, newError("missing passphrase field"), http.StatusBadRequest)
-		return
-	}
-
-	err := s.handler.LoginWallet(req.Wallet, req.Passphrase)
-	if err != nil {
-		writeError(w, newError(err.Error()), http.StatusForbidden)
-		return
-	}
-
-	token, err := s.auth.NewSession(req.Wallet)
-	if err != nil {
-		writeError(w, newError(err.Error()), http.StatusForbidden)
-		return
-	}
-
-	writeSuccess(w, TokenResponse{Token: token}, http.StatusOK)
 }
 
 func (s *Service) Revoke(t string, w http.ResponseWriter, _ *http.Request, _ httprouter.Params) {
@@ -288,13 +400,9 @@ func (s *Service) Revoke(t string, w http.ResponseWriter, _ *http.Request, _ htt
 }
 
 func (s *Service) GenerateKeypair(t string, w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	req := PassphraseMetaRequest{}
-	if err := unmarshalBody(r, &req); err != nil {
-		writeError(w, newError(err.Error()), http.StatusBadRequest)
-		return
-	}
-	if len(req.Passphrase) <= 0 {
-		writeError(w, newError("missing passphrase field"), http.StatusBadRequest)
+	req, errs := ParseGenKeyPairRequest(r)
+	if !errs.Empty() {
+		s.writeBadRequest(w, errs)
 		return
 	}
 
@@ -338,7 +446,7 @@ func (s *Service) GetPublicKey(t string, w http.ResponseWriter, r *http.Request,
 	key, err := s.handler.GetPublicKey(name, ps.ByName("keyid"))
 	if err != nil {
 		var statusCode int
-		if err == ErrPubKeyDoesNotExist {
+		if err == wallet.ErrPubKeyDoesNotExist {
 			statusCode = http.StatusNotFound
 		} else {
 			statusCode = http.StatusForbidden
@@ -367,18 +475,10 @@ func (s *Service) ListPublicKeys(t string, w http.ResponseWriter, r *http.Reques
 }
 
 func (s *Service) TaintKey(t string, w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	req := PassphraseRequest{}
-	if err := unmarshalBody(r, &req); err != nil {
-		writeError(w, newError(err.Error()), http.StatusBadRequest)
-		return
-	}
 	keyID := ps.ByName("keyid")
-	if len(keyID) <= 0 {
-		writeError(w, newError("missing keyID"), http.StatusBadRequest)
-		return
-	}
-	if len(req.Passphrase) <= 0 {
-		writeError(w, newError("missing passphrase field"), http.StatusBadRequest)
+	req, errs := ParseTaintKeyRequest(r, keyID)
+	if !errs.Empty() {
+		s.writeBadRequest(w, errs)
 		return
 	}
 
@@ -398,18 +498,10 @@ func (s *Service) TaintKey(t string, w http.ResponseWriter, r *http.Request, ps 
 }
 
 func (s *Service) UpdateMeta(t string, w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	req := PassphraseMetaRequest{}
-	if err := unmarshalBody(r, &req); err != nil {
-		writeError(w, newError(err.Error()), http.StatusBadRequest)
-		return
-	}
 	keyID := ps.ByName("keyid")
-	if len(keyID) <= 0 {
-		writeError(w, newError("missing keyID"), http.StatusBadRequest)
-		return
-	}
-	if len(req.Passphrase) <= 0 {
-		writeError(w, newError("missing passphrase field"), http.StatusBadRequest)
+	req, errs := ParseUpdateMetaRequest(r, keyID)
+	if !errs.Empty() {
+		s.writeBadRequest(w, errs)
 		return
 	}
 
@@ -429,17 +521,9 @@ func (s *Service) UpdateMeta(t string, w http.ResponseWriter, r *http.Request, p
 }
 
 func (s *Service) SignAny(t string, w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	req := SignAnyRequest{}
-	if err := unmarshalBody(r, &req); err != nil {
-		writeError(w, newError(err.Error()), http.StatusBadRequest)
-		return
-	}
-	if len(req.InputData) <= 0 {
-		writeError(w, newError("missing inputData field"), http.StatusBadRequest)
-		return
-	}
-	if len(req.PubKey) <= 0 {
-		writeError(w, newError("missing pubKey field"), http.StatusBadRequest)
+	req, errs := ParseSignAnyRequest(r)
+	if !errs.Empty() {
+		s.writeBadRequest(w, errs)
 		return
 	}
 
@@ -478,16 +562,7 @@ func (s *Service) SignTxV2(token string, w http.ResponseWriter, r *http.Request,
 func (s *Service) signTxV2(token string, w http.ResponseWriter, r *http.Request, _ httprouter.Params, ty api.SubmitTransactionV2Request_Type) {
 	defer r.Body.Close()
 
-	errs := commands.NewErrors()
-	req := walletpb.SubmitTransactionRequest{}
-
-	if err := jsonpb.Unmarshal(r.Body, &req); err != nil {
-		errs.Add(errors.New("couldn't parse the request"))
-		s.writeBadRequest(w, errs)
-		return
-	}
-
-	errs.Merge(CheckSubmitTransactionRequest(req))
+	req, errs := ParseSubmitTransactionRequest(r)
 	if !errs.Empty() {
 		s.writeBadRequest(w, errs)
 		return
@@ -505,7 +580,7 @@ func (s *Service) signTxV2(token string, w http.ResponseWriter, r *http.Request,
 		return
 	}
 
-	tx, err := s.handler.SignTxV2(name, req, height)
+	tx, err := s.handler.SignTxV2(name, *req, height)
 	if err != nil {
 		writeError(w, newError(err.Error()), http.StatusForbidden)
 		return

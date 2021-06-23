@@ -1,34 +1,43 @@
-package wallet_test
+package service_test
 
 import (
 	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
+	"code.vegaprotocol.io/go-wallet/crypto"
 	"code.vegaprotocol.io/go-wallet/fsutil"
+	"code.vegaprotocol.io/go-wallet/service"
 	"code.vegaprotocol.io/go-wallet/wallet"
-
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap"
 )
 
+var (
+	rootDirPath = "/tmp/vegatests/wallet/"
+)
+
 type testAuth struct {
-	wallet.Auth
+	service.Auth
 	rootPath string
 }
 
 func getTestAuth(t *testing.T) *testAuth {
 	rootPath := rootDir()
 	tokenExpiry := 10 * time.Hour
-	fsutil.EnsureDir(rootPath)
+	err := fsutil.EnsureDir(rootPath)
+	if err != nil {
+		panic(err)
+	}
 	log := zap.NewNop()
 
 	// gen keys
-	err := wallet.GenRsaKeyFiles(log, rootPath, false)
+	err = wallet.GenRsaKeyFiles(log, rootPath, false)
 	if err != nil {
 		t.Fatal(err)
 	}
-	a, err := wallet.NewAuth(log, rootPath, tokenExpiry)
+	a, err := service.NewAuth(log, rootPath, tokenExpiry)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -48,23 +57,23 @@ func TestAuth(t *testing.T) {
 
 func testVerifyValidToken(t *testing.T) {
 	auth := getTestAuth(t)
-	wallet := "jeremy"
+	w := "jeremy"
 
 	// get a new session
-	tok, err := auth.NewSession(wallet)
+	tok, err := auth.NewSession(w)
 	assert.NoError(t, err)
 	assert.NotEmpty(t, tok)
 
 	wallet2, err := auth.VerifyToken(tok)
 	assert.NoError(t, err)
-	assert.Equal(t, wallet, wallet2)
+	assert.Equal(t, w, wallet2)
 
 	assert.NoError(t, os.RemoveAll(auth.rootPath))
 }
 
 func testVerifyInvalidToken(t *testing.T) {
 	auth := getTestAuth(t)
-	tok := "hehehe that's not a toekn"
+	tok := "that's not a token"
 
 	w, err := auth.VerifyToken(tok)
 	assert.EqualError(t, err, "token is malformed: token contains an invalid number of segments")
@@ -91,7 +100,7 @@ func testRevokeValidToken(t *testing.T) {
 	assert.NoError(t, err)
 
 	w, err := auth.VerifyToken(tok)
-	assert.EqualError(t, err, wallet.ErrSessionNotFound.Error())
+	assert.EqualError(t, err, service.ErrSessionNotFound.Error())
 	assert.Empty(t, w)
 
 	assert.NoError(t, os.RemoveAll(auth.rootPath))
@@ -105,4 +114,13 @@ func testRevokeInvalidToken(t *testing.T) {
 	assert.EqualError(t, err, "token is malformed: token contains an invalid number of segments")
 
 	assert.NoError(t, os.RemoveAll(auth.rootPath))
+}
+
+func rootDir() string {
+	path := filepath.Join(rootDirPath, crypto.RandomStr(10))
+	err := os.MkdirAll(path, os.ModePerm)
+	if err != nil {
+		panic(err)
+	}
+	return path
 }
