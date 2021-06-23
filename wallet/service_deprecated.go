@@ -46,7 +46,13 @@ func (s *Service) signTx(t string, w http.ResponseWriter, r *http.Request, _ htt
 		return
 	}
 
-	sb, err := s.handler.SignTx(t, req.Tx, req.PubKey, height)
+	name, err := s.auth.VerifyToken(t)
+	if err != nil {
+		writeForbiddenError(w, err)
+		return
+	}
+
+	sb, err := s.handler.SignTx(name, req.Tx, req.PubKey, height)
 	if err != nil {
 		writeError(w, newError(err.Error()), http.StatusForbidden)
 		return

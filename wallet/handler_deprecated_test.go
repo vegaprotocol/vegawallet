@@ -7,7 +7,6 @@ import (
 
 	"code.vegaprotocol.io/go-wallet/wallet"
 	"code.vegaprotocol.io/go-wallet/wallet/crypto"
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -24,19 +23,10 @@ func testSignTxSuccess(t *testing.T) {
 	passphrase := "Th1isisasecurep@ssphraseinnit"
 	name := "jeremy"
 
-	// then start the test
-	h.auth.EXPECT().VerifyToken(gomock.Any()).AnyTimes().
-		Return(name, nil)
-
-	// first create the wallet
-	h.auth.EXPECT().NewSession(gomock.Any()).Times(1).
-		Return("some fake token", nil)
-
-	tok, err := h.CreateWallet(name, passphrase)
+	err := h.CreateWallet(name, passphrase)
 	require.NoError(t, err)
-	assert.NotEmpty(t, tok)
 
-	key, err := h.GenerateKeypair(tok, passphrase)
+	key, err := h.GenerateKeypair(name, passphrase)
 	require.NoError(t, err)
 	assert.NotEmpty(t, key)
 
@@ -44,7 +34,7 @@ func testSignTxSuccess(t *testing.T) {
 
 	keyBytes, _ := hex.DecodeString(key)
 
-	signedBundle, err := h.SignTx(tok, base64.StdEncoding.EncodeToString([]byte(message)), key, 42)
+	signedBundle, err := h.SignTx(name, base64.StdEncoding.EncodeToString([]byte(message)), key, 42)
 	require.NoError(t, err)
 
 	// verify signature then
@@ -63,27 +53,18 @@ func testSignTxFailure(t *testing.T) {
 	name := "jeremy"
 	passphrase := "Th1isisasecurep@ssphraseinnit"
 
-	// then start the test
-	h.auth.EXPECT().VerifyToken(gomock.Any()).AnyTimes().
-		Return(name, nil)
-
-	// first create the wallet
-	h.auth.EXPECT().NewSession(gomock.Any()).Times(1).
-		Return("some fake token", nil)
-
-	tok, err := h.CreateWallet(name, passphrase)
+	err := h.CreateWallet(name, passphrase)
 	require.NoError(t, err)
-	assert.NotEmpty(t, tok)
 
-	key, err := h.GenerateKeypair(tok, passphrase)
+	key, err := h.GenerateKeypair(name, passphrase)
 	require.NoError(t, err)
 	assert.NotEmpty(t, key)
 
 	// taint the key
-	err = h.TaintKey(tok, key, passphrase)
+	err = h.TaintKey(name, key, passphrase)
 	require.NoError(t, err)
 
 	message := "hello world."
-	_, err = h.SignTx(tok, base64.StdEncoding.EncodeToString([]byte(message)), key, 42)
+	_, err = h.SignTx(name, base64.StdEncoding.EncodeToString([]byte(message)), key, 42)
 	assert.EqualError(t, err, wallet.ErrPubKeyIsTainted.Error())
 }

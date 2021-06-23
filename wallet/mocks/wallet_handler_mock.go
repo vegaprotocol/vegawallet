@@ -36,12 +36,11 @@ func (m *MockWalletHandler) EXPECT() *MockWalletHandlerMockRecorder {
 }
 
 // CreateWallet mocks base method
-func (m *MockWalletHandler) CreateWallet(arg0, arg1 string) (string, error) {
+func (m *MockWalletHandler) CreateWallet(arg0, arg1 string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateWallet", arg0, arg1)
-	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 // CreateWallet indicates an expected call of CreateWallet
@@ -80,21 +79,6 @@ func (mr *MockWalletHandlerMockRecorder) GetPublicKey(arg0, arg1 interface{}) *g
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPublicKey", reflect.TypeOf((*MockWalletHandler)(nil).GetPublicKey), arg0, arg1)
 }
 
-// GetWalletName mocks base method
-func (m *MockWalletHandler) GetWalletName(arg0 string) (string, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetWalletName", arg0)
-	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetWalletName indicates an expected call of GetWalletName
-func (mr *MockWalletHandlerMockRecorder) GetWalletName(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetWalletName", reflect.TypeOf((*MockWalletHandler)(nil).GetWalletName), arg0)
-}
-
 // GetWalletPath mocks base method
 func (m *MockWalletHandler) GetWalletPath(arg0 string) (string, error) {
 	m.ctrl.T.Helper()
@@ -126,32 +110,17 @@ func (mr *MockWalletHandlerMockRecorder) ListPublicKeys(arg0 interface{}) *gomoc
 }
 
 // LoginWallet mocks base method
-func (m *MockWalletHandler) LoginWallet(arg0, arg1 string) (string, error) {
+func (m *MockWalletHandler) LoginWallet(arg0, arg1 string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "LoginWallet", arg0, arg1)
-	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 // LoginWallet indicates an expected call of LoginWallet
 func (mr *MockWalletHandlerMockRecorder) LoginWallet(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LoginWallet", reflect.TypeOf((*MockWalletHandler)(nil).LoginWallet), arg0, arg1)
-}
-
-// RevokeToken mocks base method
-func (m *MockWalletHandler) RevokeToken(arg0 string) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RevokeToken", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// RevokeToken indicates an expected call of RevokeToken
-func (mr *MockWalletHandlerMockRecorder) RevokeToken(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RevokeToken", reflect.TypeOf((*MockWalletHandler)(nil).RevokeToken), arg0)
 }
 
 // SignAny mocks base method

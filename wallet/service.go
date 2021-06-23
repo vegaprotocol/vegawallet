@@ -31,6 +31,7 @@ type Service struct {
 	log         *zap.Logger
 	s           *http.Server
 	handler     WalletHandler
+	auth        Auth
 	nodeForward NodeForward
 }
 
@@ -100,19 +101,25 @@ type TokenResponse struct {
 // WalletHandler ...
 //go:generate go run github.com/golang/mock/mockgen -destination mocks/wallet_handler_mock.go -package mocks code.vegaprotocol.io/go-wallet/wallet WalletHandler
 type WalletHandler interface {
-	CreateWallet(name, passphrase string) (string, error)
-	LoginWallet(name, passphrase string) (string, error)
-	RevokeToken(token string) error
-	GenerateKeypair(token, passphrase string) (string, error)
-	GetPublicKey(token, pubKey string) (*Keypair, error)
-	GetWalletName(token string) (string, error)
-	ListPublicKeys(token string) ([]Keypair, error)
-	SignTx(token, tx, pubKey string, height uint64) (SignedBundle, error)
-	SignTxV2(token string, req walletpb.SubmitTransactionRequest, height uint64) (*commandspb.Transaction, error)
-	SignAny(token, inputData, pubKey string) ([]byte, error)
-	TaintKey(token, pubKey, passphrase string) error
-	UpdateMeta(token, pubKey, passphrase string, meta []Meta) error
-	GetWalletPath(token string) (string, error)
+	CreateWallet(name, passphrase string) error
+	LoginWallet(name, passphrase string) error
+	GenerateKeypair(name, passphrase string) (string, error)
+	GetPublicKey(name, pubKey string) (*Keypair, error)
+	ListPublicKeys(name string) ([]Keypair, error)
+	SignTx(name, tx, pubKey string, height uint64) (SignedBundle, error)
+	SignTxV2(name string, req walletpb.SubmitTransactionRequest, height uint64) (*commandspb.Transaction, error)
+	SignAny(name, inputData, pubKey string) ([]byte, error)
+	TaintKey(name, pubKey, passphrase string) error
+	UpdateMeta(name, pubKey, passphrase string, meta []Meta) error
+	GetWalletPath(name string) (string, error)
+}
+
+// Auth ...
+//go:generate go run github.com/golang/mock/mockgen -destination mocks/auth_mock.go -package mocks code.vegaprotocol.io/go-wallet/wallet Auth
+type Auth interface {
+	NewSession(name string) (string, error)
+	VerifyToken(token string) (string, error)
+	Revoke(token string) error
 }
 
 // NodeForward ...
@@ -139,16 +146,17 @@ func NewService(log *zap.Logger, cfg *Config, rootPath string) (*Service, error)
 	if err != nil {
 		return nil, err
 	}
-	handler := NewHandler(auth, fileStore)
-	return NewServiceWith(log, cfg, handler, nodeForward)
+	handler := NewHandler(fileStore)
+	return NewServiceWith(log, cfg, handler, auth, nodeForward)
 }
 
-func NewServiceWith(log *zap.Logger, cfg *Config, h WalletHandler, n NodeForward) (*Service, error) {
+func NewServiceWith(log *zap.Logger, cfg *Config, h WalletHandler, a Auth, n NodeForward) (*Service, error) {
 	s := &Service{
 		Router:      httprouter.New(),
 		log:         log,
 		cfg:         cfg,
 		handler:     h,
+		auth:        a,
 		nodeForward: n,
 	}
 
@@ -207,17 +215,29 @@ func (s *Service) CreateWallet(w http.ResponseWriter, r *http.Request, _ httprou
 		return
 	}
 
-	token, err := s.handler.CreateWallet(req.Wallet, req.Passphrase)
+	err := s.handler.CreateWallet(req.Wallet, req.Passphrase)
 	if err != nil {
 		writeError(w, newError(err.Error()), http.StatusForbidden)
 		return
 	}
 
-	writeSuccess(w, TokenResponse{token}, http.StatusOK)
+	token, err := s.auth.NewSession(req.Wallet)
+	if err != nil {
+		writeError(w, newError(err.Error()), http.StatusForbidden)
+		return
+	}
+
+	writeSuccess(w, TokenResponse{Token: token}, http.StatusOK)
 }
 
 func (s *Service) DownloadWallet(token string, w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	path, err := s.handler.GetWalletPath(token)
+	name, err := s.auth.VerifyToken(token)
+	if err != nil {
+		writeError(w, newError(err.Error()), http.StatusForbidden)
+		return
+	}
+
+	path, err := s.handler.GetWalletPath(name)
 	if err != nil {
 		writeError(w, newError(err.Error()), http.StatusBadRequest)
 		return
@@ -242,16 +262,23 @@ func (s *Service) Login(w http.ResponseWriter, r *http.Request, _ httprouter.Par
 		return
 	}
 
-	token, err := s.handler.LoginWallet(req.Wallet, req.Passphrase)
+	err := s.handler.LoginWallet(req.Wallet, req.Passphrase)
 	if err != nil {
 		writeError(w, newError(err.Error()), http.StatusForbidden)
 		return
 	}
-	writeSuccess(w, TokenResponse{token}, http.StatusOK)
+
+	token, err := s.auth.NewSession(req.Wallet)
+	if err != nil {
+		writeError(w, newError(err.Error()), http.StatusForbidden)
+		return
+	}
+
+	writeSuccess(w, TokenResponse{Token: token}, http.StatusOK)
 }
 
-func (s *Service) Revoke(t string, w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	err := s.handler.RevokeToken(t)
+func (s *Service) Revoke(t string, w http.ResponseWriter, _ *http.Request, _ httprouter.Params) {
+	err := s.auth.Revoke(t)
 	if err != nil {
 		writeError(w, newError(err.Error()), http.StatusForbidden)
 		return
@@ -271,7 +298,13 @@ func (s *Service) GenerateKeypair(t string, w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	pubKey, err := s.handler.GenerateKeypair(t, req.Passphrase)
+	name, err := s.auth.VerifyToken(t)
+	if err != nil {
+		writeError(w, newError(err.Error()), http.StatusForbidden)
+		return
+	}
+
+	pubKey, err := s.handler.GenerateKeypair(name, req.Passphrase)
 	if err != nil {
 		writeError(w, newError(err.Error()), http.StatusForbidden)
 		return
@@ -279,14 +312,14 @@ func (s *Service) GenerateKeypair(t string, w http.ResponseWriter, r *http.Reque
 
 	// if any meta specified, lets add them
 	if len(req.Meta) > 0 {
-		err := s.handler.UpdateMeta(t, pubKey, req.Passphrase, req.Meta)
+		err := s.handler.UpdateMeta(name, pubKey, req.Passphrase, req.Meta)
 		if err != nil {
 			writeError(w, newError(err.Error()), http.StatusForbidden)
 			return
 		}
 	}
 
-	key, err := s.handler.GetPublicKey(t, pubKey)
+	key, err := s.handler.GetPublicKey(name, pubKey)
 	if err != nil {
 		writeError(w, newError(err.Error()), http.StatusBadRequest)
 		return
@@ -296,7 +329,13 @@ func (s *Service) GenerateKeypair(t string, w http.ResponseWriter, r *http.Reque
 }
 
 func (s *Service) GetPublicKey(t string, w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	key, err := s.handler.GetPublicKey(t, ps.ByName("keyid"))
+	name, err := s.auth.VerifyToken(t)
+	if err != nil {
+		writeError(w, newError(err.Error()), http.StatusForbidden)
+		return
+	}
+
+	key, err := s.handler.GetPublicKey(name, ps.ByName("keyid"))
 	if err != nil {
 		var statusCode int
 		if err == ErrPubKeyDoesNotExist {
@@ -312,7 +351,13 @@ func (s *Service) GetPublicKey(t string, w http.ResponseWriter, r *http.Request,
 }
 
 func (s *Service) ListPublicKeys(t string, w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	keys, err := s.handler.ListPublicKeys(t)
+	name, err := s.auth.VerifyToken(t)
+	if err != nil {
+		writeError(w, newError(err.Error()), http.StatusForbidden)
+		return
+	}
+
+	keys, err := s.handler.ListPublicKeys(name)
 	if err != nil {
 		writeError(w, newError(err.Error()), http.StatusForbidden)
 		return
@@ -337,7 +382,13 @@ func (s *Service) TaintKey(t string, w http.ResponseWriter, r *http.Request, ps 
 		return
 	}
 
-	err := s.handler.TaintKey(t, keyID, req.Passphrase)
+	name, err := s.auth.VerifyToken(t)
+	if err != nil {
+		writeError(w, newError(err.Error()), http.StatusForbidden)
+		return
+	}
+
+	err = s.handler.TaintKey(name, keyID, req.Passphrase)
 	if err != nil {
 		writeError(w, newError(err.Error()), http.StatusForbidden)
 		return
@@ -362,7 +413,13 @@ func (s *Service) UpdateMeta(t string, w http.ResponseWriter, r *http.Request, p
 		return
 	}
 
-	err := s.handler.UpdateMeta(t, keyID, req.Passphrase, req.Meta)
+	name, err := s.auth.VerifyToken(t)
+	if err != nil {
+		writeError(w, newError(err.Error()), http.StatusForbidden)
+		return
+	}
+
+	err = s.handler.UpdateMeta(name, keyID, req.Passphrase, req.Meta)
 	if err != nil {
 		writeError(w, newError(err.Error()), http.StatusForbidden)
 		return
@@ -386,7 +443,13 @@ func (s *Service) SignAny(t string, w http.ResponseWriter, r *http.Request, _ ht
 		return
 	}
 
-	signature, err := s.handler.SignAny(t, req.InputData, req.PubKey)
+	name, err := s.auth.VerifyToken(t)
+	if err != nil {
+		writeError(w, newError(err.Error()), http.StatusForbidden)
+		return
+	}
+
+	signature, err := s.handler.SignAny(name, req.InputData, req.PubKey)
 	if err != nil {
 		writeError(w, newError(err.Error()), http.StatusForbidden)
 		return
@@ -436,7 +499,13 @@ func (s *Service) signTxV2(token string, w http.ResponseWriter, r *http.Request,
 		return
 	}
 
-	tx, err := s.handler.SignTxV2(token, req, height)
+	name, err := s.auth.VerifyToken(token)
+	if err != nil {
+		writeError(w, newError(err.Error()), http.StatusForbidden)
+		return
+	}
+
+	tx, err := s.handler.SignTxV2(name, req, height)
 	if err != nil {
 		writeError(w, newError(err.Error()), http.StatusForbidden)
 		return

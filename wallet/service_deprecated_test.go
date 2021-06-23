@@ -20,7 +20,8 @@ func testServiceSignOK(t *testing.T) {
 	s := getTestService(t)
 	defer s.ctrl.Finish()
 
-	s.handler.EXPECT().SignTx(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+	s.auth.EXPECT().VerifyToken("eyXXzA").Times(1).Return("jeremy", nil)
+	s.handler.EXPECT().SignTx("jeremy", gomock.Any(), "asdasasdasd", uint64(42)).
 		Times(1).Return(wallet.SignedBundle{}, nil)
 	s.nodeForward.EXPECT().LastBlockHeight(gomock.Any()).
 		Times(1).Return(uint64(42), nil)

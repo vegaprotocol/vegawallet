@@ -61,7 +61,7 @@ type Claims struct {
 	Wallet  string
 }
 
-func (a *auth) NewSession(walletname string) (string, error) {
+func (a *auth) NewSession(name string) (string, error) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 
@@ -71,7 +71,7 @@ func (a *auth) NewSession(walletname string) (string, error) {
 	// Create the Claims
 	claims := &Claims{
 		Session: session,
-		Wallet:  walletname,
+		Wallet:  name,
 		StandardClaims: jwt.StandardClaims{
 			// these are seconds
 			ExpiresAt: jwt.NewTime((float64)(expiresAt.Unix())),
@@ -87,7 +87,7 @@ func (a *auth) NewSession(walletname string) (string, error) {
 	}
 
 	// all good up to now, insert the new session
-	a.sessions[session] = walletname
+	a.sessions[session] = name
 	return ss, nil
 }
 

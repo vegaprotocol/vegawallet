@@ -15,16 +15,8 @@ import (
 )
 
 var (
-	ErrPubKeyIsTainted      = errors.New("public key is tainted")
+	ErrPubKeyIsTainted = errors.New("public key is tainted")
 )
-
-// Auth ...
-//go:generate go run github.com/golang/mock/mockgen -destination mocks/auth_mock.go -package mocks code.vegaprotocol.io/go-wallet/wallet Auth
-type Auth interface {
-	NewSession(name string) (string, error)
-	VerifyToken(token string) (string, error)
-	Revoke(token string) error
-}
 
 // Store abstracts the underlying storage for wallet data.
 type Store interface {
@@ -34,7 +26,6 @@ type Store interface {
 }
 
 type Handler struct {
-	auth          Auth
 	store         Store
 	loggedWallets wallets
 
@@ -42,63 +33,48 @@ type Handler struct {
 	mu sync.RWMutex
 }
 
-func NewHandler(auth Auth, store Store) *Handler {
+func NewHandler(store Store) *Handler {
 	return &Handler{
-		auth:          auth,
 		store:         store,
 		loggedWallets: newWallets(),
 	}
 }
 
-// CreateWallet returns the token
-func (h *Handler) CreateWallet(name, passphrase string) (string, error) {
+// CreateWallet returns the name
+func (h *Handler) CreateWallet(name, passphrase string) error {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 
 	_, err := h.store.GetWallet(name, passphrase)
 	if err != nil && err != ErrWalletDoesNotExists {
-		return "", err
+		return err
 	} else if err == nil {
-		return "", ErrWalletAlreadyExists
+		return ErrWalletAlreadyExists
 	}
 
 	w := NewWallet(name)
 
-	err = h.saveWallet(*w, passphrase)
-	if err != nil {
-		return "", err
-	}
-
-	return h.auth.NewSession(name)
+	return h.saveWallet(*w, passphrase)
 }
 
-// LoginWallet returns the token
-func (h *Handler) LoginWallet(name, passphrase string) (string, error) {
+// LoginWallet returns the name
+func (h *Handler) LoginWallet(name, passphrase string) error {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 
 	w, err := h.store.GetWallet(name, passphrase)
 	if err != nil {
-		return "", ErrWalletDoesNotExists
+		return ErrWalletDoesNotExists
 	}
 
 	h.loggedWallets.Add(w)
 
-	return h.auth.NewSession(name)
+	return nil
 }
 
-func (h *Handler) RevokeToken(token string) error {
-	return h.auth.Revoke(token)
-}
-
-func (h *Handler) GenerateKeypair(token, passphrase string) (string, error) {
+func (h *Handler) GenerateKeypair(name, passphrase string) (string, error) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
-
-	name, err := h.auth.VerifyToken(token)
-	if err != nil {
-		return "", err
-	}
 
 	w, err := h.store.GetWallet(name, passphrase)
 	if err != nil {
@@ -120,11 +96,11 @@ func (h *Handler) GenerateKeypair(token, passphrase string) (string, error) {
 	return kp.Pub, nil
 }
 
-func (h *Handler) GetPublicKey(token, pubKey string) (*Keypair, error) {
+func (h *Handler) GetPublicKey(name, pubKey string) (*Keypair, error) {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
 
-	kp, err := h.getKeyPair(token, pubKey)
+	kp, err := h.getKeyPair(name, pubKey)
 	if err != nil {
 		return nil, err
 	}
@@ -134,18 +110,9 @@ func (h *Handler) GetPublicKey(token, pubKey string) (*Keypair, error) {
 	return &secureKeyPair, nil
 }
 
-func (h *Handler) GetWalletName(token string) (string, error) {
-	return h.auth.VerifyToken(token)
-}
-
-func (h *Handler) ListPublicKeys(token string) ([]Keypair, error) {
+func (h *Handler) ListPublicKeys(name string) ([]Keypair, error) {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
-
-	name, err := h.auth.VerifyToken(token)
-	if err != nil {
-		return nil, err
-	}
 
 	w, err := h.loggedWallets.Get(name)
 	if err != nil {
@@ -155,7 +122,7 @@ func (h *Handler) ListPublicKeys(token string) ([]Keypair, error) {
 	return w.Keypairs.GetPubKeys(), nil
 }
 
-func (h *Handler) SignAny(token, inputData, pubKey string) ([]byte, error) {
+func (h *Handler) SignAny(name, inputData, pubKey string) ([]byte, error) {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
 
@@ -164,7 +131,7 @@ func (h *Handler) SignAny(token, inputData, pubKey string) ([]byte, error) {
 		return nil, err
 	}
 
-	kp, err := h.getKeyPair(token, pubKey)
+	kp, err := h.getKeyPair(name, pubKey)
 	if err != nil {
 		return nil, err
 	}
@@ -176,11 +143,11 @@ func (h *Handler) SignAny(token, inputData, pubKey string) ([]byte, error) {
 	return kp.Algorithm.Sign(kp.privBytes, rawInputData)
 }
 
-func (h *Handler) SignTxV2(token string, req walletpb.SubmitTransactionRequest, height uint64) (*commandspb.Transaction, error) {
+func (h *Handler) SignTxV2(name string, req walletpb.SubmitTransactionRequest, height uint64) (*commandspb.Transaction, error) {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
 
-	keyPair, err := h.getKeyPair(token, req.GetPubKey())
+	keyPair, err := h.getKeyPair(name, req.GetPubKey())
 	if err != nil {
 		return nil, err
 	}
@@ -203,14 +170,9 @@ func (h *Handler) SignTxV2(token string, req walletpb.SubmitTransactionRequest, 
 	return commands.NewTransaction(keyPair.pubBytes, marshalledData, signature), nil
 }
 
-func (h *Handler) TaintKey(token, pubKey, passphrase string) error {
+func (h *Handler) TaintKey(name, pubKey, passphrase string) error {
 	h.mu.Lock()
 	defer h.mu.Unlock()
-
-	name, err := h.auth.VerifyToken(token)
-	if err != nil {
-		return err
-	}
 
 	w, err := h.store.GetWallet(name, passphrase)
 	if err != nil {
@@ -231,14 +193,9 @@ func (h *Handler) TaintKey(token, pubKey, passphrase string) error {
 	return h.saveWallet(w, passphrase)
 }
 
-func (h *Handler) UpdateMeta(token, pubKey, passphrase string, meta []Meta) error {
+func (h *Handler) UpdateMeta(name, pubKey, passphrase string, meta []Meta) error {
 	h.mu.Lock()
 	defer h.mu.Unlock()
-
-	name, err := h.auth.VerifyToken(token)
-	if err != nil {
-		return err
-	}
 
 	w, err := h.store.GetWallet(name, passphrase)
 	if err != nil {
@@ -257,21 +214,11 @@ func (h *Handler) UpdateMeta(token, pubKey, passphrase string, meta []Meta) erro
 	return h.saveWallet(w, passphrase)
 }
 
-func (h *Handler) GetWalletPath(token string) (string, error) {
-	name, err := h.auth.VerifyToken(token)
-	if err != nil {
-		return "", err
-	}
-
+func (h *Handler) GetWalletPath(name string) (string, error) {
 	return h.store.GetWalletPath(name), nil
 }
 
-func (h *Handler) getKeyPair(token, pubKey string) (*Keypair, error) {
-	name, err := h.auth.VerifyToken(token)
-	if err != nil {
-		return nil, err
-	}
-
+func (h *Handler) getKeyPair(name, pubKey string) (*Keypair, error) {
 	wallet, err := h.loggedWallets.Get(name)
 	if err != nil {
 		return nil, err
