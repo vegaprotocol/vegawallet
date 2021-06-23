@@ -28,21 +28,21 @@ func (s *Service) SignTx(t string, w http.ResponseWriter, r *http.Request, p htt
 func (s *Service) signTx(t string, w http.ResponseWriter, r *http.Request, _ httprouter.Params, ty api.SubmitTransactionRequest_Type) {
 	req := SignTxRequest{}
 	if err := unmarshalBody(r, &req); err != nil {
-		writeError(w, newError(err.Error()), http.StatusBadRequest)
+		writeError(w, newErrorResponse(err.Error()), http.StatusBadRequest)
 		return
 	}
 	if len(req.Tx) <= 0 {
-		writeError(w, newError("missing tx field"), http.StatusBadRequest)
+		writeError(w, newErrorResponse("missing tx field"), http.StatusBadRequest)
 		return
 	}
 	if len(req.PubKey) <= 0 {
-		writeError(w, newError("missing pubKey field"), http.StatusBadRequest)
+		writeError(w, newErrorResponse("missing pubKey field"), http.StatusBadRequest)
 		return
 	}
 
 	height, err := s.nodeForward.LastBlockHeight(r.Context())
 	if err != nil {
-		writeError(w, newError("could not get last block height"), http.StatusInternalServerError)
+		writeError(w, newErrorResponse("could not get last block height"), http.StatusInternalServerError)
 		return
 	}
 
@@ -54,7 +54,7 @@ func (s *Service) signTx(t string, w http.ResponseWriter, r *http.Request, _ htt
 
 	sb, err := s.handler.SignTx(name, req.Tx, req.PubKey, height)
 	if err != nil {
-		writeError(w, newError(err.Error()), http.StatusForbidden)
+		writeError(w, newErrorResponse(err.Error()), http.StatusForbidden)
 		return
 	}
 
@@ -68,7 +68,7 @@ func (s *Service) signTx(t string, w http.ResponseWriter, r *http.Request, _ htt
 				}
 				writeError(w, newErrorWithDetails(err.Error(), details), http.StatusInternalServerError)
 			} else {
-				writeError(w, newError(err.Error()), http.StatusInternalServerError)
+				writeError(w, newErrorResponse(err.Error()), http.StatusInternalServerError)
 			}
 			return
 		}
@@ -76,7 +76,7 @@ func (s *Service) signTx(t string, w http.ResponseWriter, r *http.Request, _ htt
 
 	rawBundle, err := proto.Marshal(sb.IntoProto())
 	if err != nil {
-		writeError(w, newError(err.Error()), http.StatusInternalServerError)
+		writeError(w, newErrorResponse(err.Error()), http.StatusInternalServerError)
 		return
 	}
 
