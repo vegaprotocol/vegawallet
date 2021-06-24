@@ -126,7 +126,7 @@ func (h *Handler) SecureGenerateKeyPair(name, passphrase string) (string, error)
 	return kp.Pub, nil
 }
 
-func (h *Handler) GetPublicKey(name, pubKey string) (*Keypair, error) {
+func (h *Handler) GetPublicKey(name, pubKey string) (*PublicKey, error) {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
 
@@ -135,12 +135,10 @@ func (h *Handler) GetPublicKey(name, pubKey string) (*Keypair, error) {
 		return nil, err
 	}
 
-	secureKeyPair := kp.SecureCopy()
-
-	return &secureKeyPair, nil
+	return kp.ToPublicKey(), nil
 }
 
-func (h *Handler) ListPublicKeys(name string) ([]Keypair, error) {
+func (h *Handler) ListPublicKeys(name string) ([]PublicKey, error) {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
 
@@ -149,7 +147,7 @@ func (h *Handler) ListPublicKeys(name string) ([]Keypair, error) {
 		return nil, err
 	}
 
-	return w.Keypairs.GetPubKeys(), nil
+	return w.Keypairs.GetPublicKeys(), nil
 }
 
 func (h *Handler) SignAny(name, inputData, pubKey string) ([]byte, error) {

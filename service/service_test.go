@@ -257,7 +257,7 @@ func testServiceGenKeypairOK(t *testing.T) {
 
 	s.auth.EXPECT().VerifyToken("eyXXzA").Times(1).Return("jeremy", nil)
 	s.handler.EXPECT().SecureGenerateKeyPair(gomock.Any(), gomock.Any()).Times(1).Return("", nil)
-	s.handler.EXPECT().GetPublicKey(gomock.Any(), gomock.Any()).Times(1).Return(&wallet.Keypair{}, nil)
+	s.handler.EXPECT().GetPublicKey(gomock.Any(), gomock.Any()).Times(1).Return(&wallet.PublicKey{}, nil)
 
 	payload := `{"passphrase": "oh yea?"}`
 	r := httptest.NewRequest("POST", "scheme://host/path", bytes.NewBufferString(payload))
@@ -313,7 +313,7 @@ func testServiceListPublicKeysOK(t *testing.T) {
 
 	s.auth.EXPECT().VerifyToken("eyXXzA").Times(1).Return("jeremy", nil)
 	s.handler.EXPECT().ListPublicKeys(gomock.Any()).Times(1).
-		Return([]wallet.Keypair{}, nil)
+		Return([]wallet.PublicKey{}, nil)
 
 	r := httptest.NewRequest("GET", "scheme://host/path", nil)
 	r.Header.Add("Authorization", "Bearer eyXXzA")
@@ -364,7 +364,7 @@ func testServiceGetPublicKeyOK(t *testing.T) {
 		Meta:      []wallet.Meta{{Key: "a", Value: "b"}},
 	}
 	s.handler.EXPECT().GetPublicKey(gomock.Any(), gomock.Any()).Times(1).
-		Return(&kp, nil)
+		Return(kp.ToPublicKey(), nil)
 
 	r := httptest.NewRequest("GET", "scheme://host/path", nil)
 	r.Header.Add("Authorization", "Bearer eyXXzA")

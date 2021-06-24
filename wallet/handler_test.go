@@ -179,7 +179,7 @@ func testHandlerGeneratingNewKeyPairSucceeds(t *testing.T) {
 	// then
 	require.NoError(t, err)
 	assert.Len(t, keys, 1)
-	assert.Equal(t, key, keys[0].Pub)
+	assert.Equal(t, key, keys[0].Key)
 	assert.False(t, keys[0].Tainted)
 }
 
@@ -301,8 +301,7 @@ func testHandlerGettingPublicKeySucceeds(t *testing.T) {
 	keyPair, err := h.GetPublicKey(name, key)
 
 	require.NoError(t, err)
-	assert.Equal(t, key, keyPair.Pub)
-	assert.Empty(t, keyPair.Priv)
+	assert.Equal(t, key, keyPair.Key)
 }
 
 func testHandlerGettingPublicKeyWithInvalidNameFails(t *testing.T) {

@@ -40,13 +40,12 @@ func (r *KeyRing) Upsert(pair Keypair) {
 	*r = append(*r, pair)
 }
 
-// GetPubKeys copy all keys so we do not propagate private keys
-func (r KeyRing) GetPubKeys() []Keypair {
-	pairs := make([]Keypair, 0, len(r))
+func (r KeyRing) GetPublicKeys() []PublicKey {
+	pubKeys := make([]PublicKey, 0, len(r))
 	for _, keyPair := range r {
-		pairs = append(pairs, keyPair.SecureCopy())
+		pubKeys = append(pubKeys, *keyPair.ToPublicKey())
 	}
-	return pairs
+	return pubKeys
 }
 
 type Keypair struct {
@@ -135,10 +134,19 @@ func (k *Keypair) DeepCopy() Keypair {
 	return copiedK
 }
 
-// SecureCopy ensures the sensitive information doesn't leak outside.
-func (k *Keypair) SecureCopy() Keypair {
-	copiedK := *k
-	copiedK.Priv = ""
-	copiedK.privBytes = []byte{}
-	return copiedK
+// ToPublicKey ensures the sensitive information doesn't leak outside.
+func (k *Keypair) ToPublicKey() *PublicKey {
+	return &PublicKey{
+		Key:       k.Pub,
+		Algorithm: k.Algorithm,
+		Tainted:   k.Tainted,
+		Meta:      k.Meta,
+	}
+}
+
+type PublicKey struct {
+	Key       string                    `json:"pub"`
+	Algorithm crypto.SignatureAlgorithm `json:"algo"`
+	Tainted   bool                      `json:"tainted"`
+	Meta      []Meta                    `json:"meta"`
 }

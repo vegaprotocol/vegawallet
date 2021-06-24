@@ -199,12 +199,12 @@ func ParseSubmitTransactionRequest(r *http.Request) (*walletpb.SubmitTransaction
 
 // KeyResponse describes the response to a request that returns a single key.
 type KeyResponse struct {
-	Key wallet.Keypair `json:"key"`
+	Key wallet.PublicKey `json:"key"`
 }
 
 // KeysResponse describes the response to a request that returns a list of keys.
 type KeysResponse struct {
-	Keys []wallet.Keypair `json:"keys"`
+	Keys []wallet.PublicKey `json:"keys"`
 }
 
 // SignTxResponse describes the response for SignTx.
@@ -236,8 +236,8 @@ type WalletHandler interface {
 	CreateWallet(name, passphrase string) error
 	LoginWallet(name, passphrase string) error
 	SecureGenerateKeyPair(name, passphrase string) (string, error)
-	GetPublicKey(name, pubKey string) (*wallet.Keypair, error)
-	ListPublicKeys(name string) ([]wallet.Keypair, error)
+	GetPublicKey(name, pubKey string) (*wallet.PublicKey, error)
+	ListPublicKeys(name string) ([]wallet.PublicKey, error)
 	SignTx(name, tx, pubKey string, height uint64) (wallet.SignedBundle, error)
 	SignTxV2(name string, req *walletpb.SubmitTransactionRequest, height uint64) (*commandspb.Transaction, error)
 	SignAny(name, inputData, pubKey string) ([]byte, error)

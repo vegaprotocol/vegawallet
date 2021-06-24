@@ -61,12 +61,12 @@ func testKeyRingGettingPublicKeysSucceeds(t *testing.T) {
 	ring.Upsert(*kp2)
 
 	// when
-	keys := ring.GetPubKeys()
+	keys := ring.GetPublicKeys()
 
 	// then
 	assert.Len(t, keys, 2)
-	assert.Contains(t, keys, kp1.SecureCopy())
-	assert.Contains(t, keys, kp2.SecureCopy())
+	assert.Contains(t, keys, *kp1.ToPublicKey())
+	assert.Contains(t, keys, *kp2.ToPublicKey())
 }
 
 func testKeyRingFindingExistingKeyPairSucceeds(t *testing.T) {
@@ -110,7 +110,7 @@ func TestKeypair(t *testing.T) {
 	t.Run("Generating a new key pair with unsupported algorithm fails", testKeypairGeneratingNewKeyPairWithUnsupportedAlgorithmFails)
 	t.Run("Tainting a key pair succeeds", testKeypairTaintingKeyPairSucceeds)
 	t.Run("Tainting an already tainted key pair fails", testKeypairTaintingAlreadyTaintedKeyPairFails)
-	t.Run("Secure copy of key pair removes sensitive information", testKeypairSecureCopyRemovesSensitiveInformation)
+	t.Run("Secure copy of key pair removes sensitive information", testKeypairToPublicKeyRemovesSensitiveInformation)
 }
 
 func testKeypairGeneratingNewKeyPairSucceeds(t *testing.T) {
@@ -167,16 +167,15 @@ func testKeypairTaintingAlreadyTaintedKeyPairFails(t *testing.T) {
 	assert.True(t, kp.Tainted)
 }
 
-func testKeypairSecureCopyRemovesSensitiveInformation(t *testing.T) {
+func testKeypairToPublicKeyRemovesSensitiveInformation(t *testing.T) {
 	// given
 	kp := newKeyPair()
 
 	// when
-	secureKp := kp.SecureCopy()
+	secureKp := kp.ToPublicKey()
 
 	// then
-	assert.Equal(t, kp.Pub, secureKp.Pub)
-	assert.Empty(t, secureKp.Priv)
+	assert.Equal(t, kp.Pub, secureKp.Key)
 	assert.Equal(t, kp.Tainted, secureKp.Tainted)
 	assert.Equal(t, kp.Algorithm.Name(), secureKp.Algorithm.Name())
 	assert.Equal(t, kp.Algorithm.Version(), secureKp.Algorithm.Version())
