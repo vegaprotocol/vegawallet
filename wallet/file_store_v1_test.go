@@ -160,7 +160,7 @@ func newWalletWithKeys() *wallet.Wallet {
 		panic(err)
 	}
 
-	w.Keypairs.Upsert(*kp)
+	w.KeyRing.Upsert(*kp)
 
 	return w
 }

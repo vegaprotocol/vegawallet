@@ -78,25 +78,25 @@ func (h *Handler) LoginWallet(name, passphrase string) error {
 	return nil
 }
 
-func (h *Handler) GenerateKeyPair(name, passphrase string) (Keypair, error) {
+func (h *Handler) GenerateKeyPair(name, passphrase string) (KeyPair, error) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 
 	w, err := h.store.GetWallet(name, passphrase)
 	if err != nil {
-		return Keypair{}, err
+		return KeyPair{}, err
 	}
 
 	kp, err := GenKeypair(crypto.Ed25519)
 	if err != nil {
-		return Keypair{}, err
+		return KeyPair{}, err
 	}
 
-	w.Keypairs.Upsert(*kp)
+	w.KeyRing.Upsert(*kp)
 
 	err = h.saveWallet(w, passphrase)
 	if err != nil {
-		return Keypair{}, err
+		return KeyPair{}, err
 	}
 
 	return kp.DeepCopy(), nil
@@ -116,7 +116,7 @@ func (h *Handler) SecureGenerateKeyPair(name, passphrase string) (string, error)
 		return "", err
 	}
 
-	w.Keypairs.Upsert(*kp)
+	w.KeyRing.Upsert(*kp)
 
 	err = h.saveWallet(w, passphrase)
 	if err != nil {
@@ -147,7 +147,7 @@ func (h *Handler) ListPublicKeys(name string) ([]PublicKey, error) {
 		return nil, err
 	}
 
-	return w.Keypairs.GetPublicKeys(), nil
+	return w.KeyRing.GetPublicKeys(), nil
 }
 
 func (h *Handler) SignAny(name, inputData, pubKey string) ([]byte, error) {
@@ -229,7 +229,7 @@ func (h *Handler) TaintKey(name, pubKey, passphrase string) error {
 		return err
 	}
 
-	keyPair, err := w.Keypairs.FindPair(pubKey)
+	keyPair, err := w.KeyRing.FindPair(pubKey)
 	if err != nil {
 		return err
 	}
@@ -238,7 +238,7 @@ func (h *Handler) TaintKey(name, pubKey, passphrase string) error {
 		return err
 	}
 
-	w.Keypairs.Upsert(keyPair)
+	w.KeyRing.Upsert(keyPair)
 
 	return h.saveWallet(w, passphrase)
 }
@@ -252,14 +252,14 @@ func (h *Handler) UpdateMeta(name, pubKey, passphrase string, meta []Meta) error
 		return err
 	}
 
-	keyPair, err := w.Keypairs.FindPair(pubKey)
+	keyPair, err := w.KeyRing.FindPair(pubKey)
 	if err != nil {
 		return err
 	}
 
 	keyPair.Meta = meta
 
-	w.Keypairs.Upsert(keyPair)
+	w.KeyRing.Upsert(keyPair)
 
 	return h.saveWallet(w, passphrase)
 }
@@ -268,13 +268,13 @@ func (h *Handler) GetWalletPath(name string) (string, error) {
 	return h.store.GetWalletPath(name), nil
 }
 
-func (h *Handler) getKeyPair(name, pubKey string) (*Keypair, error) {
+func (h *Handler) getKeyPair(name, pubKey string) (*KeyPair, error) {
 	wallet, err := h.loggedWallets.Get(name)
 	if err != nil {
 		return nil, err
 	}
 
-	keyPair, err := wallet.Keypairs.FindPair(pubKey)
+	keyPair, err := wallet.KeyRing.FindPair(pubKey)
 
 	return &keyPair, err
 }

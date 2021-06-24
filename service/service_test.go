@@ -356,7 +356,7 @@ func testServiceGetPublicKeyOK(t *testing.T) {
 	defer s.ctrl.Finish()
 
 	s.auth.EXPECT().VerifyToken("eyXXzA").Times(1).Return("jeremy", nil)
-	kp := wallet.Keypair{
+	kp := wallet.KeyPair{
 		Pub:       "pub",
 		Priv:      "",
 		Algorithm: crypto.NewEd25519(),

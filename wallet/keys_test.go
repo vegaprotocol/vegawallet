@@ -102,7 +102,7 @@ func testKeyRingFindingNonExistingKeyPairFails(t *testing.T) {
 
 	// then
 	assert.Error(t, err)
-	assert.Equal(t, wallet.Keypair{}, returnedKp)
+	assert.Equal(t, wallet.KeyPair{}, returnedKp)
 }
 
 func TestKeypair(t *testing.T) {
@@ -182,7 +182,7 @@ func testKeypairToPublicKeyRemovesSensitiveInformation(t *testing.T) {
 	assert.Equal(t, kp.Meta, secureKp.Meta)
 }
 
-func newKeyPair() *wallet.Keypair {
+func newKeyPair() *wallet.KeyPair {
 	kp, err := wallet.GenKeypair(crypto.Ed25519)
 	if err != nil {
 		panic(err)

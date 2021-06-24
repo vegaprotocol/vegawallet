@@ -1,8 +1,8 @@
 package wallet
 
 type Wallet struct {
-	Owner    string
-	Keypairs KeyRing
+	Owner   string
+	KeyRing KeyRing `json:"Keypairs"`
 }
 
 func NewWallet(name string) *Wallet {
@@ -18,8 +18,8 @@ type Meta struct {
 
 func New(owner string) Wallet {
 	return Wallet{
-		Owner:    owner,
-		Keypairs: NewKeyRing(),
+		Owner:   owner,
+		KeyRing: NewKeyRing(),
 	}
 }
 

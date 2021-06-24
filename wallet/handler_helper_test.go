@@ -45,12 +45,12 @@ func (m *mockedStore) GetWalletPath(name string) string {
 	return fmt.Sprintf("some/path/%v", name)
 }
 
-func (m *mockedStore) GetKey(name, pubKey string) wallet.Keypair {
+func (m *mockedStore) GetKey(name, pubKey string) wallet.KeyPair {
 	w, ok := m.wallets[name]
 	if !ok {
 		panic(fmt.Errorf("wallet \"%v\" not found", name))
 	}
-	pair, err := w.Keypairs.FindPair(pubKey)
+	pair, err := w.KeyRing.FindPair(pubKey)
 	if err != nil {
 		panic(fmt.Errorf("key \"%v\" not found", pubKey))
 	}
