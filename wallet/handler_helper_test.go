@@ -19,6 +19,11 @@ func newMockedStore() *mockedStore {
 	}
 }
 
+func (m *mockedStore) WalletExists(name string) bool {
+	_, ok := m.wallets[name]
+	return ok
+}
+
 func (m *mockedStore) SaveWallet(w wallet.Wallet, passphrase string) error {
 	m.passphrase = passphrase
 	m.wallets[w.Owner] = w

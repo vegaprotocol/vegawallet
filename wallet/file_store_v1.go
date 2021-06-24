@@ -29,6 +29,13 @@ func NewFileStoreV1(rootPath string) (*FileV1, error) {
 	}, nil
 }
 
+func (c *FileV1) WalletExists(name string) bool {
+	walletPath := c.walletPath(name)
+
+	ok, _ := fsutil.PathExists(walletPath)
+	return ok
+}
+
 func (c *FileV1) GetWallet(name, passphrase string) (Wallet, error) {
 	walletPath := c.walletPath(name)
 

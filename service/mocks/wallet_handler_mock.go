@@ -49,21 +49,6 @@ func (mr *MockWalletHandlerMockRecorder) CreateWallet(arg0, arg1 interface{}) *g
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateWallet", reflect.TypeOf((*MockWalletHandler)(nil).CreateWallet), arg0, arg1)
 }
 
-// GenerateKeypair mocks base method
-func (m *MockWalletHandler) GenerateKeypair(arg0, arg1 string) (string, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GenerateKeypair", arg0, arg1)
-	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GenerateKeypair indicates an expected call of GenerateKeypair
-func (mr *MockWalletHandlerMockRecorder) GenerateKeypair(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GenerateKeypair", reflect.TypeOf((*MockWalletHandler)(nil).GenerateKeypair), arg0, arg1)
-}
-
 // GetPublicKey mocks base method
 func (m *MockWalletHandler) GetPublicKey(arg0, arg1 string) (*wallet.Keypair, error) {
 	m.ctrl.T.Helper()
@@ -123,6 +108,21 @@ func (mr *MockWalletHandlerMockRecorder) LoginWallet(arg0, arg1 interface{}) *go
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LoginWallet", reflect.TypeOf((*MockWalletHandler)(nil).LoginWallet), arg0, arg1)
 }
 
+// SecureGenerateKeyPair mocks base method
+func (m *MockWalletHandler) SecureGenerateKeyPair(arg0, arg1 string) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SecureGenerateKeyPair", arg0, arg1)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SecureGenerateKeyPair indicates an expected call of SecureGenerateKeyPair
+func (mr *MockWalletHandlerMockRecorder) SecureGenerateKeyPair(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SecureGenerateKeyPair", reflect.TypeOf((*MockWalletHandler)(nil).SecureGenerateKeyPair), arg0, arg1)
+}
+
 // SignAny mocks base method
 func (m *MockWalletHandler) SignAny(arg0, arg1, arg2 string) ([]byte, error) {
 	m.ctrl.T.Helper()
@@ -154,7 +154,7 @@ func (mr *MockWalletHandlerMockRecorder) SignTx(arg0, arg1, arg2, arg3 interface
 }
 
 // SignTxV2 mocks base method
-func (m *MockWalletHandler) SignTxV2(arg0 string, arg1 v10.SubmitTransactionRequest, arg2 uint64) (*v1.Transaction, error) {
+func (m *MockWalletHandler) SignTxV2(arg0 string, arg1 *v10.SubmitTransactionRequest, arg2 uint64) (*v1.Transaction, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SignTxV2", arg0, arg1, arg2)
 	ret0, _ := ret[0].(*v1.Transaction)

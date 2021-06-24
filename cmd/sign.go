@@ -5,10 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	"code.vegaprotocol.io/go-wallet/fsutil"
 	"code.vegaprotocol.io/go-wallet/wallet"
-	"code.vegaprotocol.io/go-wallet/wallet/crypto"
-
 	"github.com/spf13/cobra"
 )
 
@@ -38,8 +35,21 @@ func init() {
 }
 
 func runSign(cmd *cobra.Command, args []string) error {
-	if len(signArgs.walletOwner) <= 0 {
+	store, err := wallet.NewFileStoreV1(rootArgs.rootPath)
+	if err != nil {
+		return err
+	}
+
+	handler := wallet.NewHandler(store)
+
+	if len(signArgs.walletOwner) == 0 {
 		return errors.New("wallet name is required")
+	}
+	if len(signArgs.pubkey) == 0 {
+		return errors.New("pubkey is required")
+	}
+	if len(signArgs.message) == 0 {
+		return errors.New("data is required")
 	}
 	if len(signArgs.passphrase) <= 0 {
 		var err error
@@ -48,49 +58,17 @@ func runSign(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf("could not get passphrase: %v", err)
 		}
 	}
-	if len(signArgs.pubkey) <= 0 {
-		return errors.New("pubkey is required")
-	}
-	if len(signArgs.message) <= 0 {
-		return errors.New("data is required")
-	}
 
-	if ok, err := fsutil.PathExists(rootArgs.rootPath); !ok {
-		return fmt.Errorf("invalid root directory path: %v", err)
-	}
-
-	wal, err := wallet.Read(rootArgs.rootPath, signArgs.walletOwner, signArgs.passphrase)
+	err = handler.LoginWallet(signArgs.walletOwner, signArgs.passphrase)
 	if err != nil {
-		return fmt.Errorf("unable to decrypt wallet: %v", err)
+		return fmt.Errorf("could not login to the wallet: %v", err)
 	}
 
-	dataBuf, err := base64.StdEncoding.DecodeString(signArgs.message)
+	sig, err := handler.SignAny(signArgs.walletOwner, signArgs.message, signArgs.pubkey)
 	if err != nil {
-		return fmt.Errorf("invalid base64 encoded data: %v", err)
+		return err
 	}
 
-	var kp *wallet.Keypair
-	for i, v := range wal.Keypairs {
-		if v.Pub == signArgs.pubkey {
-			kp = &wal.Keypairs[i]
-		}
-	}
-	if kp == nil {
-		return fmt.Errorf("unknown public key: %v", signArgs.pubkey)
-	}
-	if kp.Tainted {
-		return fmt.Errorf("key is tainted: %v", signArgs.pubkey)
-	}
-
-	alg, err := crypto.NewSignatureAlgorithm(crypto.Ed25519)
-	if err != nil {
-		return fmt.Errorf("unable to instanciate signature algorithm: %v", err)
-	}
-	sig, err := wallet.Sign(alg, kp, dataBuf)
-	if err != nil {
-		return fmt.Errorf("unable to sign: %v", err)
-	}
 	fmt.Printf("%v\n", base64.StdEncoding.EncodeToString(sig))
-
 	return nil
 }

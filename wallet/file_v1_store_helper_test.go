@@ -8,15 +8,6 @@ import (
 	"code.vegaprotocol.io/go-wallet/crypto"
 )
 
-func rootDir() string {
-	path := filepath.Join(rootDirPath, crypto.RandomStr(10))
-	err := os.MkdirAll(path, os.ModePerm)
-	if err != nil {
-		panic(err)
-	}
-	return path
-}
-
 type configDir struct {
 	path string
 }

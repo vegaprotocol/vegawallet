@@ -167,7 +167,7 @@ func testHandlerGeneratingNewKeyPairSucceeds(t *testing.T) {
 	require.NoError(t, err)
 	
 	// when
-	key, err := h.GenerateKeypair(name, passphrase)
+	key, err := h.SecureGenerateKeyPair(name, passphrase)
 
 	// then
 	require.NoError(t, err)
@@ -199,7 +199,7 @@ func testHandlerGeneratingNewKeyPairWithInvalidNameFails(t *testing.T) {
 	require.NoError(t, err)
 
 	// when
-	key, err := h.GenerateKeypair(otherName, passphrase)
+	key, err := h.SecureGenerateKeyPair(otherName, passphrase)
 
 	// then
 	assert.EqualError(t, err, wallet.ErrWalletDoesNotExists.Error())
@@ -215,7 +215,7 @@ func testHandlerGeneratingNewKeyPairWithoutWalletFails(t *testing.T) {
 	passphrase := "Th1isisasecurep@ssphraseinnit"
 
 	// when
-	key, err := h.GenerateKeypair(name, passphrase)
+	key, err := h.SecureGenerateKeyPair(name, passphrase)
 
 	// then
 	assert.EqualError(t, err, wallet.ErrWalletDoesNotExists.Error())
@@ -291,7 +291,7 @@ func testHandlerGettingPublicKeySucceeds(t *testing.T) {
 	require.NoError(t, err)
 
 	// when
-	key, err := h.GenerateKeypair(name, passphrase)
+	key, err := h.SecureGenerateKeyPair(name, passphrase)
 
 	// then
 	require.NoError(t, err)
@@ -322,7 +322,7 @@ func testHandlerGettingPublicKeyWithInvalidNameFails(t *testing.T) {
 	require.NoError(t, err)
 
 	// when
-	key, err := h.GenerateKeypair(name, passphrase)
+	key, err := h.SecureGenerateKeyPair(name, passphrase)
 
 	// then
 	require.NoError(t, err)
@@ -351,7 +351,7 @@ func testGettingNonExistingPublicKeyFails(t *testing.T) {
 	require.NoError(t, err)
 
 	// when
-	key, err := h.GenerateKeypair(name, passphrase)
+	key, err := h.SecureGenerateKeyPair(name, passphrase)
 
 	// then
 	require.NoError(t, err)
@@ -378,7 +378,7 @@ func testHandlerTaintingKeyPairSucceeds(t *testing.T) {
 	require.NoError(t, err)
 
 	// when
-	key, err := h.GenerateKeypair(name, passphrase)
+	key, err := h.SecureGenerateKeyPair(name, passphrase)
 
 	// then
 	require.NoError(t, err)
@@ -417,7 +417,7 @@ func testHandlerTaintingKeyPairWithInvalidNameFails(t *testing.T) {
 	require.NoError(t, err)
 
 	// when
-	key, err := h.GenerateKeypair(name, passphrase)
+	key, err := h.SecureGenerateKeyPair(name, passphrase)
 
 	// then
 	require.NoError(t, err)
@@ -489,7 +489,7 @@ func testHandlerTaintingKeyThatIsAlreadyTaintedFails(t *testing.T) {
 	require.NoError(t, err)
 
 	// when
-	key, err := h.GenerateKeypair(name, passphrase)
+	key, err := h.SecureGenerateKeyPair(name, passphrase)
 
 	// then
 	require.NoError(t, err)
@@ -534,7 +534,7 @@ func testHandlerUpdatingKeyPairMetaSucceeds(t *testing.T) {
 	require.NoError(t, err)
 
 	// when
-	key, err := h.GenerateKeypair(name, passphrase)
+	key, err := h.SecureGenerateKeyPair(name, passphrase)
 
 	// then
 	require.NoError(t, err)
@@ -569,7 +569,7 @@ func testHandlerUpdatingKeyPairMetaWithInvalidPassphraseFails(t *testing.T) {
 	require.NoError(t, err)
 
 	// when
-	key, err := h.GenerateKeypair(name, passphrase)
+	key, err := h.SecureGenerateKeyPair(name, passphrase)
 
 	// then
 	require.NoError(t, err)
@@ -600,7 +600,7 @@ func testHandlerUpdatingKeyPairMetaWithInvalidNameFails(t *testing.T) {
 	require.NoError(t, err)
 
 	// when
-	key, err := h.GenerateKeypair(name, passphrase)
+	key, err := h.SecureGenerateKeyPair(name, passphrase)
 
 	// then
 	require.NoError(t, err)
@@ -662,14 +662,14 @@ func testHandlerSigningTxV2Succeeds(t *testing.T) {
 	require.NoError(t, err)
 
 	// when
-	pubKey, err := h.GenerateKeypair(name, passphrase)
+	pubKey, err := h.SecureGenerateKeyPair(name, passphrase)
 
 	// then
 	require.NoError(t, err)
 	assert.NotEmpty(t, pubKey)
 
 	// given
-	req := walletpb.SubmitTransactionRequest{
+	req := &walletpb.SubmitTransactionRequest{
 		PubKey: pubKey,
 		Command: &walletpb.SubmitTransactionRequest_OrderCancellation{
 			OrderCancellation: &commandspb.OrderCancellation{},
@@ -706,7 +706,7 @@ func testHandlerSigningTxV2WithTaintedKeyFails(t *testing.T) {
 	require.NoError(t, err)
 
 	// when
-	pubKey, err := h.GenerateKeypair(name, passphrase)
+	pubKey, err := h.SecureGenerateKeyPair(name, passphrase)
 
 	// then
 	require.NoError(t, err)
@@ -720,7 +720,7 @@ func testHandlerSigningTxV2WithTaintedKeyFails(t *testing.T) {
 	assert.True(t, h.store.GetKey(name, pubKey).Tainted)
 
 	// given
-	req := walletpb.SubmitTransactionRequest{
+	req := &walletpb.SubmitTransactionRequest{
 		PubKey: pubKey,
 		Command: &walletpb.SubmitTransactionRequest_OrderCancellation{
 			OrderCancellation: &commandspb.OrderCancellation{},

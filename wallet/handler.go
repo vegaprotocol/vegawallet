@@ -20,6 +20,7 @@ var (
 
 // Store abstracts the underlying storage for wallet data.
 type Store interface {
+	WalletExists(name string) bool
 	SaveWallet(w Wallet, passphrase string) error
 	GetWallet(name, passphrase string) (Wallet, error)
 	GetWalletPath(name string) string
@@ -40,7 +41,13 @@ func NewHandler(store Store) *Handler {
 	}
 }
 
-// CreateWallet returns the name
+func (h *Handler) WalletExists(name string) bool {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+
+	return h.store.WalletExists(name)
+}
+
 func (h *Handler) CreateWallet(name, passphrase string) error {
 	h.mu.Lock()
 	defer h.mu.Unlock()
@@ -57,7 +64,6 @@ func (h *Handler) CreateWallet(name, passphrase string) error {
 	return h.saveWallet(*w, passphrase)
 }
 
-// LoginWallet returns the name
 func (h *Handler) LoginWallet(name, passphrase string) error {
 	h.mu.Lock()
 	defer h.mu.Unlock()
@@ -72,7 +78,31 @@ func (h *Handler) LoginWallet(name, passphrase string) error {
 	return nil
 }
 
-func (h *Handler) GenerateKeypair(name, passphrase string) (string, error) {
+func (h *Handler) GenerateKeyPair(name, passphrase string) (Keypair, error) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+
+	w, err := h.store.GetWallet(name, passphrase)
+	if err != nil {
+		return Keypair{}, err
+	}
+
+	kp, err := GenKeypair(crypto.Ed25519)
+	if err != nil {
+		return Keypair{}, err
+	}
+
+	w.Keypairs.Upsert(*kp)
+
+	err = h.saveWallet(w, passphrase)
+	if err != nil {
+		return Keypair{}, err
+	}
+
+	return kp.DeepCopy(), nil
+}
+
+func (h *Handler) SecureGenerateKeyPair(name, passphrase string) (string, error) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 
@@ -143,7 +173,7 @@ func (h *Handler) SignAny(name, inputData, pubKey string) ([]byte, error) {
 	return kp.Algorithm.Sign(kp.privBytes, rawInputData)
 }
 
-func (h *Handler) SignTxV2(name string, req walletpb.SubmitTransactionRequest, height uint64) (*commandspb.Transaction, error) {
+func (h *Handler) SignTxV2(name string, req *walletpb.SubmitTransactionRequest, height uint64) (*commandspb.Transaction, error) {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
 
@@ -168,6 +198,28 @@ func (h *Handler) SignTxV2(name string, req walletpb.SubmitTransactionRequest, h
 	}
 
 	return commands.NewTransaction(keyPair.pubBytes, marshalledData, signature), nil
+}
+
+func (h *Handler) VerifyAny(name, inputData, sig, pubKey string) (bool, error) {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+
+	rawSig, err := base64.StdEncoding.DecodeString(sig)
+	if err != nil {
+		return false, err
+	}
+
+	rawInputData, err := base64.StdEncoding.DecodeString(inputData)
+	if err != nil {
+		return false, err
+	}
+
+	kp, err := h.getKeyPair(name, pubKey)
+	if err != nil {
+		return false, err
+	}
+
+	return kp.Algorithm.Verify(kp.privBytes, rawInputData, rawSig)
 }
 
 func (h *Handler) TaintKey(name, pubKey, passphrase string) error {
@@ -240,7 +292,7 @@ func (h *Handler) saveWallet(w Wallet, passphrase string) error {
 	return nil
 }
 
-func wrapRequestCommandIntoInputData(data *commandspb.InputData, req walletpb.SubmitTransactionRequest) {
+func wrapRequestCommandIntoInputData(data *commandspb.InputData, req *walletpb.SubmitTransactionRequest) {
 	switch cmd := req.Command.(type) {
 	case *walletpb.SubmitTransactionRequest_OrderSubmission:
 		data.Command = &commandspb.InputData_OrderSubmission{

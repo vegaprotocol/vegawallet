@@ -92,7 +92,7 @@ func ParseTaintKeyRequest(r *http.Request, keyID string) (*TaintKeyRequest, comm
 	return req, errs
 }
 
-// GenKeyPairRequest describes the request for GenerateKeypair, UpdateMeta.
+// GenKeyPairRequest describes the request for GenerateKeypair
 type GenKeyPairRequest struct {
 	Passphrase string        `json:"passphrase"`
 	Meta       []wallet.Meta `json:"meta"`
@@ -117,7 +117,7 @@ func ParseGenKeyPairRequest(r *http.Request) (*GenKeyPairRequest, commands.Error
 	return req, errs
 }
 
-// UpdateMetaRequest describes the request for GenerateKeypair, UpdateMeta.
+// UpdateMetaRequest describes the request for UpdateMeta.
 type UpdateMetaRequest struct {
 	Passphrase string        `json:"passphrase"`
 	Meta       []wallet.Meta `json:"meta"`
@@ -235,11 +235,11 @@ type TokenResponse struct {
 type WalletHandler interface {
 	CreateWallet(name, passphrase string) error
 	LoginWallet(name, passphrase string) error
-	GenerateKeypair(name, passphrase string) (string, error)
+	SecureGenerateKeyPair(name, passphrase string) (string, error)
 	GetPublicKey(name, pubKey string) (*wallet.Keypair, error)
 	ListPublicKeys(name string) ([]wallet.Keypair, error)
 	SignTx(name, tx, pubKey string, height uint64) (wallet.SignedBundle, error)
-	SignTxV2(name string, req walletpb.SubmitTransactionRequest, height uint64) (*commandspb.Transaction, error)
+	SignTxV2(name string, req *walletpb.SubmitTransactionRequest, height uint64) (*commandspb.Transaction, error)
 	SignAny(name, inputData, pubKey string) ([]byte, error)
 	TaintKey(name, pubKey, passphrase string) error
 	UpdateMeta(name, pubKey, passphrase string, meta []wallet.Meta) error
@@ -412,7 +412,7 @@ func (s *Service) GenerateKeypair(t string, w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	pubKey, err := s.handler.GenerateKeypair(name, req.Passphrase)
+	pubKey, err := s.handler.SecureGenerateKeyPair(name, req.Passphrase)
 	if err != nil {
 		writeForbiddenError(w, err)
 		return
@@ -580,7 +580,7 @@ func (s *Service) signTxV2(token string, w http.ResponseWriter, r *http.Request,
 		return
 	}
 
-	tx, err := s.handler.SignTxV2(name, *req, height)
+	tx, err := s.handler.SignTxV2(name, req, height)
 	if err != nil {
 		writeForbiddenError(w, err)
 		return

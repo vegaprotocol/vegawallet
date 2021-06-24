@@ -130,6 +130,11 @@ func (k *Keypair) Sign(marshalledData []byte) (*commandspb.Signature, error) {
 	}, nil
 }
 
+func (k *Keypair) DeepCopy() Keypair {
+	copiedK := *k
+	return copiedK
+}
+
 // SecureCopy ensures the sensitive information doesn't leak outside.
 func (k *Keypair) SecureCopy() Keypair {
 	copiedK := *k
