@@ -158,7 +158,7 @@ func (s *Store) GetConfig() (*config.Config, error) {
 }
 
 func (s *Store) SaveConfig(cfg *config.Config, overwrite bool) error {
-	confPathExists, _ := fsutil.PathExists(s.configFileName)
+	confPathExists, _ := fsutil.FileExists(s.configFileName)
 
 	if confPathExists {
 		if overwrite {
@@ -194,8 +194,8 @@ func (s *Store) SaveRSAKeys(keys *wallet.RSAKeys, overwrite bool) error {
 		return ErrRSAFolderDoesNotExists
 	}
 
-	privKeyExists, _ := fsutil.PathExists(s.privRsaKeyFileName)
-	pubKeyExists, _ := fsutil.PathExists(s.pubRsaKeyFileName)
+	privKeyExists, _ := fsutil.FileExists(s.privRsaKeyFileName)
+	pubKeyExists, _ := fsutil.FileExists(s.pubRsaKeyFileName)
 	if privKeyExists && pubKeyExists {
 		if overwrite {
 			if err := s.removeExistingRSAKeys(); err != nil {
