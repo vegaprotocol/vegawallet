@@ -1,6 +1,7 @@
 package wallet_test
 
 import (
+	"encoding/base64"
 	"testing"
 
 	"code.vegaprotocol.io/go-wallet/wallet"
@@ -60,6 +61,7 @@ func TestHandler(t *testing.T) {
 	t.Run("Get wallet path succeeds", testHandlerGettingWalletPathSucceeds)
 	t.Run("Signing transaction request (v2) succeeds", testHandlerSigningTxV2Succeeds)
 	t.Run("Signing transaction request (v2) with tainted key fails", testHandlerSigningTxV2WithTaintedKeyFails)
+	t.Run("Signing and verifying a message succeeds", testHandlerSigningAndVerifyingMessageSucceeds)
 }
 
 func testHandlerCreatingWalletSucceeds(t *testing.T) {
@@ -255,7 +257,7 @@ func testHandlerGeneratingNewKeyPairSucceeds(t *testing.T) {
 	// then
 	require.NoError(t, err)
 	assert.Len(t, keys, 1)
-	assert.Equal(t, keyPair, keys[0].Key)
+	assert.Equal(t, keyPair.Pub, keys[0].Key)
 	assert.False(t, keys[0].Tainted)
 }
 
@@ -808,4 +810,47 @@ func testHandlerSigningTxV2WithTaintedKeyFails(t *testing.T) {
 	// then
 	assert.Error(t, err)
 	assert.Nil(t, tx)
+}
+
+func testHandlerSigningAndVerifyingMessageSucceeds(t *testing.T) {
+	h := getTestHandler(t)
+	defer h.ctrl.Finish()
+
+	// given
+	passphrase := "Th1isisasecurep@ssphraseinnit"
+	name := "jeremy"
+
+	// when
+	err := h.CreateWallet(name, passphrase)
+
+	// then
+	require.NoError(t, err)
+
+	// when
+	pubKey, err := h.SecureGenerateKeyPair(name, passphrase)
+
+	// then
+	require.NoError(t, err)
+	assert.NotEmpty(t, pubKey)
+
+	// given
+	data := "Je ne connaîtrai pas la peur car la peur tue l'esprit. La peur est la petite mort qui conduit à l'oblitération totale."
+	encodedData := base64.StdEncoding.EncodeToString([]byte(data))
+
+	// when
+	sig, err := h.SignAny(name, encodedData, pubKey)
+
+	// then
+	require.NoError(t, err)
+	assert.NotEmpty(t, sig)
+
+	// given
+	encodedSig := base64.StdEncoding.EncodeToString(sig)
+
+	// when
+	verified, err := h.VerifyAny(name, encodedData, encodedSig, pubKey)
+
+	// then
+	require.NoError(t, err)
+	assert.True(t, verified)
 }

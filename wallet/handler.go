@@ -105,7 +105,7 @@ func (h *Handler) GenerateKeyPair(name, passphrase string) (KeyPair, error) {
 func (h *Handler) SecureGenerateKeyPair(name, passphrase string) (string, error) {
 	kp, err := h.GenerateKeyPair(name, passphrase)
 	if err != nil {
-		return "", nil
+		return "", err
 	}
 
 	return kp.Pub, nil
@@ -202,7 +202,7 @@ func (h *Handler) VerifyAny(name, inputData, sig, pubKey string) (bool, error) {
 		return false, err
 	}
 
-	return kp.Algorithm.Verify(kp.privBytes, rawInputData, rawSig)
+	return kp.Algorithm.Verify(kp.pubBytes, rawInputData, rawSig)
 }
 
 func (h *Handler) TaintKey(name, pubKey, passphrase string) error {
