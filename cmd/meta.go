@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 
+	storev1 "code.vegaprotocol.io/go-wallet/store/v1"
 	"code.vegaprotocol.io/go-wallet/wallet"
 
 	"github.com/spf13/cobra"
@@ -31,11 +32,11 @@ func init() {
 	metaCmd.Flags().StringVarP(&metaArgs.walletOwner, "name", "n", "", "Name of the wallet to use")
 	metaCmd.Flags().StringVarP(&metaArgs.passphrase, "passphrase", "p", "", "Passphrase to access the wallet")
 	metaCmd.Flags().StringVarP(&metaArgs.pubkey, "pubkey", "k", "", "Public key to be used (hex)")
-	metaCmd.Flags().StringVarP(&metaArgs.metas, "metas", "m", "", `A list of metadata e.g: "primary:true;asset;BTC"`)
+	metaCmd.Flags().StringVarP(&metaArgs.metas, "metas", "m", "", `A list of metadata e.g: "primary:true;asset:BTC"`)
 }
 
 func runMeta(cmd *cobra.Command, args []string) error {
-	store, err := wallet.NewFileStoreV1(rootArgs.rootPath)
+	store, err := storev1.NewStore(rootArgs.rootPath)
 	if err != nil {
 		return err
 	}
@@ -56,19 +57,21 @@ func runMeta(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	metas, err := parseMeta(genKeyArgs.metas)
+	metas, err := parseMeta(metaArgs.metas)
 	if err != nil {
 		return err
 	}
 
-	err = handler.LoginWallet(signArgs.walletOwner, signArgs.passphrase)
+	err = handler.LoginWallet(metaArgs.walletOwner, metaArgs.passphrase)
 	if err != nil {
 		return fmt.Errorf("could not login to the wallet: %v", err)
 	}
 
-	err = handler.UpdateMeta(genKeyArgs.walletOwner, metaArgs.pubkey, genKeyArgs.passphrase, metas)
+	err = handler.UpdateMeta(metaArgs.walletOwner, metaArgs.pubkey, metaArgs.passphrase, metas)
 	if err != nil {
 		return fmt.Errorf("could not update the meta: %v", err)
 	}
+
+	fmt.Printf("The meta have been updated.\n")
 	return nil
 }

@@ -10,6 +10,8 @@ import (
 	"net/http"
 
 	"code.vegaprotocol.io/go-wallet/commands"
+	"code.vegaprotocol.io/go-wallet/config"
+	storev1 "code.vegaprotocol.io/go-wallet/store/v1"
 	"code.vegaprotocol.io/go-wallet/wallet"
 	typespb "github.com/vegaprotocol/api/grpc/clients/go/generated/code.vegaprotocol.io/vega/proto"
 	"github.com/vegaprotocol/api/grpc/clients/go/generated/code.vegaprotocol.io/vega/proto/api"
@@ -27,7 +29,7 @@ import (
 type Service struct {
 	*httprouter.Router
 
-	cfg         *wallet.Config
+	cfg         *config.Config
 	log         *zap.Logger
 	s           *http.Server
 	handler     WalletHandler
@@ -263,26 +265,26 @@ type NodeForward interface {
 	LastBlockHeight(context.Context) (uint64, error)
 }
 
-func NewService(log *zap.Logger, cfg *wallet.Config, rootPath string) (*Service, error) {
+func NewService(log *zap.Logger, cfg *config.Config, rootPath string) (*Service, error) {
 	log = log.Named("wallet")
 
-	fileStore, err := wallet.NewFileStoreV1(rootPath)
+	store, err := storev1.NewStore(rootPath)
 	if err != nil {
 		return nil, err
 	}
-	auth, err := NewAuth(log, rootPath, cfg.TokenExpiry.Get())
+	auth, err := NewAuth(log, store, cfg.TokenExpiry.Get())
 	if err != nil {
 		return nil, err
 	}
-	nodeForward, err := wallet.NewNodeForward(log, cfg.Nodes)
+	nodeForward, err := newNodeForward(log, cfg.Nodes)
 	if err != nil {
 		return nil, err
 	}
-	handler := wallet.NewHandler(fileStore)
+	handler := wallet.NewHandler(store)
 	return NewServiceWith(log, cfg, handler, auth, nodeForward)
 }
 
-func NewServiceWith(log *zap.Logger, cfg *wallet.Config, h WalletHandler, a Auth, n NodeForward) (*Service, error) {
+func NewServiceWith(log *zap.Logger, cfg *config.Config, h WalletHandler, a Auth, n NodeForward) (*Service, error) {
 	s := &Service{
 		Router:      httprouter.New(),
 		log:         log,

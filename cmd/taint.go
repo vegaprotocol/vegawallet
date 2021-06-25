@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 
+	storev1 "code.vegaprotocol.io/go-wallet/store/v1"
 	"code.vegaprotocol.io/go-wallet/wallet"
 	"github.com/spf13/cobra"
 )
@@ -31,7 +32,7 @@ func init() {
 }
 
 func runTaint(cmd *cobra.Command, args []string) error {
-	store, err := wallet.NewFileStoreV1(rootArgs.rootPath)
+	store, err := storev1.NewStore(rootArgs.rootPath)
 	if err != nil {
 		return err
 	}
@@ -53,5 +54,7 @@ func runTaint(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return fmt.Errorf("could not taint the key: %v", err)
 	}
+
+	fmt.Printf("The key has been tainted.\n")
 	return nil
 }

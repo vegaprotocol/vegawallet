@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	storev1 "code.vegaprotocol.io/go-wallet/store/v1"
 	"code.vegaprotocol.io/go-wallet/wallet"
 
 	"github.com/spf13/cobra"
@@ -32,7 +33,7 @@ func init() {
 }
 
 func runList(cmd *cobra.Command, args []string) error {
-	store, err := wallet.NewFileStoreV1(rootArgs.rootPath)
+	store, err := storev1.NewStore(rootArgs.rootPath)
 	if err != nil {
 		return err
 	}
@@ -50,7 +51,7 @@ func runList(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	err = handler.LoginWallet(signArgs.walletOwner, signArgs.passphrase)
+	err = handler.LoginWallet(listArgs.walletOwner, listArgs.passphrase)
 	if err != nil {
 		return fmt.Errorf("could not login to the wallet: %v", err)
 	}

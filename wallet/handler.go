@@ -103,24 +103,9 @@ func (h *Handler) GenerateKeyPair(name, passphrase string) (KeyPair, error) {
 }
 
 func (h *Handler) SecureGenerateKeyPair(name, passphrase string) (string, error) {
-	h.mu.Lock()
-	defer h.mu.Unlock()
-
-	w, err := h.store.GetWallet(name, passphrase)
+	kp, err := h.GenerateKeyPair(name, passphrase)
 	if err != nil {
-		return "", err
-	}
-
-	kp, err := GenKeypair(crypto.Ed25519)
-	if err != nil {
-		return "", err
-	}
-
-	w.KeyRing.Upsert(*kp)
-
-	err = h.saveWallet(w, passphrase)
-	if err != nil {
-		return "", err
+		return "", nil
 	}
 
 	return kp.Pub, nil

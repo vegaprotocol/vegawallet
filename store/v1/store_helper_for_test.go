@@ -1,4 +1,4 @@
-package wallet_test
+package v1_test
 
 import (
 	"io/ioutil"
@@ -9,27 +9,31 @@ import (
 )
 
 type configDir struct {
-	path string
+	rootPath string
 }
 
 func newConfigDir() configDir {
-	path := filepath.Join("/tmp/vegatests/wallet/", crypto.RandomStr(10))
+	rootPath := filepath.Join("/tmp/vegatests/wallet/", crypto.RandomStr(10))
 
 	return configDir{
-		path: path,
+		rootPath: rootPath,
 	}
 }
 
 func (d configDir) RootPath() string {
-	return d.path
+	return d.rootPath
+}
+
+func (d configDir) RSAKeysPath() string {
+	return filepath.Join(d.rootPath, "wallet_rsa")
 }
 
 func (d configDir) WalletsPath() string {
-	return filepath.Join(d.path, "wallets")
+	return filepath.Join(d.rootPath, "wallets")
 }
 
 func (d configDir) WalletPath(name string) string {
-	return filepath.Join(d.path, "wallets", name)
+	return filepath.Join(d.rootPath, "wallets", name)
 }
 
 func (d configDir) WalletContent(name string) string {
@@ -40,15 +44,8 @@ func (d configDir) WalletContent(name string) string {
 	return string(buf)
 }
 
-func (d configDir) Create() {
-	err := os.MkdirAll(d.path, os.ModePerm)
-	if err != nil {
-		panic(err)
-	}
-}
-
 func (d configDir) Remove() {
-	err := os.RemoveAll(d.path)
+	err := os.RemoveAll(d.rootPath)
 	if err != nil {
 		panic(err)
 	}

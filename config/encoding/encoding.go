@@ -24,7 +24,7 @@ func (d *Duration) UnmarshalText(text []byte) error {
 	return err
 }
 
-// MarshalText marshal a duraton into bytes
+// MarshalText marshal a duration into bytes
 func (d Duration) MarshalText() ([]byte, error) {
 	return []byte(d.String()), nil
 }

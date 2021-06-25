@@ -8,7 +8,6 @@ import (
 
 var (
 	ErrInvalidOrMissingToken  = newErrorResponse("invalid or missing token")
-
 	ErrCouldNotReadRequest = errors.New("could not read request")
 	ErrCouldNotGetBlockHeight = errors.New("could not get last block height")
 )

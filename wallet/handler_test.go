@@ -36,6 +36,9 @@ func TestHandler(t *testing.T) {
 	t.Run("Recreating a wallet with same name and different passphrase fails", testHandlerRecreatingWalletWithSameNameButDifferentPassphraseFails)
 	t.Run("Login to existing wallet succeeds", testHandlerLoginToExistingWalletSucceeds)
 	t.Run("Login to non-existing wallet succeeds", testHandlerLoginToNonExistingWalletFails)
+	t.Run("Generating new key pair securely succeeds", testHandlerGeneratingNewKeyPairSecurelySucceeds)
+	t.Run("Generating new key pair securely with invalid name fails", testHandlerGeneratingNewKeyPairSecurelyWithInvalidNameFails)
+	t.Run("Generating new key pair securely without wallet fails", testHandlerGeneratingNewKeyPairSecurelyWithoutWalletFails)
 	t.Run("Generating new key pair succeeds", testHandlerGeneratingNewKeyPairSucceeds)
 	t.Run("Generating new key pair with invalid name fails", testHandlerGeneratingNewKeyPairWithInvalidNameFails)
 	t.Run("Generating new key pair without wallet fails", testHandlerGeneratingNewKeyPairWithoutWalletFails)
@@ -152,7 +155,7 @@ func testHandlerLoginToNonExistingWalletFails(t *testing.T) {
 	assert.EqualError(t, err, wallet.ErrWalletDoesNotExists.Error())
 }
 
-func testHandlerGeneratingNewKeyPairSucceeds(t *testing.T) {
+func testHandlerGeneratingNewKeyPairSecurelySucceeds(t *testing.T) {
 	h := getTestHandler(t)
 	defer h.ctrl.Finish()
 
@@ -165,7 +168,7 @@ func testHandlerGeneratingNewKeyPairSucceeds(t *testing.T) {
 
 	// then
 	require.NoError(t, err)
-	
+
 	// when
 	key, err := h.SecureGenerateKeyPair(name, passphrase)
 
@@ -183,7 +186,7 @@ func testHandlerGeneratingNewKeyPairSucceeds(t *testing.T) {
 	assert.False(t, keys[0].Tainted)
 }
 
-func testHandlerGeneratingNewKeyPairWithInvalidNameFails(t *testing.T) {
+func testHandlerGeneratingNewKeyPairSecurelyWithInvalidNameFails(t *testing.T) {
 	h := getTestHandler(t)
 	defer h.ctrl.Finish()
 
@@ -206,7 +209,7 @@ func testHandlerGeneratingNewKeyPairWithInvalidNameFails(t *testing.T) {
 	assert.Empty(t, key)
 }
 
-func testHandlerGeneratingNewKeyPairWithoutWalletFails(t *testing.T) {
+func testHandlerGeneratingNewKeyPairSecurelyWithoutWalletFails(t *testing.T) {
 	h := getTestHandler(t)
 	defer h.ctrl.Finish()
 
@@ -220,6 +223,79 @@ func testHandlerGeneratingNewKeyPairWithoutWalletFails(t *testing.T) {
 	// then
 	assert.EqualError(t, err, wallet.ErrWalletDoesNotExists.Error())
 	assert.Empty(t, key)
+}
+
+func testHandlerGeneratingNewKeyPairSucceeds(t *testing.T) {
+	h := getTestHandler(t)
+	defer h.ctrl.Finish()
+
+	// given
+	passphrase := "Th1isisasecurep@ssphraseinnit"
+	name := "jeremy"
+
+	// when
+	err := h.CreateWallet(name, passphrase)
+
+	// then
+	require.NoError(t, err)
+
+	// when
+	keyPair, err := h.GenerateKeyPair(name, passphrase)
+
+	// then
+	require.NoError(t, err)
+	assert.NotEmpty(t, keyPair.Pub)
+	assert.NotEmpty(t, keyPair.Priv)
+	assert.False(t, keyPair.Tainted)
+	assert.Empty(t, keyPair.Meta)
+
+	// when
+	keys, err := h.ListPublicKeys(name)
+
+	// then
+	require.NoError(t, err)
+	assert.Len(t, keys, 1)
+	assert.Equal(t, keyPair, keys[0].Key)
+	assert.False(t, keys[0].Tainted)
+}
+
+func testHandlerGeneratingNewKeyPairWithInvalidNameFails(t *testing.T) {
+	h := getTestHandler(t)
+	defer h.ctrl.Finish()
+
+	// given
+	passphrase := "Th1isisasecurep@ssphraseinnit"
+	name := "jeremy"
+	otherName := "bad name"
+
+	// when
+	err := h.CreateWallet(name, passphrase)
+
+	// then
+	require.NoError(t, err)
+
+	// when
+	keyPair, err := h.GenerateKeyPair(otherName, passphrase)
+
+	// then
+	assert.EqualError(t, err, wallet.ErrWalletDoesNotExists.Error())
+	assert.Empty(t, keyPair)
+}
+
+func testHandlerGeneratingNewKeyPairWithoutWalletFails(t *testing.T) {
+	h := getTestHandler(t)
+	defer h.ctrl.Finish()
+
+	// given
+	name := "jeremy"
+	passphrase := "Th1isisasecurep@ssphraseinnit"
+
+	// when
+	keyPair, err := h.GenerateKeyPair(name, passphrase)
+
+	// then
+	assert.EqualError(t, err, wallet.ErrWalletDoesNotExists.Error())
+	assert.Empty(t, keyPair)
 }
 
 func testHandlerListingPublicKeysWithInvalidNameFails(t *testing.T) {

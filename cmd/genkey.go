@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"strings"
 
+	storev1 "code.vegaprotocol.io/go-wallet/store/v1"
 	"code.vegaprotocol.io/go-wallet/wallet"
+
 	"github.com/spf13/cobra"
 )
 
@@ -33,7 +35,7 @@ func init() {
 }
 
 func runGenKey(cmd *cobra.Command, args []string) error {
-	store, err := wallet.NewFileStoreV1(rootArgs.rootPath)
+	store, err := storev1.NewStore(rootArgs.rootPath)
 	if err != nil {
 		return err
 	}
@@ -109,7 +111,7 @@ func parseMeta(metaStr string) ([]wallet.Meta, error) {
 		return metas, nil
 	}
 
-	rawMetas := strings.Split(genKeyArgs.metas, ";")
+	rawMetas := strings.Split(metaStr, ";")
 	for _, v := range rawMetas {
 		rawMeta := strings.Split(v, ":")
 		if len(rawMeta) != 2 {
