@@ -13,7 +13,7 @@ type configDir struct {
 }
 
 func newConfigDir() configDir {
-	rootPath := filepath.Join("/tmp/vegatests/wallet/", crypto.RandomStr(10))
+	rootPath := filepath.Join("tmp", "vegatests", "wallet", crypto.RandomStr(10))
 
 	return configDir{
 		rootPath: rootPath,
