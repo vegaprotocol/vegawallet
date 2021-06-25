@@ -58,7 +58,7 @@ func EnsureDir(path string) error {
 	_, err := os.Stat(path)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return os.Mkdir(path, dirPerms)
+			return os.MkdirAll(path, dirPerms)
 		}
 		return err
 	}
