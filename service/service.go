@@ -150,7 +150,10 @@ func ParseUpdateMetaRequest(r *http.Request, keyID string) (*UpdateMetaRequest, 
 
 // SignAnyRequest describes the request for SignAny.
 type SignAnyRequest struct {
+	// InputData is the payload to generate a signature from. I should be
+	// base 64 encoded.
 	InputData string `json:"inputData"`
+	// PubKey is used to retrieve the private key to sign the InputDate.
 	PubKey    string `json:"pubKey"`
 }
 
