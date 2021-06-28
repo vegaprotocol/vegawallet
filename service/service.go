@@ -148,13 +148,6 @@ func ParseUpdateMetaRequest(r *http.Request, keyID string) (*UpdateMetaRequest, 
 	return req, errs
 }
 
-// SignTxRequest describes the request for SignTx.
-type SignTxRequest struct {
-	Tx        string `json:"tx"`
-	PubKey    string `json:"pubKey"`
-	Propagate bool   `json:"propagate"`
-}
-
 // SignAnyRequest describes the request for SignAny.
 type SignAnyRequest struct {
 	InputData string `json:"inputData"`

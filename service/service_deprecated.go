@@ -13,6 +13,13 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+// SignTxRequest describes the request for SignTx.
+type SignTxRequest struct {
+	Tx        string `json:"tx"`
+	PubKey    string `json:"pubKey"`
+	Propagate bool   `json:"propagate"`
+}
+
 func (s *Service) SignTxAsync(t string, w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	s.signTx(t, w, r, p, api.SubmitTransactionRequest_TYPE_ASYNC)
 }
