@@ -184,6 +184,44 @@ func ParseSignAnyRequest(r *http.Request) (*SignAnyRequest, commands.Errors) {
 	return req, errs
 }
 
+// VerifyAnyRequest describes the request for VerifyAny.
+type VerifyAnyRequest struct {
+	// InputData is the payload to be verified. It should be base64 encoded.
+	InputData string `json:"inputData"`
+	// Signature is the signature to check against the InputData. It should be
+	// base64 encoded.
+	Signature string `json:"signature"`
+	// PubKey is the public key used along the signature to check the InputData.
+	PubKey    string `json:"pubKey"`
+}
+
+func ParseVerifyAnyRequest(r *http.Request) (*VerifyAnyRequest, commands.Errors) {
+	errs := commands.NewErrors()
+
+	req := &VerifyAnyRequest{}
+	if err := unmarshalBody(r, &req); err != nil {
+		return nil, errs.FinalAdd(err)
+	}
+
+	if len(req.InputData) == 0 {
+		errs.AddForProperty("input_data", commands.ErrIsRequired)
+	}
+
+	if len(req.Signature) == 0 {
+		errs.AddForProperty("signature", commands.ErrIsRequired)
+	}
+
+	if len(req.PubKey) == 0 {
+		errs.AddForProperty("pub_key", commands.ErrIsRequired)
+	}
+
+	if !errs.Empty() {
+		return nil, errs
+	}
+
+	return req, errs
+}
+
 func ParseSubmitTransactionRequest(r *http.Request) (*walletpb.SubmitTransactionRequest, commands.Errors) {
 	errs := commands.NewErrors()
 
@@ -243,6 +281,7 @@ type WalletHandler interface {
 	SignTx(name, tx, pubKey string, height uint64) (wallet.SignedBundle, error)
 	SignTxV2(name string, req *walletpb.SubmitTransactionRequest, height uint64) (*commandspb.Transaction, error)
 	SignAny(name, inputData, pubKey string) ([]byte, error)
+	VerifyAny(name, inputData, sig, pubKey string) (bool, error)
 	TaintKey(name, pubKey, passphrase string) error
 	UpdateMeta(name, pubKey, passphrase string, meta []wallet.Meta) error
 	GetWalletPath(name string) (string, error)
@@ -305,6 +344,7 @@ func NewServiceWith(log *zap.Logger, cfg *config.Config, h WalletHandler, a Auth
 	s.PUT("/api/v1/keys/:keyid/taint", ExtractToken(s.TaintKey))
 	s.PUT("/api/v1/keys/:keyid/metadata", ExtractToken(s.UpdateMeta))
 	s.POST("/api/v1/sign", ExtractToken(s.SignAny))
+	s.POST("/api/v1/verify", ExtractToken(s.VerifyAny))
 	s.POST("/api/v1/command", ExtractToken(s.SignTxV2))
 	s.POST("/api/v1/command/sync", ExtractToken(s.SignTxSyncV2))
 	s.POST("/api/v1/command/commit", ExtractToken(s.SignTxCommitV2))
@@ -547,6 +587,28 @@ func (s *Service) SignAny(t string, w http.ResponseWriter, r *http.Request, _ ht
 	}
 
 	writeSuccess(w, res, http.StatusOK)
+}
+
+func (s *Service) VerifyAny(t string, w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	req, errs := ParseVerifyAnyRequest(r)
+	if !errs.Empty() {
+		s.writeBadRequest(w, errs)
+		return
+	}
+
+	name, err := s.auth.VerifyToken(t)
+	if err != nil {
+		writeForbiddenError(w, err)
+		return
+	}
+
+	verified, err := s.handler.VerifyAny(name, req.InputData, req.Signature, req.PubKey)
+	if err != nil {
+		writeForbiddenError(w, err)
+		return
+	}
+
+	writeSuccess(w, SuccessResponse{Success: verified}, http.StatusOK)
 }
 
 func (s *Service) SignTxSyncV2(token string, w http.ResponseWriter, r *http.Request, p httprouter.Params) {

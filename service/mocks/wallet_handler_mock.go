@@ -195,3 +195,18 @@ func (mr *MockWalletHandlerMockRecorder) UpdateMeta(arg0, arg1, arg2, arg3 inter
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateMeta", reflect.TypeOf((*MockWalletHandler)(nil).UpdateMeta), arg0, arg1, arg2, arg3)
 }
+
+// VerifyAny mocks base method
+func (m *MockWalletHandler) VerifyAny(arg0, arg1, arg2, arg3 string) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "VerifyAny", arg0, arg1, arg2, arg3)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// VerifyAny indicates an expected call of VerifyAny
+func (mr *MockWalletHandlerMockRecorder) VerifyAny(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VerifyAny", reflect.TypeOf((*MockWalletHandler)(nil).VerifyAny), arg0, arg1, arg2, arg3)
+}
