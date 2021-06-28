@@ -108,6 +108,18 @@ func (mr *MockWalletHandlerMockRecorder) LoginWallet(arg0, arg1 interface{}) *go
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LoginWallet", reflect.TypeOf((*MockWalletHandler)(nil).LoginWallet), arg0, arg1)
 }
 
+// LogoutWallet mocks base method
+func (m *MockWalletHandler) LogoutWallet(arg0 string) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "LogoutWallet", arg0)
+}
+
+// LogoutWallet indicates an expected call of LogoutWallet
+func (mr *MockWalletHandlerMockRecorder) LogoutWallet(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LogoutWallet", reflect.TypeOf((*MockWalletHandler)(nil).LogoutWallet), arg0)
+}
+
 // SecureGenerateKeyPair mocks base method
 func (m *MockWalletHandler) SecureGenerateKeyPair(arg0, arg1 string) (string, error) {
 	m.ctrl.T.Helper()

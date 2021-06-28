@@ -215,7 +215,9 @@ func testServiceRevokeTokenOK(t *testing.T) {
 	s := getTestService(t)
 	defer s.ctrl.Finish()
 
+	s.auth.EXPECT().VerifyToken("eyXXzA").Times(1).Return("jeremy", nil)
 	s.auth.EXPECT().Revoke(gomock.Any()).Times(1).Return(nil)
+	s.handler.EXPECT().LogoutWallet("jeremy").Times(1)
 
 	r := httptest.NewRequest("POST", "scheme://host/path", nil)
 	r.Header.Add("Authorization", "Bearer eyXXzA")

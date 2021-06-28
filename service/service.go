@@ -154,7 +154,7 @@ type SignAnyRequest struct {
 	// base 64 encoded.
 	InputData string `json:"inputData"`
 	// PubKey is used to retrieve the private key to sign the InputDate.
-	PubKey    string `json:"pubKey"`
+	PubKey string `json:"pubKey"`
 }
 
 func ParseSignAnyRequest(r *http.Request) (*SignAnyRequest, commands.Errors) {
@@ -188,7 +188,7 @@ type VerifyAnyRequest struct {
 	// base64 encoded.
 	Signature string `json:"signature"`
 	// PubKey is the public key used along the signature to check the InputData.
-	PubKey    string `json:"pubKey"`
+	PubKey string `json:"pubKey"`
 }
 
 func ParseVerifyAnyRequest(r *http.Request) (*VerifyAnyRequest, commands.Errors) {
@@ -271,6 +271,7 @@ type TokenResponse struct {
 type WalletHandler interface {
 	CreateWallet(name, passphrase string) error
 	LoginWallet(name, passphrase string) error
+	LogoutWallet(name string)
 	SecureGenerateKeyPair(name, passphrase string) (string, error)
 	GetPublicKey(name, pubKey string) (*wallet.PublicKey, error)
 	ListPublicKeys(name string) ([]wallet.PublicKey, error)
@@ -330,10 +331,10 @@ func NewServiceWith(log *zap.Logger, cfg *config.Config, h WalletHandler, a Auth
 	}
 
 	s.POST("/api/v1/auth/token", s.Login)
+	s.DELETE("/api/v1/auth/token", ExtractToken(s.Revoke))
 	s.GET("/api/v1/status", s.health)
 	s.POST("/api/v1/wallets", s.CreateWallet)
 
-	s.DELETE("/api/v1/auth/token", ExtractToken(s.Revoke))
 	s.GET("/api/v1/keys", ExtractToken(s.ListPublicKeys))
 	s.POST("/api/v1/keys", ExtractToken(s.GenerateKeypair))
 	s.GET("/api/v1/keys/:keyid", ExtractToken(s.GetPublicKey))
@@ -428,11 +429,19 @@ func (s *Service) DownloadWallet(token string, w http.ResponseWriter, r *http.Re
 }
 
 func (s *Service) Revoke(t string, w http.ResponseWriter, _ *http.Request, _ httprouter.Params) {
-	err := s.auth.Revoke(t)
+	name, err := s.auth.VerifyToken(t)
 	if err != nil {
 		writeForbiddenError(w, err)
 		return
 	}
+
+	err = s.auth.Revoke(t)
+	if err != nil {
+		writeForbiddenError(w, err)
+		return
+	}
+
+	s.handler.LogoutWallet(name)
 
 	writeSuccess(w, SuccessResponse{Success: true}, http.StatusOK)
 }
