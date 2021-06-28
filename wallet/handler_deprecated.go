@@ -9,7 +9,7 @@ import (
 	"github.com/golang/protobuf/proto"
 )
 
-func (h *Handler) SignTx(token, tx, pubKey string, blockHeight uint64) (SignedBundle, error) {
+func (h *Handler) SignTx(name, tx, pubKey string, blockHeight uint64) (SignedBundle, error) {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
 
@@ -19,7 +19,7 @@ func (h *Handler) SignTx(token, tx, pubKey string, blockHeight uint64) (SignedBu
 		return SignedBundle{}, err
 	}
 
-	kp, err := h.getKeyPair(token, pubKey)
+	kp, err := h.getKeyPair(name, pubKey)
 	if err != nil {
 		return SignedBundle{}, err
 	}

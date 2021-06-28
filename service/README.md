@@ -6,8 +6,6 @@ This package provides the basic cryptography to sign vega transactions, and a ba
 A wallet takes the form of a file saved on the file system and is encrypted using the passphrase chosen by the user.
 A wallet is composed of a list of key pairs (Ed25519) used to sign transactions for the user of a wallet.
 
-To read more about authentication & signing in Vega, see [Authentication & Signing](../design/authentication-and-signing.md)
-
 ## Generate configuration
 
 The package provides a way to generate the configuration of the service before starting it, it can be used through the vega command line like so:

@@ -14,22 +14,22 @@ var (
 	ErrPubKeyAlreadyTainted = errors.New("public key is already tainted")
 )
 
-type KeyRing []Keypair
+type KeyRing []KeyPair
 
 func NewKeyRing() KeyRing {
-	return []Keypair{}
+	return []KeyPair{}
 }
 
-func (r KeyRing) FindPair(pubKey string) (Keypair, error) {
+func (r KeyRing) FindPair(pubKey string) (KeyPair, error) {
 	for i := range r {
 		if r[i].Pub == pubKey {
 			return r[i], nil
 		}
 	}
-	return Keypair{}, ErrPubKeyDoesNotExist
+	return KeyPair{}, ErrPubKeyDoesNotExist
 }
 
-func (r *KeyRing) Upsert(pair Keypair) {
+func (r *KeyRing) Upsert(pair KeyPair) {
 	for i := range *r {
 		if (*r)[i].Pub == pair.Pub && (*r)[i].Priv == pair.Priv {
 			(*r)[i] = pair
@@ -40,16 +40,15 @@ func (r *KeyRing) Upsert(pair Keypair) {
 	*r = append(*r, pair)
 }
 
-// GetPubKeys copy all keys so we do not propagate private keys
-func (r KeyRing) GetPubKeys() []Keypair {
-	pairs := make([]Keypair, 0, len(r))
+func (r KeyRing) GetPublicKeys() []PublicKey {
+	pubKeys := make([]PublicKey, 0, len(r))
 	for _, keyPair := range r {
-		pairs = append(pairs, keyPair.SecureCopy())
+		pubKeys = append(pubKeys, *keyPair.ToPublicKey())
 	}
-	return pairs
+	return pubKeys
 }
 
-type Keypair struct {
+type KeyPair struct {
 	Pub       string                    `json:"pub"`
 	Priv      string                    `json:"priv,omitempty"`
 	Algorithm crypto.SignatureAlgorithm `json:"algo"`
@@ -63,7 +62,7 @@ type Keypair struct {
 	privBytes []byte
 }
 
-func GenKeypair(algorithm string) (*Keypair, error) {
+func GenKeypair(algorithm string) (*KeyPair, error) {
 	algo, err := crypto.NewSignatureAlgorithm(algorithm)
 	if err != nil {
 		return nil, err
@@ -76,7 +75,7 @@ func GenKeypair(algorithm string) (*Keypair, error) {
 
 	privBytes := priv.([]byte)
 	pubBytes := pub.([]byte)
-	return &Keypair{
+	return &KeyPair{
 		Priv:      hex.EncodeToString(privBytes),
 		Pub:       hex.EncodeToString(pubBytes),
 		Algorithm: algo,
@@ -85,16 +84,16 @@ func GenKeypair(algorithm string) (*Keypair, error) {
 	}, err
 }
 
-func (k *Keypair) MarshalJSON() ([]byte, error) {
+func (k *KeyPair) MarshalJSON() ([]byte, error) {
 	k.Pub = hex.EncodeToString(k.pubBytes)
 	k.Priv = hex.EncodeToString(k.privBytes)
-	type alias Keypair
+	type alias KeyPair
 	aliasKeypair := (*alias)(k)
 	return json.Marshal(aliasKeypair)
 }
 
-func (k *Keypair) UnmarshalJSON(data []byte) error {
-	type alias Keypair
+func (k *KeyPair) UnmarshalJSON(data []byte) error {
+	type alias KeyPair
 	aliasKeypair := (*alias)(k)
 	if err := json.Unmarshal(data, aliasKeypair); err != nil {
 		return err
@@ -108,7 +107,7 @@ func (k *Keypair) UnmarshalJSON(data []byte) error {
 	return err
 }
 
-func (k *Keypair) Taint() error {
+func (k *KeyPair) Taint() error {
 	if k.Tainted {
 		return ErrPubKeyAlreadyTainted
 	}
@@ -117,7 +116,7 @@ func (k *Keypair) Taint() error {
 	return nil
 }
 
-func (k *Keypair) Sign(marshalledData []byte) (*commandspb.Signature, error) {
+func (k *KeyPair) Sign(marshalledData []byte) (*commandspb.Signature, error) {
 	sig, err := k.Algorithm.Sign(k.privBytes, marshalledData)
 	if err != nil {
 		return nil, err
@@ -130,10 +129,24 @@ func (k *Keypair) Sign(marshalledData []byte) (*commandspb.Signature, error) {
 	}, nil
 }
 
-// SecureCopy ensures the sensitive information doesn't leak outside.
-func (k *Keypair) SecureCopy() Keypair {
+func (k *KeyPair) DeepCopy() KeyPair {
 	copiedK := *k
-	copiedK.Priv = ""
-	copiedK.privBytes = []byte{}
 	return copiedK
+}
+
+// ToPublicKey ensures the sensitive information doesn't leak outside.
+func (k *KeyPair) ToPublicKey() *PublicKey {
+	return &PublicKey{
+		Key:       k.Pub,
+		Algorithm: k.Algorithm,
+		Tainted:   k.Tainted,
+		Meta:      k.Meta,
+	}
+}
+
+type PublicKey struct {
+	Key       string                    `json:"pub"`
+	Algorithm crypto.SignatureAlgorithm `json:"algo"`
+	Tainted   bool                      `json:"tainted"`
+	Meta      []Meta                    `json:"meta"`
 }

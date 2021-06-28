@@ -1,16 +1,17 @@
-package wallet
+package service
 
 import (
 	"crypto/rsa"
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"net/http"
 	"strings"
 	"sync"
 	"time"
 
 	"code.vegaprotocol.io/go-wallet/crypto"
-
+	"code.vegaprotocol.io/go-wallet/wallet"
 	"github.com/dgrijalva/jwt-go/v4"
 	"github.com/julienschmidt/httprouter"
 	"go.uber.org/zap"
@@ -19,6 +20,11 @@ import (
 var (
 	ErrSessionNotFound = errors.New("session not found")
 )
+
+//go:generate go run github.com/golang/mock/mockgen -destination mocks/rsa_store_mock.go -package mocks code.vegaprotocol.io/go-wallet/service RSAStore
+type RSAStore interface {
+	GetRsaKeys() (*wallet.RSAKeys, error)
+}
 
 type auth struct {
 	log *zap.Logger
@@ -31,19 +37,18 @@ type auth struct {
 	mu sync.Mutex
 }
 
-func NewAuth(log *zap.Logger, rootPath string, tokenExpiry time.Duration) (*auth, error) {
-	// get rsa keys
-	pubBuf, privBuf, err := readRsaKeys(rootPath)
+func NewAuth(log *zap.Logger, cfgStore RSAStore, tokenExpiry time.Duration) (*auth, error) {
+	keys, err := cfgStore.GetRsaKeys()
 	if err != nil {
 		return nil, err
 	}
-	priv, err := jwt.ParseRSAPrivateKeyFromPEM(privBuf)
+	priv, err := jwt.ParseRSAPrivateKeyFromPEM(keys.Priv)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("couldn't parse private RSA key: %v", err)
 	}
-	pub, err := jwt.ParseRSAPublicKeyFromPEM(pubBuf)
+	pub, err := jwt.ParseRSAPublicKeyFromPEM(keys.Pub)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("couldn't parse public RSA key: %v", err)
 	}
 
 	return &auth{
@@ -61,17 +66,17 @@ type Claims struct {
 	Wallet  string
 }
 
-func (a *auth) NewSession(walletname string) (string, error) {
+func (a *auth) NewSession(name string) (string, error) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 
 	expiresAt := time.Now().Add(a.tokenExpiry)
 
 	session := genSession()
-	// Create the Claims
+
 	claims := &Claims{
 		Session: session,
-		Wallet:  walletname,
+		Wallet:  name,
 		StandardClaims: jwt.StandardClaims{
 			// these are seconds
 			ExpiresAt: jwt.NewTime((float64)(expiresAt.Unix())),
@@ -86,8 +91,7 @@ func (a *auth) NewSession(walletname string) (string, error) {
 		return "", err
 	}
 
-	// all good up to now, insert the new session
-	a.sessions[session] = walletname
+	a.sessions[session] = name
 	return ss, nil
 }
 
@@ -96,18 +100,17 @@ func (a *auth) VerifyToken(token string) (string, error) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 
-	// first parse the token
 	claims, err := a.parseToken(token)
 	if err != nil {
 		return "", err
 	}
 
-	wallet, ok := a.sessions[claims.Session]
+	w, ok := a.sessions[claims.Session]
 	if !ok {
 		return "", ErrSessionNotFound
 	}
 
-	return wallet, nil
+	return w, nil
 }
 
 func (a *auth) Revoke(token string) error {
@@ -119,7 +122,6 @@ func (a *auth) Revoke(token string) error {
 		return err
 	}
 
-	// extract session from the token
 	_, ok := a.sessions[claims.Session]
 	if !ok {
 		return ErrSessionNotFound
@@ -147,17 +149,14 @@ func ExtractToken(f func(string, http.ResponseWriter, *http.Request, httprouter.
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		token := r.Header.Get("Authorization")
 		if len(token) <= 0 {
-			// invalid token, return an error here
 			writeError(w, ErrInvalidOrMissingToken, http.StatusBadRequest)
 			return
 		}
 		splitToken := strings.Split(token, "Bearer")
 		if len(splitToken) != 2 || len(splitToken[1]) <= 0 {
-			// invalid token, return an error here
 			writeError(w, ErrInvalidOrMissingToken, http.StatusBadRequest)
 			return
 		}
-		// then call the function
 		f(strings.TrimSpace(splitToken[1]), w, r, ps)
 	}
 }

@@ -1,4 +1,4 @@
-package wallet
+package service
 
 import (
 	"context"
@@ -6,6 +6,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	"code.vegaprotocol.io/go-wallet/config"
+	"code.vegaprotocol.io/go-wallet/wallet"
 	"github.com/cenkalti/backoff/v4"
 	vproto "github.com/vegaprotocol/api/grpc/clients/go/generated/code.vegaprotocol.io/vega/proto"
 	"github.com/vegaprotocol/api/grpc/clients/go/generated/code.vegaprotocol.io/vega/proto/api"
@@ -17,14 +19,14 @@ import (
 
 type nodeForward struct {
 	log      *zap.Logger
-	nodeCfgs NodesConfig
+	nodeCfgs config.NodesConfig
 	clts     []api.TradingServiceClient
 	cltDatas []api.TradingDataServiceClient
 	conns    []*grpc.ClientConn
 	next     uint64
 }
 
-func NewNodeForward(log *zap.Logger, nodeConfigs NodesConfig) (*nodeForward, error) {
+func newNodeForward(log *zap.Logger, nodeConfigs config.NodesConfig) (*nodeForward, error) {
 	if len(nodeConfigs.Hosts) <= 0 {
 		return nil, errors.New("no node specified for node forwarding")
 	}
@@ -108,7 +110,7 @@ func (n *nodeForward) LastBlockHeight(ctx context.Context) (uint64, error) {
 	return height, err
 }
 
-func (n *nodeForward) Send(ctx context.Context, tx *SignedBundle, ty api.SubmitTransactionRequest_Type) error {
+func (n *nodeForward) Send(ctx context.Context, tx *wallet.SignedBundle, ty api.SubmitTransactionRequest_Type) error {
 	req := api.SubmitTransactionRequest{
 		Tx:   tx.IntoProto(),
 		Type: ty,

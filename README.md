@@ -98,7 +98,7 @@ You’ll see an output with your public and private key. DO NOT SHARE YOUR PRIVA
 > Tip: You can also use the meta command to tag a key with other data you might want, using a property name and a value. This will be useful for developing with Vega Wallet in the future.
 
 ## Run the Wallet service
-Now, **connect your Wallet to the Testnet nodes**. The `init` command (below) will initialise the configuration. A configuration file will be stored in your home folder, in a folder called `.vega`.
+Now, **connect your Wallet to the Testnet nodes**. The `init` command (below) will initialise the configuration. A configuration file will be stored in your home folder, in a folder called `.vega`.
 
 **MacOS & Linux**
 
@@ -140,7 +140,7 @@ If you'd like more information or guidance, there are instructions in the [Vega 
 If you'd prefer to request tokens from the contracts directly, there are instructions in the [testnet bridge tools repo readme](https://github.com/vegaprotocol/Public_Test_Bridge_Tools/blob/master/docs/mew.md).
 
 ### Use the wallet API
-Using the API is documented [here](./wallet/README.md).
+Using the API is documented [here](service/README.md).
 
 ## Support
 

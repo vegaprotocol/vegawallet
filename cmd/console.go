@@ -47,10 +47,6 @@ func (c *consoleProxy) Start() error {
 		Handler: &proxy,
 	}
 
-	// c.log.Info("starting console proxy",
-	// 	zap.String("proxy.address", consoleProxyAddr),
-	// 	zap.String("address", c.consoleURL),
-	// )
 	return c.s.ListenAndServe()
 }
 

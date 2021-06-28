@@ -5,7 +5,7 @@ import (
 	walletpb "github.com/vegaprotocol/api/grpc/clients/go/generated/code.vegaprotocol.io/vega/proto/wallet/v1"
 )
 
-func CheckSubmitTransactionRequest(req walletpb.SubmitTransactionRequest) commands.Errors {
+func CheckSubmitTransactionRequest(req *walletpb.SubmitTransactionRequest) commands.Errors {
 	errs := commands.NewErrors()
 
 	if len(req.PubKey) == 0 {

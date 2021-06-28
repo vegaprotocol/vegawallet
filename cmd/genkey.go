@@ -5,137 +5,120 @@ import (
 	"fmt"
 	"strings"
 
-	"code.vegaprotocol.io/go-wallet/fsutil"
+	storev1 "code.vegaprotocol.io/go-wallet/store/v1"
 	"code.vegaprotocol.io/go-wallet/wallet"
-	"code.vegaprotocol.io/go-wallet/wallet/crypto"
+
 	"github.com/spf13/cobra"
 )
 
 var (
-	genkeyArgs struct {
+	genKeyArgs struct {
 		walletOwner string
 		passphrase  string
 		metas       string
 	}
 
-	// genkeyCmd represents the genkey command
-	genkeyCmd = &cobra.Command{
+	// genKeyCmd represents the genkey command
+	genKeyCmd = &cobra.Command{
 		Use:   "genkey",
 		Short: "Generate a new keypair for a wallet",
 		Long:  "Generate a new keypair for a wallet, this will implicitly generate a new wallet if none exist for the given name",
-		RunE:  runGenkey,
+		RunE:  runGenKey,
 	}
 )
 
 func init() {
-	rootCmd.AddCommand(genkeyCmd)
-	genkeyCmd.Flags().StringVarP(&genkeyArgs.walletOwner, "name", "n", "", "Name of the wallet to use")
-	genkeyCmd.Flags().StringVarP(&genkeyArgs.passphrase, "passphrase", "p", "", "Passphrase to access the wallet")
-	genkeyCmd.Flags().StringVarP(&genkeyArgs.metas, "metas", "m", "", `A list of metadata e.g: "primary:true;asset:BTC"`)
+	rootCmd.AddCommand(genKeyCmd)
+	genKeyCmd.Flags().StringVarP(&genKeyArgs.walletOwner, "name", "n", "", "Name of the wallet to use")
+	genKeyCmd.Flags().StringVarP(&genKeyArgs.passphrase, "passphrase", "p", "", "Passphrase to access the wallet")
+	genKeyCmd.Flags().StringVarP(&genKeyArgs.metas, "metas", "m", "", `A list of metadata e.g: "primary:true;asset:BTC"`)
 }
 
-func runGenkey(cmd *cobra.Command, args []string) error {
-	if len(genkeyArgs.walletOwner) <= 0 {
+func runGenKey(cmd *cobra.Command, args []string) error {
+	store, err := storev1.NewStore(rootArgs.rootPath)
+	if err != nil {
+		return err
+	}
+
+	handler := wallet.NewHandler(store)
+
+	if len(genKeyArgs.walletOwner) == 0 {
 		return errors.New("wallet name is required")
 	}
-	if len(genkeyArgs.passphrase) <= 0 {
+
+	walletExists := handler.WalletExists(genKeyArgs.walletOwner)
+
+	if len(genKeyArgs.passphrase) == 0 {
 		var (
 			err          error
 			confirmation string
 		)
-		genkeyArgs.passphrase, err = promptForPassphrase()
+		genKeyArgs.passphrase, err = promptForPassphrase()
 		if err != nil {
 			return fmt.Errorf("could not get passphrase: %v", err)
 		}
 
-		// if wallet does not exists
-		// ask for passphrase confirmation + check it's not empty
-		if !wallet.WalletFileExists(rootArgs.rootPath, genkeyArgs.walletOwner) {
+		if len(genKeyArgs.passphrase) == 0 {
+			return fmt.Errorf("passphrase cannot be empty")
+		}
+
+		if !walletExists {
 			confirmation, err = promptForPassphrase("please confirm passphrase:")
 			if err != nil {
 				return fmt.Errorf("could not get passphrase: %v", err)
 			}
 
-			if genkeyArgs.passphrase != confirmation {
+			if genKeyArgs.passphrase != confirmation {
 				return fmt.Errorf("passphrases do not match")
 			}
-
-			if len(genkeyArgs.passphrase) <= 0 {
-				return fmt.Errorf("passphrase cannot be empty")
-			}
 		}
 	}
 
-	if ok, err := fsutil.PathExists(rootArgs.rootPath); !ok {
-		if _, ok := err.(*fsutil.PathNotFound); !ok {
-			return fmt.Errorf("invalid root directory path: %v", err)
-		}
-		// create the folder
-		if err := fsutil.EnsureDir(rootArgs.rootPath); err != nil {
-			return fmt.Errorf("error creating root directory: %v", err)
-		}
-	}
-
-	if err := wallet.EnsureBaseFolder(rootArgs.rootPath); err != nil {
-		return fmt.Errorf("unable to initialization root folder: %v", err)
-	}
-
-	wal, err := wallet.Read(rootArgs.rootPath, genkeyArgs.walletOwner, genkeyArgs.passphrase)
+	metas, err := parseMeta(genKeyArgs.metas)
 	if err != nil {
-		if err != wallet.ErrWalletDoesNotExists {
-			// this an invalid key, returning error
-			return fmt.Errorf("unable to decrypt wallet: %v", err)
-		}
-		// wallet do not exit, let's try to create it
-		wal, err = wallet.Create(rootArgs.rootPath, genkeyArgs.walletOwner, genkeyArgs.passphrase)
+		return err
+	}
+
+	if !walletExists {
+		err := handler.CreateWallet(genKeyArgs.walletOwner, genKeyArgs.passphrase)
 		if err != nil {
-			return fmt.Errorf("unable to create wallet: %v", err)
+			return fmt.Errorf("couldn't create wallet: %v", err)
 		}
 	}
 
-	// at this point we have a valid wallet
-	// let's generate the keypair
-	// defaulting to ed25519 for now
-	algo := crypto.NewEd25519()
-	kp, err := wallet.GenKeypair(algo.Name())
+	keyPair, err := handler.GenerateKeyPair(genKeyArgs.walletOwner, genKeyArgs.passphrase)
 	if err != nil {
-		return fmt.Errorf("unable to generate new key pair: %v", err)
+		return fmt.Errorf("could not generate a key pair: %v", err)
 	}
 
-	if len(genkeyArgs.metas) > 0 {
-		// expect ; separated metas
-		metasSplit := strings.Split(genkeyArgs.metas, ";")
-		for _, v := range metasSplit {
-			metaVal := strings.Split(v, ":")
-			if len(metaVal) != 2 {
-				return fmt.Errorf("invalid meta format")
-			}
-			kp.Meta = append(kp.Meta, wallet.Meta{Key: metaVal[0], Value: metaVal[1]})
-		}
-	}
-
-	// the user did not specify any metas
-	// we'll create a default one for them
-	if len(kp.Meta) <= 0 {
-		kp.Meta = append(
-			kp.Meta,
-			wallet.Meta{
-				Key:   "name",
-				Value: fmt.Sprintf("%v's key %v", genkeyArgs.walletOwner, len(wal.Keypairs)+1),
-			},
-		)
-	}
-
-	// now updating the wallet and saving it
-	_, err = wallet.AddKeypair(kp, rootArgs.rootPath, genkeyArgs.walletOwner, genkeyArgs.passphrase)
+	err = handler.UpdateMeta(genKeyArgs.walletOwner, keyPair.Pub, genKeyArgs.passphrase, metas)
 	if err != nil {
-		return fmt.Errorf("unable to add keypair to wallet: %v", err)
+		return fmt.Errorf("could not update the meta: %v", err)
 	}
 
 	// print the new keys for user info
 	fmt.Printf("new generated keys:\n")
-	fmt.Printf("public: %v\n", kp.Pub)
-	fmt.Printf("private: %v\n", kp.Priv)
+	fmt.Printf("public: %v\n", keyPair.Pub)
+	fmt.Printf("private: %v\n", keyPair.Priv)
 
 	return nil
+}
+
+func parseMeta(metaStr string) ([]wallet.Meta, error) {
+	var metas []wallet.Meta
+
+	if len(metaStr) == 0 {
+		return metas, nil
+	}
+
+	rawMetas := strings.Split(metaStr, ";")
+	for _, v := range rawMetas {
+		rawMeta := strings.Split(v, ":")
+		if len(rawMeta) != 2 {
+			return nil, fmt.Errorf("invalid meta format")
+		}
+		metas = append(metas, wallet.Meta{Key: rawMeta[0], Value: rawMeta[1]})
+	}
+
+	return metas, nil
 }
