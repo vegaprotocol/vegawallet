@@ -181,6 +181,7 @@ func (s *Store) SaveConfig(cfg *config.Config, overwrite bool) error {
 	if err != nil {
 		return err
 	}
+	defer f.Close()
 
 	if _, err = f.WriteString(buf.String()); err != nil {
 		return err
