@@ -79,6 +79,8 @@ func TestService(t *testing.T) {
 	t.Run("Signing transaction without pub-key fails", testSigningTransactionWithoutPubKeyFails)
 	t.Run("Signing transaction without command fails", testSigningTransactionWithoutCommandFails)
 	t.Run("Signing anything succeeds", testSigningAnythingSucceeds)
+	t.Run("Verifying anything succeeds", testVerifyingAnythingSucceeds)
+	t.Run("Failed verification fails", testVerifyingAnythingFails)
 }
 
 func testServiceCreateWalletOK(t *testing.T) {
@@ -213,7 +215,9 @@ func testServiceRevokeTokenOK(t *testing.T) {
 	s := getTestService(t)
 	defer s.ctrl.Finish()
 
+	s.auth.EXPECT().VerifyToken("eyXXzA").Times(1).Return("jeremy", nil)
 	s.auth.EXPECT().Revoke(gomock.Any()).Times(1).Return(nil)
+	s.handler.EXPECT().LogoutWallet("jeremy").Times(1)
 
 	r := httptest.NewRequest("POST", "scheme://host/path", nil)
 	r.Header.Add("Authorization", "Bearer eyXXzA")
@@ -503,7 +507,6 @@ func testServiceTaintFailInvalidRequest(t *testing.T) {
 
 	resp = w.Result()
 	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
-
 }
 
 func testServiceUpdateMetaOK(t *testing.T) {
@@ -569,7 +572,6 @@ func testServiceUpdateMetaFailInvalidRequest(t *testing.T) {
 
 	resp = w.Result()
 	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
-
 }
 
 func testSigningTransactionSucceeds(t *testing.T) {
@@ -766,7 +768,7 @@ func testSigningAnythingSucceeds(t *testing.T) {
 	defer s.ctrl.Finish()
 
 	s.auth.EXPECT().VerifyToken("eyXXzA").Times(1).Return("jeremy", nil)
-	s.handler.EXPECT().SignAny(gomock.Any(), gomock.Any(), gomock.Any()).
+	s.handler.EXPECT().SignAny("jeremy", "some data", "asdasasdasd").
 		Times(1).Return([]byte("some sig"), nil)
 	payload := `{"inputData": "some data", "pubKey": "asdasasdasd"}`
 	r := httptest.NewRequest("POST", "scheme://host/path", bytes.NewBufferString(payload))
@@ -780,8 +782,64 @@ func testSigningAnythingSucceeds(t *testing.T) {
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 }
 
+func testVerifyingAnythingSucceeds(t *testing.T) {
+	s := getTestService(t)
+	defer s.ctrl.Finish()
+
+	s.auth.EXPECT().VerifyToken("eyXXzA").Times(1).Return("jeremy", nil)
+	s.handler.EXPECT().VerifyAny("jeremy", "some data", "some sig", "asdasasdasd").
+		Times(1).Return(true, nil)
+	payload := `{"inputData": "some data", "pubKey": "asdasasdasd", "signature": "some sig"}`
+	r := httptest.NewRequest("POST", "scheme://host/path", bytes.NewBufferString(payload))
+	r.Header.Set("Authorization", "Bearer eyXXzA")
+
+	w := httptest.NewRecorder()
+
+	service.ExtractToken(s.VerifyAny)(w, r, nil)
+
+	httpResponse := w.Result()
+	resp := service.SuccessResponse{}
+	assert.Equal(t, http.StatusOK, httpResponse.StatusCode)
+	unmarshalResponse(httpResponse, &resp)
+	assert.True(t, resp.Success)
+}
+
+func testVerifyingAnythingFails(t *testing.T) {
+	s := getTestService(t)
+	defer s.ctrl.Finish()
+
+	s.auth.EXPECT().VerifyToken("eyXXzA").Times(1).Return("jeremy", nil)
+	s.handler.EXPECT().VerifyAny("jeremy", "some data", "some sig", "asdasasdasd").
+		Times(1).Return(false, nil)
+	payload := `{"inputData": "some data", "pubKey": "asdasasdasd", "signature": "some sig"}`
+	r := httptest.NewRequest("POST", "scheme://host/path", bytes.NewBufferString(payload))
+	r.Header.Set("Authorization", "Bearer eyXXzA")
+
+	w := httptest.NewRecorder()
+
+	service.ExtractToken(s.VerifyAny)(w, r, nil)
+
+	httpResponse := w.Result()
+	resp := service.SuccessResponse{}
+	assert.Equal(t, http.StatusOK, httpResponse.StatusCode)
+	unmarshalResponse(httpResponse, &resp)
+	assert.False(t, resp.Success)
+}
+
 func newAuthenticatedRequest(payload string) *http.Request {
 	r := httptest.NewRequest("POST", "scheme://host/path", bytes.NewBufferString(payload))
 	r.Header.Set("Authorization", "Bearer eyXXzA")
 	return r
+}
+
+func unmarshalResponse(r *http.Response, into interface{}) {
+	defer r.Body.Close()
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		panic(err)
+	}
+	err = json.Unmarshal(body, into)
+	if err != nil {
+		panic(err)
+	}
 }

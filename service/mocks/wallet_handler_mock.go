@@ -108,6 +108,18 @@ func (mr *MockWalletHandlerMockRecorder) LoginWallet(arg0, arg1 interface{}) *go
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LoginWallet", reflect.TypeOf((*MockWalletHandler)(nil).LoginWallet), arg0, arg1)
 }
 
+// LogoutWallet mocks base method
+func (m *MockWalletHandler) LogoutWallet(arg0 string) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "LogoutWallet", arg0)
+}
+
+// LogoutWallet indicates an expected call of LogoutWallet
+func (mr *MockWalletHandlerMockRecorder) LogoutWallet(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LogoutWallet", reflect.TypeOf((*MockWalletHandler)(nil).LogoutWallet), arg0)
+}
+
 // SecureGenerateKeyPair mocks base method
 func (m *MockWalletHandler) SecureGenerateKeyPair(arg0, arg1 string) (string, error) {
 	m.ctrl.T.Helper()
@@ -194,4 +206,19 @@ func (m *MockWalletHandler) UpdateMeta(arg0, arg1, arg2 string, arg3 []wallet.Me
 func (mr *MockWalletHandlerMockRecorder) UpdateMeta(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateMeta", reflect.TypeOf((*MockWalletHandler)(nil).UpdateMeta), arg0, arg1, arg2, arg3)
+}
+
+// VerifyAny mocks base method
+func (m *MockWalletHandler) VerifyAny(arg0, arg1, arg2, arg3 string) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "VerifyAny", arg0, arg1, arg2, arg3)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// VerifyAny indicates an expected call of VerifyAny
+func (mr *MockWalletHandlerMockRecorder) VerifyAny(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VerifyAny", reflect.TypeOf((*MockWalletHandler)(nil).VerifyAny), arg0, arg1, arg2, arg3)
 }

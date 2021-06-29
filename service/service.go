@@ -148,17 +148,13 @@ func ParseUpdateMetaRequest(r *http.Request, keyID string) (*UpdateMetaRequest, 
 	return req, errs
 }
 
-// SignTxRequest describes the request for SignTx.
-type SignTxRequest struct {
-	Tx        string `json:"tx"`
-	PubKey    string `json:"pubKey"`
-	Propagate bool   `json:"propagate"`
-}
-
 // SignAnyRequest describes the request for SignAny.
 type SignAnyRequest struct {
+	// InputData is the payload to generate a signature from. I should be
+	// base 64 encoded.
 	InputData string `json:"inputData"`
-	PubKey    string `json:"pubKey"`
+	// PubKey is used to retrieve the private key to sign the InputDate.
+	PubKey string `json:"pubKey"`
 }
 
 func ParseSignAnyRequest(r *http.Request) (*SignAnyRequest, commands.Errors) {
@@ -171,6 +167,44 @@ func ParseSignAnyRequest(r *http.Request) (*SignAnyRequest, commands.Errors) {
 
 	if len(req.InputData) == 0 {
 		errs.AddForProperty("input_data", commands.ErrIsRequired)
+	}
+
+	if len(req.PubKey) == 0 {
+		errs.AddForProperty("pub_key", commands.ErrIsRequired)
+	}
+
+	if !errs.Empty() {
+		return nil, errs
+	}
+
+	return req, errs
+}
+
+// VerifyAnyRequest describes the request for VerifyAny.
+type VerifyAnyRequest struct {
+	// InputData is the payload to be verified. It should be base64 encoded.
+	InputData string `json:"inputData"`
+	// Signature is the signature to check against the InputData. It should be
+	// base64 encoded.
+	Signature string `json:"signature"`
+	// PubKey is the public key used along the signature to check the InputData.
+	PubKey string `json:"pubKey"`
+}
+
+func ParseVerifyAnyRequest(r *http.Request) (*VerifyAnyRequest, commands.Errors) {
+	errs := commands.NewErrors()
+
+	req := &VerifyAnyRequest{}
+	if err := unmarshalBody(r, &req); err != nil {
+		return nil, errs.FinalAdd(err)
+	}
+
+	if len(req.InputData) == 0 {
+		errs.AddForProperty("input_data", commands.ErrIsRequired)
+	}
+
+	if len(req.Signature) == 0 {
+		errs.AddForProperty("signature", commands.ErrIsRequired)
 	}
 
 	if len(req.PubKey) == 0 {
@@ -237,12 +271,14 @@ type TokenResponse struct {
 type WalletHandler interface {
 	CreateWallet(name, passphrase string) error
 	LoginWallet(name, passphrase string) error
+	LogoutWallet(name string)
 	SecureGenerateKeyPair(name, passphrase string) (string, error)
 	GetPublicKey(name, pubKey string) (*wallet.PublicKey, error)
 	ListPublicKeys(name string) ([]wallet.PublicKey, error)
 	SignTx(name, tx, pubKey string, height uint64) (wallet.SignedBundle, error)
 	SignTxV2(name string, req *walletpb.SubmitTransactionRequest, height uint64) (*commandspb.Transaction, error)
 	SignAny(name, inputData, pubKey string) ([]byte, error)
+	VerifyAny(name, inputData, sig, pubKey string) (bool, error)
 	TaintKey(name, pubKey, passphrase string) error
 	UpdateMeta(name, pubKey, passphrase string, meta []wallet.Meta) error
 	GetWalletPath(name string) (string, error)
@@ -295,16 +331,17 @@ func NewServiceWith(log *zap.Logger, cfg *config.Config, h WalletHandler, a Auth
 	}
 
 	s.POST("/api/v1/auth/token", s.Login)
+	s.DELETE("/api/v1/auth/token", ExtractToken(s.Revoke))
 	s.GET("/api/v1/status", s.health)
 	s.POST("/api/v1/wallets", s.CreateWallet)
 
-	s.DELETE("/api/v1/auth/token", ExtractToken(s.Revoke))
 	s.GET("/api/v1/keys", ExtractToken(s.ListPublicKeys))
 	s.POST("/api/v1/keys", ExtractToken(s.GenerateKeypair))
 	s.GET("/api/v1/keys/:keyid", ExtractToken(s.GetPublicKey))
 	s.PUT("/api/v1/keys/:keyid/taint", ExtractToken(s.TaintKey))
 	s.PUT("/api/v1/keys/:keyid/metadata", ExtractToken(s.UpdateMeta))
 	s.POST("/api/v1/sign", ExtractToken(s.SignAny))
+	s.POST("/api/v1/verify", ExtractToken(s.VerifyAny))
 	s.POST("/api/v1/command", ExtractToken(s.SignTxV2))
 	s.POST("/api/v1/command/sync", ExtractToken(s.SignTxSyncV2))
 	s.POST("/api/v1/command/commit", ExtractToken(s.SignTxCommitV2))
@@ -392,11 +429,19 @@ func (s *Service) DownloadWallet(token string, w http.ResponseWriter, r *http.Re
 }
 
 func (s *Service) Revoke(t string, w http.ResponseWriter, _ *http.Request, _ httprouter.Params) {
-	err := s.auth.Revoke(t)
+	name, err := s.auth.VerifyToken(t)
 	if err != nil {
 		writeForbiddenError(w, err)
 		return
 	}
+
+	err = s.auth.Revoke(t)
+	if err != nil {
+		writeForbiddenError(w, err)
+		return
+	}
+
+	s.handler.LogoutWallet(name)
 
 	writeSuccess(w, SuccessResponse{Success: true}, http.StatusOK)
 }
@@ -547,6 +592,28 @@ func (s *Service) SignAny(t string, w http.ResponseWriter, r *http.Request, _ ht
 	}
 
 	writeSuccess(w, res, http.StatusOK)
+}
+
+func (s *Service) VerifyAny(t string, w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	req, errs := ParseVerifyAnyRequest(r)
+	if !errs.Empty() {
+		s.writeBadRequest(w, errs)
+		return
+	}
+
+	name, err := s.auth.VerifyToken(t)
+	if err != nil {
+		writeForbiddenError(w, err)
+		return
+	}
+
+	verified, err := s.handler.VerifyAny(name, req.InputData, req.Signature, req.PubKey)
+	if err != nil {
+		writeForbiddenError(w, err)
+		return
+	}
+
+	writeSuccess(w, SuccessResponse{Success: verified}, http.StatusOK)
 }
 
 func (s *Service) SignTxSyncV2(token string, w http.ResponseWriter, r *http.Request, p httprouter.Params) {

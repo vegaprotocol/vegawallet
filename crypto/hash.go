@@ -2,6 +2,7 @@ package crypto
 
 import (
 	"math/rand"
+	"time"
 
 	"golang.org/x/crypto/sha3"
 )
@@ -26,4 +27,8 @@ func RandomStr(length int) string {
 
 func RandomBytes(n int) []byte {
 	return []byte(RandomStr(n))
+}
+
+func init() {
+	rand.Seed(time.Now().UnixNano())
 }

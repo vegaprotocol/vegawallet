@@ -78,6 +78,10 @@ func (h *Handler) LoginWallet(name, passphrase string) error {
 	return nil
 }
 
+func (h *Handler) LogoutWallet(name string) {
+	h.loggedWallets.Remove(name)
+}
+
 func (h *Handler) GenerateKeyPair(name, passphrase string) (KeyPair, error) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
@@ -340,10 +344,14 @@ func (w wallets) Add(wallet Wallet) {
 	w[wallet.Owner] = wallet
 }
 
-func (w wallets) Get(owner string) (Wallet, error) {
-	wallet, ok := w[owner]
+func (w wallets) Get(name string) (Wallet, error) {
+	wallet, ok := w[name]
 	if !ok {
 		return Wallet{}, ErrWalletDoesNotExists
 	}
 	return wallet, nil
+}
+
+func (w wallets) Remove(name string) {
+	delete(w, name)
 }
