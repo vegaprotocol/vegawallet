@@ -10,7 +10,7 @@ import (
 )
 
 func TestMarshalWallet(t *testing.T) {
-	w := New("jeremy")
+	w := NewWallet("jeremy")
 	w.KeyRing = append(w.KeyRing, NewKeypair(crypto.NewEd25519(), []byte{1, 2, 3, 4}, []byte{4, 3, 2, 1}))
 	expected := `{"Owner":"jeremy","Keypairs":[{"pub":"01020304","priv":"04030201","algo":"vega/ed25519","tainted":false,"meta":null}]}`
 	m, err := json.Marshal(&w)
