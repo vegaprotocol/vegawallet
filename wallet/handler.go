@@ -341,7 +341,7 @@ func newWallets() wallets {
 }
 
 func (w wallets) Add(wallet Wallet) {
-	w[wallet.Owner] = wallet
+	w[wallet.Name] = wallet
 }
 
 func (w wallets) Get(name string) (Wallet, error) {

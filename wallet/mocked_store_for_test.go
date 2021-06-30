@@ -26,7 +26,7 @@ func (m *mockedStore) WalletExists(name string) bool {
 
 func (m *mockedStore) SaveWallet(w wallet.Wallet, passphrase string) error {
 	m.passphrase = passphrase
-	m.wallets[w.Owner] = w
+	m.wallets[w.Name] = w
 	return nil
 }
 

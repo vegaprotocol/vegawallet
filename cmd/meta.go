@@ -12,10 +12,10 @@ import (
 
 var (
 	metaArgs struct {
-		metas       string
-		walletOwner string
-		passphrase  string
-		pubkey      string
+		metas      string
+		name       string
+		passphrase string
+		pubkey     string
 	}
 
 	// metaCmd represents the meta command
@@ -29,7 +29,7 @@ var (
 
 func init() {
 	rootCmd.AddCommand(metaCmd)
-	metaCmd.Flags().StringVarP(&metaArgs.walletOwner, "name", "n", "", "Name of the wallet to use")
+	metaCmd.Flags().StringVarP(&metaArgs.name, "name", "n", "", "Name of the wallet to use")
 	metaCmd.Flags().StringVarP(&metaArgs.passphrase, "passphrase", "p", "", "Passphrase to access the wallet")
 	metaCmd.Flags().StringVarP(&metaArgs.pubkey, "pubkey", "k", "", "Public key to be used (hex)")
 	metaCmd.Flags().StringVarP(&metaArgs.metas, "metas", "m", "", `A list of metadata e.g: "primary:true;asset:BTC"`)
@@ -43,7 +43,7 @@ func runMeta(cmd *cobra.Command, args []string) error {
 
 	handler := wallet.NewHandler(store)
 
-	if len(metaArgs.walletOwner) == 0 {
+	if len(metaArgs.name) == 0 {
 		return errors.New("wallet name is required")
 	}
 	if len(metaArgs.pubkey) == 0 {
@@ -62,12 +62,12 @@ func runMeta(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	err = handler.LoginWallet(metaArgs.walletOwner, metaArgs.passphrase)
+	err = handler.LoginWallet(metaArgs.name, metaArgs.passphrase)
 	if err != nil {
 		return fmt.Errorf("could not login to the wallet: %v", err)
 	}
 
-	err = handler.UpdateMeta(metaArgs.walletOwner, metaArgs.pubkey, metaArgs.passphrase, metas)
+	err = handler.UpdateMeta(metaArgs.name, metaArgs.pubkey, metaArgs.passphrase, metas)
 	if err != nil {
 		return fmt.Errorf("could not update the meta: %v", err)
 	}

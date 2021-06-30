@@ -125,7 +125,7 @@ func (s *Store) SaveWallet(w wallet.Wallet, passphrase string) error {
 		return err
 	}
 
-	f, err := os.Create(s.walletPath(w.Owner))
+	f, err := os.Create(s.walletPath(w.Name))
 	if err != nil {
 		return err
 	}

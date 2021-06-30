@@ -77,7 +77,7 @@ func testFileStoreV1SaveWalletSucceeds(t *testing.T) {
 
 	// then
 	require.NoError(t, err)
-	assert.NotEmpty(t, configDir.WalletContent(w.Owner))
+	assert.NotEmpty(t, configDir.WalletContent(w.Name))
 }
 
 func testFileStoreV1GetWalletSucceeds(t *testing.T) {
@@ -96,7 +96,7 @@ func testFileStoreV1GetWalletSucceeds(t *testing.T) {
 	require.NoError(t, err)
 
 	// when
-	returnedWallet, err := s.GetWallet(w.Owner, passphrase)
+	returnedWallet, err := s.GetWallet(w.Name, passphrase)
 
 	// then
 	require.NoError(t, err)
@@ -120,7 +120,7 @@ func testFileStoreV1GetWalletWithWrongPassphraseFails(t *testing.T) {
 	require.NoError(t, err)
 
 	// when
-	returnedWallet, err := s.GetWallet(w.Owner, othPassphrase)
+	returnedWallet, err := s.GetWallet(w.Name, othPassphrase)
 
 	// then
 	assert.Error(t, err)
@@ -190,7 +190,7 @@ func testFileStoreV1ExistingWalletSucceeds(t *testing.T) {
 	require.NoError(t, err)
 
 	// when
-	exists := s.WalletExists(w.Owner)
+	exists := s.WalletExists(w.Name)
 
 	// then
 	assert.True(t, exists)
