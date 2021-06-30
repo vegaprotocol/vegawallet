@@ -218,16 +218,10 @@ func (h *Handler) TaintKey(name, pubKey, passphrase string) error {
 		return err
 	}
 
-	keyPair, err := w.KeyRing.FindPair(pubKey)
+	err = w.TaintKey(pubKey)
 	if err != nil {
 		return err
 	}
-
-	if err := keyPair.Taint(); err != nil {
-		return err
-	}
-
-	w.KeyRing.Upsert(keyPair)
 
 	return h.saveWallet(w, passphrase)
 }
