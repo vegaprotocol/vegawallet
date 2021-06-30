@@ -62,7 +62,7 @@ type KeyPair struct {
 	privBytes []byte
 }
 
-func GenKeypair(algorithm string) (*KeyPair, error) {
+func GenKeyPair(algorithm string) (*KeyPair, error) {
 	algo, err := crypto.NewSignatureAlgorithm(algorithm)
 	if err != nil {
 		return nil, err

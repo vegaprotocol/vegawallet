@@ -520,7 +520,7 @@ func NewInitialisedStore(configDir configDir) *storev1.Store {
 func newWalletWithKeys() *wallet.Wallet {
 	w := wallet.NewWallet("my-wallet")
 
-	kp, err := wallet.GenKeypair(crypto.Ed25519)
+	kp, err := wallet.GenKeyPair(crypto.Ed25519)
 	if err != nil {
 		panic(err)
 	}

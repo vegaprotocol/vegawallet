@@ -115,7 +115,7 @@ func TestKeypair(t *testing.T) {
 
 func testKeypairGeneratingNewKeyPairSucceeds(t *testing.T) {
 	// when
-	kp, err := wallet.GenKeypair(crypto.Ed25519)
+	kp, err := wallet.GenKeyPair(crypto.Ed25519)
 
 	// then
 	require.NoError(t, err)
@@ -129,7 +129,7 @@ func testKeypairGeneratingNewKeyPairSucceeds(t *testing.T) {
 
 func testKeypairGeneratingNewKeyPairWithUnsupportedAlgorithmFails(t *testing.T) {
 	// when
-	kp, err := wallet.GenKeypair("unsupported-algo")
+	kp, err := wallet.GenKeyPair("unsupported-algo")
 
 	// then
 	assert.Error(t, err)
@@ -183,7 +183,7 @@ func testKeypairToPublicKeyRemovesSensitiveInformation(t *testing.T) {
 }
 
 func newKeyPair() *wallet.KeyPair {
-	kp, err := wallet.GenKeypair(crypto.Ed25519)
+	kp, err := wallet.GenKeyPair(crypto.Ed25519)
 	if err != nil {
 		panic(err)
 	}

@@ -91,7 +91,7 @@ func (h *Handler) GenerateKeyPair(name, passphrase string) (KeyPair, error) {
 		return KeyPair{}, err
 	}
 
-	kp, err := GenKeypair(crypto.Ed25519)
+	kp, err := GenKeyPair(crypto.Ed25519)
 	if err != nil {
 		return KeyPair{}, err
 	}
