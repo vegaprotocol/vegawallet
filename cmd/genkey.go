@@ -1,13 +1,13 @@
 package cmd
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
 
 	storev1 "code.vegaprotocol.io/go-wallet/store/v1"
 	"code.vegaprotocol.io/go-wallet/wallet"
-
 	"github.com/spf13/cobra"
 )
 
@@ -21,8 +21,8 @@ var (
 	// genKeyCmd represents the genkey command
 	genKeyCmd = &cobra.Command{
 		Use:   "genkey",
-		Short: "Generate a new keypair for a wallet",
-		Long:  "Generate a new keypair for a wallet, this will implicitly generate a new wallet if none exist for the given name",
+		Short: "Generate a new key pair for a wallet",
+		Long:  "Generate a new key pair for a wallet, this will implicitly generate a new wallet if none exist for the given name",
 		RunE:  runGenKey,
 	}
 )
@@ -91,15 +91,19 @@ func runGenKey(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("could not generate a key pair: %v", err)
 	}
 
-	err = handler.UpdateMeta(genKeyArgs.name, keyPair.Pub, genKeyArgs.passphrase, metas)
+	err = handler.UpdateMeta(genKeyArgs.name, keyPair.PublicKey(), genKeyArgs.passphrase, metas)
 	if err != nil {
 		return fmt.Errorf("could not update the meta: %v", err)
 	}
 
+	buf, err := json.MarshalIndent(keyPair, " ", " ")
+	if err != nil {
+		return fmt.Errorf("unable to marshal message: %v", err)
+	}
+
 	// print the new keys for user info
 	fmt.Printf("new generated keys:\n")
-	fmt.Printf("public: %v\n", keyPair.Pub)
-	fmt.Printf("private: %v\n", keyPair.Priv)
+	fmt.Printf("%v\n", string(buf))
 
 	return nil
 }

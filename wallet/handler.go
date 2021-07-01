@@ -19,7 +19,7 @@ var (
 
 type Wallet interface {
 	Name() string
-	DescribePublicKey(pubKey string) (*PublicKey, error)
+	DescribePublicKey(pubKey string) (PublicKey, error)
 	ListPublicKeys() []PublicKey
 	GenerateKeyPair() (KeyPair, error)
 	TaintKey(pubKey string) error
@@ -28,6 +28,26 @@ type Wallet interface {
 	VerifyAny(pubKey string, data, sig []byte) (bool, error)
 	SignTxV1(pubKey string, data []byte, blockHeight uint64) (SignedBundle, error)
 	SignTxV2(pubKey string, data []byte) (*commandspb.Signature, error)
+}
+
+type KeyPair interface {
+	PublicKey() string
+	PrivateKey() string
+	IsTainted() bool
+	Meta() []Meta
+	AlgorithmVersion() uint32
+	AlgorithmName() string
+}
+
+type PublicKey interface {
+	Key() string
+	IsTainted() bool
+	Meta() []Meta
+	AlgorithmVersion() uint32
+	AlgorithmName() string
+
+	MarshalJSON() ([]byte, error)
+	UnmarshalJSON(data []byte) error
 }
 
 // Store abstracts the underlying storage for wallet data.
@@ -100,17 +120,17 @@ func (h *Handler) GenerateKeyPair(name, passphrase string) (KeyPair, error) {
 
 	w, err := h.store.GetWallet(name, passphrase)
 	if err != nil {
-		return KeyPair{}, err
+		return nil, err
 	}
 
 	kp, err := w.GenerateKeyPair()
 	if err != nil {
-		return KeyPair{}, err
+		return nil, err
 	}
 
 	err = h.saveWallet(w, passphrase)
 	if err != nil {
-		return KeyPair{}, err
+		return nil, err
 	}
 
 	return kp, nil
@@ -122,10 +142,10 @@ func (h *Handler) SecureGenerateKeyPair(name, passphrase string) (string, error)
 		return "", err
 	}
 
-	return kp.Pub, nil
+	return kp.PublicKey(), nil
 }
 
-func (h *Handler) GetPublicKey(name, pubKey string) (*PublicKey, error) {
+func (h *Handler) GetPublicKey(name, pubKey string) (PublicKey, error) {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
 

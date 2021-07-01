@@ -273,7 +273,7 @@ type WalletHandler interface {
 	LoginWallet(name, passphrase string) error
 	LogoutWallet(name string)
 	SecureGenerateKeyPair(name, passphrase string) (string, error)
-	GetPublicKey(name, pubKey string) (*wallet.PublicKey, error)
+	GetPublicKey(name, pubKey string) (wallet.PublicKey, error)
 	ListPublicKeys(name string) ([]wallet.PublicKey, error)
 	SignTx(name, tx, pubKey string, height uint64) (wallet.SignedBundle, error)
 	SignTxV2(name string, req *walletpb.SubmitTransactionRequest, height uint64) (*commandspb.Transaction, error)
@@ -480,7 +480,7 @@ func (s *Service) GenerateKeypair(t string, w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	writeSuccess(w, KeyResponse{Key: *key}, http.StatusOK)
+	writeSuccess(w, KeyResponse{Key: key}, http.StatusOK)
 }
 
 func (s *Service) GetPublicKey(t string, w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -502,7 +502,7 @@ func (s *Service) GetPublicKey(t string, w http.ResponseWriter, r *http.Request,
 		return
 	}
 
-	writeSuccess(w, KeyResponse{Key: *key}, http.StatusOK)
+	writeSuccess(w, KeyResponse{Key: key}, http.StatusOK)
 }
 
 func (s *Service) ListPublicKeys(t string, w http.ResponseWriter, r *http.Request, _ httprouter.Params) {

@@ -184,8 +184,8 @@ func testHandlerGeneratingNewKeyPairSecurelySucceeds(t *testing.T) {
 	// then
 	require.NoError(t, err)
 	assert.Len(t, keys, 1)
-	assert.Equal(t, key, keys[0].Key)
-	assert.False(t, keys[0].Tainted)
+	assert.Equal(t, key, keys[0].Key())
+	assert.False(t, keys[0].IsTainted())
 }
 
 func testHandlerGeneratingNewKeyPairSecurelyWithInvalidNameFails(t *testing.T) {
@@ -246,10 +246,10 @@ func testHandlerGeneratingNewKeyPairSucceeds(t *testing.T) {
 
 	// then
 	require.NoError(t, err)
-	assert.NotEmpty(t, keyPair.Pub)
-	assert.NotEmpty(t, keyPair.Priv)
-	assert.False(t, keyPair.Tainted)
-	assert.Empty(t, keyPair.Meta)
+	assert.NotEmpty(t, keyPair.PublicKey())
+	assert.NotEmpty(t, keyPair.PrivateKey())
+	assert.False(t, keyPair.IsTainted())
+	assert.Empty(t, keyPair.Meta())
 
 	// when
 	keys, err := h.ListPublicKeys(name)
@@ -257,8 +257,8 @@ func testHandlerGeneratingNewKeyPairSucceeds(t *testing.T) {
 	// then
 	require.NoError(t, err)
 	assert.Len(t, keys, 1)
-	assert.Equal(t, keyPair.Pub, keys[0].Key)
-	assert.False(t, keys[0].Tainted)
+	assert.Equal(t, keyPair.PublicKey(), keys[0].Key())
+	assert.False(t, keys[0].IsTainted())
 }
 
 func testHandlerGeneratingNewKeyPairWithInvalidNameFails(t *testing.T) {
@@ -379,7 +379,7 @@ func testHandlerGettingPublicKeySucceeds(t *testing.T) {
 	keyPair, err := h.GetPublicKey(name, key)
 
 	require.NoError(t, err)
-	assert.Equal(t, key, keyPair.Key)
+	assert.Equal(t, key, keyPair.Key())
 }
 
 func testHandlerGettingPublicKeyWithInvalidNameFails(t *testing.T) {
@@ -467,14 +467,14 @@ func testHandlerTaintingKeyPairSucceeds(t *testing.T) {
 	// then
 	require.NoError(t, err)
 	assert.NotNil(t, keyPair)
-	assert.False(t, keyPair.Tainted)
+	assert.False(t, keyPair.IsTainted())
 
 	// when
 	err = h.TaintKey(name, key, passphrase)
 
 	// then
 	require.NoError(t, err)
-	assert.True(t, h.store.GetKey(name, key).Tainted)
+	assert.True(t, h.store.GetKey(name, key).IsTainted())
 }
 
 func testHandlerTaintingKeyPairWithInvalidNameFails(t *testing.T) {
@@ -506,7 +506,7 @@ func testHandlerTaintingKeyPairWithInvalidNameFails(t *testing.T) {
 	// then
 	require.NoError(t, err)
 	assert.NotNil(t, keyPair)
-	assert.False(t, keyPair.Tainted)
+	assert.False(t, keyPair.IsTainted())
 
 	// when
 	err = h.TaintKey(otherName, key, passphrase)
@@ -557,14 +557,14 @@ func testHandlerTaintingKeyThatIsAlreadyTaintedFails(t *testing.T) {
 	// then
 	require.NoError(t, err)
 	assert.NotNil(t, keyPair)
-	assert.False(t, keyPair.Tainted)
+	assert.False(t, keyPair.IsTainted())
 
 	// when
 	err = h.TaintKey(name, key, passphrase)
 
 	// then
 	require.NoError(t, err)
-	assert.True(t, h.store.GetKey(name, key).Tainted)
+	assert.True(t, h.store.GetKey(name, key).IsTainted())
 
 	// when
 	err = h.TaintKey(name, key, passphrase)
@@ -602,9 +602,9 @@ func testHandlerUpdatingKeyPairMetaSucceeds(t *testing.T) {
 	// then
 	require.NoError(t, err)
 	updatedKp := h.store.GetKey(name, key)
-	assert.Len(t, updatedKp.Meta, 1)
-	assert.Equal(t, updatedKp.Meta[0].Key, "primary")
-	assert.Equal(t, updatedKp.Meta[0].Value, "yes")
+	assert.Len(t, updatedKp.Meta(), 1)
+	assert.Equal(t, updatedKp.Meta()[0].Key, "primary")
+	assert.Equal(t, updatedKp.Meta()[0].Value, "yes")
 }
 
 func testHandlerUpdatingKeyPairMetaWithInvalidPassphraseFails(t *testing.T) {
@@ -636,7 +636,7 @@ func testHandlerUpdatingKeyPairMetaWithInvalidPassphraseFails(t *testing.T) {
 
 	// then
 	assert.Error(t, err)
-	assert.Len(t, h.store.GetKey(name, key).Meta, 0)
+	assert.Len(t, h.store.GetKey(name, key).Meta(), 0)
 }
 
 func testHandlerUpdatingKeyPairMetaWithInvalidNameFails(t *testing.T) {
@@ -667,7 +667,7 @@ func testHandlerUpdatingKeyPairMetaWithInvalidNameFails(t *testing.T) {
 
 	// then
 	assert.Error(t, err)
-	assert.Len(t, h.store.GetKey(name, key).Meta, 0)
+	assert.Len(t, h.store.GetKey(name, key).Meta(), 0)
 }
 
 func testHandlerUpdatingKeyPairMetaWithoutWalletFails(t *testing.T) {
@@ -771,8 +771,8 @@ func testHandlerSigningTxV2Succeeds(t *testing.T) {
 	assert.NotEmpty(t, tx.InputData)
 	assert.NotNil(t, tx.Signature)
 	key := h.store.GetKey(name, pubKey)
-	assert.Equal(t, key.Algorithm.Version(), tx.Signature.Version)
-	assert.Equal(t, key.Algorithm.Name(), tx.Signature.Algo)
+	assert.Equal(t, key.AlgorithmVersion(), tx.Signature.Version)
+	assert.Equal(t, key.AlgorithmName(), tx.Signature.Algo)
 	assert.NotEmpty(t, tx.Signature.Value)
 }
 
@@ -802,7 +802,7 @@ func testHandlerSigningTxV2WithTaintedKeyFails(t *testing.T) {
 
 	// then
 	require.NoError(t, err)
-	assert.True(t, h.store.GetKey(name, pubKey).Tainted)
+	assert.True(t, h.store.GetKey(name, pubKey).IsTainted())
 
 	// given
 	req := &walletpb.SubmitTransactionRequest{

@@ -90,7 +90,7 @@ func testWalletUpdatingKeyPairMetaSucceeds(t *testing.T) {
 	// then
 	require.NoError(t, err)
 	assert.NotNil(t, keyPair)
-	assert.Equal(t, meta, keyPair.Meta)
+	assert.Equal(t, meta, keyPair.MetaList)
 }
 
 func testWalletUpdatingKeyPairMetaWithNonExistingPublicKeyFails(t *testing.T) {
@@ -150,7 +150,7 @@ func testWalletSigningTxV2WithTaintedKeyFails(t *testing.T) {
 
 func TestMarshalWallet(t *testing.T) {
 	w := wallet.NewLegacyWallet("jeremy")
-	w.KeyRing = append(w.KeyRing, wallet.NewKeypair(crypto.NewEd25519(), []byte{1, 2, 3, 4}, []byte{4, 3, 2, 1}))
+	w.KeyRing = append(w.KeyRing, newKeyPair(crypto.NewEd25519(), "01020304", "04030201"))
 	expected := `{"Owner":"jeremy","Keypairs":[{"pub":"01020304","priv":"04030201","algo":"vega/ed25519","tainted":false,"meta":null}]}`
 	m, err := json.Marshal(&w)
 	assert.NoError(t, err)
@@ -175,10 +175,18 @@ func TestUnMarshalWalletErrorInvalidAlgorithm(t *testing.T) {
 	assert.EqualError(t, err, crypto.ErrUnsupportedSignatureAlgorithm.Error())
 }
 
-func generateKeyPair() *wallet.KeyPair {
+func generateKeyPair() *wallet.LegacyKeyPair {
 	kp, err := wallet.GenKeyPair(crypto.Ed25519)
 	if err != nil {
 		panic(err)
 	}
 	return kp
+}
+
+func newKeyPair(algo crypto.SignatureAlgorithm, pub, priv string) wallet.LegacyKeyPair {
+	return wallet.LegacyKeyPair{
+		Algorithm: algo,
+		Pub:  pub,
+		Priv: priv,
+	}
 }

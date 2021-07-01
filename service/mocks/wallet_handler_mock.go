@@ -50,10 +50,10 @@ func (mr *MockWalletHandlerMockRecorder) CreateWallet(arg0, arg1 interface{}) *g
 }
 
 // GetPublicKey mocks base method
-func (m *MockWalletHandler) GetPublicKey(arg0, arg1 string) (*wallet.PublicKey, error) {
+func (m *MockWalletHandler) GetPublicKey(arg0, arg1 string) (wallet.PublicKey, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetPublicKey", arg0, arg1)
-	ret0, _ := ret[0].(*wallet.PublicKey)
+	ret0, _ := ret[0].(wallet.PublicKey)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

@@ -51,10 +51,10 @@ func (m *mockedStore) GetKey(name, pubKey string) wallet.PublicKey {
 		panic(fmt.Errorf("wallet \"%v\" not found", name))
 	}
 	for _, key := range w.ListPublicKeys() {
-		if key.Key == pubKey {
+		if key.Key() == pubKey {
 			return key
 		}
 	}
 	panic(fmt.Errorf("key \"%v\" not found", pubKey))
-	return wallet.PublicKey{}
+	return nil
 }

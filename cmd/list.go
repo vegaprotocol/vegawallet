@@ -20,8 +20,8 @@ var (
 	// listCmd represents the list command
 	listCmd = &cobra.Command{
 		Use:   "list",
-		Short: "List keypairs of a wallet",
-		Long:  "List all the keypairs for a given wallet",
+		Short: "List keys of a wallet",
+		Long:  "List all the keys for a given wallet",
 		RunE:  runList,
 	}
 )
@@ -67,7 +67,7 @@ func runList(cmd *cobra.Command, args []string) error {
 	}
 
 	// print the new keys for user info
-	fmt.Printf("List of all your keypairs:\n")
+	fmt.Printf("List of all your keys:\n")
 	fmt.Printf("%v\n", string(buf))
 
 	return nil

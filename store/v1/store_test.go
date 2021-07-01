@@ -8,7 +8,6 @@ import (
 	storev1 "code.vegaprotocol.io/go-wallet/store/v1"
 	"code.vegaprotocol.io/go-wallet/wallet"
 	"code.vegaprotocol.io/go-wallet/wallet/crypto"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
