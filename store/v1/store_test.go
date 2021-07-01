@@ -73,11 +73,11 @@ func testFileStoreV1SaveWalletSucceeds(t *testing.T) {
 	w := newWalletWithKeys()
 
 	// when
-	err := s.SaveWallet(*w, "passphrase")
+	err := s.SaveWallet(w, "passphrase")
 
 	// then
 	require.NoError(t, err)
-	assert.NotEmpty(t, configDir.WalletContent(w.Name))
+	assert.NotEmpty(t, configDir.WalletContent(w.Name()))
 }
 
 func testFileStoreV1GetWalletSucceeds(t *testing.T) {
@@ -86,7 +86,7 @@ func testFileStoreV1GetWalletSucceeds(t *testing.T) {
 
 	// given
 	s := NewInitialisedStore(configDir)
-	w := *newWalletWithKeys()
+	w := newWalletWithKeys()
 	passphrase := "passphrase"
 
 	// when
@@ -96,7 +96,7 @@ func testFileStoreV1GetWalletSucceeds(t *testing.T) {
 	require.NoError(t, err)
 
 	// when
-	returnedWallet, err := s.GetWallet(w.Name, passphrase)
+	returnedWallet, err := s.GetWallet(w.Name(), passphrase)
 
 	// then
 	require.NoError(t, err)
@@ -109,7 +109,7 @@ func testFileStoreV1GetWalletWithWrongPassphraseFails(t *testing.T) {
 
 	// given
 	s := NewInitialisedStore(configDir)
-	w := *newWalletWithKeys()
+	w := newWalletWithKeys()
 	passphrase := "passphrase"
 	othPassphrase := "not-original-passphrase"
 
@@ -120,11 +120,11 @@ func testFileStoreV1GetWalletWithWrongPassphraseFails(t *testing.T) {
 	require.NoError(t, err)
 
 	// when
-	returnedWallet, err := s.GetWallet(w.Name, othPassphrase)
+	returnedWallet, err := s.GetWallet(w.Name(), othPassphrase)
 
 	// then
 	assert.Error(t, err)
-	assert.Equal(t, wallet.Wallet{}, returnedWallet)
+	assert.Equal(t, nil, returnedWallet)
 }
 
 func testFileStoreV1GetNonExistingWalletFails(t *testing.T) {
@@ -141,7 +141,7 @@ func testFileStoreV1GetNonExistingWalletFails(t *testing.T) {
 
 	// then
 	assert.Error(t, err)
-	assert.Equal(t, wallet.Wallet{}, returnedWallet)
+	assert.Equal(t, nil, returnedWallet)
 }
 
 func testFileStoreV1GetWalletPathSucceeds(t *testing.T) {
@@ -180,7 +180,7 @@ func testFileStoreV1ExistingWalletSucceeds(t *testing.T) {
 
 	// given
 	s := NewInitialisedStore(configDir)
-	w := *newWalletWithKeys()
+	w := newWalletWithKeys()
 	passphrase := "passphrase"
 
 	// when
@@ -190,7 +190,7 @@ func testFileStoreV1ExistingWalletSucceeds(t *testing.T) {
 	require.NoError(t, err)
 
 	// when
-	exists := s.WalletExists(w.Name)
+	exists := s.WalletExists(w.Name())
 
 	// then
 	assert.True(t, exists)
@@ -517,8 +517,8 @@ func NewInitialisedStore(configDir configDir) *storev1.Store {
 	return s
 }
 
-func newWalletWithKeys() *wallet.Wallet {
-	w := wallet.NewWallet("my-wallet")
+func newWalletWithKeys() *wallet.LegacyWallet {
+	w := wallet.NewLegacyWallet("my-wallet")
 
 	kp, err := wallet.GenKeyPair(crypto.Ed25519)
 	if err != nil {

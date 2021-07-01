@@ -7,7 +7,6 @@ import (
 	"sync"
 
 	"code.vegaprotocol.io/go-wallet/commands"
-	"code.vegaprotocol.io/go-wallet/wallet/crypto"
 	commandspb "github.com/vegaprotocol/api/grpc/clients/go/generated/code.vegaprotocol.io/vega/proto/commands/v1"
 	walletpb "github.com/vegaprotocol/api/grpc/clients/go/generated/code.vegaprotocol.io/vega/proto/wallet/v1"
 
@@ -17,6 +16,19 @@ import (
 var (
 	ErrPubKeyIsTainted = errors.New("public key is tainted")
 )
+
+type Wallet interface {
+	Name() string
+	DescribePublicKey(pubKey string) (*PublicKey, error)
+	ListPublicKeys() []PublicKey
+	GenerateKeyPair() (KeyPair, error)
+	TaintKey(pubKey string) error
+	UpdateMeta(pubKey string, meta []Meta) error
+	SignAny(pubKey string, data []byte) ([]byte, error)
+	VerifyAny(pubKey string, data, sig []byte) (bool, error)
+	SignTxV1(pubKey string, data []byte, blockHeight uint64) (SignedBundle, error)
+	SignTxV2(pubKey string, data []byte) (*commandspb.Signature, error)
+}
 
 // Store abstracts the underlying storage for wallet data.
 type Store interface {
@@ -59,9 +71,9 @@ func (h *Handler) CreateWallet(name, passphrase string) error {
 		return ErrWalletAlreadyExists
 	}
 
-	w := NewWallet(name)
+	w := NewLegacyWallet(name)
 
-	return h.saveWallet(*w, passphrase)
+	return h.saveWallet(w, passphrase)
 }
 
 func (h *Handler) LoginWallet(name, passphrase string) error {
@@ -91,19 +103,17 @@ func (h *Handler) GenerateKeyPair(name, passphrase string) (KeyPair, error) {
 		return KeyPair{}, err
 	}
 
-	kp, err := GenKeyPair(crypto.Ed25519)
+	kp, err := w.GenerateKeyPair()
 	if err != nil {
 		return KeyPair{}, err
 	}
-
-	w.KeyRing.Upsert(*kp)
 
 	err = h.saveWallet(w, passphrase)
 	if err != nil {
 		return KeyPair{}, err
 	}
 
-	return kp.DeepCopy(), nil
+	return kp, nil
 }
 
 func (h *Handler) SecureGenerateKeyPair(name, passphrase string) (string, error) {
@@ -119,12 +129,12 @@ func (h *Handler) GetPublicKey(name, pubKey string) (*PublicKey, error) {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
 
-	kp, err := h.getKeyPair(name, pubKey)
+	w, err := h.loggedWallets.Get(name)
 	if err != nil {
 		return nil, err
 	}
 
-	return kp.ToPublicKey(), nil
+	return w.DescribePublicKey(pubKey)
 }
 
 func (h *Handler) ListPublicKeys(name string) ([]PublicKey, error) {
@@ -136,7 +146,7 @@ func (h *Handler) ListPublicKeys(name string) ([]PublicKey, error) {
 		return nil, err
 	}
 
-	return w.KeyRing.GetPublicKeys(), nil
+	return w.ListPublicKeys(), nil
 }
 
 func (h *Handler) SignAny(name, inputData, pubKey string) ([]byte, error) {
@@ -148,28 +158,21 @@ func (h *Handler) SignAny(name, inputData, pubKey string) ([]byte, error) {
 		return nil, err
 	}
 
-	kp, err := h.getKeyPair(name, pubKey)
+	w, err := h.loggedWallets.Get(name)
 	if err != nil {
 		return nil, err
 	}
 
-	if kp.Tainted {
-		return nil, ErrPubKeyIsTainted
-	}
-
-	return kp.Algorithm.Sign(kp.privBytes, rawInputData)
+	return w.SignAny(pubKey, rawInputData)
 }
 
 func (h *Handler) SignTxV2(name string, req *walletpb.SubmitTransactionRequest, height uint64) (*commandspb.Transaction, error) {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
 
-	keyPair, err := h.getKeyPair(name, req.GetPubKey())
+	w, err := h.loggedWallets.Get(name)
 	if err != nil {
 		return nil, err
-	}
-	if keyPair.Tainted {
-		return nil, ErrPubKeyIsTainted
 	}
 
 	data := commands.NewInputData(height)
@@ -179,12 +182,13 @@ func (h *Handler) SignTxV2(name string, req *walletpb.SubmitTransactionRequest, 
 		return nil, err
 	}
 
-	signature, err := keyPair.Sign(marshalledData)
+	pubKey := req.GetPubKey()
+	signature, err := w.SignTxV2(pubKey, marshalledData)
 	if err != nil {
 		return nil, err
 	}
 
-	return commands.NewTransaction(keyPair.pubBytes, marshalledData, signature), nil
+	return commands.NewTransaction([]byte(pubKey), marshalledData, signature), nil
 }
 
 func (h *Handler) VerifyAny(name, inputData, sig, pubKey string) (bool, error) {
@@ -201,12 +205,12 @@ func (h *Handler) VerifyAny(name, inputData, sig, pubKey string) (bool, error) {
 		return false, err
 	}
 
-	kp, err := h.getKeyPair(name, pubKey)
+	w, err := h.loggedWallets.Get(name)
 	if err != nil {
 		return false, err
 	}
 
-	return kp.Algorithm.Verify(kp.pubBytes, rawInputData, rawSig)
+	return w.VerifyAny(pubKey, rawInputData, rawSig)
 }
 
 func (h *Handler) TaintKey(name, pubKey, passphrase string) error {
@@ -235,31 +239,16 @@ func (h *Handler) UpdateMeta(name, pubKey, passphrase string, meta []Meta) error
 		return err
 	}
 
-	keyPair, err := w.KeyRing.FindPair(pubKey)
+	err = w.UpdateMeta(pubKey, meta)
 	if err != nil {
 		return err
 	}
-
-	keyPair.Meta = meta
-
-	w.KeyRing.Upsert(keyPair)
 
 	return h.saveWallet(w, passphrase)
 }
 
 func (h *Handler) GetWalletPath(name string) (string, error) {
 	return h.store.GetWalletPath(name), nil
-}
-
-func (h *Handler) getKeyPair(name, pubKey string) (*KeyPair, error) {
-	wallet, err := h.loggedWallets.Get(name)
-	if err != nil {
-		return nil, err
-	}
-
-	keyPair, err := wallet.KeyRing.FindPair(pubKey)
-
-	return &keyPair, err
 }
 
 func (h *Handler) saveWallet(w Wallet, passphrase string) error {
@@ -335,13 +324,13 @@ func newWallets() wallets {
 }
 
 func (w wallets) Add(wallet Wallet) {
-	w[wallet.Name] = wallet
+	w[wallet.Name()] = wallet
 }
 
 func (w wallets) Get(name string) (Wallet, error) {
 	wallet, ok := w[name]
 	if !ok {
-		return Wallet{}, ErrWalletDoesNotExists
+		return nil, ErrWalletDoesNotExists
 	}
 	return wallet, nil
 }

@@ -116,8 +116,16 @@ func (k *KeyPair) Taint() error {
 	return nil
 }
 
-func (k *KeyPair) Sign(marshalledData []byte) (*commandspb.Signature, error) {
-	sig, err := k.Algorithm.Sign(k.privBytes, marshalledData)
+func (k *KeyPair) SignAny(data []byte) ([]byte, error) {
+	return k.Algorithm.Sign(k.privBytes, data)
+}
+
+func (k *KeyPair) VerifyAny(data, sig []byte) (bool, error) {
+	return k.Algorithm.Verify(k.pubBytes, data, sig)
+}
+
+func (k *KeyPair) Sign(data []byte) (*commandspb.Signature, error) {
+	sig, err := k.Algorithm.Sign(k.privBytes, data)
 	if err != nil {
 		return nil, err
 	}

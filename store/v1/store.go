@@ -96,22 +96,22 @@ func (s *Store) GetWallet(name, passphrase string) (wallet.Wallet, error) {
 	walletPath := s.walletPath(name)
 
 	if ok, _ := fsutil.PathExists(walletPath); !ok {
-		return wallet.Wallet{}, wallet.ErrWalletDoesNotExists
+		return nil, wallet.ErrWalletDoesNotExists
 	}
 
 	buf, err := ioutil.ReadFile(walletPath)
 	if err != nil {
-		return wallet.Wallet{}, err
+		return nil, err
 	}
 
 	decBuf, err := crypto.Decrypt(buf, passphrase)
 	if err != nil {
-		return wallet.Wallet{}, err
+		return nil, err
 	}
 
-	w := &wallet.Wallet{}
+	w := &wallet.LegacyWallet{}
 	err = json.Unmarshal(decBuf, w)
-	return *w, err
+	return w, err
 }
 
 func (s *Store) SaveWallet(w wallet.Wallet, passphrase string) error {
@@ -125,7 +125,7 @@ func (s *Store) SaveWallet(w wallet.Wallet, passphrase string) error {
 		return err
 	}
 
-	f, err := os.Create(s.walletPath(w.Name))
+	f, err := os.Create(s.walletPath(w.Name()))
 	if err != nil {
 		return err
 	}

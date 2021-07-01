@@ -515,27 +515,6 @@ func testHandlerTaintingKeyPairWithInvalidNameFails(t *testing.T) {
 	assert.Error(t, err)
 }
 
-func testHandlerUpdatingKeyPairMetaWithNonExistingPublicKeyFails(t *testing.T) {
-	h := getTestHandler(t)
-	defer h.ctrl.Finish()
-
-	// given
-	passphrase := "Th1isisasecurep@ssphraseinnit"
-	name := "jeremy"
-
-	// when
-	err := h.CreateWallet(name, passphrase)
-
-	// then
-	require.NoError(t, err)
-
-	// when
-	err = h.TaintKey(name, "non-existing-pub-key", passphrase)
-
-	// then
-	assert.EqualError(t, err, wallet.ErrPubKeyDoesNotExist.Error())
-}
-
 func testHandlerTaintingKeyPairWithoutWalletFails(t *testing.T) {
 	h := getTestHandler(t)
 	defer h.ctrl.Finish()
@@ -698,12 +677,41 @@ func testHandlerUpdatingKeyPairMetaWithoutWalletFails(t *testing.T) {
 	// given
 	passphrase := "Th1isisasecurep@ssphraseinnit"
 	name := "jeremy"
-
 	pubKey := "non-existing-public-key"
 	meta := []wallet.Meta{{Key: "primary", Value: "yes"}}
 
 	// when
 	err := h.UpdateMeta(name, pubKey, passphrase, meta)
+
+	// then
+	assert.Error(t, err)
+}
+
+func testHandlerUpdatingKeyPairMetaWithNonExistingPublicKeyFails(t *testing.T) {
+	h := getTestHandler(t)
+	defer h.ctrl.Finish()
+
+	// given
+	passphrase := "Th1isisasecurep@ssphraseinnit"
+	name := "jeremy"
+	pubKey := "non-existing-public-key"
+	meta := []wallet.Meta{{Key: "primary", Value: "yes"}}
+
+	// when
+	err := h.CreateWallet(name, passphrase)
+
+	// then
+	require.NoError(t, err)
+
+	// when
+	key, err := h.SecureGenerateKeyPair(name, passphrase)
+
+	// then
+	require.NoError(t, err)
+	assert.NotEmpty(t, key)
+
+	// when
+	err = h.UpdateMeta(name, pubKey, passphrase, meta)
 
 	// then
 	assert.Error(t, err)
