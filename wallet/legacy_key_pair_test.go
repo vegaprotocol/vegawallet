@@ -9,17 +9,17 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestKeypair(t *testing.T) {
-	t.Run("Generating a new key pair succeeds", testKeypairGeneratingNewKeyPairSucceeds)
-	t.Run("Generating a new key pair with unsupported algorithm fails", testKeypairGeneratingNewKeyPairWithUnsupportedAlgorithmFails)
-	t.Run("Tainting a key pair succeeds", testKeypairTaintingKeyPairSucceeds)
-	t.Run("Tainting an already tainted key pair fails", testKeypairTaintingAlreadyTaintedKeyPairFails)
-	t.Run("Secure copy of key pair removes sensitive information", testKeypairToPublicKeyRemovesSensitiveInformation)
+func TestLegacyKeypair(t *testing.T) {
+	t.Run("Generating a new key pair succeeds", testLegacyKeyPairGeneratingNewKeyPairSucceeds)
+	t.Run("Generating a new key pair with unsupported algorithm fails", testLegacyKeyPairGeneratingNewKeyPairWithUnsupportedAlgorithmFails)
+	t.Run("Tainting a key pair succeeds", testLegacyKeyPairTaintingKeyPairSucceeds)
+	t.Run("Tainting an already tainted key pair fails", testLegacyKeyPairTaintingAlreadyTaintedKeyPairFails)
+	t.Run("Secure copy of key pair removes sensitive information", testLegacyKeyPairToPublicKeyRemovesSensitiveInformation)
 }
 
-func testKeypairGeneratingNewKeyPairSucceeds(t *testing.T) {
+func testLegacyKeyPairGeneratingNewKeyPairSucceeds(t *testing.T) {
 	// when
-	kp, err := wallet.GenKeyPair(crypto.Ed25519)
+	kp, err := wallet.GenKeyPair(crypto.Ed25519, 1)
 
 	// then
 	require.NoError(t, err)
@@ -31,18 +31,18 @@ func testKeypairGeneratingNewKeyPairSucceeds(t *testing.T) {
 	assert.Empty(t, kp.MetaList)
 }
 
-func testKeypairGeneratingNewKeyPairWithUnsupportedAlgorithmFails(t *testing.T) {
+func testLegacyKeyPairGeneratingNewKeyPairWithUnsupportedAlgorithmFails(t *testing.T) {
 	// when
-	kp, err := wallet.GenKeyPair("unsupported-algo")
+	kp, err := wallet.GenKeyPair("unsupported-algo", 1)
 
 	// then
 	assert.Error(t, err)
 	assert.Nil(t, kp)
 }
 
-func testKeypairTaintingKeyPairSucceeds(t *testing.T) {
+func testLegacyKeyPairTaintingKeyPairSucceeds(t *testing.T) {
 	// given
-	kp := generateKeyPair()
+	kp := generateLegacyKeyPair()
 
 	// when
 	err := kp.Taint()
@@ -52,9 +52,9 @@ func testKeypairTaintingKeyPairSucceeds(t *testing.T) {
 	assert.True(t, kp.Tainted)
 }
 
-func testKeypairTaintingAlreadyTaintedKeyPairFails(t *testing.T) {
+func testLegacyKeyPairTaintingAlreadyTaintedKeyPairFails(t *testing.T) {
 	// given
-	kp := generateKeyPair()
+	kp := generateLegacyKeyPair()
 
 	// when
 	err := kp.Taint()
@@ -71,9 +71,9 @@ func testKeypairTaintingAlreadyTaintedKeyPairFails(t *testing.T) {
 	assert.True(t, kp.Tainted)
 }
 
-func testKeypairToPublicKeyRemovesSensitiveInformation(t *testing.T) {
+func testLegacyKeyPairToPublicKeyRemovesSensitiveInformation(t *testing.T) {
 	// given
-	kp := generateKeyPair()
+	kp := generateLegacyKeyPair()
 
 	// when
 	secureKp := kp.ToPublicKey()

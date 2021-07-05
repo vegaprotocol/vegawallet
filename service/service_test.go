@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -25,6 +26,10 @@ import (
 )
 
 // this tests in general ensure request / response contracts are not broken for the service
+
+const (
+	TestMnemonic = "swing ceiling chaos green put insane ripple desk match tip melt usual shrug turkey renew icon parade veteran lens govern path rough page render"
+)
 
 type testService struct {
 	*service.Service
@@ -54,6 +59,8 @@ func getTestService(t *testing.T) *testService {
 func TestService(t *testing.T) {
 	t.Run("create wallet ok", testServiceCreateWalletOK)
 	t.Run("create wallet fail invalid request", testServiceCreateWalletFailInvalidRequest)
+	t.Run("Importing a wallet succeeds", testServiceImportWalletOK)
+	t.Run("Importing a wallet with and invalid request fails", testServiceImportWalletFailInvalidRequest)
 	t.Run("login wallet ok", testServiceLoginWalletOK)
 	t.Run("download wallet ok", testServiceDownloadWalletOK)
 	t.Run("login wallet fail invalid request", testServiceLoginWalletFailInvalidRequest)
@@ -87,7 +94,7 @@ func testServiceCreateWalletOK(t *testing.T) {
 	s := getTestService(t)
 	defer s.ctrl.Finish()
 
-	s.handler.EXPECT().CreateWallet("jeremy", "oh yea?").Times(1).Return(nil)
+	s.handler.EXPECT().CreateWallet("jeremy", "oh yea?").Times(1).Return(TestMnemonic, nil)
 	s.auth.EXPECT().NewSession("jeremy").Times(1).Return("this is a token", nil)
 
 	payload := `{"wallet": "jeremy", "passphrase": "oh yea?"}`
@@ -114,6 +121,55 @@ func testServiceCreateWalletFailInvalidRequest(t *testing.T) {
 	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
 
 	payload = `{"wallet": "jeremy", "passrase": "oh yea?"}`
+	r = httptest.NewRequest("POST", "scheme://host/path", bytes.NewBufferString(payload))
+	w = httptest.NewRecorder()
+
+	s.CreateWallet(w, r, nil)
+
+	resp = w.Result()
+	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+}
+
+func testServiceImportWalletOK(t *testing.T) {
+	s := getTestService(t)
+	defer s.ctrl.Finish()
+
+	s.handler.EXPECT().ImportWallet("jeremy", "oh yea?", TestMnemonic).Times(1).Return(nil)
+	s.auth.EXPECT().NewSession("jeremy").Times(1).Return("this is a token", nil)
+
+	payload := fmt.Sprintf(`{"wallet": "jeremy", "passphrase": "oh yea?", "mnemonic": "%s"}`, TestMnemonic)
+	r := httptest.NewRequest("POST", "scheme://host/path", bytes.NewBufferString(payload))
+	w := httptest.NewRecorder()
+
+	s.ImportWallet(w, r, nil)
+
+	resp := w.Result()
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+}
+
+func testServiceImportWalletFailInvalidRequest(t *testing.T) {
+	s := getTestService(t)
+	defer s.ctrl.Finish()
+
+	payload := fmt.Sprintf(`{"wall": "jeremy", "passphrase": "oh yea?", "mnemonic": \"%s\"}`, TestMnemonic)
+	r := httptest.NewRequest("POST", "scheme://host/path", bytes.NewBufferString(payload))
+	w := httptest.NewRecorder()
+
+	s.CreateWallet(w, r, nil)
+
+	resp := w.Result()
+	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+
+	payload = fmt.Sprintf(`{"wallet": "jeremy", "password": "oh yea?", "mnemonic": \"%s\"}`, TestMnemonic)
+	r = httptest.NewRequest("POST", "scheme://host/path", bytes.NewBufferString(payload))
+	w = httptest.NewRecorder()
+
+	s.ImportWallet(w, r, nil)
+
+	resp = w.Result()
+	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+
+	payload = fmt.Sprintf(`{"wallet": "jeremy", "passphrase": "oh yea?", "little_words": \"%s\"}`, TestMnemonic)
 	r = httptest.NewRequest("POST", "scheme://host/path", bytes.NewBufferString(payload))
 	w = httptest.NewRecorder()
 

@@ -15,13 +15,14 @@ import (
 func TestFileStoreV1(t *testing.T) {
 	t.Run("New store succeeds", testNewStoreSucceeds)
 	t.Run("Initialising new store succeeds", testInitialisingNewStoreSucceeds)
-	t.Run("Saving wallet succeeds", testFileStoreV1SaveWalletSucceeds)
 	t.Run("Getting wallet succeeds", testFileStoreV1GetWalletSucceeds)
 	t.Run("Getting wallet without wrong passphrase fails", testFileStoreV1GetWalletWithWrongPassphraseFails)
 	t.Run("Getting non-existing wallet fails", testFileStoreV1GetNonExistingWalletFails)
 	t.Run("Getting wallet path succeeds", testFileStoreV1GetWalletPathSucceeds)
 	t.Run("Verifying non-existing wallet fails", testFileStoreV1NonExistingWalletFails)
 	t.Run("Verifying existing wallet succeeds", testFileStoreV1ExistingWalletSucceeds)
+	t.Run("Saving legacy wallet succeeds", testFileStoreV1SaveLegacyWalletSucceeds)
+	t.Run("Saving HD wallet succeeds", testFileStoreV1SaveHDWalletSucceeds)
 	t.Run("Saving already existing config fails", testFileStoreV1SavingAlreadyExistingConfigFails)
 	t.Run("Saving new config  succeeds", testFileStoreV1SavingNewConfigSucceeds)
 	t.Run("Overwriting existing config succeeds", testFileStoreV1OverwritingExistingConfigSucceeds)
@@ -63,29 +64,13 @@ func testInitialisingNewStoreSucceeds(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-func testFileStoreV1SaveWalletSucceeds(t *testing.T) {
-	configDir := newConfigDir()
-	defer configDir.Remove()
-
-	// given
-	s := NewInitialisedStore(configDir)
-	w := newWalletWithKeys()
-
-	// when
-	err := s.SaveWallet(w, "passphrase")
-
-	// then
-	require.NoError(t, err)
-	assert.NotEmpty(t, configDir.WalletContent(w.Name()))
-}
-
 func testFileStoreV1GetWalletSucceeds(t *testing.T) {
 	configDir := newConfigDir()
 	defer configDir.Remove()
 
 	// given
 	s := NewInitialisedStore(configDir)
-	w := newWalletWithKeys()
+	w := newLegacyWalletWithKeys()
 	passphrase := "passphrase"
 
 	// when
@@ -108,7 +93,7 @@ func testFileStoreV1GetWalletWithWrongPassphraseFails(t *testing.T) {
 
 	// given
 	s := NewInitialisedStore(configDir)
-	w := newWalletWithKeys()
+	w := newLegacyWalletWithKeys()
 	passphrase := "passphrase"
 	othPassphrase := "not-original-passphrase"
 
@@ -179,7 +164,7 @@ func testFileStoreV1ExistingWalletSucceeds(t *testing.T) {
 
 	// given
 	s := NewInitialisedStore(configDir)
-	w := newWalletWithKeys()
+	w := newLegacyWalletWithKeys()
 	passphrase := "passphrase"
 
 	// when
@@ -193,6 +178,39 @@ func testFileStoreV1ExistingWalletSucceeds(t *testing.T) {
 
 	// then
 	assert.True(t, exists)
+}
+
+func testFileStoreV1SaveLegacyWalletSucceeds(t *testing.T) {
+	configDir := newConfigDir()
+	defer configDir.Remove()
+
+	// given
+	s := NewInitialisedStore(configDir)
+	w := newLegacyWalletWithKeys()
+
+	// when
+	err := s.SaveWallet(w, "passphrase")
+
+	// then
+	require.NoError(t, err)
+	assert.NotEmpty(t, configDir.WalletContent(w.Name()))
+}
+
+func testFileStoreV1SaveHDWalletSucceeds(t *testing.T) {
+	configDir := newConfigDir()
+	defer configDir.Remove()
+
+	// given
+	passphrase := "passphrase"
+	s := NewInitialisedStore(configDir)
+	w := newHDWalletWithKeys()
+
+	// when
+	err := s.SaveWallet(w, passphrase)
+
+	// then
+	require.NoError(t, err)
+	assert.NotEmpty(t, configDir.WalletContent(w.Name()))
 }
 
 func testFileStoreV1SavingAlreadyExistingConfigFails(t *testing.T) {
@@ -516,15 +534,29 @@ func NewInitialisedStore(configDir configDir) *storev1.Store {
 	return s
 }
 
-func newWalletWithKeys() *wallet.LegacyWallet {
+func newLegacyWalletWithKeys() *wallet.LegacyWallet {
 	w := wallet.NewLegacyWallet("my-wallet")
 
-	kp, err := wallet.GenKeyPair(crypto.Ed25519)
+	kp, err := wallet.GenKeyPair(crypto.Ed25519, 1)
 	if err != nil {
 		panic(err)
 	}
 
 	w.KeyRing.Upsert(*kp)
+
+	return w
+}
+
+func newHDWalletWithKeys() *wallet.HDWallet {
+	w, _, err := wallet.NewHDWallet("my-wallet")
+	if err != nil {
+		panic(err)
+	}
+
+	_, err = w.GenerateKeyPair()
+	if err != nil {
+		panic(err)
+	}
 
 	return w
 }

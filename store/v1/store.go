@@ -109,9 +109,30 @@ func (s *Store) GetWallet(name, passphrase string) (wallet.Wallet, error) {
 		return nil, err
 	}
 
-	w := &wallet.LegacyWallet{}
+	versionedWallet := &struct {
+		Version uint32 `json:"version"`
+	}{}
+
+	err = json.Unmarshal(decBuf, versionedWallet)
+	if err != nil {
+		return nil, err
+	}
+
+	var w wallet.Wallet
+	switch versionedWallet.Version {
+	case 0:
+		w = &wallet.LegacyWallet{}
+		break
+	case 1:
+		w = &wallet.HDWallet{}
+		break
+	default:
+		return nil, fmt.Errorf("wallet with version %d isn't supported", versionedWallet.Version)
+	}
+
 	err = json.Unmarshal(decBuf, w)
-	return w, err
+
+	return w, nil
 }
 
 func (s *Store) SaveWallet(w wallet.Wallet, passphrase string) error {

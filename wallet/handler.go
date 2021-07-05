@@ -18,9 +18,11 @@ var (
 )
 
 type Wallet interface {
+	Version() uint32
 	Name() string
 	DescribePublicKey(pubKey string) (PublicKey, error)
 	ListPublicKeys() []PublicKey
+	ListKeyPairs() []KeyPair
 	GenerateKeyPair() (KeyPair, error)
 	TaintKey(pubKey string) error
 	UpdateMeta(pubKey string, meta []Meta) error
@@ -80,18 +82,39 @@ func (h *Handler) WalletExists(name string) bool {
 	return h.store.WalletExists(name)
 }
 
-func (h *Handler) CreateWallet(name, passphrase string) error {
+func (h *Handler) CreateWallet(name, passphrase string) (string, error) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 
-	_, err := h.store.GetWallet(name, passphrase)
-	if err != nil && err != ErrWalletDoesNotExists {
-		return err
-	} else if err == nil {
+	if h.store.WalletExists(name) {
+		return "", ErrWalletAlreadyExists
+	}
+
+	w, mnemonic, err := NewHDWallet(name)
+	if err != nil {
+		return "", err
+	}
+
+	err = h.saveWallet(w, passphrase)
+	if err != nil {
+		return "", err
+	}
+
+	return mnemonic, nil
+}
+
+func (h *Handler) ImportWallet(name, passphrase, mnemonic string) error {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+
+	if h.store.WalletExists(name) {
 		return ErrWalletAlreadyExists
 	}
 
-	w := NewLegacyWallet(name)
+	w, err := ImportHDWallet(name, mnemonic)
+	if err != nil {
+		return err
+	}
 
 	return h.saveWallet(w, passphrase)
 }
@@ -149,7 +172,7 @@ func (h *Handler) GetPublicKey(name, pubKey string) (PublicKey, error) {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
 
-	w, err := h.loggedWallets.Get(name)
+	w, err := h.getLoggedWallet(name)
 	if err != nil {
 		return nil, err
 	}
@@ -161,12 +184,24 @@ func (h *Handler) ListPublicKeys(name string) ([]PublicKey, error) {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
 
-	w, err := h.loggedWallets.Get(name)
+	w, err := h.getLoggedWallet(name)
 	if err != nil {
 		return nil, err
 	}
 
 	return w.ListPublicKeys(), nil
+}
+
+func (h *Handler) ListKeyPairs(name string) ([]KeyPair, error) {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+
+	w, err := h.getLoggedWallet(name)
+	if err != nil {
+		return nil, err
+	}
+
+	return w.ListKeyPairs(), nil
 }
 
 func (h *Handler) SignAny(name, inputData, pubKey string) ([]byte, error) {
@@ -178,7 +213,7 @@ func (h *Handler) SignAny(name, inputData, pubKey string) ([]byte, error) {
 		return nil, err
 	}
 
-	w, err := h.loggedWallets.Get(name)
+	w, err := h.getLoggedWallet(name)
 	if err != nil {
 		return nil, err
 	}
@@ -190,7 +225,7 @@ func (h *Handler) SignTxV2(name string, req *walletpb.SubmitTransactionRequest, 
 	h.mu.RLock()
 	defer h.mu.RUnlock()
 
-	w, err := h.loggedWallets.Get(name)
+	w, err := h.getLoggedWallet(name)
 	if err != nil {
 		return nil, err
 	}
@@ -225,7 +260,7 @@ func (h *Handler) VerifyAny(name, inputData, sig, pubKey string) (bool, error) {
 		return false, err
 	}
 
-	w, err := h.loggedWallets.Get(name)
+	w, err := h.getLoggedWallet(name)
 	if err != nil {
 		return false, err
 	}
@@ -337,6 +372,19 @@ func wrapRequestCommandIntoInputData(data *commandspb.InputData, req *walletpb.S
 	}
 }
 
+func (h *Handler) getLoggedWallet(name string) (Wallet, error) {
+	exists := h.store.WalletExists(name)
+	if !exists {
+		return nil, ErrWalletDoesNotExists
+	}
+
+	w, loggedIn := h.loggedWallets.Get(name)
+	if !loggedIn {
+		return nil, ErrWalletNotLoggedIn
+	}
+	return w, nil
+}
+
 type wallets map[string]Wallet
 
 func newWallets() wallets {
@@ -347,12 +395,9 @@ func (w wallets) Add(wallet Wallet) {
 	w[wallet.Name()] = wallet
 }
 
-func (w wallets) Get(name string) (Wallet, error) {
+func (w wallets) Get(name string) (Wallet, bool) {
 	wallet, ok := w[name]
-	if !ok {
-		return nil, ErrWalletDoesNotExists
-	}
-	return wallet, nil
+	return wallet, ok
 }
 
 func (w wallets) Remove(name string) {

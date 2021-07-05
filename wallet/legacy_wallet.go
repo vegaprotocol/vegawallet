@@ -21,6 +21,10 @@ func NewLegacyWallet(name string) *LegacyWallet {
 	}
 }
 
+func (w *LegacyWallet) Version() uint32 {
+	return 0
+}
+
 func (w *LegacyWallet) Name() string {
 	return w.Owner
 }
@@ -35,16 +39,26 @@ func (w *LegacyWallet) DescribePublicKey(pubKey string) (PublicKey, error) {
 }
 
 func (w *LegacyWallet) ListPublicKeys() []PublicKey {
-	originalKeys := w.KeyRing.GetPublicKeys()
+	originalKeys := w.KeyRing.GetKeyPairs()
 	keys := make([]PublicKey, len(originalKeys))
 	for i, key := range originalKeys {
-		keys[i] = key
+		keys[i] = key.ToPublicKey()
+	}
+	return keys
+}
+
+// ListKeyPairs lists the key pairs. Be careful, it contains the private key.
+func (w *LegacyWallet) ListKeyPairs() []KeyPair {
+	originalKeys := w.KeyRing.GetKeyPairs()
+	keys := make([]KeyPair, len(originalKeys))
+	for i, key := range originalKeys {
+		keys[i] = key.DeepCopy()
 	}
 	return keys
 }
 
 func (w *LegacyWallet) GenerateKeyPair() (KeyPair, error) {
-	kp, err := GenKeyPair(wcrypto.Ed25519)
+	kp, err := GenKeyPair(wcrypto.Ed25519, 1)
 	if err != nil {
 		return nil, err
 	}
@@ -128,7 +142,7 @@ func (w *LegacyWallet) SignTxV1(pubKey string, data []byte, blockHeight uint64) 
 		return SignedBundle{}, err
 	}
 
-	sig, err := keyPair.Algorithm.Sign(keyPair.privBytes, rawTxTy)
+	sig, err := keyPair.SignAny(rawTxTy)
 	if err != nil {
 		return SignedBundle{}, err
 	}
@@ -137,8 +151,8 @@ func (w *LegacyWallet) SignTxV1(pubKey string, data []byte, blockHeight uint64) 
 		Tx: rawTxTy,
 		Sig: Signature{
 			Sig:     sig,
-			Algo:    keyPair.Algorithm.Name(),
-			Version: keyPair.Algorithm.Version(),
+			Algo:    keyPair.AlgorithmName(),
+			Version: keyPair.AlgorithmVersion(),
 		},
 	}, nil
 }
@@ -154,9 +168,4 @@ func (w *LegacyWallet) SignTxV2(pubKey string, data []byte) (*commandspb.Signatu
 	}
 
 	return keyPair.Sign(data)
-}
-
-type Meta struct {
-	Key   string `json:"key"`
-	Value string `json:"value"`
 }

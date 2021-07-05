@@ -80,10 +80,12 @@ func runGenKey(cmd *cobra.Command, args []string) error {
 	}
 
 	if !walletExists {
-		err := handler.CreateWallet(genKeyArgs.name, genKeyArgs.passphrase)
+		mnemonic, err := handler.CreateWallet(genKeyArgs.name, genKeyArgs.passphrase)
 		if err != nil {
 			return fmt.Errorf("couldn't create wallet: %v", err)
 		}
+		fmt.Printf("new mnemonic:\n")
+		fmt.Printf("%s\n", mnemonic)
 	}
 
 	keyPair, err := handler.GenerateKeyPair(genKeyArgs.name, genKeyArgs.passphrase)
@@ -96,14 +98,13 @@ func runGenKey(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("could not update the meta: %v", err)
 	}
 
+	// print the new keys for user info
 	buf, err := json.MarshalIndent(keyPair, " ", " ")
 	if err != nil {
 		return fmt.Errorf("unable to marshal message: %v", err)
 	}
-
-	// print the new keys for user info
 	fmt.Printf("new generated keys:\n")
-	fmt.Printf("%v\n", string(buf))
+	fmt.Printf("%s\n", string(buf))
 
 	return nil
 }

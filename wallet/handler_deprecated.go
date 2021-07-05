@@ -13,7 +13,7 @@ func (h *Handler) SignTx(name, tx, pubKey string, blockHeight uint64) (SignedBun
 		return SignedBundle{}, err
 	}
 
-	w, err := h.loggedWallets.Get(name)
+	w, err := h.getLoggedWallet(name)
 	if err != nil {
 		return SignedBundle{}, err
 	}

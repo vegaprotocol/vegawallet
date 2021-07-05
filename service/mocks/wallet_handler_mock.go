@@ -36,11 +36,12 @@ func (m *MockWalletHandler) EXPECT() *MockWalletHandlerMockRecorder {
 }
 
 // CreateWallet mocks base method
-func (m *MockWalletHandler) CreateWallet(arg0, arg1 string) error {
+func (m *MockWalletHandler) CreateWallet(arg0, arg1 string) (string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateWallet", arg0, arg1)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // CreateWallet indicates an expected call of CreateWallet
@@ -77,6 +78,20 @@ func (m *MockWalletHandler) GetWalletPath(arg0 string) (string, error) {
 func (mr *MockWalletHandlerMockRecorder) GetWalletPath(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetWalletPath", reflect.TypeOf((*MockWalletHandler)(nil).GetWalletPath), arg0)
+}
+
+// ImportWallet mocks base method
+func (m *MockWalletHandler) ImportWallet(arg0, arg1, arg2 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ImportWallet", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// ImportWallet indicates an expected call of ImportWallet
+func (mr *MockWalletHandlerMockRecorder) ImportWallet(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ImportWallet", reflect.TypeOf((*MockWalletHandler)(nil).ImportWallet), arg0, arg1, arg2)
 }
 
 // ListPublicKeys mocks base method

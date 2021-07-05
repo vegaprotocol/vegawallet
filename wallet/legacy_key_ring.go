@@ -1,5 +1,7 @@
 package wallet
 
+import "sort"
+
 type LegacyKeyRing []LegacyKeyPair
 
 func NewLegacyKeyRing() LegacyKeyRing {
@@ -26,10 +28,34 @@ func (r *LegacyKeyRing) Upsert(pair LegacyKeyPair) {
 	*r = append(*r, pair)
 }
 
-func (r LegacyKeyRing) GetPublicKeys() []*LegacyPublicKey {
-	pubKeys := make([]*LegacyPublicKey, 0, len(r))
-	for _, keyPair := range r {
-		pubKeys = append(pubKeys, keyPair.ToPublicKey())
+func (r LegacyKeyRing) GetPublicKeys() []LegacyPublicKey {
+	keyPairs := r.GetKeyPairs()
+	pubKeys := make([]LegacyPublicKey, len(keyPairs))
+	for i, keyPair := range keyPairs {
+		pubKeys[i] = *keyPair.ToPublicKey()
 	}
 	return pubKeys
+}
+
+func (r LegacyKeyRing) GetKeyPairs() []LegacyKeyPair {
+	keysList := make([]LegacyKeyPair, len(r))
+	for i, key := range r {
+		keysList[i] = key
+	}
+	sort.Sort(byPubKey(keysList))
+	return keysList
+}
+
+type byPubKey []LegacyKeyPair
+
+func (a byPubKey) Len() int {
+	return len(a)
+}
+
+func (a byPubKey) Swap(i, j int) {
+	a[i], a[j] = a[j], a[i]
+}
+
+func (a byPubKey) Less(i, j int) bool {
+	return a[i].Pub < a[j].Pub
 }

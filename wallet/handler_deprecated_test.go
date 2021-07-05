@@ -23,7 +23,7 @@ func testSignTxSuccess(t *testing.T) {
 	passphrase := "Th1isisasecurep@ssphraseinnit"
 	name := "jeremy"
 
-	err := h.CreateWallet(name, passphrase)
+	_, err := h.CreateWallet(name, passphrase)
 	require.NoError(t, err)
 
 	key, err := h.SecureGenerateKeyPair(name, passphrase)
@@ -38,7 +38,7 @@ func testSignTxSuccess(t *testing.T) {
 	require.NoError(t, err)
 
 	// verify signature then
-	alg, err := crypto.NewSignatureAlgorithm(crypto.Ed25519)
+	alg, err := crypto.NewSignatureAlgorithm(crypto.Ed25519, 1)
 	require.NoError(t, err)
 
 	v, err := alg.Verify(keyBytes, signedBundle.Tx, signedBundle.Sig.Sig)
@@ -53,7 +53,7 @@ func testSignTxFailure(t *testing.T) {
 	name := "jeremy"
 	passphrase := "Th1isisasecurep@ssphraseinnit"
 
-	err := h.CreateWallet(name, passphrase)
+	_, err := h.CreateWallet(name, passphrase)
 	require.NoError(t, err)
 
 	key, err := h.SecureGenerateKeyPair(name, passphrase)

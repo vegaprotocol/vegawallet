@@ -56,7 +56,7 @@ func runList(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("could not login to the wallet: %v", err)
 	}
 
-	keys, err := handler.ListPublicKeys(listArgs.name)
+	keys, err := handler.ListKeyPairs(listArgs.name)
 	if err != nil {
 		return fmt.Errorf("could not list the public keys: %v", err)
 	}

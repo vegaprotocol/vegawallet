@@ -8,17 +8,18 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestKeyRing(t *testing.T) {
-	t.Run("Adding a new key succeeds", testKeyRingAddingNewKeySucceeds)
-	t.Run("Updating an existing key succeeds", testKeyRingUpdatingExistingKeySucceeds)
-	t.Run("Getting public keys succeeds", testKeyRingGettingPublicKeysSucceeds)
-	t.Run("Finding an existing key pair succeeds", testKeyRingFindingExistingKeyPairSucceeds)
-	t.Run("Finding a non-existing key pair fails", testKeyRingFindingNonExistingKeyPairFails)
+func TestLegacyKeyRing(t *testing.T) {
+	t.Run("Adding a new key succeeds", testLegacyKeyRingAddingNewKeySucceeds)
+	t.Run("Updating an existing key succeeds", testLegacyKeyRingUpdatingExistingKeySucceeds)
+	t.Run("Getting public keys succeeds", testLegacyKeyRingGettingPublicKeysSucceeds)
+	t.Run("Getting key pairs succeeds", testLegacyKeyRingGettingKeyPairsSucceeds)
+	t.Run("Finding an existing key pair succeeds", testLegacyKeyRingFindingExistingKeyPairSucceeds)
+	t.Run("Finding a non-existing key pair fails", testLegacyKeyRingFindingNonExistingKeyPairFails)
 }
 
-func testKeyRingAddingNewKeySucceeds(t *testing.T) {
+func testLegacyKeyRingAddingNewKeySucceeds(t *testing.T) {
 	// given
-	kp := generateKeyPair()
+	kp := generateLegacyKeyPair()
 	ring := wallet.NewLegacyKeyRing()
 
 	// when
@@ -28,9 +29,9 @@ func testKeyRingAddingNewKeySucceeds(t *testing.T) {
 	assert.Contains(t, ring, *kp)
 }
 
-func testKeyRingUpdatingExistingKeySucceeds(t *testing.T) {
+func testLegacyKeyRingUpdatingExistingKeySucceeds(t *testing.T) {
 	// given
-	kp := generateKeyPair()
+	kp := generateLegacyKeyPair()
 	ring := wallet.NewLegacyKeyRing()
 
 	// when
@@ -48,29 +49,61 @@ func testKeyRingUpdatingExistingKeySucceeds(t *testing.T) {
 	assert.NotContains(t, ring, *kp)
 }
 
-func testKeyRingGettingPublicKeysSucceeds(t *testing.T) {
+func testLegacyKeyRingGettingPublicKeysSucceeds(t *testing.T) {
 	// given
-	kp1 := generateKeyPair()
-	kp2 := generateKeyPair()
+	kp1 := wallet.LegacyKeyPair{
+		Pub: "bbbbbb",
+		Priv: "111111",
+	}
+	kp2 := wallet.LegacyKeyPair{
+		Pub: "aaaaaa",
+		Priv: "222222",
+	}
 	ring := wallet.NewLegacyKeyRing()
 
 	// setup
-	ring.Upsert(*kp1)
-	ring.Upsert(*kp2)
+	ring.Upsert(kp1)
+	ring.Upsert(kp2)
 
 	// when
 	keys := ring.GetPublicKeys()
 
 	// then
 	assert.Len(t, keys, 2)
-	assert.Contains(t, keys, kp1.ToPublicKey())
-	assert.Contains(t, keys, kp2.ToPublicKey())
+	assert.Equal(t, keys, []wallet.LegacyPublicKey{
+		*kp2.ToPublicKey(),
+		*kp1.ToPublicKey(),
+	})
 }
 
-func testKeyRingFindingExistingKeyPairSucceeds(t *testing.T) {
+func testLegacyKeyRingGettingKeyPairsSucceeds(t *testing.T) {
 	// given
-	kp1 := generateKeyPair()
-	kp2 := generateKeyPair()
+	kp1 := wallet.LegacyKeyPair{
+		Pub: "bbbbbb",
+		Priv: "111111",
+	}
+	kp2 := wallet.LegacyKeyPair{
+		Pub: "aaaaaa",
+		Priv: "222222",
+	}
+	ring := wallet.NewLegacyKeyRing()
+
+	// setup
+	ring.Upsert(kp1)
+	ring.Upsert(kp2)
+
+	// when
+	keys := ring.GetKeyPairs()
+
+	// then
+	assert.Len(t, keys, 2)
+	assert.Equal(t, keys, []wallet.LegacyKeyPair{kp2, kp1})
+}
+
+func testLegacyKeyRingFindingExistingKeyPairSucceeds(t *testing.T) {
+	// given
+	kp1 := generateLegacyKeyPair()
+	kp2 := generateLegacyKeyPair()
 	ring := wallet.NewLegacyKeyRing()
 
 	// setup
@@ -85,10 +118,10 @@ func testKeyRingFindingExistingKeyPairSucceeds(t *testing.T) {
 	assert.Equal(t, *kp2, returnedKp)
 }
 
-func testKeyRingFindingNonExistingKeyPairFails(t *testing.T) {
+func testLegacyKeyRingFindingNonExistingKeyPairFails(t *testing.T) {
 	// given
-	kp1 := generateKeyPair()
-	kp2 := generateKeyPair()
+	kp1 := generateLegacyKeyPair()
+	kp2 := generateLegacyKeyPair()
 	ring := wallet.NewLegacyKeyRing()
 
 	// setup

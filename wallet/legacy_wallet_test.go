@@ -10,18 +10,18 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestWallet(t *testing.T) {
-	t.Run("Tainting key pair succeeds", testWalletTaintingKeyPairSucceeds)
-	t.Run("Tainting key pair that is already tainted fails", testWalletTaintingKeyThatIsAlreadyTaintedFails)
-	t.Run("Updating key pair meta succeeds", testWalletUpdatingKeyPairMetaSucceeds)
-	t.Run("Updating key pair meta with non-existing public key fails", testWalletUpdatingKeyPairMetaWithNonExistingPublicKeyFails)
-	t.Run("Signing transaction request (v2) succeeds", testWalletSigningTxV2Succeeds)
-	t.Run("Signing transaction request (v2) with tainted key fails", testWalletSigningTxV2WithTaintedKeyFails)
+func TestLegacyWallet(t *testing.T) {
+	t.Run("Tainting key pair succeeds", testLegacyWalletTaintingKeyPairSucceeds)
+	t.Run("Tainting key pair that is already tainted fails", testLegacyWalletTaintingKeyThatIsAlreadyTaintedFails)
+	t.Run("Updating key pair meta succeeds", testLegacyWalletUpdatingKeyPairMetaSucceeds)
+	t.Run("Updating key pair meta with non-existing public key fails", testLegacyWalletUpdatingKeyPairMetaWithNonExistingPublicKeyFails)
+	t.Run("Signing transaction request (v2) succeeds", testLegacyWalletSigningTxV2Succeeds)
+	t.Run("Signing transaction request (v2) with tainted key fails", testLegacyWalletSigningTxV2WithTaintedKeyFails)
 }
 
-func testWalletTaintingKeyPairSucceeds(t *testing.T) {
+func testLegacyWalletTaintingKeyPairSucceeds(t *testing.T) {
 	// given
-	kp := generateKeyPair()
+	kp := generateLegacyKeyPair()
 	name := "jeremy"
 
 	// setup
@@ -43,9 +43,9 @@ func testWalletTaintingKeyPairSucceeds(t *testing.T) {
 	assert.True(t, keyPair.Tainted)
 }
 
-func testWalletTaintingKeyThatIsAlreadyTaintedFails(t *testing.T) {
+func testLegacyWalletTaintingKeyThatIsAlreadyTaintedFails(t *testing.T) {
 	// given
-	kp := generateKeyPair()
+	kp := generateLegacyKeyPair()
 	kp.Tainted = true
 	name := "jeremy"
 
@@ -68,9 +68,9 @@ func testWalletTaintingKeyThatIsAlreadyTaintedFails(t *testing.T) {
 	assert.True(t, keyPair.Tainted)
 }
 
-func testWalletUpdatingKeyPairMetaSucceeds(t *testing.T) {
+func testLegacyWalletUpdatingKeyPairMetaSucceeds(t *testing.T) {
 	// given
-	kp := generateKeyPair()
+	kp := generateLegacyKeyPair()
 	name := "jeremy"
 	meta := []wallet.Meta{{Key: "primary", Value: "yes"}}
 
@@ -93,9 +93,9 @@ func testWalletUpdatingKeyPairMetaSucceeds(t *testing.T) {
 	assert.Equal(t, meta, keyPair.MetaList)
 }
 
-func testWalletUpdatingKeyPairMetaWithNonExistingPublicKeyFails(t *testing.T) {
+func testLegacyWalletUpdatingKeyPairMetaWithNonExistingPublicKeyFails(t *testing.T) {
 	// given
-	kp := generateKeyPair()
+	kp := generateLegacyKeyPair()
 	name := "jeremy"
 	meta := []wallet.Meta{{Key: "primary", Value: "yes"}}
 
@@ -109,9 +109,9 @@ func testWalletUpdatingKeyPairMetaWithNonExistingPublicKeyFails(t *testing.T) {
 	require.Error(t, err, wallet.ErrWalletDoesNotExists)
 }
 
-func testWalletSigningTxV2Succeeds(t *testing.T) {
+func testLegacyWalletSigningTxV2Succeeds(t *testing.T) {
 	// given
-	kp := generateKeyPair()
+	kp := generateLegacyKeyPair()
 	name := "jeremy"
 	data := []byte("Je ne connaîtrai pas la peur car la peur tue l'esprit.")
 
@@ -129,9 +129,9 @@ func testWalletSigningTxV2Succeeds(t *testing.T) {
 	assert.NotEmpty(t, signature.Value)
 }
 
-func testWalletSigningTxV2WithTaintedKeyFails(t *testing.T) {
+func testLegacyWalletSigningTxV2WithTaintedKeyFails(t *testing.T) {
 	// given
-	kp := generateKeyPair()
+	kp := generateLegacyKeyPair()
 	kp.Tainted = true
 	name := "jeremy"
 	data := []byte("Je ne connaîtrai pas la peur car la peur tue l'esprit.")
@@ -175,8 +175,8 @@ func TestUnMarshalWalletErrorInvalidAlgorithm(t *testing.T) {
 	assert.EqualError(t, err, crypto.ErrUnsupportedSignatureAlgorithm.Error())
 }
 
-func generateKeyPair() *wallet.LegacyKeyPair {
-	kp, err := wallet.GenKeyPair(crypto.Ed25519)
+func generateLegacyKeyPair() *wallet.LegacyKeyPair {
+	kp, err := wallet.GenKeyPair(crypto.Ed25519, 1)
 	if err != nil {
 		panic(err)
 	}

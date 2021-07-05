@@ -3,20 +3,14 @@ package wallet
 import (
 	"encoding/hex"
 	"encoding/json"
-	"errors"
 
 	"code.vegaprotocol.io/go-wallet/wallet/crypto"
 	commandspb "github.com/vegaprotocol/api/grpc/clients/go/generated/code.vegaprotocol.io/vega/proto/commands/v1"
 )
 
-var (
-	ErrPubKeyDoesNotExist   = errors.New("public key does not exist")
-	ErrPubKeyAlreadyTainted = errors.New("public key is already tainted")
-)
-
 type LegacyKeyPair struct {
 	Pub       string                    `json:"pub"`
-	Priv      string                    `json:"priv,omitempty"`
+	Priv      string                    `json:"priv"`
 	Algorithm crypto.SignatureAlgorithm `json:"algo"`
 	Tainted   bool                      `json:"tainted"`
 	MetaList  []Meta                    `json:"meta"`
@@ -28,8 +22,8 @@ type LegacyKeyPair struct {
 	privBytes []byte
 }
 
-func GenKeyPair(algorithm string) (*LegacyKeyPair, error) {
-	algo, err := crypto.NewSignatureAlgorithm(algorithm)
+func GenKeyPair(algorithm string, version uint32) (*LegacyKeyPair, error) {
+	algo, err := crypto.NewSignatureAlgorithm(algorithm, version)
 	if err != nil {
 		return nil, err
 	}

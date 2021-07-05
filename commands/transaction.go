@@ -78,7 +78,7 @@ func CheckTransaction(tx *commandspb.Transaction) (*commandspb.InputData, error)
 func validateSignature(inputData []byte, signature *commandspb.Signature, pubKey string) Errors {
 	errs := NewErrors()
 
-	validator, err := wcrypto.NewSignatureAlgorithm(signature.Algo)
+	validator, err := wcrypto.NewSignatureAlgorithm(signature.Algo, signature.Version)
 	if err != nil {
 		return errs.FinalAddForProperty("tx.signature.algo", err)
 	}
