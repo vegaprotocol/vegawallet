@@ -1,41 +1,42 @@
-package wallet_test
+package service_test
 
 import (
-	"os"
 	"testing"
 	"time"
 
-	"code.vegaprotocol.io/go-wallet/fsutil"
+	"code.vegaprotocol.io/go-wallet/service"
+	"code.vegaprotocol.io/go-wallet/service/mocks"
 	"code.vegaprotocol.io/go-wallet/wallet"
-
+	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap"
 )
 
 type testAuth struct {
-	wallet.Auth
+	service.Auth
 	rootPath string
+	ctrl     *gomock.Controller
 }
 
 func getTestAuth(t *testing.T) *testAuth {
-	rootPath := rootDir()
-	tokenExpiry := 10 * time.Hour
-	fsutil.EnsureDir(rootPath)
-	log := zap.NewNop()
-
-	// gen keys
-	err := wallet.GenRsaKeyFiles(log, rootPath, false)
+	rsaKeys, err := wallet.GenerateRSAKeys()
 	if err != nil {
 		t.Fatal(err)
 	}
-	a, err := wallet.NewAuth(log, rootPath, tokenExpiry)
+
+	ctrl := gomock.NewController(t)
+	store := mocks.NewMockRSAStore(ctrl)
+	store.EXPECT().GetRsaKeys().Return(rsaKeys, nil)
+
+	tokenExpiry := 10 * time.Hour
+	a, err := service.NewAuth(zap.NewNop(), store, tokenExpiry)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	return &testAuth{
-		Auth:     a,
-		rootPath: rootPath,
+		Auth: a,
+		ctrl: ctrl,
 	}
 }
 
@@ -48,29 +49,25 @@ func TestAuth(t *testing.T) {
 
 func testVerifyValidToken(t *testing.T) {
 	auth := getTestAuth(t)
-	wallet := "jeremy"
+	w := "jeremy"
 
 	// get a new session
-	tok, err := auth.NewSession(wallet)
+	tok, err := auth.NewSession(w)
 	assert.NoError(t, err)
 	assert.NotEmpty(t, tok)
 
 	wallet2, err := auth.VerifyToken(tok)
 	assert.NoError(t, err)
-	assert.Equal(t, wallet, wallet2)
-
-	assert.NoError(t, os.RemoveAll(auth.rootPath))
+	assert.Equal(t, w, wallet2)
 }
 
 func testVerifyInvalidToken(t *testing.T) {
 	auth := getTestAuth(t)
-	tok := "hehehe that's not a toekn"
+	tok := "that's not a token"
 
 	w, err := auth.VerifyToken(tok)
 	assert.EqualError(t, err, "token is malformed: token contains an invalid number of segments")
 	assert.Empty(t, w)
-
-	assert.NoError(t, os.RemoveAll(auth.rootPath))
 }
 
 func testRevokeValidToken(t *testing.T) {
@@ -91,10 +88,8 @@ func testRevokeValidToken(t *testing.T) {
 	assert.NoError(t, err)
 
 	w, err := auth.VerifyToken(tok)
-	assert.EqualError(t, err, wallet.ErrSessionNotFound.Error())
+	assert.EqualError(t, err, service.ErrSessionNotFound.Error())
 	assert.Empty(t, w)
-
-	assert.NoError(t, os.RemoveAll(auth.rootPath))
 }
 
 func testRevokeInvalidToken(t *testing.T) {
@@ -103,6 +98,4 @@ func testRevokeInvalidToken(t *testing.T) {
 
 	err := auth.Revoke(tok)
 	assert.EqualError(t, err, "token is malformed: token contains an invalid number of segments")
-
-	assert.NoError(t, os.RemoveAll(auth.rootPath))
 }

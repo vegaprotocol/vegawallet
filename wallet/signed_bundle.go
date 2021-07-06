@@ -4,7 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 
-	types "github.com/vegaprotocol/api/grpc/clients/go/generated/code.vegaprotocol.io/vega/proto"
+	typespb "github.com/vegaprotocol/api/grpc/clients/go/generated/code.vegaprotocol.io/vega/proto"
 )
 
 // here we implement Marhsalling for the SignedBundle
@@ -50,10 +50,10 @@ func (s SignedBundle) MarshalJSON() ([]byte, error) {
 	return json.Marshal(stringBundle)
 }
 
-func (s *SignedBundle) IntoProto() *types.SignedBundle {
-	return &types.SignedBundle{
+func (s *SignedBundle) IntoProto() *typespb.SignedBundle {
+	return &typespb.SignedBundle{
 		Tx: s.Tx,
-		Sig: &types.Signature{
+		Sig: &typespb.Signature{
 			Sig:     s.Sig.Sig,
 			Algo:    s.Sig.Algo,
 			Version: s.Sig.Version,

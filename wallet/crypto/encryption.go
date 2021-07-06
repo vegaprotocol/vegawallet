@@ -6,17 +6,11 @@ import (
 	"crypto/rand"
 	"io"
 
-	"golang.org/x/crypto/sha3"
+	"code.vegaprotocol.io/go-wallet/crypto"
 )
 
-func hash(key []byte) []byte {
-	hasher := sha3.New256()
-	hasher.Write([]byte(key))
-	return hasher.Sum(nil)
-}
-
 func Encrypt(data []byte, passphrase string) ([]byte, error) {
-	block, _ := aes.NewCipher(hash([]byte(passphrase)))
+	block, _ := aes.NewCipher(crypto.Hash([]byte(passphrase)))
 	gcm, err := cipher.NewGCM(block)
 	if err != nil {
 		return nil, err
@@ -30,7 +24,7 @@ func Encrypt(data []byte, passphrase string) ([]byte, error) {
 }
 
 func Decrypt(data []byte, passphrase string) ([]byte, error) {
-	key := hash([]byte(passphrase))
+	key := crypto.Hash([]byte(passphrase))
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return nil, err

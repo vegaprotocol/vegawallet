@@ -2,687 +2,855 @@ package wallet_test
 
 import (
 	"encoding/base64"
-	"encoding/hex"
-	"errors"
-	"os"
 	"testing"
 
-	"code.vegaprotocol.io/go-wallet/fsutil"
 	"code.vegaprotocol.io/go-wallet/wallet"
-	"code.vegaprotocol.io/go-wallet/wallet/crypto"
-	"code.vegaprotocol.io/go-wallet/wallet/mocks"
+	"github.com/stretchr/testify/require"
+	commandspb "github.com/vegaprotocol/api/grpc/clients/go/generated/code.vegaprotocol.io/vega/proto/commands/v1"
+	walletpb "github.com/vegaprotocol/api/grpc/clients/go/generated/code.vegaprotocol.io/vega/proto/wallet/v1"
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
-	"go.uber.org/zap"
 )
 
 type testHandler struct {
 	*wallet.Handler
-	ctrl    *gomock.Controller
-	auth    *mocks.MockAuth
-	rootDir string
+	ctrl  *gomock.Controller
+	store *mockedStore
 }
 
 func getTestHandler(t *testing.T) *testHandler {
 	ctrl := gomock.NewController(t)
-	auth := mocks.NewMockAuth(ctrl)
-	rootPath := rootDir()
-	fsutil.EnsureDir(rootPath)
-	wallet.EnsureBaseFolder(rootPath)
+	store := newMockedStore()
 
-	h := wallet.NewHandler(zap.NewNop(), auth, rootPath)
+	h := wallet.NewHandler(store)
 	return &testHandler{
 		Handler: h,
 		ctrl:    ctrl,
-		auth:    auth,
-		rootDir: rootPath,
+		store:   store,
 	}
 }
 
 func TestHandler(t *testing.T) {
-	t.Run("create a wallet success then login", testHandlerCreateWalletThenLogin)
-	t.Run("create a wallet failure - already exists", testHandlerCreateWalletFailureAlreadyExists)
-	t.Run("login failure on non wallet", testHandlerLoginFailureOnNonCreatedWallet)
-	t.Run("revoke token success", testHandlerRevokeTokenSuccess)
-	t.Run("revoke token failure", testHandlerRevokeTokenFailure)
-	t.Run("generate keypair success and list public keys", testVerifyTokenSuccess)
-	t.Run("generate keypair failure - invalid token", testVerifyTokenInvalidToken)
-	t.Run("generate keypair failure - wallet not found", testVerifyTokenWalletNotFound)
-	t.Run("list public key failure - invalid token", testListPubInvalidToken)
-	t.Run("list public key failure - wallet not found", testListPubWalletNotFound)
-	t.Run("get public key failure - success", testGetPubSuccess)
-	t.Run("get public key failure - wallet not found", testGetPubWalletNotFound)
-	t.Run("get public key failure - invalid token", testGetPubInvalidToken)
-	t.Run("get public key failure - key not found", testGetPubKeyNotFound)
-	t.Run("sign any - success", testSignAnySuccess)
-	t.Run("sign tx - success", testSignTxSuccess)
-	t.Run("sign tx - failure key tainted", testSignTxFailure)
-	t.Run("taint key - success", testTaintKeySuccess)
-	t.Run("taint key failure - invalid token", testTaintKeyInvalidToken)
-	t.Run("taint key failure - wallet not found", testTaintKeyWalletNotFound)
-	t.Run("taint key failure - already tainted", testTaintKeyAlreadyFailAlreadyTainted)
-	t.Run("update meta failure - pub key does not exists", testTaintKeyPubKeyDoesNotExists)
-	t.Run("update meta - success", testUpdateMetaSuccess)
-	t.Run("update meta - failure invalid passphrase", testUpdateMetaFailureInvalidPassphrase)
-	t.Run("update meta failure - invalid token", testUpdateMetaInvalidToken)
-	t.Run("update meta taint key failure - wallet not found", testUpdateMetaWalletNotFound)
-	t.Run("update meta failure - pub key does not exists", testUpdateMetaPubKeyDoesNotExists)
+	t.Run("Creating a wallet succeeds", testHandlerCreatingWalletSucceeds)
+	t.Run("Recreating a wallet with same name fails", testHandlerRecreatingWalletWithSameNameFails)
+	t.Run("Recreating a wallet with same name and different passphrase fails", testHandlerRecreatingWalletWithSameNameButDifferentPassphraseFails)
+	t.Run("Login to existing wallet succeeds", testHandlerLoginToExistingWalletSucceeds)
+	t.Run("Login to non-existing wallet succeeds", testHandlerLoginToNonExistingWalletFails)
+	t.Run("Generating new key pair securely succeeds", testHandlerGeneratingNewKeyPairSecurelySucceeds)
+	t.Run("Generating new key pair securely with invalid name fails", testHandlerGeneratingNewKeyPairSecurelyWithInvalidNameFails)
+	t.Run("Generating new key pair securely without wallet fails", testHandlerGeneratingNewKeyPairSecurelyWithoutWalletFails)
+	t.Run("Generating new key pair succeeds", testHandlerGeneratingNewKeyPairSucceeds)
+	t.Run("Generating new key pair with invalid name fails", testHandlerGeneratingNewKeyPairWithInvalidNameFails)
+	t.Run("Generating new key pair without wallet fails", testHandlerGeneratingNewKeyPairWithoutWalletFails)
+	t.Run("Listing public keys with invalid name fails", testHandlerListingPublicKeysWithInvalidNameFails)
+	t.Run("Listing public keys without wallet fails", testHandlerListingPublicKeysWithoutWalletFails)
+	t.Run("Getting public key succeeds", testHandlerGettingPublicKeySucceeds)
+	t.Run("Getting public key without wallet fails", testHandlerGettingPublicKeyWithoutWalletFails)
+	t.Run("Getting public key with invalid name fails", testHandlerGettingPublicKeyWithInvalidNameFails)
+	t.Run("Getting non-existing public key fails", testGettingNonExistingPublicKeyFails)
+	t.Run("Tainting key pair succeeds", testHandlerTaintingKeyPairSucceeds)
+	t.Run("Tainting key pair with invalid name fails", testHandlerTaintingKeyPairWithInvalidNameFails)
+	t.Run("Tainting key pair without wallet fails", testHandlerTaintingKeyPairWithoutWalletFails)
+	t.Run("Tainting key pair that is already tainted fails", testHandlerTaintingKeyThatIsAlreadyTaintedFails)
+	t.Run("Updating key pair meta succeeds", testHandlerUpdatingKeyPairMetaSucceeds)
+	t.Run("Updating key pair meta with invalid passphrase fails", testHandlerUpdatingKeyPairMetaWithInvalidPassphraseFails)
+	t.Run("Updating key pair meta with invalid name fails", testHandlerUpdatingKeyPairMetaWithInvalidNameFails)
+	t.Run("Updating key pair meta without wallet fails", testHandlerUpdatingKeyPairMetaWithoutWalletFails)
+	t.Run("Updating key pair meta with non-existing public key fails", testHandlerUpdatingKeyPairMetaWithNonExistingPublicKeyFails)
+	t.Run("Get wallet path succeeds", testHandlerGettingWalletPathSucceeds)
+	t.Run("Signing transaction request (v2) succeeds", testHandlerSigningTxV2Succeeds)
+	t.Run("Signing transaction request (v2) with tainted key fails", testHandlerSigningTxV2WithTaintedKeyFails)
+	t.Run("Signing and verifying a message succeeds", testHandlerSigningAndVerifyingMessageSucceeds)
 }
 
-func testHandlerCreateWalletThenLogin(t *testing.T) {
+func testHandlerCreatingWalletSucceeds(t *testing.T) {
 	h := getTestHandler(t)
 	defer h.ctrl.Finish()
 
-	h.auth.EXPECT().NewSession(gomock.Any()).Times(2).
-		Return("some fake token", nil)
+	// given
+	name := "jeremy"
+	passphrase := "Th1isisasecurep@ssphraseinnit"
 
-	tok, err := h.CreateWallet("jeremy", "Th1isisasecurep@ssphraseinnit")
-	assert.NoError(t, err)
-	assert.NotEmpty(t, tok)
+	// when
+	err := h.CreateWallet(name, passphrase)
 
-	tok, err = h.LoginWallet("jeremy", "Th1isisasecurep@ssphraseinnit")
-	assert.NoError(t, err)
-	assert.NotEmpty(t, tok)
-
-	assert.NoError(t, os.RemoveAll(h.rootDir))
+	// then
+	require.NoError(t, err)
 }
 
-func testHandlerCreateWalletFailureAlreadyExists(t *testing.T) {
+func testHandlerRecreatingWalletWithSameNameFails(t *testing.T) {
 	h := getTestHandler(t)
 	defer h.ctrl.Finish()
 
-	h.auth.EXPECT().NewSession(gomock.Any()).Times(1).
-		Return("some fake token", nil)
+	// given
+	name := "jeremy"
+	passphrase := "Th1isisasecurep@ssphraseinnit"
 
-	// create the wallet once.
-	tok, err := h.CreateWallet("jeremy", "Th1isisasecurep@ssphraseinnit")
-	assert.NoError(t, err)
-	assert.NotEmpty(t, tok)
+	// when
+	err := h.CreateWallet(name, passphrase)
 
-	// try to create it again
-	tok, err = h.CreateWallet("jeremy", "We can use a d1fferent passphrase yo!")
+	// then
+	require.NoError(t, err)
+
+	// when
+	err = h.CreateWallet(name, passphrase)
+
+	// then
 	assert.EqualError(t, err, wallet.ErrWalletAlreadyExists.Error())
-	assert.Empty(t, tok)
-
-	assert.NoError(t, os.RemoveAll(h.rootDir))
 }
 
-func testHandlerLoginFailureOnNonCreatedWallet(t *testing.T) {
+func testHandlerRecreatingWalletWithSameNameButDifferentPassphraseFails(t *testing.T) {
 	h := getTestHandler(t)
 	defer h.ctrl.Finish()
 
-	tok, err := h.LoginWallet("jeremy", "Th1isisasecurep@ssphraseinnit")
+	// given
+	name := "jeremy"
+	passphrase := "Th1isisasecurep@ssphraseinnit"
+	othPassphrase := "different-passphrase"
+
+	// when
+	err := h.CreateWallet(name, passphrase)
+
+	// then
+	require.NoError(t, err)
+
+	// when
+	err = h.CreateWallet(name, othPassphrase)
+
+	// then
+	require.Error(t, err)
+}
+
+func testHandlerLoginToExistingWalletSucceeds(t *testing.T) {
+	h := getTestHandler(t)
+	defer h.ctrl.Finish()
+
+	// given
+	passphrase := "Th1isisasecurep@ssphraseinnit"
+	name := "jeremy"
+
+	// when
+	err := h.CreateWallet(name, passphrase)
+
+	// then
+	require.NoError(t, err)
+
+	// then
+	err = h.LoginWallet(name, passphrase)
+
+	require.NoError(t, err)
+}
+
+func testHandlerLoginToNonExistingWalletFails(t *testing.T) {
+	h := getTestHandler(t)
+	defer h.ctrl.Finish()
+
+	// given
+	passphrase := "Th1isisasecurep@ssphraseinnit"
+	name := "jeremy"
+
+	// when
+	err := h.LoginWallet(name, passphrase)
+
+	// then
 	assert.EqualError(t, err, wallet.ErrWalletDoesNotExists.Error())
-	assert.Empty(t, tok)
-
-	assert.NoError(t, os.RemoveAll(h.rootDir))
 }
 
-func testHandlerRevokeTokenSuccess(t *testing.T) {
+func testHandlerGeneratingNewKeyPairSecurelySucceeds(t *testing.T) {
 	h := getTestHandler(t)
 	defer h.ctrl.Finish()
 
-	h.auth.EXPECT().NewSession(gomock.Any()).Times(1).
-		Return("some fake token", nil)
+	// given
+	passphrase := "Th1isisasecurep@ssphraseinnit"
+	name := "jeremy"
 
-	tok, err := h.CreateWallet("jeremy", "Th1isisasecurep@ssphraseinnit")
-	assert.NoError(t, err)
-	assert.NotEmpty(t, tok)
+	// when
+	err := h.CreateWallet(name, passphrase)
 
-	h.auth.EXPECT().Revoke(gomock.Any()).Times(1).
-		Return(nil)
-	err = h.RevokeToken(tok)
-	assert.NoError(t, err)
+	// then
+	require.NoError(t, err)
 
-	assert.NoError(t, os.RemoveAll(h.rootDir))
-}
+	// when
+	key, err := h.SecureGenerateKeyPair(name, passphrase)
 
-func testHandlerRevokeTokenFailure(t *testing.T) {
-	h := getTestHandler(t)
-	defer h.ctrl.Finish()
-
-	h.auth.EXPECT().NewSession(gomock.Any()).Times(1).
-		Return("some fake token", nil)
-
-	tok, err := h.CreateWallet("jeremy", "Th1isisasecurep@ssphraseinnit")
-	assert.NoError(t, err)
-	assert.NotEmpty(t, tok)
-
-	h.auth.EXPECT().Revoke(gomock.Any()).Times(1).
-		Return(errors.New("bad token"))
-	err = h.RevokeToken(tok)
-	assert.EqualError(t, err, "bad token")
-
-	assert.NoError(t, os.RemoveAll(h.rootDir))
-}
-
-func testVerifyTokenSuccess(t *testing.T) {
-	h := getTestHandler(t)
-	defer h.ctrl.Finish()
-
-	// first create the wallet
-	h.auth.EXPECT().NewSession(gomock.Any()).Times(1).
-		Return("some fake token", nil)
-
-	tok, err := h.CreateWallet("jeremy", "Th1isisasecurep@ssphraseinnit")
-	assert.NoError(t, err)
-	assert.NotEmpty(t, tok)
-
-	// then start the test
-	h.auth.EXPECT().VerifyToken(gomock.Any()).Times(2).
-		Return("jeremy", nil)
-
-	key, err := h.GenerateKeypair(tok, "Th1isisasecurep@ssphraseinnit")
-	assert.NoError(t, err)
+	// then
+	require.NoError(t, err)
 	assert.NotEmpty(t, key)
 
-	// now make sure we have the new key saved
-	keys, err := h.ListPublicKeys(tok)
-	assert.NoError(t, err)
+	// when
+	keys, err := h.ListPublicKeys(name)
+
+	// then
+	require.NoError(t, err)
 	assert.Len(t, keys, 1)
-	assert.Equal(t, key, keys[0].Pub)
-
-	assert.NoError(t, os.RemoveAll(h.rootDir))
+	assert.Equal(t, key, keys[0].Key)
+	assert.False(t, keys[0].Tainted)
 }
 
-func testVerifyTokenInvalidToken(t *testing.T) {
+func testHandlerGeneratingNewKeyPairSecurelyWithInvalidNameFails(t *testing.T) {
 	h := getTestHandler(t)
 	defer h.ctrl.Finish()
 
-	// then start the test
-	h.auth.EXPECT().VerifyToken(gomock.Any()).Times(1).
-		Return("", errors.New("bad token"))
+	// given
+	passphrase := "Th1isisasecurep@ssphraseinnit"
+	name := "jeremy"
+	otherName := "bad name"
 
-	key, err := h.GenerateKeypair("yolo token", "whatever")
-	assert.EqualError(t, err, "bad token")
-	assert.Empty(t, key)
+	// when
+	err := h.CreateWallet(name, passphrase)
 
-	assert.NoError(t, os.RemoveAll(h.rootDir))
+	// then
+	require.NoError(t, err)
 
-}
+	// when
+	key, err := h.SecureGenerateKeyPair(otherName, passphrase)
 
-// this should never happend but beeeh....
-func testVerifyTokenWalletNotFound(t *testing.T) {
-	h := getTestHandler(t)
-	defer h.ctrl.Finish()
-
-	// then start the test
-	h.auth.EXPECT().VerifyToken(gomock.Any()).Times(1).
-		Return("jeremy", nil)
-
-	key, err := h.GenerateKeypair("yolo token", "whatever")
+	// then
 	assert.EqualError(t, err, wallet.ErrWalletDoesNotExists.Error())
 	assert.Empty(t, key)
-
-	assert.NoError(t, os.RemoveAll(h.rootDir))
 }
 
-func testListPubInvalidToken(t *testing.T) {
+func testHandlerGeneratingNewKeyPairSecurelyWithoutWalletFails(t *testing.T) {
 	h := getTestHandler(t)
 	defer h.ctrl.Finish()
 
-	// then start the test
-	h.auth.EXPECT().VerifyToken(gomock.Any()).Times(1).
-		Return("", errors.New("bad token"))
+	// given
+	name := "jeremy"
+	passphrase := "Th1isisasecurep@ssphraseinnit"
 
-	key, err := h.ListPublicKeys("yolo token")
-	assert.EqualError(t, err, "bad token")
-	assert.Empty(t, key)
+	// when
+	key, err := h.SecureGenerateKeyPair(name, passphrase)
 
-	assert.NoError(t, os.RemoveAll(h.rootDir))
-
-}
-
-// this should never happend but beeeh....
-func testListPubWalletNotFound(t *testing.T) {
-	h := getTestHandler(t)
-	defer h.ctrl.Finish()
-
-	// then start the test
-	h.auth.EXPECT().VerifyToken(gomock.Any()).Times(1).
-		Return("jeremy", nil)
-
-	key, err := h.ListPublicKeys("yolo token")
+	// then
 	assert.EqualError(t, err, wallet.ErrWalletDoesNotExists.Error())
 	assert.Empty(t, key)
-
-	assert.NoError(t, os.RemoveAll(h.rootDir))
 }
 
-func testGetPubWalletNotFound(t *testing.T) {
+func testHandlerGeneratingNewKeyPairSucceeds(t *testing.T) {
 	h := getTestHandler(t)
 	defer h.ctrl.Finish()
 
-	// then start the test
-	h.auth.EXPECT().VerifyToken(gomock.Any()).Times(1).
-		Return("jeremy", nil)
+	// given
+	passphrase := "Th1isisasecurep@ssphraseinnit"
+	name := "jeremy"
 
-	key, err := h.GetPublicKey("yolo token", "1122aabb")
-	assert.Empty(t, key)
-	assert.Equal(t, err, wallet.ErrWalletDoesNotExists)
+	// when
+	err := h.CreateWallet(name, passphrase)
 
-	assert.NoError(t, os.RemoveAll(h.rootDir))
-}
+	// then
+	require.NoError(t, err)
 
-func testGetPubSuccess(t *testing.T) {
-	h := getTestHandler(t)
-	defer h.ctrl.Finish()
+	// when
+	keyPair, err := h.GenerateKeyPair(name, passphrase)
 
-	// first create the wallet
-	h.auth.EXPECT().NewSession(gomock.Any()).Times(1).
-		Return("some fake token", nil)
+	// then
+	require.NoError(t, err)
+	assert.NotEmpty(t, keyPair.Pub)
+	assert.NotEmpty(t, keyPair.Priv)
+	assert.False(t, keyPair.Tainted)
+	assert.Empty(t, keyPair.Meta)
 
-	tok, err := h.CreateWallet("walletname", "s1cur@Epassphrase")
-	if err != nil {
-		t.Fatal("Failed to create wallet")
-	}
-	assert.NotEmpty(t, tok)
+	// when
+	keys, err := h.ListPublicKeys(name)
 
-	// then start the test
-	h.auth.EXPECT().VerifyToken(gomock.Any()).AnyTimes().
-		Return("walletname", nil)
-
-	// Create a keypair to be ignored, *not* returned later
-	pubKey, err := h.GenerateKeypair(tok, "s1cur@Epassphrase")
-	assert.NoError(t, err)
-	assert.NotEmpty(t, pubKey)
-
-	// Create a keypair to be retrieved
-	pubKey, err = h.GenerateKeypair(tok, "s1cur@Epassphrase")
-	assert.NoError(t, err)
-	assert.NotEmpty(t, pubKey)
-
-	// now make sure we have the new key saved
-	key, err := h.GetPublicKey(tok, pubKey)
-	if err != nil {
-		t.Fatal("Failed to get public key")
-	}
-	assert.Equal(t, pubKey, key.Pub)
-
-	assert.NoError(t, os.RemoveAll(h.rootDir))
-}
-
-func testGetPubInvalidToken(t *testing.T) {
-	h := getTestHandler(t)
-	defer h.ctrl.Finish()
-
-	h.auth.EXPECT().VerifyToken(gomock.Any()).Times(1).
-		Return("", errors.New("bad token"))
-
-	key, err := h.GetPublicKey("yolo token", "1122aabb")
-	assert.EqualError(t, err, "bad token")
-	assert.Empty(t, key)
-
-	assert.NoError(t, os.RemoveAll(h.rootDir))
-}
-
-func testGetPubKeyNotFound(t *testing.T) {
-	h := getTestHandler(t)
-	defer h.ctrl.Finish()
-
-	// first create the wallet
-	h.auth.EXPECT().NewSession(gomock.Any()).Times(1).
-		Return("some fake token", nil)
-
-	tok, err := h.CreateWallet("walletname", "s1cur@Epassphrase")
-	assert.NoError(t, err)
-	assert.NotEmpty(t, tok)
-
-	// then start the test
-	h.auth.EXPECT().VerifyToken(gomock.Any()).AnyTimes().
-		Return("walletname", nil)
-
-	// Create a keypair to be ignored, *not* returned later
-	pubKey, err := h.GenerateKeypair(tok, "s1cur@Epassphrase")
-	assert.NoError(t, err)
-	assert.NotEmpty(t, pubKey)
-
-	// now make sure this key is not returned
-	key, err := h.GetPublicKey(tok, "nonexistantpubkey")
-	assert.Nil(t, key)
-	assert.Equal(t, err, wallet.ErrPubKeyDoesNotExist)
-
-	assert.NoError(t, os.RemoveAll(h.rootDir))
-}
-
-func testSignAnySuccess(t *testing.T) {
-	h := getTestHandler(t)
-	defer h.ctrl.Finish()
-
-	// then start the test
-	h.auth.EXPECT().VerifyToken(gomock.Any()).AnyTimes().
-		Return("jeremy", nil)
-
-	// first create the wallet
-	h.auth.EXPECT().NewSession(gomock.Any()).Times(1).
-		Return("some fake token", nil)
-
-	tok, err := h.CreateWallet("jeremy", "Th1isisasecurep@ssphraseinnit")
-	assert.NoError(t, err)
-	assert.NotEmpty(t, tok)
-
-	key, err := h.GenerateKeypair(tok, "Th1isisasecurep@ssphraseinnit")
-	assert.NoError(t, err)
-	assert.NotEmpty(t, key)
-
-	message := "@myTwitterHandle"
-
-	keyBytes, _ := hex.DecodeString(key)
-
-	signature, err := h.SignAny(
-		tok, base64.StdEncoding.EncodeToString([]byte(message)), key)
-	assert.NoError(t, err)
-
-	// verify signature then
-	alg, err := crypto.NewSignatureAlgorithm(crypto.Ed25519)
-	assert.NoError(t, err)
-
-	v, err := alg.Verify(keyBytes, []byte(message), signature)
-	assert.NoError(t, err)
-	assert.True(t, v)
-
-	assert.NoError(t, os.RemoveAll(h.rootDir))
-}
-
-func testSignTxSuccess(t *testing.T) {
-	h := getTestHandler(t)
-	defer h.ctrl.Finish()
-
-	// then start the test
-	h.auth.EXPECT().VerifyToken(gomock.Any()).AnyTimes().
-		Return("jeremy", nil)
-
-	// first create the wallet
-	h.auth.EXPECT().NewSession(gomock.Any()).Times(1).
-		Return("some fake token", nil)
-
-	tok, err := h.CreateWallet("jeremy", "Th1isisasecurep@ssphraseinnit")
-	assert.NoError(t, err)
-	assert.NotEmpty(t, tok)
-
-	key, err := h.GenerateKeypair(tok, "Th1isisasecurep@ssphraseinnit")
-	assert.NoError(t, err)
-	assert.NotEmpty(t, key)
-
-	message := "hello world."
-
-	keyBytes, _ := hex.DecodeString(key)
-
-	signedBundle, err := h.SignTx(tok, base64.StdEncoding.EncodeToString([]byte(message)), key, 42)
-	assert.NoError(t, err)
-
-	// verify signature then
-	alg, err := crypto.NewSignatureAlgorithm(crypto.Ed25519)
-	assert.NoError(t, err)
-
-	v, err := alg.Verify(keyBytes, signedBundle.Tx, signedBundle.Sig.Sig)
-	assert.NoError(t, err)
-	assert.True(t, v)
-
-	assert.NoError(t, os.RemoveAll(h.rootDir))
-}
-
-func testSignTxFailure(t *testing.T) {
-	h := getTestHandler(t)
-	defer h.ctrl.Finish()
-
-	// then start the test
-	h.auth.EXPECT().VerifyToken(gomock.Any()).AnyTimes().
-		Return("jeremy", nil)
-
-	// first create the wallet
-	h.auth.EXPECT().NewSession(gomock.Any()).Times(1).
-		Return("some fake token", nil)
-
-	tok, err := h.CreateWallet("jeremy", "Th1isisasecurep@ssphraseinnit")
-	assert.NoError(t, err)
-	assert.NotEmpty(t, tok)
-
-	key, err := h.GenerateKeypair(tok, "Th1isisasecurep@ssphraseinnit")
-	assert.NoError(t, err)
-	assert.NotEmpty(t, key)
-
-	// taint the key
-	err = h.TaintKey(tok, key, "Th1isisasecurep@ssphraseinnit")
-	assert.NoError(t, err)
-
-	message := "hello world."
-	_, err = h.SignTx(tok, base64.StdEncoding.EncodeToString([]byte(message)), key, 42)
-	assert.EqualError(t, err, wallet.ErrPubKeyIsTainted.Error())
-
-	assert.NoError(t, os.RemoveAll(h.rootDir))
-}
-
-func testTaintKeySuccess(t *testing.T) {
-	h := getTestHandler(t)
-	defer h.ctrl.Finish()
-
-	// first create the wallet
-	h.auth.EXPECT().NewSession(gomock.Any()).Times(1).
-		Return("some fake token", nil)
-
-	tok, err := h.CreateWallet("jeremy", "Th1isisasecurep@ssphraseinnit")
-	assert.NoError(t, err)
-	assert.NotEmpty(t, tok)
-
-	// then start the test
-	h.auth.EXPECT().VerifyToken(gomock.Any()).AnyTimes().
-		Return("jeremy", nil)
-
-	key, err := h.GenerateKeypair(tok, "Th1isisasecurep@ssphraseinnit")
-	assert.NoError(t, err)
-	assert.NotEmpty(t, key)
-
-	// taint the key
-	err = h.TaintKey(tok, key, "Th1isisasecurep@ssphraseinnit")
-	assert.NoError(t, err)
-
-	// now make sure we have the new key saved
-	keys, err := h.ListPublicKeys(tok)
-	assert.NoError(t, err)
+	// then
+	require.NoError(t, err)
 	assert.Len(t, keys, 1)
-	assert.Equal(t, key, keys[0].Pub)
-	assert.True(t, keys[0].Tainted)
-
-	assert.NoError(t, os.RemoveAll(h.rootDir))
+	assert.Equal(t, keyPair.Pub, keys[0].Key)
+	assert.False(t, keys[0].Tainted)
 }
 
-func testTaintKeyInvalidToken(t *testing.T) {
+func testHandlerGeneratingNewKeyPairWithInvalidNameFails(t *testing.T) {
 	h := getTestHandler(t)
 	defer h.ctrl.Finish()
 
-	// then the test
-	h.auth.EXPECT().VerifyToken(gomock.Any()).AnyTimes().
-		Return("", errors.New("invalid token"))
+	// given
+	passphrase := "Th1isisasecurep@ssphraseinnit"
+	name := "jeremy"
+	otherName := "bad name"
 
-	// taint the key
-	err := h.TaintKey("some token", "some key", "Th1isisasecurep@ssphraseinnit")
-	assert.EqualError(t, err, "invalid token")
+	// when
+	err := h.CreateWallet(name, passphrase)
 
-	assert.NoError(t, os.RemoveAll(h.rootDir))
+	// then
+	require.NoError(t, err)
 
+	// when
+	keyPair, err := h.GenerateKeyPair(otherName, passphrase)
+
+	// then
+	assert.EqualError(t, err, wallet.ErrWalletDoesNotExists.Error())
+	assert.Empty(t, keyPair)
 }
-func testTaintKeyPubKeyDoesNotExists(t *testing.T) {
+
+func testHandlerGeneratingNewKeyPairWithoutWalletFails(t *testing.T) {
 	h := getTestHandler(t)
 	defer h.ctrl.Finish()
 
-	// first create the wallet
-	h.auth.EXPECT().NewSession(gomock.Any()).Times(1).
-		Return("some fake token", nil)
+	// given
+	name := "jeremy"
+	passphrase := "Th1isisasecurep@ssphraseinnit"
 
-	tok, err := h.CreateWallet("jeremy", "Th1isisasecurep@ssphraseinnit")
-	assert.NoError(t, err)
-	assert.NotEmpty(t, tok)
+	// when
+	keyPair, err := h.GenerateKeyPair(name, passphrase)
 
-	// then start the test
-	h.auth.EXPECT().VerifyToken(gomock.Any()).AnyTimes().
-		Return("jeremy", nil)
+	// then
+	assert.EqualError(t, err, wallet.ErrWalletDoesNotExists.Error())
+	assert.Empty(t, keyPair)
+}
 
-	// taint the key
-	err = h.TaintKey(tok, "some key", "Th1isisasecurep@ssphraseinnit")
+func testHandlerListingPublicKeysWithInvalidNameFails(t *testing.T) {
+	h := getTestHandler(t)
+	defer h.ctrl.Finish()
+
+	// given
+	passphrase := "Th1isisasecurep@ssphraseinnit"
+	name := "jeremy"
+
+	otherName := "bad name"
+
+	// when
+	err := h.CreateWallet(name, passphrase)
+
+	// then
+	require.NoError(t, err)
+
+	// when
+	key, err := h.ListPublicKeys(otherName)
+
+	// then
+	assert.EqualError(t, err, wallet.ErrWalletDoesNotExists.Error())
+	assert.Empty(t, key)
+}
+
+func testHandlerListingPublicKeysWithoutWalletFails(t *testing.T) {
+	h := getTestHandler(t)
+	defer h.ctrl.Finish()
+
+	// given
+	name := "jeremy"
+
+	// when
+	key, err := h.ListPublicKeys(name)
+
+	// then
+	assert.EqualError(t, err, wallet.ErrWalletDoesNotExists.Error())
+	assert.Empty(t, key)
+}
+
+func testHandlerGettingPublicKeyWithoutWalletFails(t *testing.T) {
+	h := getTestHandler(t)
+	defer h.ctrl.Finish()
+
+	// given
+	name := "jeremy"
+
+	// when
+	key, err := h.GetPublicKey(name, name)
+
+	// then
+	assert.EqualError(t, err, wallet.ErrWalletDoesNotExists.Error())
+	assert.Empty(t, key)
+}
+
+func testHandlerGettingPublicKeySucceeds(t *testing.T) {
+	h := getTestHandler(t)
+	defer h.ctrl.Finish()
+
+	// given
+	passphrase := "Th1isisasecurep@ssphraseinnit"
+	name := "jeremy"
+
+	// when
+	err := h.CreateWallet(name, passphrase)
+
+	// then
+	require.NoError(t, err)
+
+	// when
+	key, err := h.SecureGenerateKeyPair(name, passphrase)
+
+	// then
+	require.NoError(t, err)
+	assert.NotEmpty(t, key)
+
+	// when
+	keyPair, err := h.GetPublicKey(name, key)
+
+	require.NoError(t, err)
+	assert.Equal(t, key, keyPair.Key)
+}
+
+func testHandlerGettingPublicKeyWithInvalidNameFails(t *testing.T) {
+	h := getTestHandler(t)
+	defer h.ctrl.Finish()
+
+	// given
+	passphrase := "Th1isisasecurep@ssphraseinnit"
+	name := "jeremy"
+
+	otherName := "bad name"
+
+	// when
+	err := h.CreateWallet(name, passphrase)
+
+	// then
+	require.NoError(t, err)
+
+	// when
+	key, err := h.SecureGenerateKeyPair(name, passphrase)
+
+	// then
+	require.NoError(t, err)
+	assert.NotEmpty(t, key)
+
+	// when
+	keyPair, err := h.GetPublicKey(otherName, key)
+
+	// then
+	assert.EqualError(t, err, wallet.ErrWalletDoesNotExists.Error())
+	assert.Nil(t, keyPair)
+}
+
+func testGettingNonExistingPublicKeyFails(t *testing.T) {
+	h := getTestHandler(t)
+	defer h.ctrl.Finish()
+
+	// given
+	passphrase := "Th1isisasecurep@ssphraseinnit"
+	name := "jeremy"
+
+	// when
+	err := h.CreateWallet(name, passphrase)
+
+	// then
+	require.NoError(t, err)
+
+	// when
+	key, err := h.SecureGenerateKeyPair(name, passphrase)
+
+	// then
+	require.NoError(t, err)
+	assert.NotEmpty(t, key)
+
+	// when
+	keyPair, err := h.GetPublicKey(name, "non-existing-pub-key")
 	assert.EqualError(t, err, wallet.ErrPubKeyDoesNotExist.Error())
-
-	assert.NoError(t, os.RemoveAll(h.rootDir))
+	assert.Nil(t, keyPair)
 }
 
-func testTaintKeyWalletNotFound(t *testing.T) {
+func testHandlerTaintingKeyPairSucceeds(t *testing.T) {
 	h := getTestHandler(t)
 	defer h.ctrl.Finish()
 
-	// then start the test
-	h.auth.EXPECT().VerifyToken(gomock.Any()).AnyTimes().
-		Return("jeremy", nil)
+	// given
+	passphrase := "Th1isisasecurep@ssphraseinnit"
+	name := "jeremy"
 
-	// taint the key
-	err := h.TaintKey("some token", "some key", "Th1isisasecurep@ssphraseinnit")
-	assert.EqualError(t, err, wallet.ErrWalletDoesNotExists.Error())
+	// when
+	err := h.CreateWallet(name, passphrase)
 
-	assert.NoError(t, os.RemoveAll(h.rootDir))
-}
+	// then
+	require.NoError(t, err)
 
-func testTaintKeyAlreadyFailAlreadyTainted(t *testing.T) {
-	h := getTestHandler(t)
-	defer h.ctrl.Finish()
+	// when
+	key, err := h.SecureGenerateKeyPair(name, passphrase)
 
-	// first create the wallet
-	h.auth.EXPECT().NewSession(gomock.Any()).Times(1).
-		Return("some fake token", nil)
-
-	tok, err := h.CreateWallet("jeremy", "Th1isisasecurep@ssphraseinnit")
-	assert.NoError(t, err)
-	assert.NotEmpty(t, tok)
-
-	// then start the test
-	h.auth.EXPECT().VerifyToken(gomock.Any()).AnyTimes().
-		Return("jeremy", nil)
-
-	key, err := h.GenerateKeypair(tok, "Th1isisasecurep@ssphraseinnit")
-	assert.NoError(t, err)
+	// then
+	require.NoError(t, err)
 	assert.NotEmpty(t, key)
 
-	// taint the key
-	err = h.TaintKey(tok, key, "Th1isisasecurep@ssphraseinnit")
-	assert.NoError(t, err)
+	// when
+	keyPair, err := h.GetPublicKey(name, key)
 
-	// taint the key again which produce an error
-	err = h.TaintKey(tok, key, "Th1isisasecurep@ssphraseinnit")
-	assert.Error(t, err, wallet.ErrPubKeyAlreadyTainted)
+	// then
+	require.NoError(t, err)
+	assert.NotNil(t, keyPair)
+	assert.False(t, keyPair.Tainted)
 
-	assert.NoError(t, os.RemoveAll(h.rootDir))
+	// when
+	err = h.TaintKey(name, key, passphrase)
+
+	// then
+	require.NoError(t, err)
+	assert.True(t, h.store.GetKey(name, key).Tainted)
 }
 
-func testUpdateMetaSuccess(t *testing.T) {
+func testHandlerTaintingKeyPairWithInvalidNameFails(t *testing.T) {
 	h := getTestHandler(t)
 	defer h.ctrl.Finish()
 
-	// first create the wallet
-	h.auth.EXPECT().NewSession(gomock.Any()).Times(1).
-		Return("some fake token", nil)
+	// given
+	passphrase := "Th1isisasecurep@ssphraseinnit"
+	name := "jeremy"
 
-	tok, err := h.CreateWallet("jeremy", "Th1isisasecurep@ssphraseinnit")
-	assert.NoError(t, err)
-	assert.NotEmpty(t, tok)
+	otherName := "other name"
 
-	// then start the test
-	h.auth.EXPECT().VerifyToken(gomock.Any()).AnyTimes().
-		Return("jeremy", nil)
+	// when
+	err := h.CreateWallet(name, passphrase)
 
-	key, err := h.GenerateKeypair(tok, "Th1isisasecurep@ssphraseinnit")
-	assert.NoError(t, err)
+	// then
+	require.NoError(t, err)
+
+	// when
+	key, err := h.SecureGenerateKeyPair(name, passphrase)
+
+	// then
+	require.NoError(t, err)
 	assert.NotEmpty(t, key)
 
-	// add meta
-	err = h.UpdateMeta(tok, key, "Th1isisasecurep@ssphraseinnit", []wallet.Meta{wallet.Meta{Key: "primary", Value: "yes"}})
-	assert.NoError(t, err)
+	// when
+	keyPair, err := h.GetPublicKey(name, key)
 
-	// now make sure we have the new key saved
-	keys, err := h.ListPublicKeys(tok)
-	assert.NoError(t, err)
-	assert.Len(t, keys, 1)
-	assert.Equal(t, key, keys[0].Pub)
-	assert.Len(t, keys[0].Meta, 1)
-	assert.Equal(t, keys[0].Meta[0].Key, "primary")
-	assert.Equal(t, keys[0].Meta[0].Value, "yes")
+	// then
+	require.NoError(t, err)
+	assert.NotNil(t, keyPair)
+	assert.False(t, keyPair.Tainted)
 
-	assert.NoError(t, os.RemoveAll(h.rootDir))
+	// when
+	err = h.TaintKey(otherName, key, passphrase)
+
+	// then
+	assert.Error(t, err)
 }
 
-func testUpdateMetaFailureInvalidPassphrase(t *testing.T) {
+func testHandlerUpdatingKeyPairMetaWithNonExistingPublicKeyFails(t *testing.T) {
 	h := getTestHandler(t)
 	defer h.ctrl.Finish()
 
-	// first create the wallet
-	h.auth.EXPECT().NewSession(gomock.Any()).Times(1).
-		Return("some fake token", nil)
+	// given
+	passphrase := "Th1isisasecurep@ssphraseinnit"
+	name := "jeremy"
 
-	tok, err := h.CreateWallet("jeremy", "Th1isisasecurep@ssphraseinnit")
-	assert.NoError(t, err)
-	assert.NotEmpty(t, tok)
+	// when
+	err := h.CreateWallet(name, passphrase)
 
-	// then start the test
-	h.auth.EXPECT().VerifyToken(gomock.Any()).AnyTimes().
-		Return("jeremy", nil)
+	// then
+	require.NoError(t, err)
 
-	key, err := h.GenerateKeypair(tok, "Th1isisasecurep@ssphraseinnit")
-	assert.NoError(t, err)
-	assert.NotEmpty(t, key)
+	// when
+	err = h.TaintKey(name, "non-existing-pub-key", passphrase)
 
-	// add meta
-	err = h.UpdateMeta(tok, key, "this is the wrong passphrase", []wallet.Meta{wallet.Meta{Key: "primary", Value: "yes"}})
-	assert.EqualError(t, err, "cipher: message authentication failed")
-}
-
-func testUpdateMetaInvalidToken(t *testing.T) {
-	h := getTestHandler(t)
-	defer h.ctrl.Finish()
-
-	// then the test
-	h.auth.EXPECT().VerifyToken(gomock.Any()).AnyTimes().
-		Return("", errors.New("invalid token"))
-
-	// taint the key
-	err := h.UpdateMeta("some token", "some key", "Th1isisasecurep@ssphraseinnit", []wallet.Meta{})
-	assert.EqualError(t, err, "invalid token")
-
-	assert.NoError(t, os.RemoveAll(h.rootDir))
-
-}
-
-func testUpdateMetaPubKeyDoesNotExists(t *testing.T) {
-	h := getTestHandler(t)
-	defer h.ctrl.Finish()
-
-	// first create the wallet
-	h.auth.EXPECT().NewSession(gomock.Any()).Times(1).
-		Return("some fake token", nil)
-
-	tok, err := h.CreateWallet("jeremy", "Th1isisasecurep@ssphraseinnit")
-	assert.NoError(t, err)
-	assert.NotEmpty(t, tok)
-
-	// then start the test
-	h.auth.EXPECT().VerifyToken(gomock.Any()).AnyTimes().
-		Return("jeremy", nil)
-
-	// update meta
-	err = h.UpdateMeta(tok, "some key", "Th1isisasecurep@ssphraseinnit", []wallet.Meta{})
+	// then
 	assert.EqualError(t, err, wallet.ErrPubKeyDoesNotExist.Error())
-
-	assert.NoError(t, os.RemoveAll(h.rootDir))
 }
 
-func testUpdateMetaWalletNotFound(t *testing.T) {
+func testHandlerTaintingKeyPairWithoutWalletFails(t *testing.T) {
 	h := getTestHandler(t)
 	defer h.ctrl.Finish()
 
-	// then start the test
-	h.auth.EXPECT().VerifyToken(gomock.Any()).AnyTimes().
-		Return("jeremy", nil)
+	// given
+	passphrase := "Th1isisasecurep@ssphraseinnit"
+	name := "jeremy"
 
-	// taint the key
-	err := h.UpdateMeta("some token", "some key", "Th1isisasecurep@ssphraseinnit", []wallet.Meta{})
+	// when
+	err := h.TaintKey(name, "non-existing-pub-key", passphrase)
+
+	// then
 	assert.EqualError(t, err, wallet.ErrWalletDoesNotExists.Error())
+}
 
-	assert.NoError(t, os.RemoveAll(h.rootDir))
+func testHandlerTaintingKeyThatIsAlreadyTaintedFails(t *testing.T) {
+	h := getTestHandler(t)
+	defer h.ctrl.Finish()
+
+	// given
+	passphrase := "Th1isisasecurep@ssphraseinnit"
+	name := "jeremy"
+
+	// when
+	err := h.CreateWallet(name, passphrase)
+
+	// then
+	require.NoError(t, err)
+
+	// when
+	key, err := h.SecureGenerateKeyPair(name, passphrase)
+
+	// then
+	require.NoError(t, err)
+	assert.NotEmpty(t, key)
+
+	// when
+	keyPair, err := h.GetPublicKey(name, key)
+
+	// then
+	require.NoError(t, err)
+	assert.NotNil(t, keyPair)
+	assert.False(t, keyPair.Tainted)
+
+	// when
+	err = h.TaintKey(name, key, passphrase)
+
+	// then
+	require.NoError(t, err)
+	assert.True(t, h.store.GetKey(name, key).Tainted)
+
+	// when
+	err = h.TaintKey(name, key, passphrase)
+
+	// then
+	assert.EqualError(t, err, wallet.ErrPubKeyAlreadyTainted.Error())
+}
+
+func testHandlerUpdatingKeyPairMetaSucceeds(t *testing.T) {
+	h := getTestHandler(t)
+	defer h.ctrl.Finish()
+
+	// given
+	passphrase := "Th1isisasecurep@ssphraseinnit"
+	name := "jeremy"
+
+	meta := []wallet.Meta{{Key: "primary", Value: "yes"}}
+
+	// when
+	err := h.CreateWallet(name, passphrase)
+
+	// then
+	require.NoError(t, err)
+
+	// when
+	key, err := h.SecureGenerateKeyPair(name, passphrase)
+
+	// then
+	require.NoError(t, err)
+	assert.NotEmpty(t, key)
+
+	// when
+	err = h.UpdateMeta(name, key, passphrase, meta)
+
+	// then
+	require.NoError(t, err)
+	updatedKp := h.store.GetKey(name, key)
+	assert.Len(t, updatedKp.Meta, 1)
+	assert.Equal(t, updatedKp.Meta[0].Key, "primary")
+	assert.Equal(t, updatedKp.Meta[0].Value, "yes")
+}
+
+func testHandlerUpdatingKeyPairMetaWithInvalidPassphraseFails(t *testing.T) {
+	h := getTestHandler(t)
+	defer h.ctrl.Finish()
+
+	// given
+	passphrase := "Th1isisasecurep@ssphraseinnit"
+	othPassphrase := "other-passphrase"
+	name := "jeremy"
+
+	meta := []wallet.Meta{{Key: "primary", Value: "yes"}}
+
+	// when
+	err := h.CreateWallet(name, passphrase)
+
+	// then
+	require.NoError(t, err)
+
+	// when
+	key, err := h.SecureGenerateKeyPair(name, passphrase)
+
+	// then
+	require.NoError(t, err)
+	assert.NotEmpty(t, key)
+
+	// when
+	err = h.UpdateMeta(name, key, othPassphrase, meta)
+
+	// then
+	assert.Error(t, err)
+	assert.Len(t, h.store.GetKey(name, key).Meta, 0)
+}
+
+func testHandlerUpdatingKeyPairMetaWithInvalidNameFails(t *testing.T) {
+	h := getTestHandler(t)
+	defer h.ctrl.Finish()
+
+	// given
+	passphrase := "Th1isisasecurep@ssphraseinnit"
+	name := "jeremy"
+	otherName := "other name"
+	meta := []wallet.Meta{{Key: "primary", Value: "yes"}}
+
+	// when
+	err := h.CreateWallet(name, passphrase)
+
+	// then
+	require.NoError(t, err)
+
+	// when
+	key, err := h.SecureGenerateKeyPair(name, passphrase)
+
+	// then
+	require.NoError(t, err)
+	assert.NotEmpty(t, key)
+
+	// when
+	err = h.UpdateMeta(otherName, key, passphrase, meta)
+
+	// then
+	assert.Error(t, err)
+	assert.Len(t, h.store.GetKey(name, key).Meta, 0)
+}
+
+func testHandlerUpdatingKeyPairMetaWithoutWalletFails(t *testing.T) {
+	h := getTestHandler(t)
+	defer h.ctrl.Finish()
+
+	// given
+	passphrase := "Th1isisasecurep@ssphraseinnit"
+	name := "jeremy"
+
+	pubKey := "non-existing-public-key"
+	meta := []wallet.Meta{{Key: "primary", Value: "yes"}}
+
+	// when
+	err := h.UpdateMeta(name, pubKey, passphrase, meta)
+
+	// then
+	assert.Error(t, err)
+}
+
+func testHandlerGettingWalletPathSucceeds(t *testing.T) {
+	h := getTestHandler(t)
+	defer h.ctrl.Finish()
+
+	// given
+	name := "jeremy"
+
+	// when
+	path, err := h.GetWalletPath(name)
+
+	// then
+	require.NoError(t, err)
+	assert.NotEmpty(t, path)
+}
+
+func testHandlerSigningTxV2Succeeds(t *testing.T) {
+	h := getTestHandler(t)
+	defer h.ctrl.Finish()
+
+	// given
+	passphrase := "Th1isisasecurep@ssphraseinnit"
+	name := "jeremy"
+
+	// when
+	err := h.CreateWallet(name, passphrase)
+
+	// then
+	require.NoError(t, err)
+
+	// when
+	pubKey, err := h.SecureGenerateKeyPair(name, passphrase)
+
+	// then
+	require.NoError(t, err)
+	assert.NotEmpty(t, pubKey)
+
+	// given
+	req := &walletpb.SubmitTransactionRequest{
+		PubKey: pubKey,
+		Command: &walletpb.SubmitTransactionRequest_OrderCancellation{
+			OrderCancellation: &commandspb.OrderCancellation{},
+		},
+	}
+
+	// when
+	tx, err := h.SignTxV2(name, req, 42)
+
+	// then
+	require.NoError(t, err)
+	assert.Equal(t, uint32(1), tx.Version)
+	assert.NotEmpty(t, tx.From)
+	assert.NotEmpty(t, tx.InputData)
+	assert.NotNil(t, tx.Signature)
+	key := h.store.GetKey(name, pubKey)
+	assert.Equal(t, key.Algorithm.Version(), tx.Signature.Version)
+	assert.Equal(t, key.Algorithm.Name(), tx.Signature.Algo)
+	assert.NotEmpty(t, tx.Signature.Value)
+}
+
+func testHandlerSigningTxV2WithTaintedKeyFails(t *testing.T) {
+	h := getTestHandler(t)
+	defer h.ctrl.Finish()
+
+	// given
+	passphrase := "Th1isisasecurep@ssphraseinnit"
+	name := "jeremy"
+
+	// when
+	err := h.CreateWallet(name, passphrase)
+
+	// then
+	require.NoError(t, err)
+
+	// when
+	pubKey, err := h.SecureGenerateKeyPair(name, passphrase)
+
+	// then
+	require.NoError(t, err)
+	assert.NotEmpty(t, pubKey)
+
+	// when
+	err = h.TaintKey(name, pubKey, passphrase)
+
+	// then
+	require.NoError(t, err)
+	assert.True(t, h.store.GetKey(name, pubKey).Tainted)
+
+	// given
+	req := &walletpb.SubmitTransactionRequest{
+		PubKey: pubKey,
+		Command: &walletpb.SubmitTransactionRequest_OrderCancellation{
+			OrderCancellation: &commandspb.OrderCancellation{},
+		},
+	}
+
+	// when
+	tx, err := h.SignTxV2(name, req, 42)
+
+	// then
+	assert.Error(t, err)
+	assert.Nil(t, tx)
+}
+
+func testHandlerSigningAndVerifyingMessageSucceeds(t *testing.T) {
+	h := getTestHandler(t)
+	defer h.ctrl.Finish()
+
+	// given
+	passphrase := "Th1isisasecurep@ssphraseinnit"
+	name := "jeremy"
+
+	// when
+	err := h.CreateWallet(name, passphrase)
+
+	// then
+	require.NoError(t, err)
+
+	// when
+	pubKey, err := h.SecureGenerateKeyPair(name, passphrase)
+
+	// then
+	require.NoError(t, err)
+	assert.NotEmpty(t, pubKey)
+
+	// given
+	data := "Je ne connaîtrai pas la peur car la peur tue l'esprit. La peur est la petite mort qui conduit à l'oblitération totale."
+	encodedData := base64.StdEncoding.EncodeToString([]byte(data))
+
+	// when
+	sig, err := h.SignAny(name, encodedData, pubKey)
+
+	// then
+	require.NoError(t, err)
+	assert.NotEmpty(t, sig)
+
+	// given
+	encodedSig := base64.StdEncoding.EncodeToString(sig)
+
+	// when
+	verified, err := h.VerifyAny(name, encodedData, encodedSig, pubKey)
+
+	// then
+	require.NoError(t, err)
+	assert.True(t, verified)
 }
