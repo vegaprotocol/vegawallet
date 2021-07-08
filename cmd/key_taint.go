@@ -20,7 +20,7 @@ var (
 		Use:   "taint",
 		Short: "Taint a public key",
 		Long:  "Taint a public key",
-		RunE:  runTaint,
+		RunE:  runKeyTaint,
 	}
 )
 
@@ -31,7 +31,7 @@ func init() {
 	keyTaintCmd.Flags().StringVarP(&keyTaintArgs.pubkey, "pubkey", "k", "", "Public key to be used (hex)")
 }
 
-func runTaint(cmd *cobra.Command, args []string) error {
+func runKeyTaint(cmd *cobra.Command, args []string) error {
 	store, err := storev1.NewStore(rootArgs.rootPath)
 	if err != nil {
 		return err

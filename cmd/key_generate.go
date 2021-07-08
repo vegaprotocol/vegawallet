@@ -22,7 +22,7 @@ var (
 		Use:   "generate",
 		Short: "Generate a new key pair for a wallet",
 		Long:  "Generate a new key pair for a wallet, this will implicitly generate a new wallet if none exist for the given name",
-		RunE:  runGenKey,
+		RunE:  runKeyGenerate,
 	}
 )
 
@@ -33,7 +33,7 @@ func init() {
 	keyGenerateCmd.Flags().StringVarP(&keyGenerateArgs.metas, "meta", "m", "", `A list of metadata e.g: "primary:true;asset:BTC"`)
 }
 
-func runGenKey(cmd *cobra.Command, args []string) error {
+func runKeyGenerate(cmd *cobra.Command, args []string) error {
 	store, err := storev1.NewStore(rootArgs.rootPath)
 	if err != nil {
 		return err

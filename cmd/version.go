@@ -19,7 +19,6 @@ var (
 	Version = defaultVersion
 )
 
-// verionCmd represents the list command
 var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Show the version of the vega wallet",

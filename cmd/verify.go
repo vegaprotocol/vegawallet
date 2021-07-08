@@ -18,7 +18,6 @@ var (
 		pubkey     string
 	}
 
-	// verifyCmd represents the verify command
 	verifyCmd = &cobra.Command{
 		Use:   "verify",
 		Short: "Verify the signature",

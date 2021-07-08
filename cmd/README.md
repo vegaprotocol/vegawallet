@@ -10,7 +10,7 @@ the ``--root-path`` flag to do so.
 
 There are 3 ways to list the available commands
 
-```console
+```sh
 vegawallet
 vegawallet -h
 vegawallet help
@@ -21,7 +21,7 @@ vegawallet help
 To create a new wallet, generate your first key pair using
 the following command:
 
-```console
+```sh
 vegawallet key generate --name "YOUR_USERNAME"
 ```
 
@@ -52,7 +52,7 @@ able to retrieve it with specific commands.
 
 If you want to restore your wallet, use the following command:
 
-```console
+```sh
 vegawallet import --name "YOUR_USERNAME" --mnemonic "YOUR_MNEMONIC"
 ```
 
@@ -67,7 +67,7 @@ your key pairs.
 
 To generate a key pair on the given wallet, use the following command:
 
-```console
+```sh
 vegawallet key generate --name "YOUR_USERNAME"
 ```
 
@@ -85,7 +85,7 @@ flag (more on this below).
 For better key management, you may want to add metadata to your key pairs. This
 is done with the following command:
 
-```console
+```sh
 vegawallet key meta --name "YOUR_USERNAME" --meta "key1:value1;key2:value2" --pubkey "YOUR_HEX_PUBLIC_KEY"
 ```
 
@@ -95,7 +95,7 @@ An item of metadata is represented as a key-value property.
 
 You can give to each key pair a nickname/alias with a meta `name`. For example:
 
-```console
+```sh
 vegawallet key meta --name "YOUR_USERNAME" --meta "name:my-alias" --pubkey "YOUR_HEX_PUBLIC_KEY"
 ```
 
@@ -110,7 +110,7 @@ to your update.
 You may want to prevent the use of a key by "tainting" it with
 the following command:
 
-```console
+```sh
 vegawallet key taint --name "YOUR_NAME" --pubkey "YOUR_HEX_PUBIC_KEY"
 ```
 
@@ -121,7 +121,7 @@ passphrase with the ``--passphrase`` flag.
 
 To list your key pairs, use the following command:
 
-```console
+```sh
 vegawallet key list --name "YOUR_NAME"
 ```
 
@@ -138,7 +138,7 @@ content to the outside world.**
 To sign and verify any kind of base-64 encoded messages, use the following
 commands:
 
-```console
+```sh
 vegawallet sign --name "YOUR_NAME" --pubkey "YOUR_HEX_PUBIC_KEY" --message "c3BpY2Ugb2YgZHVuZQo="
 vegawallet verify --name "YOUR_NAME" --pubkey "YOUR_HEX_PUBIC_KEY" --message "c3BpY2Ugb2YgZHVuZQo=" --signature "76f978asd6fa8s76f"
 ```
@@ -150,7 +150,7 @@ passphrase with the ``--passphrase`` flag.
 
 Before using the service, you need to initialise it with the following command:
 
-```console
+```sh
 vegawallet service init
 ```
 
@@ -162,7 +162,7 @@ operate.
 Once the service has been initialised, you can run the wallet with the following
 command:
 
-```console
+```sh
 vegawallet service run --console-proxy
 ```
 

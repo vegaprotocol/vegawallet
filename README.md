@@ -13,7 +13,7 @@ them into your command line interface.
 
 ### Building
 
-```console
+```sh
 cd go-wallet && make
 ```
 
