@@ -11,13 +11,13 @@ import (
 	"os"
 	"testing"
 
+	"code.vegaprotocol.io/go-wallet/internal/proto/api"
+	commandspb "code.vegaprotocol.io/go-wallet/internal/proto/commands/v1"
 	"code.vegaprotocol.io/go-wallet/service"
 	"code.vegaprotocol.io/go-wallet/service/mocks"
 	"code.vegaprotocol.io/go-wallet/wallet"
 	"code.vegaprotocol.io/go-wallet/wallet/crypto"
 	"github.com/stretchr/testify/require"
-	"github.com/vegaprotocol/api/grpc/clients/go/generated/code.vegaprotocol.io/vega/proto/api"
-	commandspb "github.com/vegaprotocol/api/grpc/clients/go/generated/code.vegaprotocol.io/vega/proto/commands/v1"
 
 	"github.com/golang/mock/gomock"
 	"github.com/julienschmidt/httprouter"

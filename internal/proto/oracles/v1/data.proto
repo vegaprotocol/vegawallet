@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package wallet.vega.oracles.v1;
+
+option go_package = "code.vegaprotocol.io/go-wallet/internal/proto/oracles/v1";
+
+// OracleData describes an oracle data that has been broadcast.
+message OracleData {
+  // pubKeys is the list of authorized public keys that signed the data for this
+  // oracle. All the public keys in the oracle data should be contained in these
+  // public keys.
+  repeated string pub_keys = 1;
+  // data holds all the properties of the oracle data
+  repeated Property data = 2;
+  // matched_specs_ids lists all the oracle specs that matched this oracle data.
+  repeated string matched_spec_ids = 3;
+  // broadcast_at is the time at which the data was broadcast for the first
+  // time.
+  int64 broadcast_at = 4;
+}
+
+// Property describes one property of an oracle spec with a key with its value.
+message Property {
+  // name is the name of the property.
+  string name = 1;
+  // value is the value of the property.
+  string value = 2;
+}

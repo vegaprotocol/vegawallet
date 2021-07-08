@@ -1,8 +1,8 @@
 package commands
 
 import (
-	typespb "github.com/vegaprotocol/api/grpc/clients/go/generated/code.vegaprotocol.io/vega/proto"
-	commandspb "github.com/vegaprotocol/api/grpc/clients/go/generated/code.vegaprotocol.io/vega/proto/commands/v1"
+	typespb "code.vegaprotocol.io/go-wallet/internal/proto"
+	commandspb "code.vegaprotocol.io/go-wallet/internal/proto/commands/v1"
 )
 
 func CheckVoteSubmission(cmd *commandspb.VoteSubmission) error {

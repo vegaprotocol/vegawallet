@@ -1,0 +1,121 @@
+syntax = "proto3";
+
+package wallet.vega.commands.v1;
+option go_package = "code.vegaprotocol.io/go-wallet/internal/proto/commands/v1";
+
+import "proto/governance.proto";
+import "proto/vega.proto";
+import "google/protobuf/wrappers.proto";
+import "github.com/mwitkow/go-proto-validators/validator.proto";
+
+// An order submission is a request to submit or create a new order on Vega
+message OrderSubmission {
+  // Market identifier for the order, required field
+  string market_id = 1 [(validator.field) = {string_not_empty: true}];
+  // Price for the order, the price is an integer, for example `123456` is a correctly
+  // formatted price of `1.23456` assuming market configured to 5 decimal places,
+  // , required field for limit orders, however it is not required for market orders
+  uint64 price = 2;
+  // Size for the order, for example, in a futures market the size equals the number of contracts, cannot be negative
+  uint64 size = 3 [(validator.field) = {int_gt: 0}];
+  // Side for the order, e.g. SIDE_BUY or SIDE_SELL, required field - See [`Side`](#vega.Side)
+  vega.Side side = 4;
+  // Time in force indicates how long an order will remain active before it is executed or expires, required field
+  // - See [`Order.TimeInForce`](#vega.Order.TimeInForce)
+  vega.Order.TimeInForce time_in_force = 5;
+  // Timestamp for when the order will expire, in nanoseconds since the epoch,
+  // required field only for [`Order.TimeInForce`](#vega.Order.TimeInForce)`.TIME_IN_FORCE_GTT`
+  // - See [`VegaTimeResponse`](#api.VegaTimeResponse).`timestamp`
+  int64 expires_at = 6;
+  // Type for the order, required field - See [`Order.Type`](#vega.Order.Type)
+  vega.Order.Type type = 7;
+  // Reference given for the order, this is typically used to retrieve an order submitted through consensus, currently
+  // set internally by the node to return a unique reference identifier for the order submission
+  string reference = 8;
+  // Used to specify the details for a pegged order
+  // - See [`PeggedOrder`](#vega.PeggedOrder)
+  vega.PeggedOrder pegged_order = 9;
+}
+
+// An order cancellation is a request to cancel an existing order on Vega
+message OrderCancellation {
+  // Unique identifier for the order (set by the system after consensus), required field
+  string order_id = 1;
+  // Market identifier for the order, required field
+  string market_id = 2;
+}
+
+// An order amendment is a request to amend or update an existing order on Vega
+message OrderAmendment {
+  // The `orderID`, `partyID` and `marketID` fields are used for lookup of the order only and cannot be amended by this command
+
+  // Order identifier, this is required to find the order and will not be updated, required field
+  string order_id = 1 [(validator.field) = {string_not_empty : true}];
+  // Market identifier, this is required to find the order and will not be updated
+  string market_id = 2;
+
+  // All fields below can be altered by this command:
+
+  // Amend the price for the order, if the Price value is set, otherwise price will remain unchanged - See [`Price`](#vega.Price)
+  vega.Price price = 3;
+  // Amend the size for the order by the delta specified:
+  // - To reduce the size from the current value set a negative integer value
+  // - To increase the size from the current value, set a positive integer value
+  // - To leave the size unchanged set a value of zero
+  int64 size_delta = 4;
+  // Amend the expiry time for the order, if the Timestamp value is set, otherwise expiry time will remain unchanged
+  // - See [`VegaTimeResponse`](#api.VegaTimeResponse).`timestamp`
+  vega.Timestamp expires_at = 5;
+  // Amend the time in force for the order, set to TIME_IN_FORCE_UNSPECIFIED to remain unchanged
+  // - See [`TimeInForce`](#api.VegaTimeResponse).`timestamp`
+  vega.Order.TimeInForce time_in_force = 6;
+  // Amend the pegged order offset for the order
+  google.protobuf.Int64Value pegged_offset = 7;
+  // Amend the pegged order reference for the order
+  // - See [`PeggedReference`](#vega.PeggedReference)
+  vega.PeggedReference pegged_reference = 8;
+}
+
+// A liquidity provision submitted for a given market
+message LiquidityProvisionSubmission {
+  // Market identifier for the order, required field
+  string market_id = 1 [(validator.field) = {string_not_empty: true}];
+  // Specified as a unitless number that represents the amount of settlement asset of the market
+  uint64 commitment_amount = 2;
+  // Nominated liquidity fee factor, which is an input to the calculation of taker fees on the market, as per seeting fees and rewarding liquidity providers
+  string fee = 3;
+  // A set of liquidity sell orders to meet the liquidity provision obligation
+  repeated vega.LiquidityOrder sells = 4;
+  // A set of liquidity buy orders to meet the liquidity provision obligation
+  repeated vega.LiquidityOrder buys = 5;
+  // A reference to be added to every order created out of this liquidityProvisionSubmission
+  string reference = 6;
+}
+
+// Represents the submission request to withdraw funds for a party on Vega
+message WithdrawSubmission {
+  // The amount to be withdrawn
+  uint64 amount = 1;
+  // The asset we want to withdraw
+  string asset = 2;
+  // Foreign chain specifics
+  vega.WithdrawExt ext = 3;
+}
+
+// A command to submit a new proposal for the
+// vega network governance
+message ProposalSubmission {
+  // Proposal reference
+  string reference = 1;
+  // Proposal configuration and the actual change that is meant to be executed when proposal is enacted
+  vega.ProposalTerms terms = 2 [(validator.field) = {msg_exists: true}];
+}
+
+// A command to submit a new vote for a governance
+// proposal.
+message VoteSubmission {
+  // The ID of the proposal to vote for.
+  string proposal_id = 1 [(validator.field) = {string_not_empty : true}];
+  // The actual value of the vote
+  vega.Vote.Value value = 2;
+}

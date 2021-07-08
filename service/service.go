@@ -11,12 +11,12 @@ import (
 
 	"code.vegaprotocol.io/go-wallet/commands"
 	"code.vegaprotocol.io/go-wallet/config"
+	typespb "code.vegaprotocol.io/go-wallet/internal/proto"
+	"code.vegaprotocol.io/go-wallet/internal/proto/api"
+	commandspb "code.vegaprotocol.io/go-wallet/internal/proto/commands/v1"
+	walletpb "code.vegaprotocol.io/go-wallet/internal/proto/wallet/v1"
 	storev1 "code.vegaprotocol.io/go-wallet/store/v1"
 	"code.vegaprotocol.io/go-wallet/wallet"
-	typespb "github.com/vegaprotocol/api/grpc/clients/go/generated/code.vegaprotocol.io/vega/proto"
-	"github.com/vegaprotocol/api/grpc/clients/go/generated/code.vegaprotocol.io/vega/proto/api"
-	commandspb "github.com/vegaprotocol/api/grpc/clients/go/generated/code.vegaprotocol.io/vega/proto/commands/v1"
-	walletpb "github.com/vegaprotocol/api/grpc/clients/go/generated/code.vegaprotocol.io/vega/proto/wallet/v1"
 
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/proto"

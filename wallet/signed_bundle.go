@@ -4,7 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 
-	typespb "github.com/vegaprotocol/api/grpc/clients/go/generated/code.vegaprotocol.io/vega/proto"
+	typespb "code.vegaprotocol.io/go-wallet/internal/proto"
 )
 
 // here we implement Marhsalling for the SignedBundle

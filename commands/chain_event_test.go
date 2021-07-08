@@ -4,9 +4,10 @@ import (
 	"testing"
 
 	"code.vegaprotocol.io/go-wallet/commands"
+	typespb "code.vegaprotocol.io/go-wallet/internal/proto"
+	commandspb "code.vegaprotocol.io/go-wallet/internal/proto/commands/v1"
+
 	"github.com/stretchr/testify/assert"
-	typespb "github.com/vegaprotocol/api/grpc/clients/go/generated/code.vegaprotocol.io/vega/proto"
-	commandspb "github.com/vegaprotocol/api/grpc/clients/go/generated/code.vegaprotocol.io/vega/proto/commands/v1"
 )
 
 func TestCheckChainEvent(t *testing.T) {
@@ -99,9 +100,7 @@ func newBuiltInChainEvent() *commandspb.ChainEvent {
 		TxId:  "my ID",
 		Nonce: RandomPositiveU64(),
 		Event: &commandspb.ChainEvent_Builtin{
-			Builtin: &typespb.BuiltinAssetEvent{
-
-			},
+			Builtin: &typespb.BuiltinAssetEvent{},
 		},
 	}
 }

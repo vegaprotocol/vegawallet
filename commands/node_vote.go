@@ -1,6 +1,6 @@
 package commands
 
-import commandspb "github.com/vegaprotocol/api/grpc/clients/go/generated/code.vegaprotocol.io/vega/proto/commands/v1"
+import commandspb "code.vegaprotocol.io/go-wallet/internal/proto/commands/v1"
 
 func CheckNodeVote(cmd *commandspb.NodeVote) error {
 	return checkNodeVote(cmd).ErrorOrNil()

@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"code.vegaprotocol.io/go-wallet/commands"
-	commandspb "github.com/vegaprotocol/api/grpc/clients/go/generated/code.vegaprotocol.io/vega/proto/commands/v1"
+	commandspb "code.vegaprotocol.io/go-wallet/internal/proto/commands/v1"
 
 	"github.com/stretchr/testify/assert"
 )
