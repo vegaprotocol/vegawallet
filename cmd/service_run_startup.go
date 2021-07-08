@@ -26,9 +26,6 @@ Available endpoints:
  - sign:            POST   http://{{.WalletServiceLocalAddress}}/api/v1/messages
  - sign sync:       POST   http://{{.WalletServiceLocalAddress}}/api/v1/messages/sync
  - sign commit:     POST   http://{{.WalletServiceLocalAddress}}/api/v1/messages/commit
- - sign:            POST   http://{{.WalletServiceLocalAddress}}/api/v1/command
- - sign sync:       POST   http://{{.WalletServiceLocalAddress}}/api/v1/command/sync
- - sign commit:     POST   http://{{.WalletServiceLocalAddress}}/api/v1/command/commit
  - download wallet: GET    http://{{.WalletServiceLocalAddress}}/api/v1/wallets
 `
 

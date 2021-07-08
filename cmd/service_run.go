@@ -16,24 +16,23 @@ import (
 )
 
 var (
-	runArgs struct {
+	serviceRunArgs struct {
 		consoleProxy bool
 		noBrowser    bool
 	}
 
-	// runCmd represents the run command
-	runCmd = &cobra.Command{
+	serviceRunCmd = &cobra.Command{
 		Use:   "run",
 		Short: "Start the vega wallet service",
-		Long:  "Start a vega wallet service behind an http server",
+		Long:  "Start a vega wallet service behind an HTTP server",
 		RunE:  runServiceRun,
 	}
 )
 
 func init() {
-	serviceCmd.AddCommand(runCmd)
-	runCmd.Flags().BoolVarP(&runArgs.consoleProxy, "console-proxy", "p", false, "Start the vega console proxy and open the console in the default browser")
-	runCmd.Flags().BoolVarP(&runArgs.noBrowser, "no-browser", "n", false, "Do not open the default browser if the console proxy is stated")
+	serviceCmd.AddCommand(serviceRunCmd)
+	serviceRunCmd.Flags().BoolVarP(&serviceRunArgs.consoleProxy, "console-proxy", "p", false, "Start the vega console proxy and open the console in the default browser")
+	serviceRunCmd.Flags().BoolVarP(&serviceRunArgs.noBrowser, "no-browser", "n", false, "Do not open the default browser if the console proxy is stated")
 }
 
 func runServiceRun(cmd *cobra.Command, args []string) error {
@@ -68,7 +67,7 @@ func runServiceRun(cmd *cobra.Command, args []string) error {
 	}()
 
 	var cproxy *consoleProxy
-	if runArgs.consoleProxy {
+	if serviceRunArgs.consoleProxy {
 		cproxy = newConsoleProxy(log, cfg.Console.LocalPort, cfg.Console.URL, cfg.Nodes.Hosts[0], Version)
 		go func() {
 			defer cancel()
@@ -78,8 +77,7 @@ func runServiceRun(cmd *cobra.Command, args []string) error {
 			}
 		}()
 
-		if !runArgs.noBrowser {
-			// then we open the console for the user straight at the right runServiceRun
+		if !serviceRunArgs.noBrowser {
 			err := open.Run(cproxy.GetBrowserURL())
 			if err != nil {
 				log.Error("unable to open the console in the default browser",
@@ -103,7 +101,7 @@ func runServiceRun(cmd *cobra.Command, args []string) error {
 		log.Info("wallet http server stopped with success")
 	}
 
-	if runArgs.consoleProxy {
+	if serviceRunArgs.consoleProxy {
 		err = cproxy.Stop()
 		if err != nil {
 			log.Error("error stopping console proxy server", zap.Error(err))

@@ -1,5 +1,4 @@
-Wallet
-======
+# Wallet API
 
 This package provides the basic cryptography to sign vega transactions, and a basic key management system: `wallet service`. It can be run alongside the core, but is not required for the operation of a Vega node, and API clients are free to implement their own transaction signing.
 

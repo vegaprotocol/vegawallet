@@ -20,7 +20,6 @@ proto:
 	protoc --go_out=paths=source_relative,plugins=grpc:. ./proto/*.proto
 	protoc --go_out=paths=source_relative,plugins=grpc:. ./proto/api/*.proto
 
-
 release-windows:
 	GOOS=windows GOARCH=amd64 CGO_ENABLED=1 go build -o build/vegawallet.exe -ldflags "-X code.vegaprotocol.io/go-wallet/cmd.Version=${VERSION} -X code.vegaprotocol.io/go-wallet/cmd.VersionHash=${VERSION_HASH}"
 	cd build && 7z a -tzip vegawallet-windows-amd64.zip vegawallet.exe

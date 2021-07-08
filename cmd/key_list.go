@@ -12,13 +12,12 @@ import (
 )
 
 var (
-	listArgs struct {
+	keyListArgs struct {
 		name       string
 		passphrase string
 	}
 
-	// listCmd represents the list command
-	listCmd = &cobra.Command{
+	keyListCmd = &cobra.Command{
 		Use:   "list",
 		Short: "List keys of a wallet",
 		Long:  "List all the keys for a given wallet",
@@ -27,9 +26,9 @@ var (
 )
 
 func init() {
-	rootCmd.AddCommand(listCmd)
-	listCmd.Flags().StringVarP(&listArgs.name, "name", "n", "", "Name of the wallet to use")
-	listCmd.Flags().StringVarP(&listArgs.passphrase, "passphrase", "p", "", "Passphrase to access the wallet")
+	keyCmd.AddCommand(keyListCmd)
+	keyListCmd.Flags().StringVarP(&keyListArgs.name, "name", "n", "", "Name of the wallet to use")
+	keyListCmd.Flags().StringVarP(&keyListArgs.passphrase, "passphrase", "p", "", "Passphrase to access the wallet")
 }
 
 func runList(cmd *cobra.Command, args []string) error {
@@ -40,23 +39,23 @@ func runList(cmd *cobra.Command, args []string) error {
 
 	handler := wallet.NewHandler(store)
 
-	if len(listArgs.name) == 0 {
+	if len(keyListArgs.name) == 0 {
 		return errors.New("wallet name is required")
 	}
-	if len(listArgs.passphrase) == 0 {
+	if len(keyListArgs.passphrase) == 0 {
 		var err error
-		listArgs.passphrase, err = promptForPassphrase()
+		keyListArgs.passphrase, err = promptForPassphrase()
 		if err != nil {
 			return fmt.Errorf("could not get passphrase: %v", err)
 		}
 	}
 
-	err = handler.LoginWallet(listArgs.name, listArgs.passphrase)
+	err = handler.LoginWallet(keyListArgs.name, keyListArgs.passphrase)
 	if err != nil {
 		return fmt.Errorf("could not login to the wallet: %v", err)
 	}
 
-	keys, err := handler.ListKeyPairs(listArgs.name)
+	keys, err := handler.ListKeyPairs(keyListArgs.name)
 	if err != nil {
 		return fmt.Errorf("could not list the public keys: %v", err)
 	}
@@ -66,7 +65,6 @@ func runList(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("unable to marshal message: %v", err)
 	}
 
-	// print the new keys for user info
 	fmt.Printf("List of all your keys:\n")
 	fmt.Printf("%v\n", string(buf))
 

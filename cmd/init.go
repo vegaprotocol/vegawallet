@@ -13,7 +13,6 @@ var (
 		NoGenRsaKey bool
 	}
 
-	// initCmd represents the init command
 	initCmd = &cobra.Command{
 		Use:   "init",
 		Short: "Generate the configuration",

@@ -11,15 +11,14 @@ import (
 )
 
 var (
-	metaArgs struct {
-		metas      string
+	keyMetaArgs struct {
+		meta       string
 		name       string
 		passphrase string
 		pubkey     string
 	}
 
-	// metaCmd represents the meta command
-	metaCmd = &cobra.Command{
+	keyMetaCmd = &cobra.Command{
 		Use:   "meta",
 		Short: "Add metadata to a public key",
 		Long:  "Add a list of metadata to a public key",
@@ -28,11 +27,11 @@ var (
 )
 
 func init() {
-	rootCmd.AddCommand(metaCmd)
-	metaCmd.Flags().StringVarP(&metaArgs.name, "name", "n", "", "Name of the wallet to use")
-	metaCmd.Flags().StringVarP(&metaArgs.passphrase, "passphrase", "p", "", "Passphrase to access the wallet")
-	metaCmd.Flags().StringVarP(&metaArgs.pubkey, "pubkey", "k", "", "Public key to be used (hex)")
-	metaCmd.Flags().StringVarP(&metaArgs.metas, "metas", "m", "", `A list of metadata e.g: "primary:true;asset:BTC"`)
+	keyCmd.AddCommand(keyMetaCmd)
+	keyMetaCmd.Flags().StringVarP(&keyMetaArgs.name, "name", "n", "", "Name of the wallet to use")
+	keyMetaCmd.Flags().StringVarP(&keyMetaArgs.passphrase, "passphrase", "p", "", "Passphrase to access the wallet")
+	keyMetaCmd.Flags().StringVarP(&keyMetaArgs.pubkey, "pubkey", "k", "", "Public key to be used (hex)")
+	keyMetaCmd.Flags().StringVarP(&keyMetaArgs.meta, "meta", "m", "", `A list of metadata e.g: "primary:true;asset:BTC"`)
 }
 
 func runMeta(cmd *cobra.Command, args []string) error {
@@ -43,31 +42,31 @@ func runMeta(cmd *cobra.Command, args []string) error {
 
 	handler := wallet.NewHandler(store)
 
-	if len(metaArgs.name) == 0 {
+	if len(keyMetaArgs.name) == 0 {
 		return errors.New("wallet name is required")
 	}
-	if len(metaArgs.pubkey) == 0 {
+	if len(keyMetaArgs.pubkey) == 0 {
 		return errors.New("pubkey is required")
 	}
-	if len(metaArgs.passphrase) == 0 {
+	if len(keyMetaArgs.passphrase) == 0 {
 		var err error
-		metaArgs.passphrase, err = promptForPassphrase()
+		keyMetaArgs.passphrase, err = promptForPassphrase()
 		if err != nil {
 			return fmt.Errorf("could not get passphrase: %v", err)
 		}
 	}
 
-	metas, err := parseMeta(metaArgs.metas)
+	meta, err := parseMeta(keyMetaArgs.meta)
 	if err != nil {
 		return err
 	}
 
-	err = handler.LoginWallet(metaArgs.name, metaArgs.passphrase)
+	err = handler.LoginWallet(keyMetaArgs.name, keyMetaArgs.passphrase)
 	if err != nil {
 		return fmt.Errorf("could not login to the wallet: %v", err)
 	}
 
-	err = handler.UpdateMeta(metaArgs.name, metaArgs.pubkey, metaArgs.passphrase, metas)
+	err = handler.UpdateMeta(keyMetaArgs.name, keyMetaArgs.pubkey, keyMetaArgs.passphrase, meta)
 	if err != nil {
 		return fmt.Errorf("could not update the meta: %v", err)
 	}

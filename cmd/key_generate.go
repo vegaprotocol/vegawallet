@@ -12,15 +12,14 @@ import (
 )
 
 var (
-	genKeyArgs struct {
+	keyGenerateArgs struct {
 		name       string
 		passphrase string
 		metas      string
 	}
 
-	// genKeyCmd represents the genkey command
-	genKeyCmd = &cobra.Command{
-		Use:   "genkey",
+	keyGenerateCmd = &cobra.Command{
+		Use:   "generate",
 		Short: "Generate a new key pair for a wallet",
 		Long:  "Generate a new key pair for a wallet, this will implicitly generate a new wallet if none exist for the given name",
 		RunE:  runGenKey,
@@ -28,10 +27,10 @@ var (
 )
 
 func init() {
-	rootCmd.AddCommand(genKeyCmd)
-	genKeyCmd.Flags().StringVarP(&genKeyArgs.name, "name", "n", "", "Name of the wallet to use")
-	genKeyCmd.Flags().StringVarP(&genKeyArgs.passphrase, "passphrase", "p", "", "Passphrase to access the wallet")
-	genKeyCmd.Flags().StringVarP(&genKeyArgs.metas, "metas", "m", "", `A list of metadata e.g: "primary:true;asset:BTC"`)
+	keyCmd.AddCommand(keyGenerateCmd)
+	keyGenerateCmd.Flags().StringVarP(&keyGenerateArgs.name, "name", "n", "", "Name of the wallet to use")
+	keyGenerateCmd.Flags().StringVarP(&keyGenerateArgs.passphrase, "passphrase", "p", "", "Passphrase to access the wallet")
+	keyGenerateCmd.Flags().StringVarP(&keyGenerateArgs.metas, "meta", "m", "", `A list of metadata e.g: "primary:true;asset:BTC"`)
 }
 
 func runGenKey(cmd *cobra.Command, args []string) error {
@@ -42,23 +41,23 @@ func runGenKey(cmd *cobra.Command, args []string) error {
 
 	handler := wallet.NewHandler(store)
 
-	if len(genKeyArgs.name) == 0 {
+	if len(keyGenerateArgs.name) == 0 {
 		return errors.New("wallet name is required")
 	}
 
-	walletExists := handler.WalletExists(genKeyArgs.name)
+	walletExists := handler.WalletExists(keyGenerateArgs.name)
 
-	if len(genKeyArgs.passphrase) == 0 {
+	if len(keyGenerateArgs.passphrase) == 0 {
 		var (
 			err          error
 			confirmation string
 		)
-		genKeyArgs.passphrase, err = promptForPassphrase()
+		keyGenerateArgs.passphrase, err = promptForPassphrase()
 		if err != nil {
 			return fmt.Errorf("could not get passphrase: %v", err)
 		}
 
-		if len(genKeyArgs.passphrase) == 0 {
+		if len(keyGenerateArgs.passphrase) == 0 {
 			return fmt.Errorf("passphrase cannot be empty")
 		}
 
@@ -68,19 +67,19 @@ func runGenKey(cmd *cobra.Command, args []string) error {
 				return fmt.Errorf("could not get passphrase: %v", err)
 			}
 
-			if genKeyArgs.passphrase != confirmation {
+			if keyGenerateArgs.passphrase != confirmation {
 				return fmt.Errorf("passphrases do not match")
 			}
 		}
 	}
 
-	metas, err := parseMeta(genKeyArgs.metas)
+	metas, err := parseMeta(keyGenerateArgs.metas)
 	if err != nil {
 		return err
 	}
 
 	if !walletExists {
-		mnemonic, err := handler.CreateWallet(genKeyArgs.name, genKeyArgs.passphrase)
+		mnemonic, err := handler.CreateWallet(keyGenerateArgs.name, keyGenerateArgs.passphrase)
 		if err != nil {
 			return fmt.Errorf("couldn't create wallet: %v", err)
 		}
@@ -88,17 +87,16 @@ func runGenKey(cmd *cobra.Command, args []string) error {
 		fmt.Printf("%s\n", mnemonic)
 	}
 
-	keyPair, err := handler.GenerateKeyPair(genKeyArgs.name, genKeyArgs.passphrase)
+	keyPair, err := handler.GenerateKeyPair(keyGenerateArgs.name, keyGenerateArgs.passphrase)
 	if err != nil {
 		return fmt.Errorf("could not generate a key pair: %v", err)
 	}
 
-	err = handler.UpdateMeta(genKeyArgs.name, keyPair.PublicKey(), genKeyArgs.passphrase, metas)
+	err = handler.UpdateMeta(keyGenerateArgs.name, keyPair.PublicKey(), keyGenerateArgs.passphrase, metas)
 	if err != nil {
 		return fmt.Errorf("could not update the meta: %v", err)
 	}
 
-	// print the new keys for user info
 	buf, err := json.MarshalIndent(keyPair, " ", " ")
 	if err != nil {
 		return fmt.Errorf("unable to marshal message: %v", err)
