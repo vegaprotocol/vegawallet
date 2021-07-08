@@ -22,7 +22,7 @@ var (
 		Use:   "meta",
 		Short: "Add metadata to a public key",
 		Long:  "Add a list of metadata to a public key",
-		RunE:  runMeta,
+		RunE:  runKeyMeta,
 	}
 )
 
@@ -34,7 +34,7 @@ func init() {
 	keyMetaCmd.Flags().StringVarP(&keyMetaArgs.meta, "meta", "m", "", `A list of metadata e.g: "primary:true;asset:BTC"`)
 }
 
-func runMeta(cmd *cobra.Command, args []string) error {
+func runKeyMeta(cmd *cobra.Command, args []string) error {
 	store, err := storev1.NewStore(rootArgs.rootPath)
 	if err != nil {
 		return err

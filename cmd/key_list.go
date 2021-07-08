@@ -21,7 +21,7 @@ var (
 		Use:   "list",
 		Short: "List keys of a wallet",
 		Long:  "List all the keys for a given wallet",
-		RunE:  runList,
+		RunE:  runKeyList,
 	}
 )
 
@@ -31,7 +31,7 @@ func init() {
 	keyListCmd.Flags().StringVarP(&keyListArgs.passphrase, "passphrase", "p", "", "Passphrase to access the wallet")
 }
 
-func runList(cmd *cobra.Command, args []string) error {
+func runKeyList(cmd *cobra.Command, args []string) error {
 	store, err := storev1.NewStore(rootArgs.rootPath)
 	if err != nil {
 		return err
