@@ -4,10 +4,10 @@ import (
 	"encoding/base64"
 	"testing"
 
+	commandspb "code.vegaprotocol.io/go-wallet/internal/proto/commands/v1"
+	walletpb "code.vegaprotocol.io/go-wallet/internal/proto/wallet/v1"
 	"code.vegaprotocol.io/go-wallet/wallet"
 	"github.com/stretchr/testify/require"
-	commandspb "github.com/vegaprotocol/api/grpc/clients/go/generated/code.vegaprotocol.io/vega/proto/commands/v1"
-	walletpb "github.com/vegaprotocol/api/grpc/clients/go/generated/code.vegaprotocol.io/vega/proto/wallet/v1"
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"

@@ -7,8 +7,8 @@ import (
 	"sync"
 
 	"code.vegaprotocol.io/go-wallet/commands"
-	commandspb "github.com/vegaprotocol/api/grpc/clients/go/generated/code.vegaprotocol.io/vega/proto/commands/v1"
-	walletpb "github.com/vegaprotocol/api/grpc/clients/go/generated/code.vegaprotocol.io/vega/proto/wallet/v1"
+	commandspb "code.vegaprotocol.io/go-wallet/internal/proto/commands/v1"
+	walletpb "code.vegaprotocol.io/go-wallet/internal/proto/wallet/v1"
 
 	"github.com/golang/protobuf/proto"
 )

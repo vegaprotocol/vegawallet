@@ -1,0 +1,304 @@
+syntax = "proto3";
+
+package wallet.vega;
+option go_package = "code.vegaprotocol.io/go-wallet/internal/proto";
+
+import "github.com/mwitkow/go-proto-validators/validator.proto";
+
+import "proto/oracles/v1/spec.proto";
+
+// An auction duration is used to configure 3 auction periods:
+// 1. `duration > 0`, `volume == 0`:
+//   The auction will last for at least N seconds
+// 2. `duration == 0`, `volume > 0`:
+//   The auction will end once we can close with given traded volume
+// 3. `duration > 0`, `volume > 0`:
+//   The auction will take at least N seconds, but can end sooner if we can trade a certain volume
+message AuctionDuration {
+  // Duration of the auction in seconds
+  int64 duration = 1;
+  //Target uncrossing trading volume
+  uint64 volume = 2;
+}
+
+// Continuous trading
+message ContinuousTrading {
+  // Tick size
+  string tick_size = 1;
+}
+
+// Discrete trading
+message DiscreteTrading {
+  // Duration in nanoseconds, maximum 1 month (2592000000000000 ns)
+  int64 duration_ns = 1 [(validator.field) = {int_gt: 0, int_lt: 2592000000000000}];
+  // Tick size
+  string tick_size = 2;
+}
+
+// Future product definition
+message Future {
+  // The maturity for the future
+  string maturity = 1;
+  // The asset for the future
+  string settlement_asset = 2;
+  // Quote name of the instrument
+  string quote_name = 4;
+  // The oracle spec describing the oracle data of interest
+  oracles.v1.OracleSpec oracle_spec = 5;
+  // The binding between the oracle spec and the settlement price
+  OracleSpecToFutureBinding oracle_spec_binding = 6;
+}
+
+// OracleSpecToFutureBinding tells on which property oracle data should be
+// used as settlement price.
+message OracleSpecToFutureBinding {
+  // settlement_price_property holds the name of the property in the oracle data
+  // that should be used as settlement price.
+  // If it is set to "prices.BTC.value", then the Future will use the value of
+  // this property as settlement price.
+  string settlement_price_property = 1;
+}
+
+// Instrument metadata definition
+message InstrumentMetadata {
+  // A list of 0 or more tags
+  repeated string tags = 1;
+}
+
+// Instrument definition
+message Instrument {
+  // Instrument identifier
+  string id = 1;
+  // Code for the instrument
+  string code = 2;
+  // Name of the instrument
+  string name = 3;
+  // A collection of instrument meta-data
+  InstrumentMetadata metadata = 4;
+  // The product the instrument is composed of
+  oneof product {
+    // Future
+    Future future = 100;
+  }
+}
+
+// Risk model for log normal
+message LogNormalRiskModel {
+  // Risk Aversion Parameter
+  double risk_aversion_parameter = 1;
+  // Tau
+  double tau = 2;
+  // Risk model parameters for log normal
+  LogNormalModelParams params = 3;
+}
+
+// Risk model parameters for log normal
+message LogNormalModelParams {
+  // Mu param
+  double mu = 1;
+  // R param
+  double r = 2;
+  // Sigma param
+  double sigma = 3;
+}
+
+// Risk model for simple modelling
+message SimpleRiskModel {
+  // Risk model params for simple modelling
+  SimpleModelParams params = 1;
+}
+
+// Risk model parameters for simple modelling
+message SimpleModelParams {
+  // Pre-defined risk factor value for long
+  double factor_long = 1;
+  // Pre-defined risk factor value for short
+  double factor_short = 2;
+  // Pre-defined maximum price move up that the model considers as valid
+  double max_move_up = 3 [(validator.field) = {float_gte: 0}];
+  // Pre-defined minimum price move down that the model considers as valid
+  double min_move_down = 4 [(validator.field) = {float_lte: 0}];
+  // Pre-defined constant probability of trading
+  double probability_of_trading = 5 [(validator.field) = {float_gte: 0, float_lte: 1}];
+}
+
+// Scaling Factors (for use in margin calculation)
+message ScalingFactors {
+  // Search level
+  double search_level = 1;
+  // Initial margin level
+  double initial_margin = 2;
+  // Collateral release level
+  double collateral_release = 3;
+}
+
+// Margin Calculator definition
+message MarginCalculator {
+  // Scaling factors for margin calculation
+  ScalingFactors scaling_factors = 1;
+}
+
+// Tradable Instrument definition
+message TradableInstrument {
+  // Instrument details
+  Instrument instrument = 1;
+  // Margin calculator for the instrument
+  MarginCalculator margin_calculator = 2;
+  // Risk model for use by the instrument
+  oneof risk_model {
+    // Log normal
+    LogNormalRiskModel log_normal_risk_model = 100;
+    // Simple
+    SimpleRiskModel simple_risk_model = 101;
+  }
+}
+
+// Fee factors definition
+message FeeFactors {
+  // Maker fee
+  string maker_fee = 1;
+  // Infrastructure fee
+  string infrastructure_fee = 2;
+  // Liquidity fee
+  string liquidity_fee = 3;
+}
+
+// Fees definition
+message Fees {
+  // Fee factors
+  FeeFactors factors = 1;
+}
+
+// PriceMonitoringTrigger holds together price projection horizon τ, probability level p, and auction extension duration
+message PriceMonitoringTrigger {
+  // Price monitoring projection horizon τ in seconds
+  int64 horizon = 1 [(validator.field) = {int_gt: 0}];
+  // Price monitoring probability level p
+  double probability = 2 [(validator.field) = {float_gt: 0, float_lt: 1}];
+  // Price monitoring auction extension duration in seconds should the price
+  // breach it's theoretical level over the specified horizon at the specified
+  // probability level
+  int64 auction_extension = 3 [(validator.field) = {int_gt: 0}];
+}
+
+// PriceMonitoringParameters contains a collection of triggers to be used for a given market
+message PriceMonitoringParameters {
+  repeated PriceMonitoringTrigger triggers = 1;
+}
+
+// PriceMonitoringSettings contains the settings for price monitoring
+message PriceMonitoringSettings {
+  // Specifies price monitoring parameters to be used for price monitoring purposes
+  PriceMonitoringParameters parameters = 1;
+  // Specifies how often (expressed in seconds) the price monitoring bounds should be updated
+  int64 update_frequency = 2;
+}
+
+// LiquidityMonitoringParameters contains settings used for liquidity monitoring
+message LiquidityMonitoringParameters {
+
+  // Specifies parameters related to target stake calculation
+  TargetStakeParameters target_stake_parameters = 1;
+  // Specifies the triggering ratio for entering liquidity auction
+  double triggering_ratio = 2 [(validator.field) = {float_gte: 0, float_lte: 1}];
+  // Specifies by how many seconds an auction should be extended if leaving the auction were to trigger a liquidity auction
+  int64 auction_extension = 3;
+}
+
+// TargetStakeParameters contains parameters used in target stake calculation
+message TargetStakeParameters {
+  // Specifies length of time window expressed in seconds for target stake calculation
+  int64 time_window = 1 [(validator.field) = {int_gt: 0}];
+  // Specifies scaling factors used in target stake calculation
+  double scaling_factor = 2 [(validator.field) = {float_gt: 0}];
+}
+
+// Market definition
+message Market {
+  // The current state of the Market
+  enum State {
+    // Default value, invalid
+    STATE_UNSPECIFIED = 0;
+    // The Governance proposal valid and accepted
+    STATE_PROPOSED = 1;
+    // Outcome of governance votes is to reject the market
+    STATE_REJECTED = 2;
+    // Governance vote passes/wins
+    STATE_PENDING = 3;
+    // Market triggers cancellation condition or governance
+    // votes to close before market becomes Active
+    STATE_CANCELLED = 4;
+    // Enactment date reached and usual auction exit checks pass
+    STATE_ACTIVE = 5;
+    // Price monitoring or liquidity monitoring trigger
+    STATE_SUSPENDED = 6;
+    // Governance vote (to close)
+    STATE_CLOSED = 7;
+    // Defined by the product (i.e. from a product parameter,
+    // specified in market definition, giving close date/time)
+    STATE_TRADING_TERMINATED = 8;
+    // Settlement triggered and completed as defined by product
+    STATE_SETTLED = 9;
+  }
+
+  // The trading mode the market is currently running, also referred to as 'market state'
+  enum TradingMode {
+    // Default value, this is invalid
+    TRADING_MODE_UNSPECIFIED = 0;
+    // Normal trading
+    TRADING_MODE_CONTINUOUS = 1;
+    // Auction trading (FBA)
+    TRADING_MODE_BATCH_AUCTION = 2;
+    // Opening auction
+    TRADING_MODE_OPENING_AUCTION = 3;
+    // Auction triggered by monitoring
+    TRADING_MODE_MONITORING_AUCTION = 4;
+
+    // Note: If adding an enum value, add a matching entry in:
+    //       - gateway/graphql/helpers_enum.go
+    //       - gateway/graphql/schema.graphql (enum MarketTradingMode)
+  }
+
+  // Unique identifier
+  string id = 1;
+  // Tradable instrument configuration
+  TradableInstrument tradable_instrument = 2;
+  // Number of decimal places that a price must be shifted by in order to get a
+  // correct price denominated in the currency of the market, for example:
+  // `realPrice = price / 10^decimalPlaces`
+  uint64 decimal_places = 3;
+  // Fees configuration
+  Fees fees = 4;
+  // Auction duration specifies how long the opening auction will run (minimum
+  // duration and optionally a minimum traded volume)
+  AuctionDuration opening_auction = 5;
+  // Trading mode for the market
+  oneof trading_mode_config {
+    // Continuous
+    ContinuousTrading continuous = 100;
+    // Discrete
+    DiscreteTrading discrete = 101;
+  }
+  // PriceMonitoringSettings for the market
+  PriceMonitoringSettings price_monitoring_settings = 6;
+  // LiquidityMonitoringParameters for the market
+  LiquidityMonitoringParameters liquidity_monitoring_parameters = 7;
+  // Current mode of execution of the market
+  TradingMode trading_mode = 8;
+  // Current state of the market
+  State state = 9;
+  // Timestamps for when the market stay changes
+  MarketTimestamps market_timestamps = 10;
+}
+
+// Time stamps for important times about creating, enacting etc the market
+message MarketTimestamps {
+  // Time when the market is first proposed
+  int64 proposed = 1;
+  // Time when the market has been voted in and is created into an opening auction
+  int64 pending = 2;
+  // Time when the market has left the opening auction and is ready to accept trades
+  int64 open = 3;
+  // Time when the market is closed
+  int64 close = 4;
+}

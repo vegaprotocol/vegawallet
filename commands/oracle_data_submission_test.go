@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"code.vegaprotocol.io/go-wallet/commands"
-	commandspb "github.com/vegaprotocol/api/grpc/clients/go/generated/code.vegaprotocol.io/vega/proto/commands/v1"
+	commandspb "code.vegaprotocol.io/go-wallet/internal/proto/commands/v1"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -34,7 +34,6 @@ func testOracleDataSubmissionWithPayloadSucceeds(t *testing.T) {
 	})
 	assert.NotContains(t, err.Get("oracle_data_submission.payload"), commands.ErrIsRequired)
 }
-
 
 func testOracleDataSubmissionWithoutSourceFails(t *testing.T) {
 	err := checkOracleDataSubmission(&commandspb.OracleDataSubmission{})

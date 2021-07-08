@@ -5,8 +5,8 @@ import (
 	"errors"
 
 	"code.vegaprotocol.io/go-wallet/crypto"
+	commandspb "code.vegaprotocol.io/go-wallet/internal/proto/commands/v1"
 	wcrypto "code.vegaprotocol.io/go-wallet/wallet/crypto"
-	commandspb "github.com/vegaprotocol/api/grpc/clients/go/generated/code.vegaprotocol.io/vega/proto/commands/v1"
 
 	"github.com/golang/protobuf/proto"
 )

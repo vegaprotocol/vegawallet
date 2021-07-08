@@ -1,0 +1,278 @@
+syntax = "proto3";
+
+package wallet.vega.events.v1;
+option go_package = "code.vegaprotocol.io/go-wallet/internal/proto/events/v1";
+
+import "proto/markets.proto";
+import "proto/assets.proto";
+import "proto/governance.proto";
+import "proto/vega.proto";
+import "proto/oracles/v1/spec.proto";
+import "proto/oracles/v1/data.proto";
+import "proto/commands/v1/commands.proto";
+import "proto/commands/v1/validator_commands.proto";
+
+// MarketEvent - the common denominator for all market events
+// interface has a method to return a string for logging
+message MarketEvent {
+  // Market identifier for the event
+  string market_id = 1;
+  // Payload is a unique information string
+  string payload = 2;
+}
+
+message TxErrorEvent {
+  // Unique party identifier for the related party
+  string party_id = 1;
+  // An error message describing what went wrong
+  string err_msg = 2;
+  // The transaction that failed
+  oneof transaction {
+    commands.v1.OrderSubmission order_submission = 101;
+    commands.v1.OrderAmendment order_amendment = 102;
+    commands.v1.OrderCancellation order_cancellation = 103;
+    commands.v1.ProposalSubmission proposal = 104;
+    commands.v1.VoteSubmission vote_submission = 105;
+    commands.v1.LiquidityProvisionSubmission liquidity_provision_submission = 106;
+    commands.v1.WithdrawSubmission withdraw_submission = 107;
+  }
+}
+
+// A time update event contains the latest time update from Vega blockchain
+message TimeUpdate {
+  // Timestamp containing latest update from Vega blockchain aka Vega-time
+  int64 timestamp = 1;
+}
+
+// A transfer responses event contains a collection of transfer information
+message TransferResponses {
+  // One or more entries containing internal transfer information
+  repeated TransferResponse responses = 1;
+}
+
+// A position resolution event contains information on distressed trades
+message PositionResolution {
+  // Market identifier for the event
+  string market_id = 1;
+  // Number of distressed traders
+  int64 distressed = 2;
+  // Number of close outs
+  int64 closed = 3;
+  // Mark price, as an integer, for example `123456` is a correctly
+  // formatted price of `1.23456` assuming market configured to 5 decimal places
+  uint64 mark_price = 4;
+}
+
+// A loss socialization event contains details on the amount of wins unable to be distributed
+message LossSocialization {
+  // Market identifier for the event
+  string market_id = 1;
+  // Party identifier (public key) for the event
+  string party_id = 2;
+  // Amount distributed
+  int64 amount = 3;
+}
+
+// A trade settlement is part of the settle position event
+message TradeSettlement {
+  // Size of trade settlement
+  int64 size = 1;
+  // Price of settlement as an integer, for example `123456` is a correctly
+  // formatted price of `1.23456` assuming market configured to 5 decimal places
+  uint64 price = 2;
+}
+
+// A settle position event contains position settlement information for a party
+message SettlePosition {
+  // Market identifier for the event
+  string market_id = 1;
+  // Party identifier (public key) for the event
+  string party_id = 2;
+  // Price of settlement as an integer, for example `123456` is a correctly
+  // formatted price of `1.23456` assuming market configured to 5 decimal places
+  uint64 price = 3;
+  // A collection of 1 or more trade settlements
+  repeated TradeSettlement trade_settlements = 4;
+}
+
+// A settle distressed event contains information on distressed trading parties who are closed out
+message SettleDistressed {
+  // Note: Any PositionResolution event (market level) will most likely be followed by a number of these events
+
+  // Market identifier for the event
+  string market_id = 1;
+  // Party identifier (public key) for the event
+  string party_id = 2;
+  // Margin value as an integer, for example `123456` is a correctly
+  // formatted price of `1.23456` assuming market configured to 5 decimal places
+  uint64 margin = 3;
+  // Price as an integer, for example `123456` is a correctly
+  // formatted price of `1.23456` assuming market configured to 5 decimal places
+  uint64 price = 4;
+}
+
+// A market ticket event contains the time value for when a particular market was last processed on Vega
+message MarketTick {
+  // Market identifier for the event
+  string id = 1;
+  // Timestamp containing latest update from Vega blockchain aka Vega-time
+  int64 time = 2;
+}
+
+// An auction event indicating a change in auction state, for example starting or ending an auction
+message AuctionEvent {
+  // Market identifier for the event
+  string market_id = 1;
+  // True if the event indicates an auction opening and False otherwise
+  bool opening_auction = 2;
+  // True if the event indicates leaving auction mode and False otherwise
+  bool leave = 3;
+  // Timestamp containing the start time for an auction
+  int64 start = 4;
+  // Timestamp containing the end time for an auction
+  int64 end = 5;
+  // the reason this market is/was in auction
+  AuctionTrigger trigger = 6;
+  // If an auction was ongoing, but was extended for whatever reason, this field will
+  // be set to the trigger type indicating which component extended the auction
+  AuctionTrigger extension_trigger = 7;
+}
+
+// An (event) bus event type is used to specify a type of event
+// It has 2 styles of event:
+// Single values (e.g. BUS_EVENT_TYPE_ORDER) where they represent one data item
+// Group values (e.g. BUS_EVENT_TYPE_AUCTION) where they represent a group of data items
+enum BusEventType {
+    // Default value, always invalid
+    BUS_EVENT_TYPE_UNSPECIFIED = 0;
+    // Events of ALL event types, used when filtering stream from event bus
+    BUS_EVENT_TYPE_ALL = 1;
+    // Event for blockchain time updates
+    BUS_EVENT_TYPE_TIME_UPDATE = 2;
+    // Event for when a transfer happens internally, contains the transfer information
+    BUS_EVENT_TYPE_TRANSFER_RESPONSES = 3;
+    // Event indicating position resolution has occurred
+    BUS_EVENT_TYPE_POSITION_RESOLUTION = 4;
+    // Event for order updates, both new and existing orders
+    BUS_EVENT_TYPE_ORDER = 5;
+    // Event for account updates
+    BUS_EVENT_TYPE_ACCOUNT = 6;
+    // Event for party updates
+    BUS_EVENT_TYPE_PARTY = 7;
+    // Event indicating a new trade has occurred
+    BUS_EVENT_TYPE_TRADE = 8;
+    // Event indicating margin levels have changed for a party
+    BUS_EVENT_TYPE_MARGIN_LEVELS = 9;
+    // Event for proposal updates (for governance)
+    BUS_EVENT_TYPE_PROPOSAL = 10;
+    // Event indicating a new vote has occurred (for governance)
+    BUS_EVENT_TYPE_VOTE = 11;
+    // Event for market data updates
+    BUS_EVENT_TYPE_MARKET_DATA = 12;
+    // Event for a new signature for a Vega node
+    BUS_EVENT_TYPE_NODE_SIGNATURE = 13;
+    // Event indicating loss socialisation occurred for a party
+    BUS_EVENT_TYPE_LOSS_SOCIALIZATION = 14;
+    // Event for when a position is being settled
+    BUS_EVENT_TYPE_SETTLE_POSITION = 15;
+    // Event for when a position is distressed
+    BUS_EVENT_TYPE_SETTLE_DISTRESSED = 16;
+    // Event indicating a new market was created
+    BUS_EVENT_TYPE_MARKET_CREATED = 17;
+    // Event for when an asset is added to Vega
+    BUS_EVENT_TYPE_ASSET = 18;
+    // Event indicating a market tick event
+    BUS_EVENT_TYPE_MARKET_TICK = 19;
+    // Event for when a withdrawal occurs
+    BUS_EVENT_TYPE_WITHDRAWAL = 20;
+    // Event for when a deposit occurs
+    BUS_EVENT_TYPE_DEPOSIT = 21;
+    // Event indicating a change in auction state, for example starting or ending an auction
+    BUS_EVENT_TYPE_AUCTION = 22;
+    // Event indicating a risk factor has been updated
+    BUS_EVENT_TYPE_RISK_FACTOR = 23;
+    // Event indicating a network parameter has been added or updated
+    BUS_EVENT_TYPE_NETWORK_PARAMETER = 24;
+    // Event indicating a liquidity provision has been created or updated
+    BUS_EVENT_TYPE_LIQUIDITY_PROVISION = 25;
+    // Event indicating a new market was created
+    BUS_EVENT_TYPE_MARKET_UPDATED = 26;
+    // Event indicating an oracle spec has been created or updated
+    BUS_EVENT_TYPE_ORACLE_SPEC = 27;
+    // Event indicating that an oracle data has been broadcast
+    BUS_EVENT_TYPE_ORACLE_DATA = 28;
+    // Event indicating a market related event, for example when a market opens
+    BUS_EVENT_TYPE_MARKET = 101;
+    // Event used to report failed transactions back to a user, this is excluded from the ALL type
+    BUS_EVENT_TYPE_TX_ERROR = 201;
+}
+
+// A bus event is a container for event bus events emitted by Vega
+message BusEvent {
+  // A unique event identifier for the message
+  string id = 1;
+  // The batch (or block) of transactions that the events relate to
+  string block = 2;
+  // The type of bus event (one of the list below)
+  BusEventType type = 3;
+  oneof event {
+    // Time update events - See [TimeUpdate](#vega.TimeUpdate)
+    TimeUpdate time_update = 101;
+    // Transfer responses update events - See [TransferResponses](#vega.TransferResponses)
+    TransferResponses transfer_responses = 102;
+    // Position resolution events - See [PositionResolution](#vega.PositionResolution)
+    PositionResolution position_resolution = 103;
+    // Order events
+    Order order = 104;
+    // Account events
+    Account account = 105;
+    // Party events
+    Party party = 106;
+    // Trade events
+    Trade trade = 107;
+    // Margin level update events
+    MarginLevels margin_levels = 108;
+    // Proposal events (for governance)
+    Proposal proposal = 109;
+    // Vote events (for governance)
+    Vote vote = 110;
+    // Market data events
+    MarketData market_data = 111;
+    // Node signature events
+    vega.commands.v1.NodeSignature node_signature = 112;
+    // Loss socialization events - See [LossSocialization](#vega.LossSocialization)
+    LossSocialization loss_socialization = 113;
+    // Position settlement events - See [SettlePosition](#vega.SettlePosition)
+    SettlePosition settle_position = 114;
+    // Position distressed events - See [SettleDistressed](#vega.SettleDistressed)
+    SettleDistressed settle_distressed = 115;
+    // Market created events
+    Market market_created = 116;
+    // Asset events
+    Asset asset = 117;
+    // Market tick events - See [MarketTick](#vega.MarketTick)
+    MarketTick market_tick = 118;
+    // Withdrawal events
+    Withdrawal withdrawal = 119;
+    // Deposit events
+    Deposit deposit = 120;
+    // Auction events - See [AuctionEvent](#vega.AuctionEvent)
+    AuctionEvent auction = 121;
+    // Risk factor events
+    RiskFactor risk_factor = 122;
+    // Network parameter events
+    NetworkParameter network_parameter = 123;
+    // LiquidityProvision  events
+    LiquidityProvision liquidity_provision = 124;
+    // Market created events
+    Market market_updated = 125;
+    // OracleSpec events
+    oracles.v1.OracleSpec oracle_spec = 126;
+    // OracleData events
+    oracles.v1.OracleData oracle_data = 127;
+    // Market tick events - See [MarketEvent](#vega.MarketEvent)
+    MarketEvent market = 1001;
+    // Transaction error events, not included in the ALL event type
+    TxErrorEvent tx_err_event = 2001;
+  }
+}

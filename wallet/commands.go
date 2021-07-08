@@ -2,7 +2,7 @@ package wallet
 
 import (
 	"code.vegaprotocol.io/go-wallet/commands"
-	walletpb "github.com/vegaprotocol/api/grpc/clients/go/generated/code.vegaprotocol.io/vega/proto/wallet/v1"
+	walletpb "code.vegaprotocol.io/go-wallet/internal/proto/wallet/v1"
 )
 
 func CheckSubmitTransactionRequest(req *walletpb.SubmitTransactionRequest) commands.Errors {

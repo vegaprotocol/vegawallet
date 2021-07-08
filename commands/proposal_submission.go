@@ -7,9 +7,9 @@ import (
 	"strings"
 	"time"
 
-	typespb "github.com/vegaprotocol/api/grpc/clients/go/generated/code.vegaprotocol.io/vega/proto"
-	commandspb "github.com/vegaprotocol/api/grpc/clients/go/generated/code.vegaprotocol.io/vega/proto/commands/v1"
-	oraclespb "github.com/vegaprotocol/api/grpc/clients/go/generated/code.vegaprotocol.io/vega/proto/oracles/v1"
+	typespb "code.vegaprotocol.io/go-wallet/internal/proto"
+	commandspb "code.vegaprotocol.io/go-wallet/internal/proto/commands/v1"
+	oraclespb "code.vegaprotocol.io/go-wallet/internal/proto/oracles/v1"
 )
 
 const (
