@@ -96,22 +96,43 @@ func (s *Store) GetWallet(name, passphrase string) (wallet.Wallet, error) {
 	walletPath := s.walletPath(name)
 
 	if ok, _ := fsutil.PathExists(walletPath); !ok {
-		return wallet.Wallet{}, wallet.ErrWalletDoesNotExists
+		return nil, wallet.ErrWalletDoesNotExists
 	}
 
 	buf, err := ioutil.ReadFile(walletPath)
 	if err != nil {
-		return wallet.Wallet{}, err
+		return nil, err
 	}
 
 	decBuf, err := crypto.Decrypt(buf, passphrase)
 	if err != nil {
-		return wallet.Wallet{}, err
+		return nil, err
 	}
 
-	w := &wallet.Wallet{}
+	versionedWallet := &struct {
+		Version uint32 `json:"version"`
+	}{}
+
+	err = json.Unmarshal(decBuf, versionedWallet)
+	if err != nil {
+		return nil, err
+	}
+
+	var w wallet.Wallet
+	switch versionedWallet.Version {
+	case 0:
+		w = &wallet.LegacyWallet{}
+		break
+	case 1:
+		w = &wallet.HDWallet{}
+		break
+	default:
+		return nil, fmt.Errorf("wallet with version %d isn't supported", versionedWallet.Version)
+	}
+
 	err = json.Unmarshal(decBuf, w)
-	return *w, err
+
+	return w, nil
 }
 
 func (s *Store) SaveWallet(w wallet.Wallet, passphrase string) error {
@@ -125,7 +146,7 @@ func (s *Store) SaveWallet(w wallet.Wallet, passphrase string) error {
 		return err
 	}
 
-	f, err := os.Create(s.walletPath(w.Owner))
+	f, err := os.Create(s.walletPath(w.Name()))
 	if err != nil {
 		return err
 	}

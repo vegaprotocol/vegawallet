@@ -1,35 +1,35 @@
 package cmd
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
 
 	storev1 "code.vegaprotocol.io/go-wallet/store/v1"
 	"code.vegaprotocol.io/go-wallet/wallet"
-
 	"github.com/spf13/cobra"
 )
 
 var (
 	genKeyArgs struct {
-		walletOwner string
-		passphrase  string
-		metas       string
+		name       string
+		passphrase string
+		metas      string
 	}
 
 	// genKeyCmd represents the genkey command
 	genKeyCmd = &cobra.Command{
 		Use:   "genkey",
-		Short: "Generate a new keypair for a wallet",
-		Long:  "Generate a new keypair for a wallet, this will implicitly generate a new wallet if none exist for the given name",
+		Short: "Generate a new key pair for a wallet",
+		Long:  "Generate a new key pair for a wallet, this will implicitly generate a new wallet if none exist for the given name",
 		RunE:  runGenKey,
 	}
 )
 
 func init() {
 	rootCmd.AddCommand(genKeyCmd)
-	genKeyCmd.Flags().StringVarP(&genKeyArgs.walletOwner, "name", "n", "", "Name of the wallet to use")
+	genKeyCmd.Flags().StringVarP(&genKeyArgs.name, "name", "n", "", "Name of the wallet to use")
 	genKeyCmd.Flags().StringVarP(&genKeyArgs.passphrase, "passphrase", "p", "", "Passphrase to access the wallet")
 	genKeyCmd.Flags().StringVarP(&genKeyArgs.metas, "metas", "m", "", `A list of metadata e.g: "primary:true;asset:BTC"`)
 }
@@ -42,11 +42,11 @@ func runGenKey(cmd *cobra.Command, args []string) error {
 
 	handler := wallet.NewHandler(store)
 
-	if len(genKeyArgs.walletOwner) == 0 {
+	if len(genKeyArgs.name) == 0 {
 		return errors.New("wallet name is required")
 	}
 
-	walletExists := handler.WalletExists(genKeyArgs.walletOwner)
+	walletExists := handler.WalletExists(genKeyArgs.name)
 
 	if len(genKeyArgs.passphrase) == 0 {
 		var (
@@ -80,26 +80,31 @@ func runGenKey(cmd *cobra.Command, args []string) error {
 	}
 
 	if !walletExists {
-		err := handler.CreateWallet(genKeyArgs.walletOwner, genKeyArgs.passphrase)
+		mnemonic, err := handler.CreateWallet(genKeyArgs.name, genKeyArgs.passphrase)
 		if err != nil {
 			return fmt.Errorf("couldn't create wallet: %v", err)
 		}
+		fmt.Printf("new mnemonic:\n")
+		fmt.Printf("%s\n", mnemonic)
 	}
 
-	keyPair, err := handler.GenerateKeyPair(genKeyArgs.walletOwner, genKeyArgs.passphrase)
+	keyPair, err := handler.GenerateKeyPair(genKeyArgs.name, genKeyArgs.passphrase)
 	if err != nil {
 		return fmt.Errorf("could not generate a key pair: %v", err)
 	}
 
-	err = handler.UpdateMeta(genKeyArgs.walletOwner, keyPair.Pub, genKeyArgs.passphrase, metas)
+	err = handler.UpdateMeta(genKeyArgs.name, keyPair.PublicKey(), genKeyArgs.passphrase, metas)
 	if err != nil {
 		return fmt.Errorf("could not update the meta: %v", err)
 	}
 
 	// print the new keys for user info
+	buf, err := json.MarshalIndent(keyPair, " ", " ")
+	if err != nil {
+		return fmt.Errorf("unable to marshal message: %v", err)
+	}
 	fmt.Printf("new generated keys:\n")
-	fmt.Printf("public: %v\n", keyPair.Pub)
-	fmt.Printf("private: %v\n", keyPair.Priv)
+	fmt.Printf("%s\n", string(buf))
 
 	return nil
 }

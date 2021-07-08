@@ -13,22 +13,22 @@ import (
 
 var (
 	listArgs struct {
-		walletOwner string
-		passphrase  string
+		name       string
+		passphrase string
 	}
 
 	// listCmd represents the list command
 	listCmd = &cobra.Command{
 		Use:   "list",
-		Short: "List keypairs of a wallet",
-		Long:  "List all the keypairs for a given wallet",
+		Short: "List keys of a wallet",
+		Long:  "List all the keys for a given wallet",
 		RunE:  runList,
 	}
 )
 
 func init() {
 	rootCmd.AddCommand(listCmd)
-	listCmd.Flags().StringVarP(&listArgs.walletOwner, "name", "n", "", "Name of the wallet to use")
+	listCmd.Flags().StringVarP(&listArgs.name, "name", "n", "", "Name of the wallet to use")
 	listCmd.Flags().StringVarP(&listArgs.passphrase, "passphrase", "p", "", "Passphrase to access the wallet")
 }
 
@@ -40,7 +40,7 @@ func runList(cmd *cobra.Command, args []string) error {
 
 	handler := wallet.NewHandler(store)
 
-	if len(listArgs.walletOwner) == 0 {
+	if len(listArgs.name) == 0 {
 		return errors.New("wallet name is required")
 	}
 	if len(listArgs.passphrase) == 0 {
@@ -51,12 +51,12 @@ func runList(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	err = handler.LoginWallet(listArgs.walletOwner, listArgs.passphrase)
+	err = handler.LoginWallet(listArgs.name, listArgs.passphrase)
 	if err != nil {
 		return fmt.Errorf("could not login to the wallet: %v", err)
 	}
 
-	keys, err := handler.ListPublicKeys(listArgs.walletOwner)
+	keys, err := handler.ListKeyPairs(listArgs.name)
 	if err != nil {
 		return fmt.Errorf("could not list the public keys: %v", err)
 	}
@@ -67,7 +67,7 @@ func runList(cmd *cobra.Command, args []string) error {
 	}
 
 	// print the new keys for user info
-	fmt.Printf("List of all your keypairs:\n")
+	fmt.Printf("List of all your keys:\n")
 	fmt.Printf("%v\n", string(buf))
 
 	return nil

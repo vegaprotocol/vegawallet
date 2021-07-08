@@ -37,16 +37,86 @@ type Service struct {
 	nodeForward NodeForward
 }
 
-// CreateLoginWalletRequest describes the request for CreateWallet, LoginWallet.
-type CreateLoginWalletRequest struct {
+// CreateWalletRequest describes the request for CreateWallet.
+type CreateWalletRequest struct {
 	Wallet     string `json:"wallet"`
 	Passphrase string `json:"passphrase"`
 }
 
-func ParseCreateLoginWalletRequest(r *http.Request) (*CreateLoginWalletRequest, commands.Errors) {
+func ParseCreateWalletRequest(r *http.Request) (*CreateWalletRequest, commands.Errors) {
 	errs := commands.NewErrors()
 
-	req := &CreateLoginWalletRequest{}
+	req := &CreateWalletRequest{}
+	if err := unmarshalBody(r, &req); err != nil {
+		return nil, errs.FinalAdd(err)
+	}
+
+	if len(req.Wallet) == 0 {
+		errs.AddForProperty("wallet", commands.ErrIsRequired)
+	}
+
+	if len(req.Passphrase) == 0 {
+		errs.AddForProperty("passphrase", commands.ErrIsRequired)
+	}
+
+	if !errs.Empty() {
+		return nil, errs
+	}
+
+	return req, errs
+}
+
+// CreateWalletResponse returns the authentication token and the auto-generated
+// mnemonic of the created wallet.
+type CreateWalletResponse struct {
+	Mnemonic string `json:"mnemonic"`
+	Token    string `json:"token"`
+}
+
+// ImportWalletRequest describes the request for ImportWallet.
+type ImportWalletRequest struct {
+	Wallet     string `json:"wallet"`
+	Passphrase string `json:"passphrase"`
+	Mnemonic   string `json:"mnemonic"`
+}
+
+func ParseImportWalletRequest(r *http.Request) (*ImportWalletRequest, commands.Errors) {
+	errs := commands.NewErrors()
+
+	req := &ImportWalletRequest{}
+	if err := unmarshalBody(r, &req); err != nil {
+		return nil, errs.FinalAdd(err)
+	}
+
+	if len(req.Wallet) == 0 {
+		errs.AddForProperty("wallet", commands.ErrIsRequired)
+	}
+
+	if len(req.Passphrase) == 0 {
+		errs.AddForProperty("passphrase", commands.ErrIsRequired)
+	}
+
+	if len(req.Mnemonic) == 0 {
+		errs.AddForProperty("mnemonic", commands.ErrIsRequired)
+	}
+
+	if !errs.Empty() {
+		return nil, errs
+	}
+
+	return req, errs
+}
+
+// LoginWalletRequest describes the request for CreateWallet, LoginWallet.
+type LoginWalletRequest struct {
+	Wallet     string `json:"wallet"`
+	Passphrase string `json:"passphrase"`
+}
+
+func ParseLoginWalletRequest(r *http.Request) (*LoginWalletRequest, commands.Errors) {
+	errs := commands.NewErrors()
+
+	req := &LoginWalletRequest{}
 	if err := unmarshalBody(r, &req); err != nil {
 		return nil, errs.FinalAdd(err)
 	}
@@ -269,11 +339,12 @@ type TokenResponse struct {
 // WalletHandler ...
 //go:generate go run github.com/golang/mock/mockgen -destination mocks/wallet_handler_mock.go -package mocks code.vegaprotocol.io/go-wallet/service WalletHandler
 type WalletHandler interface {
-	CreateWallet(name, passphrase string) error
+	CreateWallet(name, passphrase string) (string, error)
+	ImportWallet(name, passphrase, mnemonic string) error
 	LoginWallet(name, passphrase string) error
 	LogoutWallet(name string)
 	SecureGenerateKeyPair(name, passphrase string) (string, error)
-	GetPublicKey(name, pubKey string) (*wallet.PublicKey, error)
+	GetPublicKey(name, pubKey string) (wallet.PublicKey, error)
 	ListPublicKeys(name string) ([]wallet.PublicKey, error)
 	SignTx(name, tx, pubKey string, height uint64) (wallet.SignedBundle, error)
 	SignTxV2(name string, req *walletpb.SubmitTransactionRequest, height uint64) (*commandspb.Transaction, error)
@@ -334,7 +405,7 @@ func NewServiceWith(log *zap.Logger, cfg *config.Config, h WalletHandler, a Auth
 	s.DELETE("/api/v1/auth/token", ExtractToken(s.Revoke))
 	s.GET("/api/v1/status", s.health)
 	s.POST("/api/v1/wallets", s.CreateWallet)
-
+	s.POST("/api/v1/wallets/import", s.ImportWallet)
 	s.GET("/api/v1/keys", ExtractToken(s.ListPublicKeys))
 	s.POST("/api/v1/keys", ExtractToken(s.GenerateKeypair))
 	s.GET("/api/v1/keys/:keyid", ExtractToken(s.GetPublicKey))
@@ -369,13 +440,35 @@ func (s *Service) Stop() error {
 }
 
 func (s *Service) CreateWallet(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	req, errs := ParseCreateLoginWalletRequest(r)
+	req, errs := ParseCreateWalletRequest(r)
 	if !errs.Empty() {
 		s.writeBadRequest(w, errs)
 		return
 	}
 
-	err := s.handler.CreateWallet(req.Wallet, req.Passphrase)
+	mnemonic, err := s.handler.CreateWallet(req.Wallet, req.Passphrase)
+	if err != nil {
+		writeForbiddenError(w, err)
+		return
+	}
+
+	token, err := s.auth.NewSession(req.Wallet)
+	if err != nil {
+		writeForbiddenError(w, err)
+		return
+	}
+
+	writeSuccess(w, CreateWalletResponse{Mnemonic: mnemonic, Token: token}, http.StatusOK)
+}
+
+func (s *Service) ImportWallet(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	req, errs := ParseImportWalletRequest(r)
+	if !errs.Empty() {
+		s.writeBadRequest(w, errs)
+		return
+	}
+
+	err := s.handler.ImportWallet(req.Wallet, req.Passphrase, req.Mnemonic)
 	if err != nil {
 		writeForbiddenError(w, err)
 		return
@@ -391,7 +484,7 @@ func (s *Service) CreateWallet(w http.ResponseWriter, r *http.Request, _ httprou
 }
 
 func (s *Service) Login(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	req, errs := ParseCreateLoginWalletRequest(r)
+	req, errs := ParseLoginWalletRequest(r)
 	if !errs.Empty() {
 		s.writeBadRequest(w, errs)
 		return
@@ -480,7 +573,7 @@ func (s *Service) GenerateKeypair(t string, w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	writeSuccess(w, KeyResponse{Key: *key}, http.StatusOK)
+	writeSuccess(w, KeyResponse{Key: key}, http.StatusOK)
 }
 
 func (s *Service) GetPublicKey(t string, w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -502,7 +595,7 @@ func (s *Service) GetPublicKey(t string, w http.ResponseWriter, r *http.Request,
 		return
 	}
 
-	writeSuccess(w, KeyResponse{Key: *key}, http.StatusOK)
+	writeSuccess(w, KeyResponse{Key: key}, http.StatusOK)
 }
 
 func (s *Service) ListPublicKeys(t string, w http.ResponseWriter, r *http.Request, _ httprouter.Params) {

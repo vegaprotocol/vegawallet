@@ -16,7 +16,9 @@ require (
 	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
 	github.com/spf13/cobra v1.0.0
 	github.com/stretchr/testify v1.7.0
+	github.com/tyler-smith/go-bip39 v1.1.0
 	github.com/vegaprotocol/api v0.38.0
+	github.com/vegaprotocol/go-slip10 v0.1.0
 	github.com/zannen/toml v0.3.2
 	go.uber.org/zap v1.13.0
 	golang.org/x/crypto v0.0.0-20201221181555-eec23a3978ad

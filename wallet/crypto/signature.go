@@ -32,14 +32,11 @@ func NewEd25519() SignatureAlgorithm {
 	}
 }
 
-func NewSignatureAlgorithm(algo string) (SignatureAlgorithm, error) {
-	switch algo {
-	case Ed25519:
+func NewSignatureAlgorithm(name string, version uint32) (SignatureAlgorithm, error) {
+	if name == Ed25519 && version == 1 {
 		return NewEd25519(), nil
-	default:
-		return SignatureAlgorithm{}, ErrUnsupportedSignatureAlgorithm
 	}
-
+	return SignatureAlgorithm{}, ErrUnsupportedSignatureAlgorithm
 }
 
 func (s *SignatureAlgorithm) GenKey() (crypto.PublicKey, crypto.PrivateKey, error) {
@@ -62,6 +59,8 @@ func (s *SignatureAlgorithm) Version() uint32 {
 	return s.impl.Version()
 }
 
+// TODO We should rethink this to include the version, based on the
+//		jsonAlgorithm implementation.
 func (s *SignatureAlgorithm) MarshalJSON() ([]byte, error) {
 	if s != nil {
 		return json.Marshal(s.Name())
@@ -69,6 +68,8 @@ func (s *SignatureAlgorithm) MarshalJSON() ([]byte, error) {
 	return nil, errors.New("nil signature")
 }
 
+// TODO We should rethink this to include the version, based on the
+//		jsonAlgorithm implementation.
 func (s *SignatureAlgorithm) UnmarshalJSON(data []byte) error {
 	var name string
 	if err := json.Unmarshal(data, &name); err != nil {

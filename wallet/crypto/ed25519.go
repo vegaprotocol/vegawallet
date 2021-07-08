@@ -17,12 +17,15 @@ var (
 	ErrBadED25519PublicKeyLength = errors.New("bad ed25519 public key length")
 )
 
+// TODO Rethink this struct to hold a ed25519 key pair
 type ed25519Sig struct{}
 
 func newEd25519() *ed25519Sig {
 	return &ed25519Sig{}
 }
 
+// TODO Remove once the LegacyWallet is removed since the key generation will
+//   	be handled by the slip10 library
 func (e *ed25519Sig) GenKey() (crypto.PublicKey, crypto.PrivateKey, error) {
 	pub, priv, err := ed25519.GenerateKey(nil)
 	if err != nil {

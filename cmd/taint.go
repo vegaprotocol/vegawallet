@@ -11,9 +11,9 @@ import (
 
 var (
 	taintArgs struct {
-		walletOwner string
-		passphrase  string
-		pubkey      string
+		name       string
+		passphrase string
+		pubkey     string
 	}
 	// taintCmd represents the taint command
 	taintCmd = &cobra.Command{
@@ -26,7 +26,7 @@ var (
 
 func init() {
 	rootCmd.AddCommand(taintCmd)
-	taintCmd.Flags().StringVarP(&taintArgs.walletOwner, "name", "n", "", "Name of the wallet to use")
+	taintCmd.Flags().StringVarP(&taintArgs.name, "name", "n", "", "Name of the wallet to use")
 	taintCmd.Flags().StringVarP(&taintArgs.passphrase, "passphrase", "p", "", "Passphrase to access the wallet")
 	taintCmd.Flags().StringVarP(&taintArgs.pubkey, "pubkey", "k", "", "Public key to be used (hex)")
 }
@@ -39,7 +39,7 @@ func runTaint(cmd *cobra.Command, args []string) error {
 
 	handler := wallet.NewHandler(store)
 
-	if len(taintArgs.walletOwner) == 0 {
+	if len(taintArgs.name) == 0 {
 		return errors.New("wallet name is required")
 	}
 
@@ -50,7 +50,7 @@ func runTaint(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	err = handler.TaintKey(taintArgs.walletOwner, taintArgs.pubkey, taintArgs.passphrase)
+	err = handler.TaintKey(taintArgs.name, taintArgs.pubkey, taintArgs.passphrase)
 	if err != nil {
 		return fmt.Errorf("could not taint the key: %v", err)
 	}

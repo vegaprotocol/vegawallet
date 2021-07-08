@@ -11,11 +11,11 @@ import (
 
 var (
 	verifyArgs struct {
-		walletOwner string
-		passphrase  string
-		sig         string
-		message     string
-		pubkey      string
+		name       string
+		passphrase string
+		sig        string
+		message    string
+		pubkey     string
 	}
 
 	// verifyCmd represents the verify command
@@ -29,7 +29,7 @@ var (
 
 func init() {
 	rootCmd.AddCommand(verifyCmd)
-	verifyCmd.Flags().StringVarP(&verifyArgs.walletOwner, "name", "n", "", "Name of the wallet to use")
+	verifyCmd.Flags().StringVarP(&verifyArgs.name, "name", "n", "", "Name of the wallet to use")
 	verifyCmd.Flags().StringVarP(&verifyArgs.passphrase, "passphrase", "p", "", "Passphrase to access the wallet")
 	verifyCmd.Flags().StringVarP(&verifyArgs.message, "message", "m", "", "Message to be verified (base64)")
 	verifyCmd.Flags().StringVarP(&verifyArgs.sig, "signature", "s", "", "Signature to be verified (base64)")
@@ -44,7 +44,7 @@ func runVerify(cmd *cobra.Command, args []string) error {
 
 	handler := wallet.NewHandler(store)
 
-	if len(verifyArgs.walletOwner) == 0 {
+	if len(verifyArgs.name) == 0 {
 		return errors.New("wallet name is required")
 	}
 	if len(verifyArgs.pubkey) == 0 {
@@ -64,12 +64,12 @@ func runVerify(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	err = handler.LoginWallet(verifyArgs.walletOwner, verifyArgs.passphrase)
+	err = handler.LoginWallet(verifyArgs.name, verifyArgs.passphrase)
 	if err != nil {
 		return fmt.Errorf("could not login to the wallet: %v", err)
 	}
 
-	verified, err := handler.VerifyAny(verifyArgs.walletOwner, verifyArgs.message, verifyArgs.sig, verifyArgs.pubkey)
+	verified, err := handler.VerifyAny(verifyArgs.name, verifyArgs.message, verifyArgs.sig, verifyArgs.pubkey)
 	if err != nil {
 		return fmt.Errorf("could not verify the message: %v", err)
 	}
