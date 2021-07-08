@@ -2,8 +2,8 @@
 
 ## Root flags
 
-By default, the wallet will be stored at specific location. If you want to
-specify a different location for test or isolation purpose, use
+By default, the wallet will be stored at a specific location. If you want to
+specify a different location for test or isolation purposes, use
 the ``--root-path`` flag to do so.
 
 ## List of available commands
@@ -18,14 +18,14 @@ vegawallet help
 
 ## Create a wallet
 
-To create a new wallet, you simply need to generate your first key pair using
+To create a new wallet, generate your first key pair using
 the following command:
 
 ```console
 vegawallet key generate --name "YOUR_USERNAME"
 ```
 
-The `--name` flag set the name of your wallet.
+The `--name` flag sets the name of your wallet.
 
 It will then prompt you to input a passphrase, and then confirm that passphrase.
 You'll use this username and passphrase to login to Vega Console. You can also
@@ -80,7 +80,7 @@ If the wallet does not exist, it will automatically create one. See
 You have the opportunity to attach metadata to your key with the ``--meta``
 flag (more on this below).
 
-## Add meta to your keys
+## Add metadata to your keys
 
 For better key management, you may want to add metadata to your key pairs. This
 is done with the following command:
@@ -89,7 +89,7 @@ is done with the following command:
 vegawallet key meta --name "YOUR_USERNAME" --meta "key1:value1;key2:value2" --pubkey "YOUR_HEX_PUBLIC_KEY"
 ```
 
-A metadata is represented as a key-value property.
+An item of metadata is represented as a key-value property.
 
 ### Give an alias to a key
 
@@ -107,7 +107,7 @@ to your update.
 
 ## Tainting a key pair
 
-For some reason, you may want to prevent the use of a key, by "tainting" it with
+You may want to prevent the use of a key by "tainting" it with
 the following command:
 
 ```console
