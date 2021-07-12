@@ -4,7 +4,7 @@
 These instructions are written to be used in command line. Below, in the snippets, you'll see commands in blue text. Copy those instructions and paste them into your command line interface.
 
 ### Download
-Download and save the zip file from Releases. We suggest you keep track of where you've saved the file, because that's where the command line interface will look for it. 
+Download and save the zip file from Releases. We suggest you keep track of where you've saved the file, because that's where the command line interface will look for it.
 https://github.com/vegaprotocol/go-wallet/releases
 
 **For MacOS:**
@@ -33,7 +33,7 @@ Download `vegawallet-linux-amd64.zip`
 
 ### Execute the program
 
-> Tip: You'll need to run the commands from the directory you've saved the wallet file in. Use the command `pwd` to find out where your terminal is looking in the file system. Use the command `cd` and the path/to/wallet/directory to tell the command line where to find the file. 
+> Tip: You'll need to run the commands from the directory you've saved the wallet file in. Use the command `pwd` to find out where your terminal is looking in the file system. Use the command `cd` and the path/to/wallet/directory to tell the command line where to find the file.
 
 > Tip: You can use the tab key to auto-fill the name of the file, after you type the first few characters.
 
@@ -58,7 +58,7 @@ to execute the program.
 > Tip: You can see a list of available commands by running  `./vegawallet -h` on MacOS and Linux, or `vegawallet -h` on Windows.
 
 ### Create name and passphrase
-Next, **create a user name and passphrase** for your Wallet, and **create a public and private key** (genkey). 
+Next, **create a user name and passphrase** for your Wallet, and **create a public and private key** (genkey).
 
 Replace "YOUR_CUSTOM_USERNAME" (below) with your chosen username:
 
@@ -84,17 +84,17 @@ You’ll see an output with a "mnemonic" and a public and private key. DO NOT SH
 
 You don’t need to save your private key, as you’ll be able to retrieve it from your Wallet in the future.
 
-> Tip: You can give each new key a nickname/alias. 
-> When creating a key, run 
-> 
-> MacOS & Linux: `./vegawallet genkey -name="YOUR_CUSTOM_USERNAME" --metas="name:CHOOSE_CUSTOM_ALIAS_FOR_KEY"`. 
-> 
+> Tip: You can give each new key a nickname/alias.
+> When creating a key, run
+>
+> MacOS & Linux: `./vegawallet genkey -name="YOUR_CUSTOM_USERNAME" --metas="name:CHOOSE_CUSTOM_ALIAS_FOR_KEY"`.
+>
 > Windows: `vegawallet genkey -name="YOUR_CUSTOM_USERNAME" --metas="name:CHOOSE_CUSTOM_ALIAS_FOR_KEY"`
 
-> Tip: To give an existing key a nickname/alias, run 
-> 
-> MacOS & Linux: `./vegawallet meta --metas="name:CHOOSE_CUSTOM_ALIAS_FOR_KEY" --name="YOUR_CUSTOM_USERNAME" --pubkey="REPLACE_THIS_WITH_YOUR_PUBLIC_KEY"`. 
-> 
+> Tip: To give an existing key a nickname/alias, run
+>
+> MacOS & Linux: `./vegawallet meta --metas="name:CHOOSE_CUSTOM_ALIAS_FOR_KEY" --name="YOUR_CUSTOM_USERNAME" --pubkey="REPLACE_THIS_WITH_YOUR_PUBLIC_KEY"`.
+>
 > Windows: `vegawallet meta --metas="name:CHOOSE_CUSTOM_ALIAS_FOR_KEY" --name="YOUR_CUSTOM_USERNAME" --pubkey="REPLACE_THIS_WITH_YOUR_PUBLIC_KEY"`
 
 > Tip: You can also use the meta command to tag a key with other data you might want, using a property name and a value. This will be useful for developing with Vega Wallet in the future.
