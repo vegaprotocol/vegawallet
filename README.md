@@ -5,30 +5,20 @@ implemented in Go. It is used to sign transactions for use
 on [Vega](#about-vega). Vega Wallet creates and manages HD wallets with ed25519
 key pairs.
 
-## Installation
+### Use the [getting started instructions](/GETTING-STARTED.md) to install and run the wallet if you are new to command line (CLI).
 
-These instructions are written to be used in command line. Below, in the
-snippets, you'll see commands in blue text. Copy those instructions and paste
-them into your command line interface.
-
-### Building
+## Building
 
 ```sh
 cd go-wallet && make
 ```
+Note: Building and compiling locally will install the wallet under the name go-wallet, and not vegawallet. Thus, when reading the documentation, replace `vegawallet` with `go-wallet`.
 
-**Note:** This will install the wallet under the name `go-wallet`, and
-not `vegawallet`. Thus, when reading the documentation, replace `vegawallet`
-by `go-wallet`.
+## Download
 
-### Download
+Download and save the zip file from [Releases](https://github.com/vegaprotocol/go-wallet/releases). Keep track of where you've saved the file, because that's where the CLI will look for it.
 
-Download and save the zip file
-from [Releases](https://github.com/vegaprotocol/go-wallet/releases). We suggest
-you keep track of where you've saved the file, because that's where the command
-line interface will look for it.
-
-#### MacOS
+### MacOS
 
 Download `vegawallet-darwin-amd64.zip`
 
@@ -45,7 +35,7 @@ Click on the `(?)` help button, which will open a window that links you to the
 You’ll need to go to `System Preferences > Security & Privacy > General`, and
 choose `Open Anyway`.
 
-#### Windows
+### Windows
 
 Download `vegawallet-windows-amd64.zip`
 
@@ -58,15 +48,15 @@ message from Windows Defender saying:
 
 Click on the `(More info)` text, which will reveal a button to `Run anyway`.
 
-#### Linux
+### Linux
 
 Download `vegawallet-linux-amd64.zip`
 
 ## Usage
 
-### Using the CLI
+### Using the wallet commands
 
-Using the CLI is documented [here](cmd/README.md)
+See a list of commands available in the wallet [here](cmd/README.md)
 
 ### Using the API
 
@@ -75,29 +65,16 @@ using the CLI.
 
 Using the API is documented [here](service/README.md).
 
-## Deposit tokens
-
-Once the wallet and its service have been initialised, you'll need to **deposit
-Ropsten Ethereum-based tokens** to start trading.
-
-You can create and deposit assets directly through the proxy Console via Wallet.
-
-If you'd like more information or guidance, there are instructions in
-the [Vega documentation](https://docs.testnet.vega.xyz/docs/wallet/).
-
-If you'd prefer to request tokens from the contracts directly, there are
-instructions in
-the [testnet bridge tools repo README](https://github.com/vegaprotocol/Public_Test_Bridge_Tools/blob/master/docs/mew.md)
-.
-
 ## Support
 
-**[Documentation](https://docs.testnet.vega.xyz)**
+**[Documentation](https://docs.fairground.vega.xyz)**
 
 Get API reference documentation, learn more about how Vega works, and explore
 sample scripts for API trading
 
-**[Walet documentation](https://docs.testnet.vega.xyz/docs/wallet/)**
+**[Wallet documentation](https://docs.fairground.vega.xyz/docs/wallet/)**
+
+Learn about how Vega interacts with wallets. 
 
 **[Nolt](https://vega-testnet.nolt.io/)**
 
@@ -105,7 +82,7 @@ Raise issues and see what others have raised.
 
 **[Discord](https://vega.xyz/discord)**
 
-Ask us for help, find out about scheduled open office hours, and keep up with
+Ask us for help, find out about scheduled open sessions, and keep up with
 Vega generally.
 
 ## About Vega

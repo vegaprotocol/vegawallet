@@ -163,14 +163,20 @@ Once the service has been initialised, you can run the wallet with the following
 command:
 
 ```sh
+vegawallet service run
+```
+
+To run the wallet and open up a local version of Vega Console, the trading UI, use the following command:
+
+```sh
 vegawallet service run --console-proxy
 ```
 
 To terminate the process, such as if you want to run other commands in Wallet,
 use `ctrl+c`.
 
-### Important
+### Ad-blockers
 
 If you're running an ad/tracker blocker, and you're getting errors, it may be
-blocking the node from connecting. Try `allowlisting lb.testnet.vega.xyz` and
+blocking the node from connecting. Try allowlisting `lb.testnet.vega.xyz` and
 refreshing.
