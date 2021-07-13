@@ -54,7 +54,7 @@ func runServiceRun(cmd *cobra.Command, args []string) error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	srv, err := service.NewService(log, cfg, rootArgs.rootPath)
+	srv, err := service.NewService(log, cfg, rootArgs.rootPath, Version, VersionHash)
 	if err != nil {
 		return err
 	}

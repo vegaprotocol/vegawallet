@@ -35,6 +35,9 @@ type Service struct {
 	handler     WalletHandler
 	auth        Auth
 	nodeForward NodeForward
+
+	version     string
+	versionHash string
 }
 
 // CreateWalletRequest describes the request for CreateWallet.
@@ -336,6 +339,12 @@ type TokenResponse struct {
 	Token string `json:"token"`
 }
 
+// VersionResponse describes the response to a request that returns app version info.
+type VersionResponse struct {
+	Version     string `json:"version"`
+	VersionHash string `json:"versionHash"`
+}
+
 // WalletHandler ...
 //go:generate go run github.com/golang/mock/mockgen -destination mocks/wallet_handler_mock.go -package mocks code.vegaprotocol.io/go-wallet/service WalletHandler
 type WalletHandler interface {
@@ -372,7 +381,7 @@ type NodeForward interface {
 	LastBlockHeight(context.Context) (uint64, error)
 }
 
-func NewService(log *zap.Logger, cfg *config.Config, rootPath string) (*Service, error) {
+func NewService(log *zap.Logger, cfg *config.Config, rootPath string, v, vh string) (*Service, error) {
 	log = log.Named("wallet")
 
 	store, err := storev1.NewStore(rootPath)
@@ -388,10 +397,10 @@ func NewService(log *zap.Logger, cfg *config.Config, rootPath string) (*Service,
 		return nil, err
 	}
 	handler := wallet.NewHandler(store)
-	return NewServiceWith(log, cfg, handler, auth, nodeForward)
+	return NewServiceWith(log, cfg, handler, auth, nodeForward, v, vh)
 }
 
-func NewServiceWith(log *zap.Logger, cfg *config.Config, h WalletHandler, a Auth, n NodeForward) (*Service, error) {
+func NewServiceWith(log *zap.Logger, cfg *config.Config, h WalletHandler, a Auth, n NodeForward, v, vh string) (*Service, error) {
 	s := &Service{
 		Router:      httprouter.New(),
 		log:         log,
@@ -399,6 +408,9 @@ func NewServiceWith(log *zap.Logger, cfg *config.Config, h WalletHandler, a Auth
 		handler:     h,
 		auth:        a,
 		nodeForward: n,
+
+		version:     v,
+		versionHash: vh,
 	}
 
 	s.POST("/api/v1/auth/token", s.Login)
@@ -417,6 +429,7 @@ func NewServiceWith(log *zap.Logger, cfg *config.Config, h WalletHandler, a Auth
 	s.POST("/api/v1/command/sync", ExtractToken(s.SignTxSyncV2))
 	s.POST("/api/v1/command/commit", ExtractToken(s.SignTxCommitV2))
 	s.GET("/api/v1/wallets", ExtractToken(s.DownloadWallet))
+	s.GET("/api/v1/version", s.Version)
 
 	// DEPRECATED Use
 	s.POST("/api/v1/messages", ExtractToken(s.SignTx))
@@ -765,6 +778,15 @@ func (s *Service) signTxV2(token string, w http.ResponseWriter, r *http.Request,
 	}
 
 	writeSuccessProto(w, tx, http.StatusOK)
+}
+
+func (s *Service) Version(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	res := VersionResponse{
+		Version:     s.version,
+		VersionHash: s.versionHash,
+	}
+
+	writeSuccess(w, res, http.StatusOK)
 }
 
 func (s *Service) health(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
