@@ -206,8 +206,8 @@ func checkNewMarketChanges(change *typespb.ProposalTerms_NewMarket) Errors {
 
 	changes := change.NewMarket.Changes
 
-	if changes.DecimalPlaces <= 0 {
-		errs.AddForProperty("proposal_submission.terms.change.new_market.changes.decimal_places", ErrMustBePositive)
+	if changes.DecimalPlaces < 0 {
+		errs.AddForProperty("proposal_submission.terms.change.new_market.changes.decimal_places", ErrMustBePositiveOrZero)
 	} else if changes.DecimalPlaces >= 150 {
 		errs.AddForProperty("proposal_submission.terms.change.new_market.changes.decimal_places", ErrMustBeLessThan150)
 	}
