@@ -119,3 +119,19 @@ message VoteSubmission {
   // The actual value of the vote
   vega.Vote.Value value = 2;
 }
+
+// A command to submit an instruction to delegate some stake to a node
+message DelegateSubmission {
+  // The ID for the node to delegate to
+  string node_id = 1 [(validator.field) = {string_not_empty : true}];
+  // The amount of stake to delegate
+  uint64 amount = 2;
+}
+
+// A command to submit an instruction to undelete stake from a node
+message UndelegateAtEpochEndSubmission {
+  // The ID for the node to undelegate from
+  string node_id = 1 [(validator.field) = {string_not_empty : true}];
+  // The amount of stake to undelegate
+  uint64 amount = 2;
+}
