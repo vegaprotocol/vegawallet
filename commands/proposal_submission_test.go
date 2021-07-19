@@ -56,7 +56,7 @@ func TestCheckProposalSubmission(t *testing.T) {
 	t.Run("Submitting a network parameter change with value succeeds", testNetworkParameterChangeSubmissionWithValueSucceeds)
 	t.Run("Submitting a market change without new market fails", testNewMarketChangeSubmissionWithoutNewMarketFails)
 	t.Run("Submitting a market change without changes fails", testNewMarketChangeSubmissionWithoutChangesFails)
-	t.Run("Submitting a market change without decimal places fails", testNewMarketChangeSubmissionWithoutDecimalPlacesFails)
+	t.Run("Submitting a market change with decimal places equal to 0 succeeds", testNewMarketChangeSubmissionWithDecimalPlacesEqualtTo0Succeeds)
 	t.Run("Submitting a market change with decimal places above or equal to 150 fails", testNewMarketChangeSubmissionWithDecimalPlacesAboveOrEqualTo150Fails)
 	t.Run("Submitting a market change with decimal places below 150 succeeds", testNewMarketChangeSubmissionWithDecimalPlacesBelow150Succeeds)
 	t.Run("Submitting a new market without price monitoring succeeds", testNewMarketChangeSubmissionWithoutPriceMonitoringSucceeds)
@@ -863,18 +863,20 @@ func testNewMarketChangeSubmissionWithoutChangesFails(t *testing.T) {
 	assert.Contains(t, err.Get("proposal_submission.terms.change.new_market.changes"), commands.ErrIsRequired)
 }
 
-func testNewMarketChangeSubmissionWithoutDecimalPlacesFails(t *testing.T) {
+func testNewMarketChangeSubmissionWithDecimalPlacesEqualtTo0Succeeds(t *testing.T) {
 	err := checkProposalSubmission(&commandspb.ProposalSubmission{
 		Terms: &typespb.ProposalTerms{
 			Change: &typespb.ProposalTerms_NewMarket{
 				NewMarket: &typespb.NewMarket{
-					Changes: &typespb.NewMarketConfiguration{},
+					Changes: &typespb.NewMarketConfiguration{
+						DecimalPlaces: 0,
+					},
 				},
 			},
 		},
 	})
 
-	assert.Contains(t, err.Get("proposal_submission.terms.change.new_market.changes.decimal_places"), commands.ErrMustBePositive)
+	assert.NotContains(t, err.Get("proposal_submission.terms.change.new_market.changes.decimal_places"), commands.ErrMustBePositiveOrZero)
 }
 
 func testNewMarketChangeSubmissionWithDecimalPlacesAboveOrEqualTo150Fails(t *testing.T) {
