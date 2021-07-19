@@ -5,8 +5,8 @@ import (
 	"os"
 
 	"code.vegaprotocol.io/go-wallet/fsutil"
+	storev1 "code.vegaprotocol.io/go-wallet/store/v1"
 	"code.vegaprotocol.io/go-wallet/version"
-
 	"github.com/spf13/cobra"
 	"golang.org/x/crypto/ssh/terminal"
 )
@@ -24,8 +24,6 @@ var (
 		Long:             `The Vega wallet`,
 		PersistentPreRun: checkVersion,
 	}
-
-
 )
 
 func checkVersion(cmd *cobra.Command, args []string) {
@@ -66,4 +64,16 @@ func promptForPassphrase(msg ...string) (string, error) {
 	fmt.Println()
 
 	return string(password), nil
+}
+
+func getStore() (*storev1.Store, error) {
+	store, err := storev1.NewStore(rootArgs.rootPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := store.Initialise(); err != nil {
+		return nil, err
+	}
+	return store, nil
 }

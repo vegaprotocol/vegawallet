@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"strings"
 
-	storev1 "code.vegaprotocol.io/go-wallet/store/v1"
 	"code.vegaprotocol.io/go-wallet/wallet"
 	"github.com/spf13/cobra"
 )
@@ -34,7 +33,7 @@ func init() {
 }
 
 func runKeyGenerate(cmd *cobra.Command, args []string) error {
-	store, err := storev1.NewStore(rootArgs.rootPath)
+	store, err := getStore()
 	if err != nil {
 		return err
 	}
