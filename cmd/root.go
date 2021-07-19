@@ -41,7 +41,6 @@ func checkVersion(cmd *cobra.Command, args []string) {
 
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
-		fmt.Printf("%v\n", err)
 		os.Exit(1)
 	}
 }
