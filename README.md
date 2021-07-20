@@ -12,11 +12,16 @@ key pairs.
 ```sh
 cd go-wallet && make
 ```
-Note: Building and compiling locally will install the wallet under the name go-wallet, and not vegawallet. Thus, when reading the documentation, replace `vegawallet` with `go-wallet`.
+
+Note: Building and compiling locally will install the wallet under the name
+go-wallet, and not vegawallet. Thus, when reading the documentation,
+replace `vegawallet` with `go-wallet`.
 
 ## Download
 
-Download and save the zip file from [Releases](https://github.com/vegaprotocol/go-wallet/releases). Keep track of where you've saved the file, because that's where the CLI will look for it.
+Download and save the zip file
+from [Releases](https://github.com/vegaprotocol/go-wallet/releases). Keep track
+of where you've saved the file, because that's where the CLI will look for it.
 
 ### MacOS
 
@@ -54,14 +59,15 @@ Download `vegawallet-linux-amd64.zip`
 
 ## Usage
 
+**Important:** Before using the API and the commands, you will have to
+initialise the program using the `init` command as
+documented [here](cmd/README.md#initialise-the-program).
+
 ### Using the wallet commands
 
 See a list of commands available in the wallet [here](cmd/README.md)
 
 ### Using the API
-
-**Important:** Before using the API, you will have to initialise the service
-using the CLI.
 
 Using the API is documented [here](service/README.md).
 
@@ -74,7 +80,7 @@ sample scripts for API trading
 
 **[Wallet documentation](https://docs.fairground.vega.xyz/docs/wallet/)**
 
-Learn about how Vega interacts with wallets. 
+Learn about how Vega interacts with wallets.
 
 **[Nolt](https://vega-testnet.nolt.io/)**
 
@@ -82,8 +88,8 @@ Raise issues and see what others have raised.
 
 **[Discord](https://vega.xyz/discord)**
 
-Ask us for help, find out about scheduled open sessions, and keep up with
-Vega generally.
+Ask us for help, find out about scheduled open sessions, and keep up with Vega
+generally.
 
 ## About Vega
 
