@@ -5,8 +5,8 @@ import (
 	"encoding/hex"
 	"testing"
 
+	crypto2 "code.vegaprotocol.io/go-wallet/crypto"
 	"code.vegaprotocol.io/go-wallet/wallet"
-	"code.vegaprotocol.io/go-wallet/wallet/crypto"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -38,7 +38,7 @@ func testSignTxSuccess(t *testing.T) {
 	require.NoError(t, err)
 
 	// verify signature then
-	alg, err := crypto.NewSignatureAlgorithm(crypto.Ed25519, 1)
+	alg, err := crypto2.NewSignatureAlgorithm(crypto2.Ed25519, 1)
 	require.NoError(t, err)
 
 	v, err := alg.Verify(keyBytes, signedBundle.Tx, signedBundle.Sig.Sig)

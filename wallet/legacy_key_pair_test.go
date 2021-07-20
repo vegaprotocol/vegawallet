@@ -3,8 +3,8 @@ package wallet_test
 import (
 	"testing"
 
+	crypto2 "code.vegaprotocol.io/go-wallet/crypto"
 	"code.vegaprotocol.io/go-wallet/wallet"
-	"code.vegaprotocol.io/go-wallet/wallet/crypto"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -19,7 +19,7 @@ func TestLegacyKeypair(t *testing.T) {
 
 func testLegacyKeyPairGeneratingNewKeyPairSucceeds(t *testing.T) {
 	// when
-	kp, err := wallet.GenKeyPair(crypto.Ed25519, 1)
+	kp, err := wallet.GenKeyPair(crypto2.Ed25519, 1)
 
 	// then
 	require.NoError(t, err)

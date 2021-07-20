@@ -4,7 +4,7 @@ import (
 	"crypto"
 	"testing"
 
-	wcrypto "code.vegaprotocol.io/go-wallet/wallet/crypto"
+	crypto2 "code.vegaprotocol.io/go-wallet/crypto"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -20,24 +20,24 @@ func TestSignature(t *testing.T) {
 }
 
 func testCreateEd25519SignatureOK(t *testing.T) {
-	_, err := wcrypto.NewSignatureAlgorithm(wcrypto.Ed25519, 1)
+	_, err := crypto2.NewSignatureAlgorithm(crypto2.Ed25519, 1)
 	assert.NoError(t, err)
 }
 
 func testCreateSignatureFailureNotAnAlgo(t *testing.T) {
-	_, err := wcrypto.NewSignatureAlgorithm("not an algo", 1)
-	assert.EqualError(t, err, wcrypto.ErrUnsupportedSignatureAlgorithm.Error())
+	_, err := crypto2.NewSignatureAlgorithm("not an algo", 1)
+	assert.EqualError(t, err, crypto2.ErrUnsupportedSignatureAlgorithm.Error())
 }
 
 func testGenerateKey(t *testing.T) {
-	s, err := wcrypto.NewSignatureAlgorithm(wcrypto.Ed25519, 1)
+	s, err := crypto2.NewSignatureAlgorithm(crypto2.Ed25519, 1)
 	assert.NoError(t, err)
 	_, _, err = s.GenKey()
 	assert.NoError(t, err)
 }
 
 func testVerifyOK(t *testing.T) {
-	s, err := wcrypto.NewSignatureAlgorithm(wcrypto.Ed25519, 1)
+	s, err := crypto2.NewSignatureAlgorithm(crypto2.Ed25519, 1)
 	assert.NoError(t, err)
 	pub, priv, err := s.GenKey()
 	assert.NoError(t, err)
@@ -54,7 +54,7 @@ func testVerifyOK(t *testing.T) {
 }
 
 func testSignBadKeyLength(t *testing.T) {
-	s, err := wcrypto.NewSignatureAlgorithm(wcrypto.Ed25519, 1)
+	s, err := crypto2.NewSignatureAlgorithm(crypto2.Ed25519, 1)
 	assert.NoError(t, err)
 	_, priv, err := s.GenKey()
 
@@ -71,7 +71,7 @@ func testSignBadKeyLength(t *testing.T) {
 }
 
 func testVerifyBadKeyLength(t *testing.T) {
-	s, err := wcrypto.NewSignatureAlgorithm(wcrypto.Ed25519, 1)
+	s, err := crypto2.NewSignatureAlgorithm(crypto2.Ed25519, 1)
 	assert.NoError(t, err)
 	pub, priv, err := s.GenKey()
 
@@ -92,7 +92,7 @@ func testVerifyBadKeyLength(t *testing.T) {
 }
 
 func testVerifyFailWrongMessage(t *testing.T) {
-	s, err := wcrypto.NewSignatureAlgorithm(wcrypto.Ed25519, 1)
+	s, err := crypto2.NewSignatureAlgorithm(crypto2.Ed25519, 1)
 	assert.NoError(t, err)
 	pub, priv, err := s.GenKey()
 	assert.NoError(t, err)
@@ -110,7 +110,7 @@ func testVerifyFailWrongMessage(t *testing.T) {
 }
 
 func testVerifyFailWrongPubKey(t *testing.T) {
-	s, err := wcrypto.NewSignatureAlgorithm(wcrypto.Ed25519, 1)
+	s, err := crypto2.NewSignatureAlgorithm(crypto2.Ed25519, 1)
 	assert.NoError(t, err)
 	// gen 2 sets of  keys
 	_, priv, err := s.GenKey()

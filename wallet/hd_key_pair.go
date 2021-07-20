@@ -5,8 +5,8 @@ import (
 	"encoding/hex"
 	"encoding/json"
 
+	"code.vegaprotocol.io/go-wallet/crypto"
 	commandspb "code.vegaprotocol.io/go-wallet/internal/proto/commands/v1"
-	wcrypto "code.vegaprotocol.io/go-wallet/wallet/crypto"
 )
 
 type HDKeyPair struct {
@@ -15,7 +15,7 @@ type HDKeyPair struct {
 	privateKey *key
 	meta       []Meta
 	tainted    bool
-	algo       wcrypto.SignatureAlgorithm
+	algo       crypto.SignatureAlgorithm
 }
 
 type key struct {
@@ -28,7 +28,7 @@ func NewHDKeyPair(
 	publicKey ed25519.PublicKey,
 	privateKey ed25519.PrivateKey,
 ) (*HDKeyPair, error) {
-	algo, err := wcrypto.NewSignatureAlgorithm(wcrypto.Ed25519, 1)
+	algo, err := crypto.NewSignatureAlgorithm(crypto.Ed25519, 1)
 	if err != nil {
 		return nil, err
 	}
@@ -161,7 +161,7 @@ func (k *HDKeyPair) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	algo, err := wcrypto.NewSignatureAlgorithm(wcrypto.Ed25519, 1)
+	algo, err := crypto.NewSignatureAlgorithm(crypto.Ed25519, 1)
 	if err != nil {
 		return err
 	}

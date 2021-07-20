@@ -4,8 +4,8 @@ import (
 	"os"
 	"testing"
 
+	crypto2 "code.vegaprotocol.io/go-wallet/crypto"
 	"code.vegaprotocol.io/go-wallet/wallet"
-	"code.vegaprotocol.io/go-wallet/wallet/crypto"
 	storev1 "code.vegaprotocol.io/go-wallet/wallet/store/v1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -219,7 +219,7 @@ func NewInitialisedStore(walletsDir walletsDir) *storev1.Store {
 func newLegacyWalletWithKeys() *wallet.LegacyWallet {
 	w := wallet.NewLegacyWallet("my-wallet")
 
-	kp, err := wallet.GenKeyPair(crypto.Ed25519, 1)
+	kp, err := wallet.GenKeyPair(crypto2.Ed25519, 1)
 	if err != nil {
 		panic(err)
 	}

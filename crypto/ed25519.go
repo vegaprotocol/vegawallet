@@ -4,8 +4,6 @@ import (
 	"crypto"
 	"errors"
 
-	vcrypto "code.vegaprotocol.io/go-wallet/crypto"
-
 	"github.com/oasisprotocol/curve25519-voi/primitives/ed25519"
 )
 
@@ -41,7 +39,7 @@ func (e *ed25519Sig) Sign(priv crypto.PrivateKey, buf []byte) ([]byte, error) {
 	if len(privBytes) != ed25519.PrivateKeySize {
 		return nil, ErrBadED25519PrivateKeyLength
 	}
-	return ed25519.Sign(privBytes, vcrypto.Hash(buf)), nil
+	return ed25519.Sign(privBytes, Hash(buf)), nil
 }
 
 func (e *ed25519Sig) Verify(pub crypto.PublicKey, message, sig []byte) (bool, error) {
@@ -50,7 +48,7 @@ func (e *ed25519Sig) Verify(pub crypto.PublicKey, message, sig []byte) (bool, er
 	if len(pubBytes) != ed25519.PublicKeySize {
 		return false, ErrBadED25519PublicKeyLength
 	}
-	return ed25519.Verify(pubBytes, vcrypto.Hash(message), sig), nil
+	return ed25519.Verify(pubBytes, Hash(message), sig), nil
 }
 
 func (e *ed25519Sig) Name() string {

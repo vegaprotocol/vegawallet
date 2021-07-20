@@ -5,12 +5,10 @@ import (
 	"crypto/cipher"
 	"crypto/rand"
 	"io"
-
-	"code.vegaprotocol.io/go-wallet/crypto"
 )
 
 func Encrypt(data []byte, passphrase string) ([]byte, error) {
-	block, _ := aes.NewCipher(crypto.Hash([]byte(passphrase)))
+	block, _ := aes.NewCipher(Hash([]byte(passphrase)))
 	gcm, err := cipher.NewGCM(block)
 	if err != nil {
 		return nil, err
@@ -24,7 +22,7 @@ func Encrypt(data []byte, passphrase string) ([]byte, error) {
 }
 
 func Decrypt(data []byte, passphrase string) ([]byte, error) {
-	key := crypto.Hash([]byte(passphrase))
+	key := Hash([]byte(passphrase))
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return nil, err
