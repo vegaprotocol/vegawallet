@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"code.vegaprotocol.io/go-wallet/config"
-	storev1 "code.vegaprotocol.io/go-wallet/store/v1"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 )
@@ -33,12 +32,8 @@ func runServiceInit(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	store, err := storev1.NewStore(rootArgs.rootPath)
+	store, err := getStore()
 	if err != nil {
-		return err
-	}
-
-	if err := store.Initialise(); err != nil {
 		return err
 	}
 
