@@ -3,15 +3,12 @@ package cmd
 import (
 	"fmt"
 
-	"code.vegaprotocol.io/go-wallet/config"
-	storev1 "code.vegaprotocol.io/go-wallet/store/v1"
 	"github.com/spf13/cobra"
-	"go.uber.org/zap"
 )
 
 var (
 	serviceInitArgs struct {
-		force       bool
+		force bool
 	}
 
 	serviceInitCmd = &cobra.Command{
@@ -28,21 +25,8 @@ func init() {
 }
 
 func runServiceInit(cmd *cobra.Command, args []string) error {
-	log, err := zap.NewProduction()
-	if err != nil {
-		return err
-	}
-
 	fmt.Println("\n\nDEPRECATION:\nThe command `service init` is deprecated. Use `init` instead.")
 
-	store, err := storev1.NewStore(rootArgs.rootPath)
-	if err != nil {
-		return err
-	}
-
-	if err := store.Initialise(); err != nil {
-		return err
-	}
-
-	return config.GenerateConfig(log, store, initArgs.force)
+	initArgs.force = serviceInitArgs.force
+	return runInit(cmd, args)
 }

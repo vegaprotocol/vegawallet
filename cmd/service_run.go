@@ -9,7 +9,7 @@ import (
 	"syscall"
 
 	"code.vegaprotocol.io/go-wallet/service"
-	storev1 "code.vegaprotocol.io/go-wallet/store/v1"
+	"code.vegaprotocol.io/go-wallet/service/store/v1"
 	"github.com/skratchdot/open-golang/open"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
@@ -41,7 +41,7 @@ func runServiceRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	store, err := storev1.NewStore(rootArgs.rootPath)
+	store, err := v1.NewStore(rootArgs.rootPath)
 	if err != nil {
 		return err
 	}
@@ -54,7 +54,12 @@ func runServiceRun(cmd *cobra.Command, args []string) error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	srv, err := service.NewService(log, cfg, rootArgs.rootPath, Version, VersionHash)
+	handler, err := newWalletHandler(rootArgs.rootPath)
+	if err != nil {
+		return err
+	}
+
+	srv, err := service.NewService(log, cfg, rootArgs.rootPath, handler, Version, VersionHash)
 	if err != nil {
 		return err
 	}

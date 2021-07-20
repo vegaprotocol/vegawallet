@@ -15,9 +15,8 @@ import (
 	"code.vegaprotocol.io/go-wallet/internal/proto/api"
 	commandspb "code.vegaprotocol.io/go-wallet/internal/proto/commands/v1"
 	walletpb "code.vegaprotocol.io/go-wallet/internal/proto/wallet/v1"
-	storev1 "code.vegaprotocol.io/go-wallet/store/v1"
+	storev1 "code.vegaprotocol.io/go-wallet/service/store/v1"
 	"code.vegaprotocol.io/go-wallet/wallet"
-
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/proto"
 	"github.com/julienschmidt/httprouter"
@@ -381,14 +380,13 @@ type NodeForward interface {
 	LastBlockHeight(context.Context) (uint64, error)
 }
 
-func NewService(log *zap.Logger, cfg *config.Config, rootPath string, v, vh string) (*Service, error) {
+func NewService(log *zap.Logger, cfg *config.Config, rootPath string, handler WalletHandler, v, vh string) (*Service, error) {
 	log = log.Named("wallet")
-
-	store, err := storev1.NewStore(rootPath)
+	svcStore, err := storev1.NewStore(rootPath)
 	if err != nil {
 		return nil, err
 	}
-	auth, err := NewAuth(log, store, cfg.TokenExpiry.Get())
+	auth, err := NewAuth(log, svcStore, cfg.TokenExpiry.Get())
 	if err != nil {
 		return nil, err
 	}
@@ -396,7 +394,6 @@ func NewService(log *zap.Logger, cfg *config.Config, rootPath string, v, vh stri
 	if err != nil {
 		return nil, err
 	}
-	handler := wallet.NewHandler(store)
 	return NewServiceWith(log, cfg, handler, auth, nodeForward, v, vh)
 }
 

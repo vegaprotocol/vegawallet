@@ -2,14 +2,14 @@ package cmd
 
 import (
 	"code.vegaprotocol.io/go-wallet/config"
-	storev1 "code.vegaprotocol.io/go-wallet/store/v1"
+	"code.vegaprotocol.io/go-wallet/service/store/v1"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 )
 
 var (
 	initArgs struct {
-		force       bool
+		force bool
 	}
 
 	initCmd = &cobra.Command{
@@ -31,14 +31,23 @@ func runInit(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	store, err := storev1.NewStore(rootArgs.rootPath)
+	wStore, err := newWalletsStore(rootArgs.rootPath)
 	if err != nil {
 		return err
 	}
 
-	if err := store.Initialise(); err != nil {
+	if err := wStore.Initialise(); err != nil {
 		return err
 	}
 
-	return config.GenerateConfig(log, store, initArgs.force)
+	svcStore, err := v1.NewStore(rootArgs.rootPath)
+	if err != nil {
+		return err
+	}
+
+	if err := svcStore.Initialise(); err != nil {
+		return err
+	}
+
+	return config.GenerateConfig(log, svcStore, initArgs.force)
 }
