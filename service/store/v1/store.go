@@ -8,9 +8,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"code.vegaprotocol.io/go-wallet/config"
 	"code.vegaprotocol.io/go-wallet/fsutil"
-	"code.vegaprotocol.io/go-wallet/wallet"
+	"code.vegaprotocol.io/go-wallet/service"
 	"github.com/zannen/toml"
 )
 
@@ -61,13 +60,13 @@ func (s *Store) Initialise() error {
 	return nil
 }
 
-func (s *Store) GetConfig() (*config.Config, error) {
+func (s *Store) GetConfig() (*service.Config, error) {
 	buf, err := ioutil.ReadFile(s.configFileName)
 	if err != nil {
 		return nil, err
 	}
 
-	cfg := config.NewDefaultConfig()
+	cfg := service.NewDefaultConfig()
 
 	if _, err := toml.Decode(string(buf), &cfg); err != nil {
 		return nil, err
@@ -76,7 +75,7 @@ func (s *Store) GetConfig() (*config.Config, error) {
 	return &cfg, nil
 }
 
-func (s *Store) SaveConfig(cfg *config.Config, overwrite bool) error {
+func (s *Store) SaveConfig(cfg *service.Config, overwrite bool) error {
 	confPathExists, _ := fsutil.FileExists(s.configFileName)
 
 	if confPathExists {
@@ -109,7 +108,7 @@ func (s *Store) SaveConfig(cfg *config.Config, overwrite bool) error {
 	return nil
 }
 
-func (s *Store) SaveRSAKeys(keys *wallet.RSAKeys, overwrite bool) error {
+func (s *Store) SaveRSAKeys(keys *service.RSAKeys, overwrite bool) error {
 	if ok, _ := fsutil.PathExists(s.keyFolderPath); !ok {
 		return ErrRSAFolderDoesNotExists
 	}
@@ -137,7 +136,7 @@ func (s *Store) SaveRSAKeys(keys *wallet.RSAKeys, overwrite bool) error {
 	return nil
 }
 
-func (s *Store) GetRsaKeys() (*wallet.RSAKeys, error) {
+func (s *Store) GetRsaKeys() (*service.RSAKeys, error) {
 	pub, err := ioutil.ReadFile(s.pubRsaKeyFileName)
 	if err != nil {
 		return nil, err
@@ -148,7 +147,7 @@ func (s *Store) GetRsaKeys() (*wallet.RSAKeys, error) {
 		return nil, err
 	}
 
-	return &wallet.RSAKeys{
+	return &service.RSAKeys{
 		Pub:  pub,
 		Priv: priv,
 	}, nil

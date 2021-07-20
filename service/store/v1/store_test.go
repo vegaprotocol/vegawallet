@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"code.vegaprotocol.io/go-wallet/config"
+	"code.vegaprotocol.io/go-wallet/service"
 	"code.vegaprotocol.io/go-wallet/service/store/v1"
 	"code.vegaprotocol.io/go-wallet/wallet"
 	"code.vegaprotocol.io/go-wallet/wallet/crypto"
@@ -59,7 +59,7 @@ func testFileStoreV1SavingAlreadyExistingConfigFails(t *testing.T) {
 
 	// given
 	s := NewInitialisedStore(configDir)
-	cfg := config.NewDefaultConfig()
+	cfg := service.NewDefaultConfig()
 
 	// when
 	err := s.SaveConfig(&cfg, false)
@@ -80,7 +80,7 @@ func testFileStoreV1SavingNewConfigSucceeds(t *testing.T) {
 
 	// given
 	s := NewInitialisedStore(configDir)
-	cfg := config.NewDefaultConfig()
+	cfg := service.NewDefaultConfig()
 
 	// when
 	err := s.SaveConfig(&cfg, false)
@@ -102,7 +102,7 @@ func testFileStoreV1OverwritingNonExistingConfigSucceeds(t *testing.T) {
 
 	// given
 	s := NewInitialisedStore(configDir)
-	cfg := config.NewDefaultConfig()
+	cfg := service.NewDefaultConfig()
 
 	// when
 	err := s.SaveConfig(&cfg, true)
@@ -124,7 +124,7 @@ func testFileStoreV1OverwritingExistingConfigSucceeds(t *testing.T) {
 
 	// given
 	s := NewInitialisedStore(configDir)
-	cfg := config.NewDefaultConfig()
+	cfg := service.NewDefaultConfig()
 
 	// when
 	err := s.SaveConfig(&cfg, false)
@@ -170,7 +170,7 @@ func testFileStoreV1GetConfigSucceeds(t *testing.T) {
 
 	// given
 	s := NewInitialisedStore(configDir)
-	cfg := config.NewDefaultConfig()
+	cfg := service.NewDefaultConfig()
 
 	// when
 	err := s.SaveConfig(&cfg, false)
@@ -191,7 +191,7 @@ func testFileStoreV1SaveRSAKeysWithoutFolderFails(t *testing.T) {
 
 	// given
 	s := NewStore(configDir)
-	keys := &wallet.RSAKeys{
+	keys := &service.RSAKeys{
 		Pub:  []byte("my public key"),
 		Priv: []byte("my private key"),
 	}
@@ -209,7 +209,7 @@ func testFileStoreV1SaveAlreadyExistingRSAKeysFails(t *testing.T) {
 
 	// given
 	s := NewInitialisedStore(configDir)
-	keys := &wallet.RSAKeys{
+	keys := &service.RSAKeys{
 		Pub:  []byte("my public key"),
 		Priv: []byte("my private key"),
 	}
@@ -233,7 +233,7 @@ func testFileStoreV1SaveRSAKeysSucceeds(t *testing.T) {
 
 	// given
 	s := NewInitialisedStore(configDir)
-	keys := &wallet.RSAKeys{
+	keys := &service.RSAKeys{
 		Pub:  []byte("my public key"),
 		Priv: []byte("my private key"),
 	}
@@ -258,7 +258,7 @@ func testFileStoreV1OverwritingAlreadyExistingRSAKeysSucceeds(t *testing.T) {
 
 	// given
 	s := NewInitialisedStore(configDir)
-	keys := &wallet.RSAKeys{
+	keys := &service.RSAKeys{
 		Pub:  []byte("my public key"),
 		Priv: []byte("my private key"),
 	}
@@ -270,7 +270,7 @@ func testFileStoreV1OverwritingAlreadyExistingRSAKeysSucceeds(t *testing.T) {
 	require.NoError(t, err)
 
 	// given
-	newKeys := &wallet.RSAKeys{
+	newKeys := &service.RSAKeys{
 		Pub:  []byte("my public key 2"),
 		Priv: []byte("my private key 2"),
 	}
@@ -295,7 +295,7 @@ func testFileStoreV1OverwritingNonExistingRSAKeysSucceeds(t *testing.T) {
 
 	// given
 	s := NewInitialisedStore(configDir)
-	keys := &wallet.RSAKeys{
+	keys := &service.RSAKeys{
 		Pub:  []byte("my public key"),
 		Priv: []byte("my private key"),
 	}
@@ -335,7 +335,7 @@ func testFileStoreV1GetExistingRSAKeysSucceeds(t *testing.T) {
 
 	// given
 	s := NewInitialisedStore(configDir)
-	keys := &wallet.RSAKeys{
+	keys := &service.RSAKeys{
 		Pub:  []byte("my public key"),
 		Priv: []byte("my private key"),
 	}

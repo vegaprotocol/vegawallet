@@ -10,12 +10,10 @@ import (
 	"net/http"
 
 	"code.vegaprotocol.io/go-wallet/commands"
-	"code.vegaprotocol.io/go-wallet/config"
 	typespb "code.vegaprotocol.io/go-wallet/internal/proto"
 	"code.vegaprotocol.io/go-wallet/internal/proto/api"
 	commandspb "code.vegaprotocol.io/go-wallet/internal/proto/commands/v1"
 	walletpb "code.vegaprotocol.io/go-wallet/internal/proto/wallet/v1"
-	storev1 "code.vegaprotocol.io/go-wallet/service/store/v1"
 	"code.vegaprotocol.io/go-wallet/wallet"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/proto"
@@ -28,7 +26,7 @@ import (
 type Service struct {
 	*httprouter.Router
 
-	cfg         *config.Config
+	cfg         *Config
 	log         *zap.Logger
 	s           *http.Server
 	handler     WalletHandler
@@ -380,13 +378,9 @@ type NodeForward interface {
 	LastBlockHeight(context.Context) (uint64, error)
 }
 
-func NewService(log *zap.Logger, cfg *config.Config, rootPath string, handler WalletHandler, v, vh string) (*Service, error) {
+func NewService(log *zap.Logger, cfg *Config, rsaStore RSAStore, handler WalletHandler, v, vh string) (*Service, error) {
 	log = log.Named("wallet")
-	svcStore, err := storev1.NewStore(rootPath)
-	if err != nil {
-		return nil, err
-	}
-	auth, err := NewAuth(log, svcStore, cfg.TokenExpiry.Get())
+	auth, err := NewAuth(log, rsaStore, cfg.TokenExpiry.Get())
 	if err != nil {
 		return nil, err
 	}
@@ -397,7 +391,7 @@ func NewService(log *zap.Logger, cfg *config.Config, rootPath string, handler Wa
 	return NewServiceWith(log, cfg, handler, auth, nodeForward, v, vh)
 }
 
-func NewServiceWith(log *zap.Logger, cfg *config.Config, h WalletHandler, a Auth, n NodeForward, v, vh string) (*Service, error) {
+func NewServiceWith(log *zap.Logger, cfg *Config, h WalletHandler, a Auth, n NodeForward, v, vh string) (*Service, error) {
 	s := &Service{
 		Router:      httprouter.New(),
 		log:         log,

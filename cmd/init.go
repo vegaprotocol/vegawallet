@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"code.vegaprotocol.io/go-wallet/config"
+	"code.vegaprotocol.io/go-wallet/service"
 	"code.vegaprotocol.io/go-wallet/service/store/v1"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
@@ -49,5 +49,5 @@ func runInit(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return config.GenerateConfig(log, svcStore, initArgs.force)
+	return service.GenerateConfig(log, svcStore, initArgs.force)
 }

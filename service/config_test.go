@@ -1,27 +1,27 @@
-package config_test
+package service_test
 
 import (
 	"errors"
 	"testing"
 
-	"code.vegaprotocol.io/go-wallet/config"
-	"code.vegaprotocol.io/go-wallet/config/mocks"
+	"code.vegaprotocol.io/go-wallet/service"
+	"code.vegaprotocol.io/go-wallet/service/mocks"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 )
 
-type testService struct {
+type testConfig struct {
 	ctrl  *gomock.Controller
 	log   *zap.Logger
 	store *mocks.MockStore
 }
 
-func getTestService(t *testing.T) *testService {
+func getTestConfig(t *testing.T) *testConfig {
 	ctrl := gomock.NewController(t)
 	store := mocks.NewMockStore(ctrl)
 
-	return &testService{
+	return &testConfig{
 		ctrl:  ctrl,
 		log:   zap.NewNop(),
 		store: store,
@@ -36,7 +36,7 @@ func TestGenerateConfig(t *testing.T) {
 }
 
 func testGeneratingConfigSucceeds(t *testing.T) {
-	ts := getTestService(t)
+	ts := getTestConfig(t)
 
 	// setup
 	ts.store.EXPECT().
@@ -49,14 +49,14 @@ func testGeneratingConfigSucceeds(t *testing.T) {
 		Return(nil)
 
 	// when
-	err := config.GenerateConfig(ts.log, ts.store, false)
+	err := service.GenerateConfig(ts.log, ts.store, false)
 
 	// then
 	require.NoError(t, err)
 }
 
 func testGeneratingConfigWithErrorFails(t *testing.T) {
-	ts := getTestService(t)
+	ts := getTestConfig(t)
 
 	// setup
 	ts.store.EXPECT().
@@ -68,14 +68,14 @@ func testGeneratingConfigWithErrorFails(t *testing.T) {
 		Times(0)
 
 	// when
-	err := config.GenerateConfig(ts.log, ts.store, false)
+	err := service.GenerateConfig(ts.log, ts.store, false)
 
 	// then
 	require.Error(t, err, errors.New("some error"))
 }
 
 func testGeneratingConfigWithRSAKeysWithErrorFails(t *testing.T) {
-	ts := getTestService(t)
+	ts := getTestConfig(t)
 
 	// setup
 	ts.store.EXPECT().
@@ -88,14 +88,14 @@ func testGeneratingConfigWithRSAKeysWithErrorFails(t *testing.T) {
 		Return(errors.New("some error"))
 
 	// when
-	err := config.GenerateConfig(ts.log, ts.store, false)
+	err := service.GenerateConfig(ts.log, ts.store, false)
 
 	// then
 	require.Error(t, err, errors.New("some error"))
 }
 
 func testOverwritingConfigSucceeds(t *testing.T) {
-	ts := getTestService(t)
+	ts := getTestConfig(t)
 
 	// setup
 	ts.store.EXPECT().
@@ -108,7 +108,7 @@ func testOverwritingConfigSucceeds(t *testing.T) {
 		Return(nil)
 
 	// when
-	err := config.GenerateConfig(ts.log, ts.store, true)
+	err := service.GenerateConfig(ts.log, ts.store, true)
 
 	// then
 	require.NoError(t, err)

@@ -6,7 +6,6 @@ import (
 
 	"code.vegaprotocol.io/go-wallet/service"
 	"code.vegaprotocol.io/go-wallet/service/mocks"
-	"code.vegaprotocol.io/go-wallet/wallet"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap"
@@ -19,7 +18,7 @@ type testAuth struct {
 }
 
 func getTestAuth(t *testing.T) *testAuth {
-	rsaKeys, err := wallet.GenerateRSAKeys()
+	rsaKeys, err := service.GenerateRSAKeys()
 	if err != nil {
 		t.Fatal(err)
 	}
