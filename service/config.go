@@ -25,7 +25,6 @@ type Config struct {
 	Port        int
 	Host        string
 	Nodes       NodesConfig
-	RsaKey      string
 	Console     ConsoleConfig
 }
 
