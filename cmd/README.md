@@ -16,10 +16,21 @@ vegawallet -h
 vegawallet help
 ```
 
+## Initialise the program
+
+Before using the wallet, you need to initialise it with the following command:
+
+```sh
+vegawallet init
+```
+
+This creates the folders, the configuration file and RSA keys needed by the
+wallet and its service to operate.
+
 ## Create a wallet
 
-To create a new wallet, generate your first key pair using
-the following command:
+To create a new wallet, generate your first key pair using the following
+command:
 
 ```sh
 vegawallet key generate --name "YOUR_USERNAME"
@@ -107,8 +118,8 @@ to your update.
 
 ## Tainting a key pair
 
-You may want to prevent the use of a key by "tainting" it with
-the following command:
+You may want to prevent the use of a key by "tainting" it with the following
+command:
 
 ```sh
 vegawallet key taint --name "YOUR_NAME" --pubkey "YOUR_HEX_PUBIC_KEY"
@@ -146,17 +157,6 @@ vegawallet verify --name "YOUR_NAME" --pubkey "YOUR_HEX_PUBIC_KEY" --message "c3
 It will then prompt you to input a passphrase. You can also specify the
 passphrase with the ``--passphrase`` flag.
 
-## Initialise the service
-
-Before using the service, you need to initialise it with the following command:
-
-```sh
-vegawallet service init
-```
-
-This creates the configuration file and RSA keys needed by the service to
-operate.
-
 ## Run the service
 
 Once the service has been initialised, you can run the wallet with the following
@@ -166,7 +166,8 @@ command:
 vegawallet service run
 ```
 
-To run the wallet and open up a local version of Vega Console, the trading UI, use the following command:
+To run the wallet and open up a local version of Vega Console, the trading UI,
+use the following command:
 
 ```sh
 vegawallet service run --console-proxy

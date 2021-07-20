@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	storev1 "code.vegaprotocol.io/go-wallet/store/v1"
 	"code.vegaprotocol.io/go-wallet/wallet"
 
 	"github.com/spf13/cobra"
@@ -31,7 +32,7 @@ func init() {
 }
 
 func runKeyList(cmd *cobra.Command, args []string) error {
-	store, err := getStore()
+	store, err := storev1.NewStore(rootArgs.rootPath)
 	if err != nil {
 		return err
 	}

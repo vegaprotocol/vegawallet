@@ -39,7 +39,7 @@ type NodesConfig struct {
 	Retries uint64
 }
 
-func GenerateConfig(log *zap.Logger, store Store, overwrite, genRsaKey bool) error {
+func GenerateConfig(log *zap.Logger, store Store, overwrite bool) error {
 	config := NewDefaultConfig()
 	err := store.SaveConfig(&config, overwrite)
 	if err != nil {
@@ -48,17 +48,15 @@ func GenerateConfig(log *zap.Logger, store Store, overwrite, genRsaKey bool) err
 
 	log.Info("wallet service configuration generated successfully")
 
-	if genRsaKey {
-		keys, err := wallet.GenerateRSAKeys()
-		if err != nil {
-			return err
-		}
-		if err := store.SaveRSAKeys(keys, overwrite); err != nil {
-			return err
-		}
-
-		log.Info("wallet RSA keys generated successfully")
+	keys, err := wallet.GenerateRSAKeys()
+	if err != nil {
+		return err
 	}
+	if err := store.SaveRSAKeys(keys, overwrite); err != nil {
+		return err
+	}
+
+	log.Info("wallet RSA keys generated successfully")
 
 	return nil
 }

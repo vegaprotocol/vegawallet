@@ -1,7 +1,10 @@
 package cmd
 
 import (
+	"fmt"
+
 	"code.vegaprotocol.io/go-wallet/config"
+	storev1 "code.vegaprotocol.io/go-wallet/store/v1"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 )
@@ -9,13 +12,12 @@ import (
 var (
 	serviceInitArgs struct {
 		force       bool
-		NoGenRsaKey bool
 	}
 
 	serviceInitCmd = &cobra.Command{
 		Use:   "init",
-		Short: "Generate the configuration",
-		Long:  "Generate the configuration for the wallet service",
+		Short: "Generate the configuration (deprecated)",
+		Long:  "DEPRECATED! Use init instead. Generate the configuration for the wallet service.",
 		RunE:  runServiceInit,
 	}
 )
@@ -23,7 +25,6 @@ var (
 func init() {
 	serviceCmd.AddCommand(serviceInitCmd)
 	serviceInitCmd.Flags().BoolVarP(&serviceInitArgs.force, "force", "f", false, "Erase exiting wallet service configuration at the specified path")
-	serviceInitCmd.Flags().BoolVarP(&serviceInitArgs.NoGenRsaKey, "no-genrsakey", "g", false, "Do not generate rsa keys for the jwt tokens by default")
 }
 
 func runServiceInit(cmd *cobra.Command, args []string) error {
@@ -32,10 +33,16 @@ func runServiceInit(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	store, err := getStore()
+	fmt.Println("\n\nDEPRECATION:\nThe command `service init` is deprecated. Use `init` instead.")
+
+	store, err := storev1.NewStore(rootArgs.rootPath)
 	if err != nil {
 		return err
 	}
 
-	return config.GenerateConfig(log, store, serviceInitArgs.force, !serviceInitArgs.NoGenRsaKey)
+	if err := store.Initialise(); err != nil {
+		return err
+	}
+
+	return config.GenerateConfig(log, store, initArgs.force)
 }

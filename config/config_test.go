@@ -31,10 +31,8 @@ func getTestService(t *testing.T) *testService {
 func TestGenerateConfig(t *testing.T) {
 	t.Run("Generating config succeeds", testGeneratingConfigSucceeds)
 	t.Run("Generating config with error fails", testGeneratingConfigWithErrorFails)
-	t.Run("Generating config with RSA keys generation succeeds", testGeneratingConfigWithRSAKeysSucceeds)
 	t.Run("Generating config with RSA keys generation with error fails", testGeneratingConfigWithRSAKeysWithErrorFails)
 	t.Run("Overwriting config succeeds", testOverwritingConfigSucceeds)
-	t.Run("Overwriting config with RSA keys generation succeeds", testOverwritingConfigWithRSAKeysSucceeds)
 }
 
 func testGeneratingConfigSucceeds(t *testing.T) {
@@ -47,10 +45,11 @@ func testGeneratingConfigSucceeds(t *testing.T) {
 		Return(nil)
 	ts.store.EXPECT().
 		SaveRSAKeys(gomock.Any(), gomock.Any()).
-		Times(0)
+		Times(1).
+		Return(nil)
 
 	// when
-	err := config.GenerateConfig(ts.log, ts.store, false, false)
+	err := config.GenerateConfig(ts.log, ts.store, false)
 
 	// then
 	require.NoError(t, err)
@@ -69,30 +68,10 @@ func testGeneratingConfigWithErrorFails(t *testing.T) {
 		Times(0)
 
 	// when
-	err := config.GenerateConfig(ts.log, ts.store, false, false)
+	err := config.GenerateConfig(ts.log, ts.store, false)
 
 	// then
 	require.Error(t, err, errors.New("some error"))
-}
-
-func testGeneratingConfigWithRSAKeysSucceeds(t *testing.T) {
-	ts := getTestService(t)
-
-	// setup
-	ts.store.EXPECT().
-		SaveConfig(gomock.Any(), false).
-		Times(1).
-		Return(nil)
-	ts.store.EXPECT().
-		SaveRSAKeys(gomock.Any(), false).
-		Times(1).
-		Return(nil)
-
-	// when
-	err := config.GenerateConfig(ts.log, ts.store, false, true)
-
-	// then
-	require.NoError(t, err)
 }
 
 func testGeneratingConfigWithRSAKeysWithErrorFails(t *testing.T) {
@@ -109,7 +88,7 @@ func testGeneratingConfigWithRSAKeysWithErrorFails(t *testing.T) {
 		Return(errors.New("some error"))
 
 	// when
-	err := config.GenerateConfig(ts.log, ts.store, false, true)
+	err := config.GenerateConfig(ts.log, ts.store, false)
 
 	// then
 	require.Error(t, err, errors.New("some error"))
@@ -124,31 +103,12 @@ func testOverwritingConfigSucceeds(t *testing.T) {
 		Times(1).
 		Return(nil)
 	ts.store.EXPECT().
-		SaveRSAKeys(gomock.Any(), gomock.Any()).
-		Times(0)
-
-	// when
-	err := config.GenerateConfig(ts.log, ts.store, true, false)
-
-	// then
-	require.NoError(t, err)
-}
-
-func testOverwritingConfigWithRSAKeysSucceeds(t *testing.T) {
-	ts := getTestService(t)
-
-	// setup
-	ts.store.EXPECT().
-		SaveConfig(gomock.Any(), true).
-		Times(1).
-		Return(nil)
-	ts.store.EXPECT().
 		SaveRSAKeys(gomock.Any(), true).
 		Times(1).
 		Return(nil)
 
 	// when
-	err := config.GenerateConfig(ts.log, ts.store, true, true)
+	err := config.GenerateConfig(ts.log, ts.store, true)
 
 	// then
 	require.NoError(t, err)

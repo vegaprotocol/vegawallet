@@ -9,6 +9,7 @@ import (
 	"syscall"
 
 	"code.vegaprotocol.io/go-wallet/service"
+	storev1 "code.vegaprotocol.io/go-wallet/store/v1"
 	"github.com/skratchdot/open-golang/open"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
@@ -40,7 +41,7 @@ func runServiceRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	store, err := getStore()
+	store, err := storev1.NewStore(rootArgs.rootPath)
 	if err != nil {
 		return err
 	}

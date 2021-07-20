@@ -57,26 +57,44 @@ to execute the program.
 
 > Tip: You can see a list of available commands by running  `./vegawallet -h` on MacOS and Linux, or `vegawallet -h` on Windows.
 
+### Initialise the program
+
+The `init` command (below) will initialise the configuration. A configuration file will be stored in your home folder, in a folder called `.vega`.
+
+**MacOS & Linux**
+
+```console
+./vegawallet init
+```
+**Windows**
+
+```console
+vegawallet init
+```
+
+> Tip: If you want to specify a root-path, it will not go into the default path, but a folder you choose to create. If you want to create a new config for a new wallet, or test or isolate it, you should specify the root path.
+
+
 ### Create name and passphrase
-Next, **create a user name and passphrase** for your Wallet, and **create a public and private key** (genkey).
+Next, **create a user name and passphrase** for your Wallet, and **create a public and private key** (key generate).
 
 Replace "YOUR_CUSTOM_USERNAME" (below) with your chosen username:
 
 **MacOS & Linux**
 
 ```console
-./vegawallet genkey -n "YOUR_CUSTOM_USERNAME"
+./vegawallet key generate -n "YOUR_CUSTOM_USERNAME"
 ```
 
 **Windows**
 
 ```console
-vegawallet genkey -n "YOUR_CUSTOM_USERNAME"
+vegawallet key generate -n "YOUR_CUSTOM_USERNAME"
 ```
 
 It will then prompt you to **input a passphrase**, and then **confirm that passphrase**. You'll use this username and passphrase to login to Vega Console. (Instructions on connecting to Console are below.)
 
-The genkey command in that instruction will generate public and private keys for the wallet, at the same time as creating a user name.
+The key generate command in that instruction will generate public and private keys for the wallet, at the same time as creating a user name.
 
 You’ll see an output with a "mnemonic" and a public and private key. DO NOT SHARE YOUR MNEMONIC OR YOUR PRIVATE KEY.
 
@@ -87,35 +105,20 @@ You don’t need to save your private key, as you’ll be able to retrieve it fr
 > Tip: You can give each new key a nickname/alias.
 > When creating a key, run
 >
-> MacOS & Linux: `./vegawallet genkey -name="YOUR_CUSTOM_USERNAME" --metas="name:CHOOSE_CUSTOM_ALIAS_FOR_KEY"`.
+> MacOS & Linux: `./vegawallet key generate -name="YOUR_CUSTOM_USERNAME" --metas="name:CHOOSE_CUSTOM_ALIAS_FOR_KEY"`.
 >
-> Windows: `vegawallet genkey -name="YOUR_CUSTOM_USERNAME" --metas="name:CHOOSE_CUSTOM_ALIAS_FOR_KEY"`
+> Windows: `vegawallet key generate -name="YOUR_CUSTOM_USERNAME" --metas="name:CHOOSE_CUSTOM_ALIAS_FOR_KEY"`
 
 > Tip: To give an existing key a nickname/alias, run
 >
-> MacOS & Linux: `./vegawallet meta --metas="name:CHOOSE_CUSTOM_ALIAS_FOR_KEY" --name="YOUR_CUSTOM_USERNAME" --pubkey="REPLACE_THIS_WITH_YOUR_PUBLIC_KEY"`.
+> MacOS & Linux: `./vegawallet key meta --metas="name:CHOOSE_CUSTOM_ALIAS_FOR_KEY" --name="YOUR_CUSTOM_USERNAME" --pubkey="REPLACE_THIS_WITH_YOUR_PUBLIC_KEY"`.
 >
-> Windows: `vegawallet meta --metas="name:CHOOSE_CUSTOM_ALIAS_FOR_KEY" --name="YOUR_CUSTOM_USERNAME" --pubkey="REPLACE_THIS_WITH_YOUR_PUBLIC_KEY"`
+> Windows: `vegawallet key meta --metas="name:CHOOSE_CUSTOM_ALIAS_FOR_KEY" --name="YOUR_CUSTOM_USERNAME" --pubkey="REPLACE_THIS_WITH_YOUR_PUBLIC_KEY"`
 
 > Tip: You can also use the meta command to tag a key with other data you might want, using a property name and a value. This will be useful for developing with Vega Wallet in the future.
 
 ## Run the Wallet service
-Now, **connect your wallet to the Vega testnet (Fairground) nodes**. The `init` command (below) will initialise the configuration. A configuration file will be stored in your home folder, in a folder called `.vega`.
-
-**MacOS & Linux**
-
-```console
-./vegawallet service init
-```
-**Windows**
-
-```console
-vegawallet service init
-```
-
-> Tip: If you want to specify a root-path, it will not go into the default path, but a folder you choose to create. If you want to create a new config for a new wallet, or test or isolate it, you should specify the root path.
-
-Next: To trade, run the wallet and **start the Vega Console** with the command below. (You'll need collateral to trade, and you can deposit it through Vega Console, once you're connected.)
+Now, **connect your wallet to the Vega testnet (Fairground) nodes**. To trade, run the wallet and **start the Vega Console** with the command below. (You'll need collateral to trade, and you can deposit it through Vega Console, once you're connected.)
 
 **MacOS & Linux**
 
