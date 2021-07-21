@@ -33,3 +33,15 @@ func (d configDir) Remove() {
 		panic(err)
 	}
 }
+
+func (d configDir) ConfigFilePath() string {
+	return filepath.Join(d.rootPath, "wallet-service-config.toml")
+}
+
+func (d configDir) PublicRSAKeyFilePath() string {
+	return filepath.Join(d.RSAKeysPath(), "public.pem")
+}
+
+func (d configDir) PrivateRSAKeyFilePath() string {
+	return filepath.Join(d.RSAKeysPath(), "private.pem")
+}

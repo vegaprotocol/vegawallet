@@ -94,15 +94,8 @@ func (s *Store) SaveConfig(cfg *service.Config, overwrite bool) error {
 		return err
 	}
 
-	// create the configuration file
-	f, err := os.Create(s.configFileName)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-
-	if _, err = f.WriteString(buf.String()); err != nil {
-		return err
+	if err := writeFile(buf.Bytes(), s.configFileName); err != nil {
+		return fmt.Errorf("unable to save configuration: %v", err)
 	}
 
 	return nil
@@ -126,11 +119,11 @@ func (s *Store) SaveRSAKeys(keys *service.RSAKeys, overwrite bool) error {
 	}
 
 	if err := writeFile(keys.Priv, s.privRsaKeyFileName); err != nil {
-		return fmt.Errorf("unable to write private key: %v", err)
+		return fmt.Errorf("unable to save private key: %v", err)
 	}
 
 	if err := writeFile(keys.Pub, s.pubRsaKeyFileName); err != nil {
-		return fmt.Errorf("unable to write private key: %v", err)
+		return fmt.Errorf("unable to save public key: %v", err)
 	}
 
 	return nil
@@ -170,13 +163,18 @@ func (s *Store) removeExistingRSAKeys() error {
 }
 
 func writeFile(content []byte, fileName string) error {
-	pemFile, err := os.Create(fileName)
+	f, err := os.Create(fileName)
 	if err != nil {
 		return err
 	}
-	defer pemFile.Close()
+	defer f.Close()
 
-	_, err = pemFile.Write(content)
+	err = f.Chmod(0600)
+	if err != nil {
+		return err
+	}
+
+	_, err = f.Write(content)
 	if err != nil {
 		return err
 	}

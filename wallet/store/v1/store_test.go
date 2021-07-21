@@ -1,6 +1,7 @@
 package v1_test
 
 import (
+	"io/fs"
 	"os"
 	"testing"
 
@@ -43,8 +44,9 @@ func testInitialisingNewStoreSucceeds(t *testing.T) {
 
 	err = s.Initialise()
 
-	_, err = os.Stat(walletsDir.WalletsPath())
+	stats, err := os.Stat(walletsDir.WalletsPath())
 	assert.NoError(t, err)
+	assert.Equal(t, fs.FileMode(0700), stats.Mode().Perm())
 }
 
 func testFileStoreV1GetWalletSucceeds(t *testing.T) {
@@ -176,6 +178,9 @@ func testFileStoreV1SaveLegacyWalletSucceeds(t *testing.T) {
 
 	// then
 	require.NoError(t, err)
+	stats, err := os.Stat(walletsDir.WalletPath(w.Name()))
+	assert.NoError(t, err)
+	assert.Equal(t, fs.FileMode(0600), stats.Mode().Perm())
 	assert.NotEmpty(t, walletsDir.WalletContent(w.Name()))
 }
 
@@ -193,6 +198,9 @@ func testFileStoreV1SaveHDWalletSucceeds(t *testing.T) {
 
 	// then
 	require.NoError(t, err)
+	stats, err := os.Stat(walletsDir.WalletPath(w.Name()))
+	assert.NoError(t, err)
+	assert.Equal(t, fs.FileMode(0600), stats.Mode().Perm())
 	assert.NotEmpty(t, walletsDir.WalletContent(w.Name()))
 }
 

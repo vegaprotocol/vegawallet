@@ -99,6 +99,11 @@ func (s *Store) SaveWallet(w wallet.Wallet, passphrase string) error {
 		return err
 	}
 
+	err = f.Chmod(0600)
+	if err != nil {
+		return err
+	}
+
 	_, err = f.Write(encBuf)
 	if err != nil {
 		return err
