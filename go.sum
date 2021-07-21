@@ -102,6 +102,8 @@ github.com/mwitkow/go-proto-validators v0.3.2 h1:qRlmpTzm2pstMKKzTdvwPCF5QfBNURS
 github.com/mwitkow/go-proto-validators v0.3.2/go.mod h1:ej0Qp0qMgHN/KtDyUt+Q1/tA7a5VarXUOUxD+oeD30w=
 github.com/oasisprotocol/curve25519-voi v0.0.0-20210609091139-0a56a4bca00b h1:MKwruh+HeCSKWphkxuzvRzU4QzDkg7yiPkDVV0cDFgI=
 github.com/oasisprotocol/curve25519-voi v0.0.0-20210609091139-0a56a4bca00b/go.mod h1:TLJifjWF6eotcfzDjKZsDqWJ+73Uvj/N85MvVyrvynM=
+github.com/oasisprotocol/curve25519-voi v0.0.0-20210716083614-f38f8e8b0b84 h1:VGE87qI0pfuQ23PLPiXpXIdk4gVGFZpq5H5A2f1dZcY=
+github.com/oasisprotocol/curve25519-voi v0.0.0-20210716083614-f38f8e8b0b84/go.mod h1:TLJifjWF6eotcfzDjKZsDqWJ+73Uvj/N85MvVyrvynM=
 github.com/oklog/ulid v1.3.1/go.mod h1:CirwcVhetQ6Lv90oh/F+FBtV6XMibvdAFo93nm5qn4U=
 github.com/pelletier/go-toml v1.2.0/go.mod h1:5z9KED0ma1S8pY6P1sdut58dfprrGBbd/94hg7ilaic=
 github.com/pkg/errors v0.8.0/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
