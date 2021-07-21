@@ -6,7 +6,6 @@ import (
 	"sync/atomic"
 	"time"
 
-	"code.vegaprotocol.io/go-wallet/config"
 	vproto "code.vegaprotocol.io/go-wallet/internal/proto"
 	"code.vegaprotocol.io/go-wallet/internal/proto/api"
 	commandspb "code.vegaprotocol.io/go-wallet/internal/proto/commands/v1"
@@ -19,14 +18,14 @@ import (
 
 type nodeForward struct {
 	log      *zap.Logger
-	nodeCfgs config.NodesConfig
+	nodeCfgs NodesConfig
 	clts     []api.TradingServiceClient
 	cltDatas []api.TradingDataServiceClient
 	conns    []*grpc.ClientConn
 	next     uint64
 }
 
-func newNodeForward(log *zap.Logger, nodeConfigs config.NodesConfig) (*nodeForward, error) {
+func newNodeForward(log *zap.Logger, nodeConfigs NodesConfig) (*nodeForward, error) {
 	if len(nodeConfigs.Hosts) <= 0 {
 		return nil, errors.New("no node specified for node forwarding")
 	}

@@ -3,7 +3,7 @@ package wallet
 import (
 	"encoding/json"
 
-	"code.vegaprotocol.io/go-wallet/wallet/crypto"
+	"code.vegaprotocol.io/go-wallet/crypto"
 )
 
 type LegacyPublicKey struct {

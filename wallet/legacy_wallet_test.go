@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"testing"
 
+	"code.vegaprotocol.io/go-wallet/crypto"
 	"code.vegaprotocol.io/go-wallet/wallet"
-	"code.vegaprotocol.io/go-wallet/wallet/crypto"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -186,7 +186,7 @@ func generateLegacyKeyPair() *wallet.LegacyKeyPair {
 func newKeyPair(algo crypto.SignatureAlgorithm, pub, priv string) wallet.LegacyKeyPair {
 	return wallet.LegacyKeyPair{
 		Algorithm: algo,
-		Pub:  pub,
-		Priv: priv,
+		Pub:       pub,
+		Priv:      priv,
 	}
 }

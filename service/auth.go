@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"code.vegaprotocol.io/go-wallet/crypto"
-	"code.vegaprotocol.io/go-wallet/wallet"
 	"github.com/dgrijalva/jwt-go/v4"
 	"github.com/julienschmidt/httprouter"
 	"go.uber.org/zap"
@@ -23,7 +22,7 @@ var (
 
 //go:generate go run github.com/golang/mock/mockgen -destination mocks/rsa_store_mock.go -package mocks code.vegaprotocol.io/go-wallet/service RSAStore
 type RSAStore interface {
-	GetRsaKeys() (*wallet.RSAKeys, error)
+	GetRsaKeys() (*RSAKeys, error)
 }
 
 type auth struct {

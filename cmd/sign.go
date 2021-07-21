@@ -5,8 +5,6 @@ import (
 	"errors"
 	"fmt"
 
-	storev1 "code.vegaprotocol.io/go-wallet/store/v1"
-	"code.vegaprotocol.io/go-wallet/wallet"
 	"github.com/spf13/cobra"
 )
 
@@ -36,12 +34,10 @@ func init() {
 }
 
 func runSign(cmd *cobra.Command, args []string) error {
-	store, err := storev1.NewStore(rootArgs.rootPath)
+	handler, err := newWalletHandler(rootArgs.rootPath)
 	if err != nil {
 		return err
 	}
-
-	handler := wallet.NewHandler(store)
 
 	if len(signArgs.name) == 0 {
 		return errors.New("wallet name is required")
@@ -50,8 +46,13 @@ func runSign(cmd *cobra.Command, args []string) error {
 		return errors.New("pubkey is required")
 	}
 	if len(signArgs.message) == 0 {
-		return errors.New("data is required")
+		return errors.New("message is required")
 	}
+	decodedMessage, err := base64.StdEncoding.DecodeString(signArgs.message)
+	if err != nil {
+		return errors.New("message should be encoded into base64")
+	}
+
 	if len(signArgs.passphrase) <= 0 {
 		var err error
 		signArgs.passphrase, err = promptForPassphrase()
@@ -64,8 +65,7 @@ func runSign(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return fmt.Errorf("could not login to the wallet: %v", err)
 	}
-
-	sig, err := handler.SignAny(signArgs.name, signArgs.message, signArgs.pubkey)
+	sig, err := handler.SignAny(signArgs.name, decodedMessage, signArgs.pubkey)
 	if err != nil {
 		return err
 	}

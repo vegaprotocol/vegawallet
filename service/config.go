@@ -1,22 +1,22 @@
-package config
+package service
 
 import (
 	"time"
 
-	"code.vegaprotocol.io/go-wallet/config/encoding"
-	"code.vegaprotocol.io/go-wallet/wallet"
+	"code.vegaprotocol.io/go-wallet/service/encoding"
+
 	"go.uber.org/zap"
 )
 
 const (
-	//  7 days, needs to be in seconds for the token
+	// 7 days, needs to be in seconds for the token
 	tokenExpiry = time.Hour * 24 * 7
 )
 
-//go:generate go run github.com/golang/mock/mockgen -destination mocks/store_mock.go -package mocks code.vegaprotocol.io/go-wallet/config Store
+//go:generate go run github.com/golang/mock/mockgen -destination mocks/store_mock.go -package mocks code.vegaprotocol.io/go-wallet/service Store
 type Store interface {
 	SaveConfig(*Config, bool) error
-	SaveRSAKeys(*wallet.RSAKeys, bool) error
+	SaveRSAKeys(*RSAKeys, bool) error
 }
 
 type Config struct {
@@ -25,7 +25,6 @@ type Config struct {
 	Port        int
 	Host        string
 	Nodes       NodesConfig
-	RsaKey      string
 	Console     ConsoleConfig
 }
 
@@ -48,7 +47,7 @@ func GenerateConfig(log *zap.Logger, store Store, overwrite bool) error {
 
 	log.Info("wallet service configuration generated successfully")
 
-	keys, err := wallet.GenerateRSAKeys()
+	keys, err := GenerateRSAKeys()
 	if err != nil {
 		return err
 	}

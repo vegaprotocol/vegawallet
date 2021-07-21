@@ -6,8 +6,6 @@ import (
 
 	"code.vegaprotocol.io/go-wallet/crypto"
 	commandspb "code.vegaprotocol.io/go-wallet/internal/proto/commands/v1"
-	wcrypto "code.vegaprotocol.io/go-wallet/wallet/crypto"
-
 	"github.com/golang/protobuf/proto"
 )
 
@@ -78,7 +76,7 @@ func CheckTransaction(tx *commandspb.Transaction) (*commandspb.InputData, error)
 func validateSignature(inputData []byte, signature *commandspb.Signature, pubKey string) Errors {
 	errs := NewErrors()
 
-	validator, err := wcrypto.NewSignatureAlgorithm(signature.Algo, signature.Version)
+	validator, err := crypto.NewSignatureAlgorithm(signature.Algo, signature.Version)
 	if err != nil {
 		return errs.FinalAddForProperty("tx.signature.algo", err)
 	}

@@ -5,7 +5,7 @@
 package mocks
 
 import (
-	wallet "code.vegaprotocol.io/go-wallet/wallet"
+	service "code.vegaprotocol.io/go-wallet/service"
 	gomock "github.com/golang/mock/gomock"
 	reflect "reflect"
 )
@@ -34,10 +34,10 @@ func (m *MockRSAStore) EXPECT() *MockRSAStoreMockRecorder {
 }
 
 // GetRsaKeys mocks base method
-func (m *MockRSAStore) GetRsaKeys() (*wallet.RSAKeys, error) {
+func (m *MockRSAStore) GetRsaKeys() (*service.RSAKeys, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetRsaKeys")
-	ret0, _ := ret[0].(*wallet.RSAKeys)
+	ret0, _ := ret[0].(*service.RSAKeys)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

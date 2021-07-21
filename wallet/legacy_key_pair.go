@@ -4,8 +4,8 @@ import (
 	"encoding/hex"
 	"encoding/json"
 
+	"code.vegaprotocol.io/go-wallet/crypto"
 	commandspb "code.vegaprotocol.io/go-wallet/internal/proto/commands/v1"
-	"code.vegaprotocol.io/go-wallet/wallet/crypto"
 )
 
 type LegacyKeyPair struct {

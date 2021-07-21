@@ -151,7 +151,7 @@ func (mr *MockWalletHandlerMockRecorder) SecureGenerateKeyPair(arg0, arg1 interf
 }
 
 // SignAny mocks base method
-func (m *MockWalletHandler) SignAny(arg0, arg1, arg2 string) ([]byte, error) {
+func (m *MockWalletHandler) SignAny(arg0 string, arg1 []byte, arg2 string) ([]byte, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SignAny", arg0, arg1, arg2)
 	ret0, _ := ret[0].([]byte)
@@ -224,7 +224,7 @@ func (mr *MockWalletHandlerMockRecorder) UpdateMeta(arg0, arg1, arg2, arg3 inter
 }
 
 // VerifyAny mocks base method
-func (m *MockWalletHandler) VerifyAny(arg0, arg1, arg2, arg3 string) (bool, error) {
+func (m *MockWalletHandler) VerifyAny(arg0 string, arg1, arg2 []byte, arg3 string) (bool, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "VerifyAny", arg0, arg1, arg2, arg3)
 	ret0, _ := ret[0].(bool)

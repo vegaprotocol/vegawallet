@@ -2,26 +2,22 @@ package v1
 
 import (
 	"bytes"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 
-	"code.vegaprotocol.io/go-wallet/config"
 	"code.vegaprotocol.io/go-wallet/fsutil"
-	"code.vegaprotocol.io/go-wallet/wallet"
-	"code.vegaprotocol.io/go-wallet/wallet/crypto"
+	"code.vegaprotocol.io/go-wallet/service"
 	"github.com/zannen/toml"
 )
 
 const (
-	configFile       = "wallet-service-config.toml"
-	rsaKeyPath       = "wallet_rsa"
-	pubRsaKeyName    = "public.pem"
-	privRsaKeyName   = "private.pem"
-	walletBaseFolder = "wallets"
+	configFile     = "wallet-service-config.toml"
+	rsaKeyPath     = "wallet_rsa"
+	pubRsaKeyName  = "public.pem"
+	privRsaKeyName = "private.pem"
 )
 
 var (
@@ -29,36 +25,29 @@ var (
 )
 
 type Store struct {
-	rootPath           string
+	configPath         string
 	keyFolderPath      string
 	pubRsaKeyFileName  string
 	privRsaKeyFileName string
 	configFileName     string
-	walletBasePath     string
 }
 
-func NewStore(rootPath string) (*Store, error) {
-	keyFolderPath := filepath.Join(rootPath, rsaKeyPath)
+func NewStore(configPath string) (*Store, error) {
+	keyFolderPath := filepath.Join(configPath, rsaKeyPath)
 
 	return &Store{
-		rootPath:           rootPath,
+		configPath:         configPath,
 		keyFolderPath:      keyFolderPath,
 		pubRsaKeyFileName:  filepath.Join(keyFolderPath, pubRsaKeyName),
 		privRsaKeyFileName: filepath.Join(keyFolderPath, privRsaKeyName),
-		configFileName:     filepath.Join(rootPath, configFile),
-		walletBasePath:     filepath.Join(rootPath, walletBaseFolder),
+		configFileName:     filepath.Join(configPath, configFile),
 	}, nil
 }
 
 // Initialise creates the folders. It does nothing if a folder already
 // exists.
 func (s *Store) Initialise() error {
-	err := createFolder(s.rootPath)
-	if err != nil {
-		return err
-	}
-
-	err = createFolder(s.walletBasePath)
+	err := createFolder(s.configPath)
 	if err != nil {
 		return err
 	}
@@ -71,105 +60,13 @@ func (s *Store) Initialise() error {
 	return nil
 }
 
-func createFolder(folder string) error {
-	ok, err := fsutil.PathExists(folder)
-	if !ok {
-		if _, ok := err.(*fsutil.PathNotFound); !ok {
-			return fmt.Errorf("invalid directory path %s: %v", folder, err)
-		}
-
-		if err := fsutil.EnsureDir(folder); err != nil {
-			return fmt.Errorf("error creating directory %s: %v", folder, err)
-		}
-	}
-	return nil
-}
-
-func (s *Store) WalletExists(name string) bool {
-	walletPath := s.walletPath(name)
-
-	ok, _ := fsutil.PathExists(walletPath)
-	return ok
-}
-
-func (s *Store) GetWallet(name, passphrase string) (wallet.Wallet, error) {
-	walletPath := s.walletPath(name)
-
-	if ok, _ := fsutil.PathExists(walletPath); !ok {
-		return nil, wallet.ErrWalletDoesNotExists
-	}
-
-	buf, err := ioutil.ReadFile(walletPath)
-	if err != nil {
-		return nil, err
-	}
-
-	decBuf, err := crypto.Decrypt(buf, passphrase)
-	if err != nil {
-		return nil, err
-	}
-
-	versionedWallet := &struct {
-		Version uint32 `json:"version"`
-	}{}
-
-	err = json.Unmarshal(decBuf, versionedWallet)
-	if err != nil {
-		return nil, err
-	}
-
-	var w wallet.Wallet
-	switch versionedWallet.Version {
-	case 0:
-		w = &wallet.LegacyWallet{}
-		break
-	case 1:
-		w = &wallet.HDWallet{}
-		break
-	default:
-		return nil, fmt.Errorf("wallet with version %d isn't supported", versionedWallet.Version)
-	}
-
-	err = json.Unmarshal(decBuf, w)
-
-	return w, nil
-}
-
-func (s *Store) SaveWallet(w wallet.Wallet, passphrase string) error {
-	buf, err := json.Marshal(w)
-	if err != nil {
-		return err
-	}
-
-	encBuf, err := crypto.Encrypt(buf, passphrase)
-	if err != nil {
-		return err
-	}
-
-	f, err := os.Create(s.walletPath(w.Name()))
-	if err != nil {
-		return err
-	}
-
-	_, err = f.Write(encBuf)
-	if err != nil {
-		return err
-	}
-
-	return f.Close()
-}
-
-func (s *Store) GetWalletPath(name string) string {
-	return s.walletPath(name)
-}
-
-func (s *Store) GetConfig() (*config.Config, error) {
+func (s *Store) GetConfig() (*service.Config, error) {
 	buf, err := ioutil.ReadFile(s.configFileName)
 	if err != nil {
 		return nil, err
 	}
 
-	cfg := config.NewDefaultConfig()
+	cfg := service.NewDefaultConfig()
 
 	if _, err := toml.Decode(string(buf), &cfg); err != nil {
 		return nil, err
@@ -178,7 +75,7 @@ func (s *Store) GetConfig() (*config.Config, error) {
 	return &cfg, nil
 }
 
-func (s *Store) SaveConfig(cfg *config.Config, overwrite bool) error {
+func (s *Store) SaveConfig(cfg *service.Config, overwrite bool) error {
 	confPathExists, _ := fsutil.FileExists(s.configFileName)
 
 	if confPathExists {
@@ -211,7 +108,7 @@ func (s *Store) SaveConfig(cfg *config.Config, overwrite bool) error {
 	return nil
 }
 
-func (s *Store) SaveRSAKeys(keys *wallet.RSAKeys, overwrite bool) error {
+func (s *Store) SaveRSAKeys(keys *service.RSAKeys, overwrite bool) error {
 	if ok, _ := fsutil.PathExists(s.keyFolderPath); !ok {
 		return ErrRSAFolderDoesNotExists
 	}
@@ -239,7 +136,7 @@ func (s *Store) SaveRSAKeys(keys *wallet.RSAKeys, overwrite bool) error {
 	return nil
 }
 
-func (s *Store) GetRsaKeys() (*wallet.RSAKeys, error) {
+func (s *Store) GetRsaKeys() (*service.RSAKeys, error) {
 	pub, err := ioutil.ReadFile(s.pubRsaKeyFileName)
 	if err != nil {
 		return nil, err
@@ -250,7 +147,7 @@ func (s *Store) GetRsaKeys() (*wallet.RSAKeys, error) {
 		return nil, err
 	}
 
-	return &wallet.RSAKeys{
+	return &service.RSAKeys{
 		Pub:  pub,
 		Priv: priv,
 	}, nil
@@ -272,10 +169,6 @@ func (s *Store) removeExistingRSAKeys() error {
 	return createFolder(s.keyFolderPath)
 }
 
-func (s *Store) walletPath(name string) string {
-	return filepath.Join(s.rootPath, walletBaseFolder, name)
-}
-
 func writeFile(content []byte, fileName string) error {
 	pemFile, err := os.Create(fileName)
 	if err != nil {
@@ -288,5 +181,19 @@ func writeFile(content []byte, fileName string) error {
 		return err
 	}
 
+	return nil
+}
+
+func createFolder(folder string) error {
+	ok, err := fsutil.PathExists(folder)
+	if !ok {
+		if _, ok := err.(*fsutil.PathNotFound); !ok {
+			return fmt.Errorf("invalid directory path %s: %v", folder, err)
+		}
+
+		if err := fsutil.EnsureDir(folder); err != nil {
+			return fmt.Errorf("error creating directory %s: %v", folder, err)
+		}
+	}
 	return nil
 }

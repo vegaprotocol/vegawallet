@@ -1,7 +1,6 @@
 package v1_test
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -28,26 +27,9 @@ func (d configDir) RSAKeysPath() string {
 	return filepath.Join(d.rootPath, "wallet_rsa")
 }
 
-func (d configDir) WalletsPath() string {
-	return filepath.Join(d.rootPath, "wallets")
-}
-
-func (d configDir) WalletPath(name string) string {
-	return filepath.Join(d.rootPath, "wallets", name)
-}
-
-func (d configDir) WalletContent(name string) string {
-	buf, err := ioutil.ReadFile(d.WalletPath(name))
-	if err != nil {
-		panic(err)
-	}
-	return string(buf)
-}
-
 func (d configDir) Remove() {
 	err := os.RemoveAll(d.rootPath)
 	if err != nil {
 		panic(err)
 	}
 }
-

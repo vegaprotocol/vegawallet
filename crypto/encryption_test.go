@@ -3,7 +3,7 @@ package crypto_test
 import (
 	"testing"
 
-	"code.vegaprotocol.io/go-wallet/wallet/crypto"
+	"code.vegaprotocol.io/go-wallet/crypto"
 	"github.com/stretchr/testify/assert"
 )
 

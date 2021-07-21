@@ -4,8 +4,6 @@ import (
 	"code.vegaprotocol.io/go-wallet/crypto"
 	typespb "code.vegaprotocol.io/go-wallet/internal/proto"
 	commandspb "code.vegaprotocol.io/go-wallet/internal/proto/commands/v1"
-	wcrypto "code.vegaprotocol.io/go-wallet/wallet/crypto"
-
 	"github.com/golang/protobuf/proto"
 )
 
@@ -58,7 +56,7 @@ func (w *LegacyWallet) ListKeyPairs() []KeyPair {
 }
 
 func (w *LegacyWallet) GenerateKeyPair() (KeyPair, error) {
-	kp, err := GenKeyPair(wcrypto.Ed25519, 1)
+	kp, err := GenKeyPair(crypto.Ed25519, 1)
 	if err != nil {
 		return nil, err
 	}

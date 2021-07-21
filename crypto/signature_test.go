@@ -4,7 +4,7 @@ import (
 	"crypto"
 	"testing"
 
-	wcrypto "code.vegaprotocol.io/go-wallet/wallet/crypto"
+	wcrypto "code.vegaprotocol.io/go-wallet/crypto"
 	"github.com/stretchr/testify/assert"
 )
 

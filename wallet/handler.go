@@ -1,7 +1,6 @@
 package wallet
 
 import (
-	"encoding/base64"
 	"errors"
 	"fmt"
 	"sync"
@@ -204,21 +203,16 @@ func (h *Handler) ListKeyPairs(name string) ([]KeyPair, error) {
 	return w.ListKeyPairs(), nil
 }
 
-func (h *Handler) SignAny(name, inputData, pubKey string) ([]byte, error) {
+func (h *Handler) SignAny(name string, inputData []byte, pubKey string) ([]byte, error) {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
-
-	rawInputData, err := base64.StdEncoding.DecodeString(inputData)
-	if err != nil {
-		return nil, err
-	}
 
 	w, err := h.getLoggedWallet(name)
 	if err != nil {
 		return nil, err
 	}
 
-	return w.SignAny(pubKey, rawInputData)
+	return w.SignAny(pubKey, inputData)
 }
 
 func (h *Handler) SignTxV2(name string, req *walletpb.SubmitTransactionRequest, height uint64) (*commandspb.Transaction, error) {
@@ -246,26 +240,16 @@ func (h *Handler) SignTxV2(name string, req *walletpb.SubmitTransactionRequest, 
 	return commands.NewTransaction([]byte(pubKey), marshalledData, signature), nil
 }
 
-func (h *Handler) VerifyAny(name, inputData, sig, pubKey string) (bool, error) {
+func (h *Handler) VerifyAny(name string, inputData, sig []byte, pubKey string) (bool, error) {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
-
-	rawSig, err := base64.StdEncoding.DecodeString(sig)
-	if err != nil {
-		return false, err
-	}
-
-	rawInputData, err := base64.StdEncoding.DecodeString(inputData)
-	if err != nil {
-		return false, err
-	}
 
 	w, err := h.getLoggedWallet(name)
 	if err != nil {
 		return false, err
 	}
 
-	return w.VerifyAny(pubKey, rawInputData, rawSig)
+	return w.VerifyAny(pubKey, inputData, sig)
 }
 
 func (h *Handler) TaintKey(name, pubKey, passphrase string) error {
