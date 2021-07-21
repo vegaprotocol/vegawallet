@@ -11,7 +11,7 @@ import (
 	"os"
 	"testing"
 
-	crypto2 "code.vegaprotocol.io/go-wallet/crypto"
+	"code.vegaprotocol.io/go-wallet/crypto"
 	"code.vegaprotocol.io/go-wallet/internal/proto/api"
 	commandspb "code.vegaprotocol.io/go-wallet/internal/proto/commands/v1"
 	"code.vegaprotocol.io/go-wallet/service"
@@ -317,7 +317,7 @@ func testServiceGenKeypairOK(t *testing.T) {
 
 	key := &wallet.LegacyPublicKey{
 		Pub:       "0xdeadbeef",
-		Algorithm: crypto2.NewEd25519(),
+		Algorithm: crypto.NewEd25519(),
 		Tainted:   false,
 		MetaList:  nil,
 	}
@@ -426,7 +426,7 @@ func testServiceGetPublicKeyOK(t *testing.T) {
 	kp := wallet.LegacyKeyPair{
 		Pub:       "pub",
 		Priv:      "",
-		Algorithm: crypto2.NewEd25519(),
+		Algorithm: crypto.NewEd25519(),
 		Tainted:   false,
 		MetaList:  []wallet.Meta{{Key: "a", Value: "b"}},
 	}

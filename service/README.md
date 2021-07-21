@@ -17,6 +17,7 @@ starting it, it can be used through the vega command line like so:
 ```shell
 vegawallet init
 ```
+
 You can specify the `-f` flag to overwrite any existing configuration files (if
 found).
 

@@ -3,14 +3,14 @@ package wallet
 import (
 	"encoding/json"
 
-	crypto2 "code.vegaprotocol.io/go-wallet/crypto"
+	"code.vegaprotocol.io/go-wallet/crypto"
 )
 
 type LegacyPublicKey struct {
-	Pub       string                     `json:"pub"`
-	Algorithm crypto2.SignatureAlgorithm `json:"algo"`
-	Tainted   bool                       `json:"tainted"`
-	MetaList  []Meta                     `json:"meta"`
+	Pub       string                    `json:"pub"`
+	Algorithm crypto.SignatureAlgorithm `json:"algo"`
+	Tainted   bool                      `json:"tainted"`
+	MetaList  []Meta                    `json:"meta"`
 }
 
 func (k *LegacyPublicKey) Key() string {

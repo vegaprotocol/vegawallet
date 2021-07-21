@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"code.vegaprotocol.io/go-wallet/commands"
-	crypto2 "code.vegaprotocol.io/go-wallet/crypto"
+	"code.vegaprotocol.io/go-wallet/crypto"
 	commandspb "code.vegaprotocol.io/go-wallet/internal/proto/commands/v1"
 	"github.com/stretchr/testify/assert"
 )
@@ -105,7 +105,7 @@ func testSubmittingTransactionWithUnsupportedAlgoFails(t *testing.T) {
 
 	err := checkTransaction(tx)
 
-	assert.Contains(t, err.Get("tx.signature.algo"), crypto2.ErrUnsupportedSignatureAlgorithm)
+	assert.Contains(t, err.Get("tx.signature.algo"), crypto.ErrUnsupportedSignatureAlgorithm)
 }
 
 func testSubmittingTransactionWithInvalidEncodingOfValueFails(t *testing.T) {

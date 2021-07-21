@@ -52,11 +52,11 @@ func testLegacyKeyRingUpdatingExistingKeySucceeds(t *testing.T) {
 func testLegacyKeyRingGettingPublicKeysSucceeds(t *testing.T) {
 	// given
 	kp1 := wallet.LegacyKeyPair{
-		Pub: "bbbbbb",
+		Pub:  "bbbbbb",
 		Priv: "111111",
 	}
 	kp2 := wallet.LegacyKeyPair{
-		Pub: "aaaaaa",
+		Pub:  "aaaaaa",
 		Priv: "222222",
 	}
 	ring := wallet.NewLegacyKeyRing()
@@ -79,11 +79,11 @@ func testLegacyKeyRingGettingPublicKeysSucceeds(t *testing.T) {
 func testLegacyKeyRingGettingKeyPairsSucceeds(t *testing.T) {
 	// given
 	kp1 := wallet.LegacyKeyPair{
-		Pub: "bbbbbb",
+		Pub:  "bbbbbb",
 		Priv: "111111",
 	}
 	kp2 := wallet.LegacyKeyPair{
-		Pub: "aaaaaa",
+		Pub:  "aaaaaa",
 		Priv: "222222",
 	}
 	ring := wallet.NewLegacyKeyRing()

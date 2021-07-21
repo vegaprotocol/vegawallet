@@ -3,7 +3,7 @@ package crypto_test
 import (
 	"testing"
 
-	crypto2 "code.vegaprotocol.io/go-wallet/crypto"
+	"code.vegaprotocol.io/go-wallet/crypto"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -16,11 +16,11 @@ func testEncryptDecryptOK(t *testing.T) {
 	data := []byte("hello world")
 	passphrase := "oh yea?"
 
-	buf, err := crypto2.Encrypt(data, passphrase)
+	buf, err := crypto.Encrypt(data, passphrase)
 	assert.NoError(t, err)
 	assert.NotEmpty(t, buf)
 
-	buf1, err := crypto2.Decrypt(buf, passphrase)
+	buf1, err := crypto.Decrypt(buf, passphrase)
 	assert.NoError(t, err)
 	assert.Equal(t, data, buf1)
 }
@@ -30,11 +30,11 @@ func testDecryptFailWrongPassphrase(t *testing.T) {
 	passphrase := "oh yea?"
 	wrongpassphrase := "oh really!"
 
-	buf, err := crypto2.Encrypt(data, passphrase)
+	buf, err := crypto.Encrypt(data, passphrase)
 	assert.NoError(t, err)
 	assert.NotEmpty(t, buf)
 
-	buf1, err := crypto2.Decrypt(buf, wrongpassphrase)
+	buf1, err := crypto.Decrypt(buf, wrongpassphrase)
 	assert.Error(t, err)
 	assert.NotEqual(t, data, buf1)
 }

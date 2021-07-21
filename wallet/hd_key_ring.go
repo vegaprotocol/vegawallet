@@ -32,7 +32,7 @@ func (r *HDKeyRing) FindPair(pubKey string) (HDKeyPair, bool) {
 func (r *HDKeyRing) Upsert(keyPair HDKeyPair) {
 	r.keys[keyPair.PublicKey()] = keyPair
 	if r.nextIndex <= keyPair.Index() {
-		r.nextIndex =  keyPair.Index() + 1
+		r.nextIndex = keyPair.Index() + 1
 	}
 }
 

@@ -4,16 +4,16 @@ import (
 	"encoding/hex"
 	"encoding/json"
 
-	crypto2 "code.vegaprotocol.io/go-wallet/crypto"
+	"code.vegaprotocol.io/go-wallet/crypto"
 	commandspb "code.vegaprotocol.io/go-wallet/internal/proto/commands/v1"
 )
 
 type LegacyKeyPair struct {
-	Pub       string                     `json:"pub"`
-	Priv      string                     `json:"priv"`
-	Algorithm crypto2.SignatureAlgorithm `json:"algo"`
-	Tainted   bool                       `json:"tainted"`
-	MetaList  []Meta                     `json:"meta"`
+	Pub       string                    `json:"pub"`
+	Priv      string                    `json:"priv"`
+	Algorithm crypto.SignatureAlgorithm `json:"algo"`
+	Tainted   bool                      `json:"tainted"`
+	MetaList  []Meta                    `json:"meta"`
 
 	// byte version of the public and private keys
 	// not being marshalled/sent over the network
@@ -23,7 +23,7 @@ type LegacyKeyPair struct {
 }
 
 func GenKeyPair(algorithm string, version uint32) (*LegacyKeyPair, error) {
-	algo, err := crypto2.NewSignatureAlgorithm(algorithm, version)
+	algo, err := crypto.NewSignatureAlgorithm(algorithm, version)
 	if err != nil {
 		return nil, err
 	}

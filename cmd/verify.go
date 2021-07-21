@@ -60,7 +60,7 @@ func runVerify(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.New("signature should be encoded into base64")
 	}
-	
+
 	if len(verifyArgs.passphrase) == 0 {
 		var err error
 		verifyArgs.passphrase, err = promptForPassphrase()

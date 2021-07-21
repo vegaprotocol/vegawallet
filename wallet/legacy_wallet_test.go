@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	crypto2 "code.vegaprotocol.io/go-wallet/crypto"
+	"code.vegaprotocol.io/go-wallet/crypto"
 	"code.vegaprotocol.io/go-wallet/wallet"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -150,7 +150,7 @@ func testLegacyWalletSigningTxV2WithTaintedKeyFails(t *testing.T) {
 
 func TestMarshalWallet(t *testing.T) {
 	w := wallet.NewLegacyWallet("jeremy")
-	w.KeyRing = append(w.KeyRing, newKeyPair(crypto2.NewEd25519(), "01020304", "04030201"))
+	w.KeyRing = append(w.KeyRing, newKeyPair(crypto.NewEd25519(), "01020304", "04030201"))
 	expected := `{"Owner":"jeremy","Keypairs":[{"pub":"01020304","priv":"04030201","algo":"vega/ed25519","tainted":false,"meta":null}]}`
 	m, err := json.Marshal(&w)
 	assert.NoError(t, err)
@@ -172,21 +172,21 @@ func TestUnMarshalWalletErrorInvalidAlgorithm(t *testing.T) {
 	w := wallet.LegacyWallet{}
 	marshalled := `{"Owner":"jeremy","Keypairs":[{"pub":"01020304","priv":"04030201","algo":"notanalgorithm","tainted":false,"meta":null}]}`
 	err := json.Unmarshal([]byte(marshalled), &w)
-	assert.EqualError(t, err, crypto2.ErrUnsupportedSignatureAlgorithm.Error())
+	assert.EqualError(t, err, crypto.ErrUnsupportedSignatureAlgorithm.Error())
 }
 
 func generateLegacyKeyPair() *wallet.LegacyKeyPair {
-	kp, err := wallet.GenKeyPair(crypto2.Ed25519, 1)
+	kp, err := wallet.GenKeyPair(crypto.Ed25519, 1)
 	if err != nil {
 		panic(err)
 	}
 	return kp
 }
 
-func newKeyPair(algo crypto2.SignatureAlgorithm, pub, priv string) wallet.LegacyKeyPair {
+func newKeyPair(algo crypto.SignatureAlgorithm, pub, priv string) wallet.LegacyKeyPair {
 	return wallet.LegacyKeyPair{
 		Algorithm: algo,
-		Pub:  pub,
-		Priv: priv,
+		Pub:       pub,
+		Priv:      priv,
 	}
 }
