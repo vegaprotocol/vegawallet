@@ -225,6 +225,8 @@ type SignAnyRequest struct {
 	InputData string `json:"inputData"`
 	// PubKey is used to retrieve the private key to sign the InputDate.
 	PubKey string `json:"pubKey"`
+
+	decodedInputData []byte
 }
 
 func ParseSignAnyRequest(r *http.Request) (*SignAnyRequest, commands.Errors) {
@@ -237,6 +239,12 @@ func ParseSignAnyRequest(r *http.Request) (*SignAnyRequest, commands.Errors) {
 
 	if len(req.InputData) == 0 {
 		errs.AddForProperty("input_data", commands.ErrIsRequired)
+	}
+	decodedInputData, err := base64.StdEncoding.DecodeString(req.InputData)
+	if err != nil {
+		errs.AddForProperty("input_data", ErrShouldBeBase64Encoded)
+	} else {
+		req.decodedInputData = decodedInputData
 	}
 
 	if len(req.PubKey) == 0 {
@@ -259,6 +267,9 @@ type VerifyAnyRequest struct {
 	Signature string `json:"signature"`
 	// PubKey is the public key used along the signature to check the InputData.
 	PubKey string `json:"pubKey"`
+
+	decodedInputData []byte
+	decodedSignature []byte
 }
 
 func ParseVerifyAnyRequest(r *http.Request) (*VerifyAnyRequest, commands.Errors) {
@@ -271,10 +282,24 @@ func ParseVerifyAnyRequest(r *http.Request) (*VerifyAnyRequest, commands.Errors)
 
 	if len(req.InputData) == 0 {
 		errs.AddForProperty("input_data", commands.ErrIsRequired)
+	} else {
+		decodedInputData, err := base64.StdEncoding.DecodeString(req.InputData)
+		if err != nil {
+			errs.AddForProperty("input_data", ErrShouldBeBase64Encoded)
+		} else {
+			req.decodedInputData = decodedInputData
+		}
 	}
 
 	if len(req.Signature) == 0 {
 		errs.AddForProperty("signature", commands.ErrIsRequired)
+	} else {
+		decodedSignature, err := base64.StdEncoding.DecodeString(req.Signature)
+		if err != nil {
+			errs.AddForProperty("signature", ErrShouldBeBase64Encoded)
+		} else {
+			req.decodedSignature = decodedSignature
+		}
 	}
 
 	if len(req.PubKey) == 0 {
@@ -354,8 +379,8 @@ type WalletHandler interface {
 	ListPublicKeys(name string) ([]wallet.PublicKey, error)
 	SignTx(name, tx, pubKey string, height uint64) (wallet.SignedBundle, error)
 	SignTxV2(name string, req *walletpb.SubmitTransactionRequest, height uint64) (*commandspb.Transaction, error)
-	SignAny(name, inputData, pubKey string) ([]byte, error)
-	VerifyAny(name, inputData, sig, pubKey string) (bool, error)
+	SignAny(name string, inputData []byte, pubKey string) ([]byte, error)
+	VerifyAny(name string, inputData, sig []byte, pubKey string) (bool, error)
 	TaintKey(name, pubKey, passphrase string) error
 	UpdateMeta(name, pubKey, passphrase string, meta []wallet.Meta) error
 	GetWalletPath(name string) (string, error)
@@ -677,7 +702,7 @@ func (s *Service) SignAny(t string, w http.ResponseWriter, r *http.Request, _ ht
 		return
 	}
 
-	signature, err := s.handler.SignAny(name, req.InputData, req.PubKey)
+	signature, err := s.handler.SignAny(name, req.decodedInputData, req.PubKey)
 	if err != nil {
 		writeForbiddenError(w, err)
 		return
@@ -704,7 +729,7 @@ func (s *Service) VerifyAny(t string, w http.ResponseWriter, r *http.Request, _ 
 		return
 	}
 
-	verified, err := s.handler.VerifyAny(name, req.InputData, req.Signature, req.PubKey)
+	verified, err := s.handler.VerifyAny(name, req.decodedInputData, req.decodedSignature, req.PubKey)
 	if err != nil {
 		writeForbiddenError(w, err)
 		return

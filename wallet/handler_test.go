@@ -1,7 +1,6 @@
 package wallet_test
 
 import (
-	"encoding/base64"
 	"testing"
 
 	commandspb "code.vegaprotocol.io/go-wallet/internal/proto/commands/v1"
@@ -1306,21 +1305,17 @@ func testHandlerSigningAndVerifyingMessageSucceeds(t *testing.T) {
 	assert.NotEmpty(t, pubKey)
 
 	// given
-	data := "Je ne connaîtrai pas la peur car la peur tue l'esprit. La peur est la petite mort qui conduit à l'oblitération totale."
-	encodedData := base64.StdEncoding.EncodeToString([]byte(data))
+	data := []byte("Je ne connaîtrai pas la peur car la peur tue l'esprit. La peur est la petite mort qui conduit à l'oblitération totale.")
 
 	// when
-	sig, err := h.SignAny(name, encodedData, pubKey)
+	sig, err := h.SignAny(name, data, pubKey)
 
 	// then
 	require.NoError(t, err)
 	assert.NotEmpty(t, sig)
 
-	// given
-	encodedSig := base64.StdEncoding.EncodeToString(sig)
-
 	// when
-	verified, err := h.VerifyAny(name, encodedData, encodedSig, pubKey)
+	verified, err := h.VerifyAny(name, data, sig, pubKey)
 
 	// then
 	require.NoError(t, err)
@@ -1355,11 +1350,10 @@ func testHandlerSigningMessageWithLoggedOutWalletFails(t *testing.T) {
 	})
 
 	// given
-	data := "Je ne connaîtrai pas la peur car la peur tue l'esprit. La peur est la petite mort qui conduit à l'oblitération totale."
-	encodedData := base64.StdEncoding.EncodeToString([]byte(data))
+	data := []byte("Je ne connaîtrai pas la peur car la peur tue l'esprit. La peur est la petite mort qui conduit à l'oblitération totale.")
 
 	// when
-	sig, err := h.SignAny(name, encodedData, pubKey)
+	sig, err := h.SignAny(name, data, pubKey)
 
 	// then
 	require.EqualError(t, err, wallet.ErrWalletNotLoggedIn.Error())
@@ -1389,11 +1383,10 @@ func testHandlerVerifyingMessageWithLoggedOutWalletSucceeds(t *testing.T) {
 	assert.NotEmpty(t, pubKey)
 
 	// given
-	data := "Je ne connaîtrai pas la peur car la peur tue l'esprit. La peur est la petite mort qui conduit à l'oblitération totale."
-	encodedData := base64.StdEncoding.EncodeToString([]byte(data))
+	data := []byte("Je ne connaîtrai pas la peur car la peur tue l'esprit. La peur est la petite mort qui conduit à l'oblitération totale.")
 
 	// when
-	sig, err := h.SignAny(name, encodedData, pubKey)
+	sig, err := h.SignAny(name, data, pubKey)
 
 	// then
 	require.NoError(t, err)
@@ -1404,11 +1397,8 @@ func testHandlerVerifyingMessageWithLoggedOutWalletSucceeds(t *testing.T) {
 		h.LogoutWallet(name)
 	})
 
-	// given
-	encodedSig := base64.StdEncoding.EncodeToString(sig)
-
 	// when
-	verified, err := h.VerifyAny(name, encodedData, encodedSig, pubKey)
+	verified, err := h.VerifyAny(name, data, sig, pubKey)
 
 	// then
 	require.EqualError(t, err, wallet.ErrWalletNotLoggedIn.Error())

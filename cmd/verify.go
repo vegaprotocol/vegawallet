@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"encoding/base64"
 	"errors"
 	"fmt"
 
@@ -48,9 +49,18 @@ func runVerify(cmd *cobra.Command, args []string) error {
 	if len(verifyArgs.message) == 0 {
 		return errors.New("message is required")
 	}
-	if len(verifyArgs.sig) == 0 {
-		return errors.New("data is required")
+	decodedMessage, err := base64.StdEncoding.DecodeString(verifyArgs.message)
+	if err != nil {
+		return errors.New("message should be encoded into base64")
 	}
+	if len(verifyArgs.sig) == 0 {
+		return errors.New("signature is required")
+	}
+	decodedSig, err := base64.StdEncoding.DecodeString(verifyArgs.sig)
+	if err != nil {
+		return errors.New("signature should be encoded into base64")
+	}
+	
 	if len(verifyArgs.passphrase) == 0 {
 		var err error
 		verifyArgs.passphrase, err = promptForPassphrase()
@@ -64,7 +74,7 @@ func runVerify(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("could not login to the wallet: %v", err)
 	}
 
-	verified, err := handler.VerifyAny(verifyArgs.name, verifyArgs.message, verifyArgs.sig, verifyArgs.pubkey)
+	verified, err := handler.VerifyAny(verifyArgs.name, decodedMessage, decodedSig, verifyArgs.pubkey)
 	if err != nil {
 		return fmt.Errorf("could not verify the message: %v", err)
 	}

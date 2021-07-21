@@ -831,9 +831,9 @@ func testSigningAnythingSucceeds(t *testing.T) {
 	defer s.ctrl.Finish()
 
 	s.auth.EXPECT().VerifyToken("eyXXzA").Times(1).Return("jeremy", nil)
-	s.handler.EXPECT().SignAny("jeremy", "some data", "asdasasdasd").
+	s.handler.EXPECT().SignAny("jeremy", []byte("spice of dune"), "asdasasdasd").
 		Times(1).Return([]byte("some sig"), nil)
-	payload := `{"inputData": "some data", "pubKey": "asdasasdasd"}`
+	payload := `{"inputData": "c3BpY2Ugb2YgZHVuZQ==", "pubKey": "asdasasdasd"}`
 	r := httptest.NewRequest("POST", "scheme://host/path", bytes.NewBufferString(payload))
 	r.Header.Set("Authorization", "Bearer eyXXzA")
 
@@ -850,9 +850,9 @@ func testVerifyingAnythingSucceeds(t *testing.T) {
 	defer s.ctrl.Finish()
 
 	s.auth.EXPECT().VerifyToken("eyXXzA").Times(1).Return("jeremy", nil)
-	s.handler.EXPECT().VerifyAny("jeremy", "some data", "some sig", "asdasasdasd").
+	s.handler.EXPECT().VerifyAny("jeremy", []byte("spice of dune"), []byte("Sietch Tabr"), "asdasasdasd").
 		Times(1).Return(true, nil)
-	payload := `{"inputData": "some data", "pubKey": "asdasasdasd", "signature": "some sig"}`
+	payload := `{"inputData": "c3BpY2Ugb2YgZHVuZQ==", "pubKey": "asdasasdasd", "signature": "U2lldGNoIFRhYnI="}`
 	r := httptest.NewRequest("POST", "scheme://host/path", bytes.NewBufferString(payload))
 	r.Header.Set("Authorization", "Bearer eyXXzA")
 
@@ -872,9 +872,9 @@ func testVerifyingAnythingFails(t *testing.T) {
 	defer s.ctrl.Finish()
 
 	s.auth.EXPECT().VerifyToken("eyXXzA").Times(1).Return("jeremy", nil)
-	s.handler.EXPECT().VerifyAny("jeremy", "some data", "some sig", "asdasasdasd").
+	s.handler.EXPECT().VerifyAny("jeremy", []byte("spice of dune"), []byte("Sietch Tabr"), "asdasasdasd").
 		Times(1).Return(false, nil)
-	payload := `{"inputData": "some data", "pubKey": "asdasasdasd", "signature": "some sig"}`
+	payload := `{"inputData":"c3BpY2Ugb2YgZHVuZQ==", "pubKey": "asdasasdasd", "signature": "U2lldGNoIFRhYnI="}`
 	r := httptest.NewRequest("POST", "scheme://host/path", bytes.NewBufferString(payload))
 	r.Header.Set("Authorization", "Bearer eyXXzA")
 
