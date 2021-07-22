@@ -8,6 +8,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"code.vegaprotocol.io/go-wallet/logger"
 	"code.vegaprotocol.io/go-wallet/service"
 	svcstore1 "code.vegaprotocol.io/go-wallet/service/store/v1"
 	"github.com/skratchdot/open-golang/open"
@@ -36,11 +37,6 @@ func init() {
 }
 
 func runServiceRun(cmd *cobra.Command, args []string) error {
-	log, err := zap.NewProduction()
-	if err != nil {
-		return err
-	}
-
 	handler, err := newWalletHandler(rootArgs.rootPath)
 	if err != nil {
 		return err
@@ -55,6 +51,12 @@ func runServiceRun(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+
+	log, err := logger.New(cfg.Level.Level)
+	if err != nil {
+		return err
+	}
+	defer log.Sync()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

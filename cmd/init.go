@@ -1,10 +1,11 @@
 package cmd
 
 import (
+	"code.vegaprotocol.io/go-wallet/logger"
 	"code.vegaprotocol.io/go-wallet/service"
 	"code.vegaprotocol.io/go-wallet/service/store/v1"
 	"github.com/spf13/cobra"
-	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 var (
@@ -26,10 +27,11 @@ func init() {
 }
 
 func runInit(cmd *cobra.Command, args []string) error {
-	log, err := zap.NewProduction()
+	log, err := logger.New(zapcore.InfoLevel)
 	if err != nil {
 		return err
 	}
+	defer log.Sync()
 
 	wStore, err := newWalletsStore(rootArgs.rootPath)
 	if err != nil {
