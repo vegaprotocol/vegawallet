@@ -48,7 +48,7 @@ func Execute() {
 }
 
 func init() {
-	rootCmd.PersistentFlags().StringVar(&rootArgs.rootPath, "root-path", fsutil.DefaultVegaDir(), "Root directory for the Vega wallet configuration")
+	rootCmd.PersistentFlags().StringVarP(&rootArgs.rootPath, "root-path", "r", fsutil.DefaultVegaDir(), "Root directory for the Vega wallet configuration")
 	rootCmd.PersistentFlags().BoolVar(&rootArgs.noVersionCheck, "no-version-check", false, "Do not check for new version of the Vega wallet")
 }
 
