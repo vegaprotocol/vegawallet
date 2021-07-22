@@ -5,8 +5,8 @@ implemented in Go. It is used to sign transactions for use
 on [Vega](#about-vega). Vega Wallet creates and manages HD wallets with ed25519
 key pairs.
 
-### Use the [getting started instructions](/GETTING_STARTED.md) to install and run the wallet if you are new to command line (CLI).
-
+### ⚠️ [Learn how to install and run Vega Wallet (v 0.8.0) by clicking here.](https://github.com/vegaprotocol/go-wallet/tree/master#vega-wallet) 
+ 
 ## Building
 
 ```sh
@@ -65,7 +65,7 @@ documented [here](cmd/README.md#initialise-the-program).
 
 ### Using the wallet commands
 
-See a list of commands available in the wallet [here](cmd/README.md)
+See a list of commands available in the wallet [here](cmd/README.md).
 
 ### Using the API
 
