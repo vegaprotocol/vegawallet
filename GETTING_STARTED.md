@@ -123,7 +123,7 @@ Now, **connect your wallet to the Vega testnet (Fairground) nodes**. To trade, r
 **MacOS & Linux**
 
 ```console
-./vega-wallet service run -p
+./vegawallet service run -p
 ```
 **Windows**
 
