@@ -3,6 +3,7 @@ package v1_test
 import (
 	"io/fs"
 	"os"
+	"runtime"
 	"testing"
 
 	"code.vegaprotocol.io/go-wallet/crypto"
@@ -44,9 +45,7 @@ func testInitialisingNewStoreSucceeds(t *testing.T) {
 
 	err = s.Initialise()
 
-	stats, err := os.Stat(walletsDir.WalletsPath())
-	assert.NoError(t, err)
-	assert.Equal(t, fs.FileMode(0700), stats.Mode().Perm())
+	assertDirAccess(t, walletsDir.WalletsPath())
 }
 
 func testFileStoreV1GetWalletSucceeds(t *testing.T) {
@@ -178,9 +177,7 @@ func testFileStoreV1SaveLegacyWalletSucceeds(t *testing.T) {
 
 	// then
 	require.NoError(t, err)
-	stats, err := os.Stat(walletsDir.WalletPath(w.Name()))
-	assert.NoError(t, err)
-	assert.Equal(t, fs.FileMode(0600), stats.Mode().Perm())
+	assertFileAccess(t, walletsDir.WalletPath(w.Name()))
 	assert.NotEmpty(t, walletsDir.WalletContent(w.Name()))
 }
 
@@ -198,9 +195,7 @@ func testFileStoreV1SaveHDWalletSucceeds(t *testing.T) {
 
 	// then
 	require.NoError(t, err)
-	stats, err := os.Stat(walletsDir.WalletPath(w.Name()))
-	assert.NoError(t, err)
-	assert.Equal(t, fs.FileMode(0600), stats.Mode().Perm())
+	assertFileAccess(t, walletsDir.WalletPath(w.Name()))
 	assert.NotEmpty(t, walletsDir.WalletContent(w.Name()))
 }
 
@@ -249,4 +244,24 @@ func newHDWalletWithKeys() *wallet.HDWallet {
 	}
 
 	return w
+}
+
+func assertDirAccess(t *testing.T, dirPath string) {
+	stats, err := os.Stat(dirPath)
+	assert.NoError(t, err)
+	if runtime.GOOS == "windows" {
+		assert.Equal(t, fs.FileMode(0777), stats.Mode().Perm())
+	} else {
+		assert.Equal(t, fs.FileMode(0700), stats.Mode().Perm())
+	}
+}
+
+func assertFileAccess(t *testing.T, filePath string) {
+	stats, err := os.Stat(filePath)
+	assert.NoError(t, err)
+	if runtime.GOOS == "windows" {
+		assert.Equal(t, fs.FileMode(0666), stats.Mode().Perm())
+	} else {
+		assert.Equal(t, fs.FileMode(0600), stats.Mode().Perm())
+	}
 }

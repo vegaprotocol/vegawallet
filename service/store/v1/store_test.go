@@ -3,6 +3,7 @@ package v1_test
 import (
 	"io/fs"
 	"os"
+	"runtime"
 	"testing"
 
 	"code.vegaprotocol.io/go-wallet/service"
@@ -48,13 +49,8 @@ func testInitialisingNewStoreSucceeds(t *testing.T) {
 
 	err = s.Initialise()
 
-	stats, err := os.Stat(configDir.RootPath())
-	assert.NoError(t, err)
-	assert.Equal(t, fs.FileMode(0700), stats.Mode().Perm())
-
-	stats, err = os.Stat(configDir.RSAKeysPath())
-	assert.NoError(t, err)
-	assert.Equal(t, fs.FileMode(0700), stats.Mode().Perm())
+	assertDirAccess(t, configDir.RootPath())
+	assertDirAccess(t, configDir.RSAKeysPath())
 }
 
 func testFileStoreV1SavingAlreadyExistingConfigFails(t *testing.T) {
@@ -91,9 +87,7 @@ func testFileStoreV1SavingNewConfigSucceeds(t *testing.T) {
 
 	// then
 	require.NoError(t, err)
-	stats, err := os.Stat(configDir.ConfigFilePath())
-	assert.NoError(t, err)
-	assert.Equal(t, fs.FileMode(0600), stats.Mode().Perm())
+	assertFileAccess(t, configDir.ConfigFilePath())
 
 	// when
 	returnedCfg, err := s.GetConfig()
@@ -116,9 +110,7 @@ func testFileStoreV1OverwritingNonExistingConfigSucceeds(t *testing.T) {
 
 	// then
 	require.NoError(t, err)
-	stats, err := os.Stat(configDir.ConfigFilePath())
-	assert.NoError(t, err)
-	assert.Equal(t, fs.FileMode(0600), stats.Mode().Perm())
+	assertFileAccess(t, configDir.ConfigFilePath())
 
 	// when
 	returnedCfg, err := s.GetConfig()
@@ -141,9 +133,7 @@ func testFileStoreV1OverwritingExistingConfigSucceeds(t *testing.T) {
 
 	// then
 	require.NoError(t, err)
-	stats, err := os.Stat(configDir.ConfigFilePath())
-	assert.NoError(t, err)
-	assert.Equal(t, fs.FileMode(0600), stats.Mode().Perm())
+	assertFileAccess(t, configDir.ConfigFilePath())
 
 	// given
 	cfg.Host = "my.new.host.com"
@@ -153,9 +143,7 @@ func testFileStoreV1OverwritingExistingConfigSucceeds(t *testing.T) {
 
 	// then
 	require.NoError(t, err)
-	stats, err = os.Stat(configDir.ConfigFilePath())
-	assert.NoError(t, err)
-	assert.Equal(t, fs.FileMode(0600), stats.Mode().Perm())
+	assertFileAccess(t, configDir.ConfigFilePath())
 
 	// when
 	returnedCfg, err := s.GetConfig()
@@ -259,12 +247,8 @@ func testFileStoreV1SaveRSAKeysSucceeds(t *testing.T) {
 
 	// then
 	require.NoError(t, err)
-	stats, err := os.Stat(configDir.PublicRSAKeyFilePath())
-	assert.NoError(t, err)
-	assert.Equal(t, fs.FileMode(0600), stats.Mode().Perm())
-	stats, err = os.Stat(configDir.PrivateRSAKeyFilePath())
-	assert.NoError(t, err)
-	assert.Equal(t, fs.FileMode(0600), stats.Mode().Perm())
+	assertFileAccess(t, configDir.PublicRSAKeyFilePath())
+	assertFileAccess(t, configDir.PrivateRSAKeyFilePath())
 
 	// when
 	returnedKeys, err := s.GetRsaKeys()
@@ -290,12 +274,8 @@ func testFileStoreV1OverwritingAlreadyExistingRSAKeysSucceeds(t *testing.T) {
 
 	// then
 	require.NoError(t, err)
-	stats, err := os.Stat(configDir.PublicRSAKeyFilePath())
-	assert.NoError(t, err)
-	assert.Equal(t, fs.FileMode(0600), stats.Mode().Perm())
-	stats, err = os.Stat(configDir.PrivateRSAKeyFilePath())
-	assert.NoError(t, err)
-	assert.Equal(t, fs.FileMode(0600), stats.Mode().Perm())
+	assertFileAccess(t, configDir.PublicRSAKeyFilePath())
+	assertFileAccess(t, configDir.PrivateRSAKeyFilePath())
 
 	// given
 	newKeys := &service.RSAKeys{
@@ -307,13 +287,8 @@ func testFileStoreV1OverwritingAlreadyExistingRSAKeysSucceeds(t *testing.T) {
 	err = s.SaveRSAKeys(newKeys, true)
 
 	// then
-	require.NoError(t, err)
-	stats, err = os.Stat(configDir.PublicRSAKeyFilePath())
-	assert.NoError(t, err)
-	assert.Equal(t, fs.FileMode(0600), stats.Mode().Perm())
-	stats, err = os.Stat(configDir.PrivateRSAKeyFilePath())
-	assert.NoError(t, err)
-	assert.Equal(t, fs.FileMode(0600), stats.Mode().Perm())
+	assertFileAccess(t, configDir.PublicRSAKeyFilePath())
+	assertFileAccess(t, configDir.PrivateRSAKeyFilePath())
 
 	// when
 	returnedKeys, err := s.GetRsaKeys()
@@ -339,12 +314,8 @@ func testFileStoreV1OverwritingNonExistingRSAKeysSucceeds(t *testing.T) {
 
 	// then
 	require.NoError(t, err)
-	stats, err := os.Stat(configDir.PublicRSAKeyFilePath())
-	assert.NoError(t, err)
-	assert.Equal(t, fs.FileMode(0600), stats.Mode().Perm())
-	stats, err = os.Stat(configDir.PrivateRSAKeyFilePath())
-	assert.NoError(t, err)
-	assert.Equal(t, fs.FileMode(0600), stats.Mode().Perm())
+	assertFileAccess(t, configDir.PublicRSAKeyFilePath())
+	assertFileAccess(t, configDir.PrivateRSAKeyFilePath())
 
 	// when
 	returnedKeys, err := s.GetRsaKeys()
@@ -385,12 +356,8 @@ func testFileStoreV1GetExistingRSAKeysSucceeds(t *testing.T) {
 
 	// then
 	require.NoError(t, err)
-	stats, err := os.Stat(configDir.PublicRSAKeyFilePath())
-	assert.NoError(t, err)
-	assert.Equal(t, fs.FileMode(0600), stats.Mode().Perm())
-	stats, err = os.Stat(configDir.PrivateRSAKeyFilePath())
-	assert.NoError(t, err)
-	assert.Equal(t, fs.FileMode(0600), stats.Mode().Perm())
+	assertFileAccess(t, configDir.PublicRSAKeyFilePath())
+	assertFileAccess(t, configDir.PrivateRSAKeyFilePath())
 
 	// when
 	returnedKeys, err := s.GetRsaKeys()
@@ -418,4 +385,24 @@ func NewInitialisedStore(configDir configDir) *v1.Store {
 	}
 
 	return s
+}
+
+func assertDirAccess(t *testing.T, dirPath string) {
+	stats, err := os.Stat(dirPath)
+	assert.NoError(t, err)
+	if runtime.GOOS == "windows" {
+		assert.Equal(t, fs.FileMode(0777), stats.Mode().Perm())
+	} else {
+		assert.Equal(t, fs.FileMode(0700), stats.Mode().Perm())
+	}
+}
+
+func assertFileAccess(t *testing.T, filePath string) {
+	stats, err := os.Stat(filePath)
+	assert.NoError(t, err)
+	if runtime.GOOS == "windows" {
+		assert.Equal(t, fs.FileMode(0666), stats.Mode().Perm())
+	} else {
+		assert.Equal(t, fs.FileMode(0600), stats.Mode().Perm())
+	}
 }
