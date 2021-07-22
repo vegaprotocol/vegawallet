@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io/fs"
 	"os"
 	"path/filepath"
 
@@ -27,9 +27,9 @@ var (
 type Store struct {
 	configPath         string
 	keyFolderPath      string
-	pubRsaKeyFileName  string
-	privRsaKeyFileName string
-	configFileName     string
+	pubRsaKeyFilePath  string
+	privRsaKeyFilePath string
+	configFilePath     string
 }
 
 func NewStore(configPath string) (*Store, error) {
@@ -38,9 +38,9 @@ func NewStore(configPath string) (*Store, error) {
 	return &Store{
 		configPath:         configPath,
 		keyFolderPath:      keyFolderPath,
-		pubRsaKeyFileName:  filepath.Join(keyFolderPath, pubRsaKeyName),
-		privRsaKeyFileName: filepath.Join(keyFolderPath, privRsaKeyName),
-		configFileName:     filepath.Join(configPath, configFile),
+		pubRsaKeyFilePath:  filepath.Join(keyFolderPath, pubRsaKeyName),
+		privRsaKeyFilePath: filepath.Join(keyFolderPath, privRsaKeyName),
+		configFilePath:     filepath.Join(configPath, configFile),
 	}, nil
 }
 
@@ -61,7 +61,7 @@ func (s *Store) Initialise() error {
 }
 
 func (s *Store) GetConfig() (*service.Config, error) {
-	buf, err := ioutil.ReadFile(s.configFileName)
+	buf, err := fs.ReadFile(os.DirFS(s.configPath), configFile)
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +76,7 @@ func (s *Store) GetConfig() (*service.Config, error) {
 }
 
 func (s *Store) SaveConfig(cfg *service.Config, overwrite bool) error {
-	confPathExists, _ := fsutil.FileExists(s.configFileName)
+	confPathExists, _ := fsutil.FileExists(s.configFilePath)
 
 	if confPathExists {
 		if overwrite {
@@ -84,7 +84,7 @@ func (s *Store) SaveConfig(cfg *service.Config, overwrite bool) error {
 				return err
 			}
 		} else {
-			return fmt.Errorf("configuration already exists at path: %v", s.configFileName)
+			return fmt.Errorf("configuration already exists at path: %v", s.configFilePath)
 		}
 	}
 
@@ -94,7 +94,7 @@ func (s *Store) SaveConfig(cfg *service.Config, overwrite bool) error {
 		return err
 	}
 
-	if err := writeFile(buf.Bytes(), s.configFileName); err != nil {
+	if err := writeFile(buf.Bytes(), s.configFilePath); err != nil {
 		return fmt.Errorf("unable to save configuration: %v", err)
 	}
 
@@ -106,8 +106,8 @@ func (s *Store) SaveRSAKeys(keys *service.RSAKeys, overwrite bool) error {
 		return ErrRSAFolderDoesNotExists
 	}
 
-	privKeyExists, _ := fsutil.FileExists(s.privRsaKeyFileName)
-	pubKeyExists, _ := fsutil.FileExists(s.pubRsaKeyFileName)
+	privKeyExists, _ := fsutil.FileExists(s.privRsaKeyFilePath)
+	pubKeyExists, _ := fsutil.FileExists(s.pubRsaKeyFilePath)
 	if privKeyExists && pubKeyExists {
 		if overwrite {
 			if err := s.removeExistingRSAKeys(); err != nil {
@@ -118,11 +118,11 @@ func (s *Store) SaveRSAKeys(keys *service.RSAKeys, overwrite bool) error {
 		}
 	}
 
-	if err := writeFile(keys.Priv, s.privRsaKeyFileName); err != nil {
+	if err := writeFile(keys.Priv, s.privRsaKeyFilePath); err != nil {
 		return fmt.Errorf("unable to save private key: %v", err)
 	}
 
-	if err := writeFile(keys.Pub, s.pubRsaKeyFileName); err != nil {
+	if err := writeFile(keys.Pub, s.pubRsaKeyFilePath); err != nil {
 		return fmt.Errorf("unable to save public key: %v", err)
 	}
 
@@ -130,12 +130,12 @@ func (s *Store) SaveRSAKeys(keys *service.RSAKeys, overwrite bool) error {
 }
 
 func (s *Store) GetRsaKeys() (*service.RSAKeys, error) {
-	pub, err := ioutil.ReadFile(s.pubRsaKeyFileName)
+	pub, err := fs.ReadFile(os.DirFS(s.keyFolderPath), pubRsaKeyName)
 	if err != nil {
 		return nil, err
 	}
 
-	priv, err := ioutil.ReadFile(s.privRsaKeyFileName)
+	priv, err := fs.ReadFile(os.DirFS(s.keyFolderPath), privRsaKeyName)
 	if err != nil {
 		return nil, err
 	}
@@ -147,7 +147,7 @@ func (s *Store) GetRsaKeys() (*service.RSAKeys, error) {
 }
 
 func (s *Store) removeConfigFile() error {
-	if err := os.Remove(s.configFileName); err != nil {
+	if err := os.Remove(s.configFilePath); err != nil {
 		return fmt.Errorf("unable to remove configuration: %v", err)
 	}
 
