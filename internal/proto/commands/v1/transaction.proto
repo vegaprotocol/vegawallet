@@ -26,11 +26,15 @@ message InputData {
     ProposalSubmission proposal_submission = 1005;
     VoteSubmission vote_submission = 1006;
     LiquidityProvisionSubmission liquidity_provision_submission = 1007;
+    DelegateSubmission delegate_submission = 1008;
+    UndelegateAtEpochEndSubmission undelegate_at_epoch_end_submission = 1009;
+
     // Validator commands
     NodeRegistration node_registration = 2001;
     NodeVote node_vote = 2002;
     NodeSignature node_signature = 2003;
     ChainEvent chain_event = 2004;
+
     // Oracles
     OracleDataSubmission oracle_data_submission = 3001;
   }
