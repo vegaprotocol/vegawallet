@@ -20,11 +20,15 @@ message SubmitTransactionRequest {
     commands.v1.ProposalSubmission proposal_submission = 1005;
     commands.v1.VoteSubmission vote_submission = 1006;
     commands.v1.LiquidityProvisionSubmission liquidity_provision_submission = 1007;
+    commands.v1.DelegateSubmission delegate_submission = 1008;
+    commands.v1.UndelegateAtEpochEndSubmission undelegate_at_epoch_end_submission = 1009;
+
     // Validator commands
     commands.v1.NodeRegistration node_registration = 2001;
     commands.v1.NodeVote node_vote = 2002;
     commands.v1.NodeSignature node_signature = 2003;
     commands.v1.ChainEvent chain_event = 2004;
+
     // Oracle commands
     commands.v1.OracleDataSubmission oracle_data_submission = 3001;
   }
