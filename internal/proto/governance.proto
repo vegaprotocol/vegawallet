@@ -18,10 +18,12 @@ message FutureProduct {
   string settlement_asset = 2  [(validator.field) = {string_not_empty : true}];
   // Product quote name
   string quote_name = 3 [(validator.field) = {string_not_empty : true}];
-  // The oracle spec describing the oracle data of interest
-  oracles.v1.OracleSpecConfiguration oracle_spec = 5;
+  // The oracle spec describing the oracle data of settlement price
+  oracles.v1.OracleSpecConfiguration oracle_spec_for_settlement_price = 5;
+  // The oracle spec describing the oracle data of trading termination
+  oracles.v1.OracleSpecConfiguration oracle_spec_for_trading_termination = 6;
   // The binding between the oracle spec and the settlement price
-  OracleSpecToFutureBinding oracle_spec_binding = 6;
+  OracleSpecToFutureBinding oracle_spec_binding = 7;
 }
 
 // Instrument configuration
