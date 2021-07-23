@@ -164,7 +164,7 @@ func ParseTaintKeyRequest(r *http.Request, keyID string) (*TaintKeyRequest, comm
 	return req, errs
 }
 
-// GenKeyPairRequest describes the request for GenerateKeypair
+// GenKeyPairRequest describes the request for GenerateKeyPair
 type GenKeyPairRequest struct {
 	Passphrase string        `json:"passphrase"`
 	Meta       []wallet.Meta `json:"meta"`
@@ -374,7 +374,7 @@ type WalletHandler interface {
 	ImportWallet(name, passphrase, mnemonic string) error
 	LoginWallet(name, passphrase string) error
 	LogoutWallet(name string)
-	SecureGenerateKeyPair(name, passphrase string) (string, error)
+	SecureGenerateKeyPair(name, passphrase string, meta []wallet.Meta) (string, error)
 	GetPublicKey(name, pubKey string) (wallet.PublicKey, error)
 	ListPublicKeys(name string) ([]wallet.PublicKey, error)
 	SignTx(name, tx, pubKey string, height uint64) (wallet.SignedBundle, error)
@@ -435,7 +435,7 @@ func NewServiceWith(log *zap.Logger, cfg *Config, h WalletHandler, a Auth, n Nod
 	s.POST("/api/v1/wallets", s.CreateWallet)
 	s.POST("/api/v1/wallets/import", s.ImportWallet)
 	s.GET("/api/v1/keys", ExtractToken(s.ListPublicKeys))
-	s.POST("/api/v1/keys", ExtractToken(s.GenerateKeypair))
+	s.POST("/api/v1/keys", ExtractToken(s.GenerateKeyPair))
 	s.GET("/api/v1/keys/:keyid", ExtractToken(s.GetPublicKey))
 	s.PUT("/api/v1/keys/:keyid/taint", ExtractToken(s.TaintKey))
 	s.PUT("/api/v1/keys/:keyid/metadata", ExtractToken(s.UpdateMeta))
@@ -568,7 +568,7 @@ func (s *Service) Revoke(t string, w http.ResponseWriter, _ *http.Request, _ htt
 	writeSuccess(w, SuccessResponse{Success: true}, http.StatusOK)
 }
 
-func (s *Service) GenerateKeypair(t string, w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (s *Service) GenerateKeyPair(t string, w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	req, errs := ParseGenKeyPairRequest(r)
 	if !errs.Empty() {
 		s.writeBadRequest(w, errs)
@@ -581,19 +581,10 @@ func (s *Service) GenerateKeypair(t string, w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	pubKey, err := s.handler.SecureGenerateKeyPair(name, req.Passphrase)
+	pubKey, err := s.handler.SecureGenerateKeyPair(name, req.Passphrase, req.Meta)
 	if err != nil {
 		writeForbiddenError(w, err)
 		return
-	}
-
-	// if any meta specified, lets add them
-	if len(req.Meta) > 0 {
-		err := s.handler.UpdateMeta(name, pubKey, req.Passphrase, req.Meta)
-		if err != nil {
-			writeForbiddenError(w, err)
-			return
-		}
 	}
 
 	key, err := s.handler.GetPublicKey(name, pubKey)

@@ -78,8 +78,8 @@ func (w *HDWallet) Name() string {
 	return w.name
 }
 
-// DescribePublicKey returns all the information associated to a public key. The
-// private key is not returned.
+// DescribePublicKey returns all the information associated to a public key,
+// except the private key.
 func (w *HDWallet) DescribePublicKey(pubKey string) (PublicKey, error) {
 	keyPair, ok := w.keyRing.FindPair(pubKey)
 	if !ok {
@@ -114,7 +114,7 @@ func (w *HDWallet) ListKeyPairs() []KeyPair {
 
 // GenerateKeyPair generates a new key pair from a node, that is derived from
 // the wallet node.
-func (w *HDWallet) GenerateKeyPair() (KeyPair, error) {
+func (w *HDWallet) GenerateKeyPair(meta []Meta) (KeyPair, error) {
 	nextIndex := w.keyRing.NextIndex()
 	childNode, err := w.node.Derive(OriginIndex + nextIndex)
 	if err != nil {
@@ -126,6 +126,8 @@ func (w *HDWallet) GenerateKeyPair() (KeyPair, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	keyPair.meta = meta
 
 	w.keyRing.Upsert(*keyPair)
 

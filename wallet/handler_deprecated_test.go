@@ -26,7 +26,7 @@ func testSignTxSuccess(t *testing.T) {
 	_, err := h.CreateWallet(name, passphrase)
 	require.NoError(t, err)
 
-	key, err := h.SecureGenerateKeyPair(name, passphrase)
+	key, err := h.SecureGenerateKeyPair(name, passphrase, []wallet.Meta{})
 	require.NoError(t, err)
 	assert.NotEmpty(t, key)
 
@@ -56,7 +56,7 @@ func testSignTxFailure(t *testing.T) {
 	_, err := h.CreateWallet(name, passphrase)
 	require.NoError(t, err)
 
-	key, err := h.SecureGenerateKeyPair(name, passphrase)
+	key, err := h.SecureGenerateKeyPair(name, passphrase, []wallet.Meta{})
 	require.NoError(t, err)
 	assert.NotEmpty(t, key)
 
