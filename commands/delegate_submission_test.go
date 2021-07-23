@@ -36,6 +36,16 @@ func TestSubmittingNoDelegateAmountFails(t *testing.T) {
 	assert.Contains(t, err.Get("delegate_submission.amount"), commands.ErrIsRequired)
 }
 
+func TestSubmittingValidDelegate(t *testing.T) {
+	cmd := &commandspb.DelegateSubmission{
+		NodeId: "TestingNodeID",
+		Amount: 12345,
+	}
+	err := checkDelegateSubmission(cmd)
+
+	assert.Equal(t, 0, len(err))
+}
+
 func checkDelegateSubmission(cmd *commandspb.DelegateSubmission) commands.Errors {
 	err := commands.CheckDelegateSubmission(cmd)
 
@@ -71,6 +81,16 @@ func TestSubmittingNoUndelegateAtEpochEndAmountFails(t *testing.T) {
 	err := checkUndelegateAtEpochEndSubmission(cmd)
 
 	assert.Contains(t, err.Get("undelegateAtEpochEnd_submission.amount"), commands.ErrIsRequired)
+}
+
+func TestSubmittingValidUndelegate(t *testing.T) {
+	cmd := &commandspb.UndelegateAtEpochEndSubmission{
+		NodeId: "TestingNodeID",
+		Amount: 12345,
+	}
+	err := checkUndelegateAtEpochEndSubmission(cmd)
+
+	assert.Equal(t, 0, len(err))
 }
 
 func checkUndelegateAtEpochEndSubmission(cmd *commandspb.UndelegateAtEpochEndSubmission) commands.Errors {
