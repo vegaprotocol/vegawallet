@@ -12,9 +12,10 @@ import (
 
 var (
 	keyGenerateArgs struct {
-		name       string
-		passphrase string
-		metas      string
+		name           string
+		passphrase     string
+		passphraseFile string
+		metas          string
 	}
 
 	keyGenerateCmd = &cobra.Command{
@@ -29,6 +30,7 @@ func init() {
 	keyCmd.AddCommand(keyGenerateCmd)
 	keyGenerateCmd.Flags().StringVarP(&keyGenerateArgs.name, "name", "n", "", "Name of the wallet to use")
 	keyGenerateCmd.Flags().StringVarP(&keyGenerateArgs.passphrase, "passphrase", "p", "", "Passphrase to access the wallet")
+	keyGenerateCmd.Flags().StringVar(&keyGenerateArgs.passphraseFile, "passphrase-file", "", "Path of the file containing the passphrase to access the wallet")
 	keyGenerateCmd.Flags().StringVarP(&keyGenerateArgs.metas, "meta", "m", "", `A list of metadata e.g: "primary:true;asset:BTC"`)
 }
 
@@ -44,30 +46,9 @@ func runKeyGenerate(cmd *cobra.Command, args []string) error {
 
 	walletExists := handler.WalletExists(keyGenerateArgs.name)
 
-	if len(keyGenerateArgs.passphrase) == 0 {
-		var (
-			err          error
-			confirmation string
-		)
-		keyGenerateArgs.passphrase, err = promptForPassphrase()
-		if err != nil {
-			return fmt.Errorf("could not get passphrase: %v", err)
-		}
-
-		if len(keyGenerateArgs.passphrase) == 0 {
-			return fmt.Errorf("passphrase cannot be empty")
-		}
-
-		if !walletExists {
-			confirmation, err = promptForPassphrase("please confirm passphrase:")
-			if err != nil {
-				return fmt.Errorf("could not get passphrase: %v", err)
-			}
-
-			if keyGenerateArgs.passphrase != confirmation {
-				return fmt.Errorf("passphrases do not match")
-			}
-		}
+	passphrase, err := getPassphrase(keyGenerateArgs.passphrase, keyGenerateArgs.passphraseFile, !walletExists)
+	if err != nil {
+		return err
 	}
 
 	metas, err := parseMeta(keyGenerateArgs.metas)
@@ -76,7 +57,7 @@ func runKeyGenerate(cmd *cobra.Command, args []string) error {
 	}
 
 	if !walletExists {
-		mnemonic, err := handler.CreateWallet(keyGenerateArgs.name, keyGenerateArgs.passphrase)
+		mnemonic, err := handler.CreateWallet(keyGenerateArgs.name, passphrase)
 		if err != nil {
 			return fmt.Errorf("couldn't create wallet: %v", err)
 		}
@@ -84,7 +65,7 @@ func runKeyGenerate(cmd *cobra.Command, args []string) error {
 		fmt.Printf("%s\n", mnemonic)
 	}
 
-	keyPair, err := handler.GenerateKeyPair(keyGenerateArgs.name, keyGenerateArgs.passphrase, metas)
+	keyPair, err := handler.GenerateKeyPair(keyGenerateArgs.name, passphrase, metas)
 	if err != nil {
 		return fmt.Errorf("could not generate a key pair: %v", err)
 	}
