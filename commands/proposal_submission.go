@@ -322,57 +322,66 @@ func checkFuture(future *typespb.FutureProduct) Errors {
 		errs.AddForProperty("proposal_submission.terms.change.new_market.changes.instrument.product.future.maturity", ErrMustBeValidDate)
 	}
 
-	errs.Merge(checkOracleSpec(future))
+	errs.Merge(checkOracleSpec(future.OracleSpecForSettlementPrice, "oracle_spec_for_settlement_price"))
+	errs.Merge(checkOracleSpec(future.OracleSpecForTradingTermination, "oracle_spec_for_trading_termination"))
+	errs.Merge(checkOracleBinding(future))
 
 	return errs
 }
 
-func checkOracleSpec(future *typespb.FutureProduct) Errors {
+func checkOracleSpec(spec *oraclespb.OracleSpecConfiguration, name string) Errors {
 	errs := NewErrors()
-
-	if future.OracleSpec != nil {
-		if len(future.OracleSpec.PubKeys) == 0 {
-			errs.AddForProperty("proposal_submission.terms.change.new_market.changes.instrument.product.future.oracle_spec.pub_keys", ErrIsRequired)
+	if spec != nil {
+		if len(spec.PubKeys) == 0 {
+			errs.AddForProperty("proposal_submission.terms.change.new_market.changes.instrument.product.future."+name+".pub_keys", ErrIsRequired)
 		}
-		for i, key := range future.OracleSpec.PubKeys {
+		for i, key := range spec.PubKeys {
 			if len(strings.TrimSpace(key)) == 0 {
-				errs.AddForProperty(fmt.Sprintf("proposal_submission.terms.change.new_market.changes.instrument.product.future.oracle_spec.pub_keys.%d", i), ErrIsNotValid)
+				errs.AddForProperty(fmt.Sprintf("proposal_submission.terms.change.new_market.changes.instrument.product.future."+name+".pub_keys.%d", i), ErrIsNotValid)
 			}
 		}
-		if len(future.OracleSpec.Filters) == 0 {
-			errs.AddForProperty("proposal_submission.terms.change.new_market.changes.instrument.product.future.oracle_spec.filters", ErrIsRequired)
+		if len(spec.Filters) == 0 {
+			errs.AddForProperty("proposal_submission.terms.change.new_market.changes.instrument.product.future."+name+".filters", ErrIsRequired)
 		} else {
-			for i, filter := range future.OracleSpec.Filters {
+			for i, filter := range spec.Filters {
 				if filter.Key == nil {
-					errs.AddForProperty(fmt.Sprintf("proposal_submission.terms.change.new_market.changes.instrument.product.future.oracle_spec.filters.%d.key", i), ErrIsNotValid)
+					errs.AddForProperty(fmt.Sprintf("proposal_submission.terms.change.new_market.changes.instrument.product.future."+name+".filters.%d.key", i), ErrIsNotValid)
 				} else {
 					if len(filter.Key.Name) == 0 {
-						errs.AddForProperty(fmt.Sprintf("proposal_submission.terms.change.new_market.changes.instrument.product.future.oracle_spec.filters.%d.key.name", i), ErrIsRequired)
+						errs.AddForProperty(fmt.Sprintf("proposal_submission.terms.change.new_market.changes.instrument.product.future."+name+".filters.%d.key.name", i), ErrIsRequired)
 					}
 					if filter.Key.Type == oraclespb.PropertyKey_TYPE_UNSPECIFIED {
-						errs.AddForProperty(fmt.Sprintf("proposal_submission.terms.change.new_market.changes.instrument.product.future.oracle_spec.filters.%d.key.type", i), ErrIsRequired)
+						errs.AddForProperty(fmt.Sprintf("proposal_submission.terms.change.new_market.changes.instrument.product.future."+name+".filters.%d.key.type", i), ErrIsRequired)
 					}
 				}
 
 				if len(filter.Conditions) != 0 {
 					for j, condition := range filter.Conditions {
 						if len(condition.Value) == 0 {
-							errs.AddForProperty(fmt.Sprintf("proposal_submission.terms.change.new_market.changes.instrument.product.future.oracle_spec.filters.%d.conditions.%d.value", i, j), ErrIsRequired)
+							errs.AddForProperty(fmt.Sprintf("proposal_submission.terms.change.new_market.changes.instrument.product.future."+name+".filters.%d.conditions.%d.value", i, j), ErrIsRequired)
 						}
 						if condition.Operator == oraclespb.Condition_OPERATOR_UNSPECIFIED {
-							errs.AddForProperty(fmt.Sprintf("proposal_submission.terms.change.new_market.changes.instrument.product.future.oracle_spec.filters.%d.conditions.%d.operator", i, j), ErrIsRequired)
+							errs.AddForProperty(fmt.Sprintf("proposal_submission.terms.change.new_market.changes.instrument.product.future."+name+".filters.%d.conditions.%d.operator", i, j), ErrIsRequired)
 						}
 					}
 				}
 			}
 		}
 	} else {
-		errs.AddForProperty("proposal_submission.terms.change.new_market.changes.instrument.product.future.oracle_spec", ErrIsRequired)
+		errs.AddForProperty("proposal_submission.terms.change.new_market.changes.instrument.product.future."+name, ErrIsRequired)
 	}
 
+	return errs
+}
+
+func checkOracleBinding(future *typespb.FutureProduct) Errors {
+	errs := NewErrors()
 	if future.OracleSpecBinding != nil {
 		if len(future.OracleSpecBinding.SettlementPriceProperty) == 0 {
 			errs.AddForProperty("proposal_submission.terms.change.new_market.changes.instrument.product.future.oracle_spec_binding.settlement_price_property", ErrIsRequired)
+		}
+		if len(future.OracleSpecBinding.TradingTerminationProperty) == 0 {
+			errs.AddForProperty("proposal_submission.terms.change.new_market.changes.instrument.product.future.oracle_spec_binding.trading_termination_property", ErrIsRequired)
 		}
 	} else {
 		errs.AddForProperty("proposal_submission.terms.change.new_market.changes.instrument.product.future.oracle_spec_binding", ErrIsRequired)
