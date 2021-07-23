@@ -26,7 +26,7 @@ var (
 func init() {
 	keyCmd.AddCommand(keyListCmd)
 	keyListCmd.Flags().StringVarP(&keyListArgs.name, "name", "n", "", "Name of the wallet to use")
-	keyListCmd.Flags().StringVarP(&keyListArgs.passphrase, "passphrase", "p", "", "Passphrase to access the wallet")
+	keyListCmd.Flags().StringVar(&keyListArgs.passphrase, "passphrase", "", "Passphrase to access the wallet")
 	keyListCmd.Flags().StringVar(&keyListArgs.passphraseFile, "passphrase-file", "", "Path of the file containing the passphrase to access the wallet")
 }
 

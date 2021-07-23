@@ -29,7 +29,7 @@ var (
 func init() {
 	rootCmd.AddCommand(signCmd)
 	signCmd.Flags().StringVarP(&signArgs.name, "name", "n", "", "Name of the wallet to use")
-	signCmd.Flags().StringVarP(&signArgs.passphrase, "passphrase", "p", "", "Passphrase to access the wallet")
+	signCmd.Flags().StringVar(&signArgs.passphrase, "passphrase", "", "Passphrase to access the wallet")
 	signCmd.Flags().StringVar(&signArgs.passphraseFile, "passphrase-file", "", "Path of the file containing the passphrase to access the wallet")
 	signCmd.Flags().StringVarP(&signArgs.message, "message", "m", "", "Message to be signed (base64)")
 	signCmd.Flags().StringVarP(&signArgs.pubkey, "pubkey", "k", "", "Public key to be used (hex)")

@@ -29,7 +29,7 @@ var (
 func init() {
 	keyCmd.AddCommand(keyGenerateCmd)
 	keyGenerateCmd.Flags().StringVarP(&keyGenerateArgs.name, "name", "n", "", "Name of the wallet to use")
-	keyGenerateCmd.Flags().StringVarP(&keyGenerateArgs.passphrase, "passphrase", "p", "", "Passphrase to access the wallet")
+	keyGenerateCmd.Flags().StringVar(&keyGenerateArgs.passphrase, "passphrase", "", "Passphrase to access the wallet")
 	keyGenerateCmd.Flags().StringVar(&keyGenerateArgs.passphraseFile, "passphrase-file", "", "Path of the file containing the passphrase to access the wallet")
 	keyGenerateCmd.Flags().StringVarP(&keyGenerateArgs.metas, "meta", "m", "", `A list of metadata e.g: "primary:true;asset:BTC"`)
 }
@@ -57,7 +57,7 @@ func runKeyGenerate(cmd *cobra.Command, args []string) error {
 	}
 
 	if !walletExists {
-		mnemonic, err := handler.CreateWallet(keyGenerateArgs.name, passphrase)
+		mnemonic, err := handler.CreateWallet(keyGenerateArgs.name, keyGenerateArgs.passphrase)
 		if err != nil {
 			return fmt.Errorf("couldn't create wallet: %v", err)
 		}

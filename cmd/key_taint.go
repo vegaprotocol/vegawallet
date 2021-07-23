@@ -26,7 +26,7 @@ var (
 func init() {
 	keyCmd.AddCommand(keyTaintCmd)
 	keyTaintCmd.Flags().StringVarP(&keyTaintArgs.name, "name", "n", "", "Name of the wallet to use")
-	keyTaintCmd.Flags().StringVarP(&keyTaintArgs.passphrase, "passphrase", "p", "", "Passphrase to access the wallet")
+	keyTaintCmd.Flags().StringVar(&keyTaintArgs.passphrase, "passphrase", "", "Passphrase to access the wallet")
 	keyTaintCmd.Flags().StringVar(&keyTaintArgs.passphraseFile, "passphrase-file", "", "Path of the file containing the passphrase to access the wallet")
 	keyTaintCmd.Flags().StringVarP(&keyTaintArgs.pubkey, "pubkey", "k", "", "Public key to be used (hex)")
 }
