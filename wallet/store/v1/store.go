@@ -3,7 +3,7 @@ package v1
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io/fs"
 	"os"
 	"path/filepath"
 
@@ -47,7 +47,7 @@ func (s *Store) GetWallet(name, passphrase string) (wallet.Wallet, error) {
 		return nil, wallet.ErrWalletDoesNotExists
 	}
 
-	buf, err := ioutil.ReadFile(walletPath)
+	buf, err := fs.ReadFile(os.DirFS(s.walletsPath), name)
 	if err != nil {
 		return nil, err
 	}
@@ -95,6 +95,11 @@ func (s *Store) SaveWallet(w wallet.Wallet, passphrase string) error {
 	}
 
 	f, err := os.Create(s.walletPath(w.Name()))
+	if err != nil {
+		return err
+	}
+
+	err = f.Chmod(0600)
 	if err != nil {
 		return err
 	}
