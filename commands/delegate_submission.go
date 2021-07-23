@@ -15,7 +15,7 @@ func checkDelegateSubmission(cmd *commandspb.DelegateSubmission) Errors {
 		return errs.FinalAddForProperty("delegate_submission", ErrIsRequired)
 	}
 
-	if cmd.Amount <= 0 {
+	if cmd.Amount == 0 {
 		errs.AddForProperty("delegate_submission.amount", ErrIsRequired)
 	}
 
@@ -37,7 +37,7 @@ func checkUndelegateAtEpochEndSubmission(cmd *commandspb.UndelegateAtEpochEndSub
 		return errs.FinalAddForProperty("undelegateAtEpochEnd_submission", ErrIsRequired)
 	}
 
-	if cmd.Amount <= 0 {
+	if cmd.Amount == 0 {
 		errs.AddForProperty("undelegateAtEpochEnd_submission.amount", ErrIsRequired)
 	}
 
