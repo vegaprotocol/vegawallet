@@ -9,9 +9,10 @@ import (
 
 var (
 	importArgs struct {
-		name       string
-		passphrase string
-		mnemonic   string
+		name           string
+		passphrase     string
+		passphraseFile string
+		mnemonic       string
 	}
 
 	importCmd = &cobra.Command{
@@ -26,6 +27,7 @@ func init() {
 	rootCmd.AddCommand(importCmd)
 	importCmd.Flags().StringVarP(&importArgs.name, "name", "n", "", "Name of the wallet to use")
 	importCmd.Flags().StringVarP(&importArgs.passphrase, "passphrase", "p", "", "Passphrase to access the wallet")
+	importCmd.Flags().StringVar(&importArgs.passphraseFile, "passphrase-file", "", "Path of the file containing the passphrase to access the wallet")
 	importCmd.Flags().StringVarP(&importArgs.mnemonic, "mnemonic", "m", "", `Mnemonic of the wallet "swing ceiling chaos..."`)
 }
 
@@ -43,31 +45,12 @@ func runImport(cmd *cobra.Command, args []string) error {
 		return errors.New("wallet mnemonic is required")
 	}
 
-	if len(importArgs.passphrase) == 0 {
-		var (
-			err          error
-			confirmation string
-		)
-		importArgs.passphrase, err = promptForPassphrase()
-		if err != nil {
-			return fmt.Errorf("could not get passphrase: %v", err)
-		}
-
-		if len(importArgs.passphrase) == 0 {
-			return fmt.Errorf("passphrase cannot be empty")
-		}
-
-		confirmation, err = promptForPassphrase("please confirm passphrase:")
-		if err != nil {
-			return fmt.Errorf("could not get passphrase: %v", err)
-		}
-
-		if importArgs.passphrase != confirmation {
-			return fmt.Errorf("passphrases do not match")
-		}
+	passphrase, err := getPassphrase(importArgs.passphrase, importArgs.passphraseFile, true)
+	if err != nil {
+		return err
 	}
 
-	err = handler.ImportWallet(importArgs.name, importArgs.passphrase, importArgs.mnemonic)
+	err = handler.ImportWallet(importArgs.name, passphrase, importArgs.mnemonic)
 	if err != nil {
 		return fmt.Errorf("couldn't import wallet: %v", err)
 	}

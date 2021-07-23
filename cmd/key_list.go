@@ -10,8 +10,9 @@ import (
 
 var (
 	keyListArgs struct {
-		name       string
-		passphrase string
+		name           string
+		passphrase     string
+		passphraseFile string
 	}
 
 	keyListCmd = &cobra.Command{
@@ -26,6 +27,7 @@ func init() {
 	keyCmd.AddCommand(keyListCmd)
 	keyListCmd.Flags().StringVarP(&keyListArgs.name, "name", "n", "", "Name of the wallet to use")
 	keyListCmd.Flags().StringVarP(&keyListArgs.passphrase, "passphrase", "p", "", "Passphrase to access the wallet")
+	keyListCmd.Flags().StringVar(&keyListArgs.passphraseFile, "passphrase-file", "", "Path of the file containing the passphrase to access the wallet")
 }
 
 func runKeyList(cmd *cobra.Command, args []string) error {
@@ -37,15 +39,13 @@ func runKeyList(cmd *cobra.Command, args []string) error {
 	if len(keyListArgs.name) == 0 {
 		return errors.New("wallet name is required")
 	}
-	if len(keyListArgs.passphrase) == 0 {
-		var err error
-		keyListArgs.passphrase, err = promptForPassphrase()
-		if err != nil {
-			return fmt.Errorf("could not get passphrase: %v", err)
-		}
+
+	passphrase, err := getPassphrase(keyListArgs.passphrase, keyListArgs.passphraseFile, false)
+	if err != nil {
+		return err
 	}
 
-	err = handler.LoginWallet(keyListArgs.name, keyListArgs.passphrase)
+	err = handler.LoginWallet(keyListArgs.name, passphrase)
 	if err != nil {
 		return fmt.Errorf("could not login to the wallet: %v", err)
 	}

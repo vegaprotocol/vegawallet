@@ -9,10 +9,11 @@ import (
 
 var (
 	keyMetaArgs struct {
-		meta       string
-		name       string
-		passphrase string
-		pubkey     string
+		meta           string
+		name           string
+		passphrase     string
+		passphraseFile string
+		pubkey         string
 	}
 
 	keyMetaCmd = &cobra.Command{
@@ -27,6 +28,7 @@ func init() {
 	keyCmd.AddCommand(keyMetaCmd)
 	keyMetaCmd.Flags().StringVarP(&keyMetaArgs.name, "name", "n", "", "Name of the wallet to use")
 	keyMetaCmd.Flags().StringVarP(&keyMetaArgs.passphrase, "passphrase", "p", "", "Passphrase to access the wallet")
+	keyMetaCmd.Flags().StringVar(&keyMetaArgs.passphraseFile, "passphrase-file", "", "Path of the file containing the passphrase to access the wallet")
 	keyMetaCmd.Flags().StringVarP(&keyMetaArgs.pubkey, "pubkey", "k", "", "Public key to be used (hex)")
 	keyMetaCmd.Flags().StringVarP(&keyMetaArgs.meta, "meta", "m", "", `A list of metadata e.g: "primary:true;asset:BTC"`)
 }
@@ -43,12 +45,10 @@ func runKeyMeta(cmd *cobra.Command, args []string) error {
 	if len(keyMetaArgs.pubkey) == 0 {
 		return errors.New("pubkey is required")
 	}
-	if len(keyMetaArgs.passphrase) == 0 {
-		var err error
-		keyMetaArgs.passphrase, err = promptForPassphrase()
-		if err != nil {
-			return fmt.Errorf("could not get passphrase: %v", err)
-		}
+
+	passphrase, err := getPassphrase(keyMetaArgs.passphrase, keyMetaArgs.passphraseFile, false)
+	if err != nil {
+		return err
 	}
 
 	meta, err := parseMeta(keyMetaArgs.meta)
@@ -56,12 +56,12 @@ func runKeyMeta(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	err = handler.LoginWallet(keyMetaArgs.name, keyMetaArgs.passphrase)
+	err = handler.LoginWallet(keyMetaArgs.name, passphrase)
 	if err != nil {
 		return fmt.Errorf("could not login to the wallet: %v", err)
 	}
 
-	err = handler.UpdateMeta(keyMetaArgs.name, keyMetaArgs.pubkey, keyMetaArgs.passphrase, meta)
+	err = handler.UpdateMeta(keyMetaArgs.name, keyMetaArgs.pubkey, passphrase, meta)
 	if err != nil {
 		return fmt.Errorf("could not update the meta: %v", err)
 	}
