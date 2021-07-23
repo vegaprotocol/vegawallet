@@ -26,7 +26,7 @@ var (
 func init() {
 	rootCmd.AddCommand(importCmd)
 	importCmd.Flags().StringVarP(&importArgs.name, "name", "n", "", "Name of the wallet to use")
-	importCmd.Flags().StringVarP(&importArgs.passphrase, "passphrase", "p", "", "Passphrase to access the wallet")
+	importCmd.Flags().StringVar(&importArgs.passphrase, "passphrase", "", "Passphrase to access the wallet")
 	importCmd.Flags().StringVar(&importArgs.passphraseFile, "passphrase-file", "", "Path of the file containing the passphrase to access the wallet")
 	importCmd.Flags().StringVarP(&importArgs.mnemonic, "mnemonic", "m", "", `Mnemonic of the wallet "swing ceiling chaos..."`)
 }
