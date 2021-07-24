@@ -84,14 +84,9 @@ func runKeyGenerate(cmd *cobra.Command, args []string) error {
 		fmt.Printf("%s\n", mnemonic)
 	}
 
-	keyPair, err := handler.GenerateKeyPair(keyGenerateArgs.name, keyGenerateArgs.passphrase)
+	keyPair, err := handler.GenerateKeyPair(keyGenerateArgs.name, keyGenerateArgs.passphrase, metas)
 	if err != nil {
 		return fmt.Errorf("could not generate a key pair: %v", err)
-	}
-
-	err = handler.UpdateMeta(keyGenerateArgs.name, keyPair.PublicKey(), keyGenerateArgs.passphrase, metas)
-	if err != nil {
-		return fmt.Errorf("could not update the meta: %v", err)
 	}
 
 	buf, err := json.MarshalIndent(keyPair, " ", " ")

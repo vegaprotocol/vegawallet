@@ -323,7 +323,7 @@ func testServiceGenKeypairOK(t *testing.T) {
 	}
 
 	s.auth.EXPECT().VerifyToken("eyXXzA").Times(1).Return("jeremy", nil)
-	s.handler.EXPECT().SecureGenerateKeyPair("jeremy", "oh yea?").Times(1).Return("0xdeadbeef", nil)
+	s.handler.EXPECT().SecureGenerateKeyPair("jeremy", "oh yea?", gomock.Len(0)).Times(1).Return("0xdeadbeef", nil)
 	s.handler.EXPECT().GetPublicKey("jeremy", "0xdeadbeef").Times(1).Return(key, nil)
 
 	payload := `{"passphrase": "oh yea?"}`
@@ -332,7 +332,7 @@ func testServiceGenKeypairOK(t *testing.T) {
 
 	w := httptest.NewRecorder()
 
-	service.ExtractToken(s.GenerateKeypair)(w, r, nil)
+	service.ExtractToken(s.GenerateKeyPair)(w, r, nil)
 
 	resp := w.Result()
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
@@ -348,7 +348,7 @@ func testServiceGenKeypairFailInvalidRequest(t *testing.T) {
 
 	w := httptest.NewRecorder()
 
-	service.ExtractToken(s.GenerateKeypair)(w, r, nil)
+	service.ExtractToken(s.GenerateKeyPair)(w, r, nil)
 
 	resp := w.Result()
 	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
@@ -357,7 +357,7 @@ func testServiceGenKeypairFailInvalidRequest(t *testing.T) {
 	r = httptest.NewRequest("POST", "scheme://host/path", nil)
 	w = httptest.NewRecorder()
 
-	service.ExtractToken(s.GenerateKeypair)(w, r, nil)
+	service.ExtractToken(s.GenerateKeyPair)(w, r, nil)
 
 	resp = w.Result()
 	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
@@ -367,7 +367,7 @@ func testServiceGenKeypairFailInvalidRequest(t *testing.T) {
 	w = httptest.NewRecorder()
 	r.Header.Add("Authorization", "Bearer eyXXzA")
 
-	service.ExtractToken(s.GenerateKeypair)(w, r, nil)
+	service.ExtractToken(s.GenerateKeyPair)(w, r, nil)
 
 	resp = w.Result()
 	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)

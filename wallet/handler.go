@@ -22,7 +22,7 @@ type Wallet interface {
 	DescribePublicKey(pubKey string) (PublicKey, error)
 	ListPublicKeys() []PublicKey
 	ListKeyPairs() []KeyPair
-	GenerateKeyPair() (KeyPair, error)
+	GenerateKeyPair(meta []Meta) (KeyPair, error)
 	TaintKey(pubKey string) error
 	UpdateMeta(pubKey string, meta []Meta) error
 	SignAny(pubKey string, data []byte) ([]byte, error)
@@ -136,7 +136,7 @@ func (h *Handler) LogoutWallet(name string) {
 	h.loggedWallets.Remove(name)
 }
 
-func (h *Handler) GenerateKeyPair(name, passphrase string) (KeyPair, error) {
+func (h *Handler) GenerateKeyPair(name, passphrase string, meta []Meta) (KeyPair, error) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 
@@ -145,7 +145,9 @@ func (h *Handler) GenerateKeyPair(name, passphrase string) (KeyPair, error) {
 		return nil, err
 	}
 
-	kp, err := w.GenerateKeyPair()
+	meta = addDefaultAlias(meta, w)
+
+	kp, err := w.GenerateKeyPair(meta)
 	if err != nil {
 		return nil, err
 	}
@@ -158,8 +160,8 @@ func (h *Handler) GenerateKeyPair(name, passphrase string) (KeyPair, error) {
 	return kp, nil
 }
 
-func (h *Handler) SecureGenerateKeyPair(name, passphrase string) (string, error) {
-	kp, err := h.GenerateKeyPair(name, passphrase)
+func (h *Handler) SecureGenerateKeyPair(name, passphrase string, meta []Meta) (string, error) {
+	kp, err := h.GenerateKeyPair(name, passphrase, meta)
 	if err != nil {
 		return "", err
 	}
@@ -367,6 +369,24 @@ func (h *Handler) getLoggedWallet(name string) (Wallet, error) {
 		return nil, ErrWalletNotLoggedIn
 	}
 	return w, nil
+}
+
+func addDefaultAlias(meta []Meta, w Wallet) []Meta {
+	hasName := false
+	for _, m := range meta {
+		if m.Key == "name" {
+			hasName = true
+		}
+	}
+	if !hasName {
+		nextId := len(w.ListKeyPairs()) + 1
+
+		meta = append(meta, Meta{
+			Key:   "name",
+			Value: fmt.Sprintf("%s key %d", w.Name(), nextId),
+		})
+	}
+	return meta
 }
 
 type wallets map[string]Wallet

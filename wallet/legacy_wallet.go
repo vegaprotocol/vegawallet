@@ -55,11 +55,13 @@ func (w *LegacyWallet) ListKeyPairs() []KeyPair {
 	return keys
 }
 
-func (w *LegacyWallet) GenerateKeyPair() (KeyPair, error) {
+func (w *LegacyWallet) GenerateKeyPair(meta []Meta) (KeyPair, error) {
 	kp, err := GenKeyPair(crypto.Ed25519, 1)
 	if err != nil {
 		return nil, err
 	}
+
+	kp.MetaList = meta
 
 	w.KeyRing.Upsert(*kp)
 

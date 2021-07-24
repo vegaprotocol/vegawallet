@@ -238,7 +238,7 @@ func newHDWalletWithKeys() *wallet.HDWallet {
 		panic(err)
 	}
 
-	_, err = w.GenerateKeyPair()
+	_, err = w.GenerateKeyPair([]wallet.Meta{})
 	if err != nil {
 		panic(err)
 	}
