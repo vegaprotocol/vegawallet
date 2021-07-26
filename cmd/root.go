@@ -1,9 +1,11 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"code.vegaprotocol.io/go-wallet/fsutil"
 	"code.vegaprotocol.io/go-wallet/version"
@@ -50,6 +52,49 @@ func Execute() {
 func init() {
 	rootCmd.PersistentFlags().StringVarP(&rootArgs.rootPath, "root-path", "r", fsutil.DefaultVegaDir(), "Root directory for the Vega wallet configuration")
 	rootCmd.PersistentFlags().BoolVar(&rootArgs.noVersionCheck, "no-version-check", false, "Do not check for new version of the Vega wallet")
+}
+
+func getPassphrase(flaggedPassphrase, flaggedPassphraseFile string, confirmInput bool) (string, error) {
+	hasPassphraseFileFlag := len(flaggedPassphraseFile) != 0
+	hasPassphraseFlag := len(flaggedPassphrase) != 0
+
+	if hasPassphraseFlag && hasPassphraseFileFlag {
+		return "", errors.New("can't have both passphrase and passphrase-file flags defined")
+	}
+
+	if hasPassphraseFlag {
+		return flaggedPassphrase, nil
+	} else if hasPassphraseFileFlag {
+		rawPassphrase, err := os.ReadFile(flaggedPassphraseFile)
+		if err != nil {
+			return "", err
+		}
+		// user might have added \n at the end of the line, let's remove it.
+		cleanupPassphrase := strings.Trim(string(rawPassphrase), "\n")
+		return cleanupPassphrase, nil
+	} else {
+		passphrase, err := promptForPassphrase()
+		if err != nil {
+			return "", fmt.Errorf("could not get passphrase: %v", err)
+		}
+
+		if len(passphrase) == 0 {
+			return "", fmt.Errorf("passphrase cannot be empty")
+		}
+
+		if confirmInput {
+			confirmation, err := promptForPassphrase("please confirm passphrase:")
+			if err != nil {
+				return "", fmt.Errorf("could not get passphrase: %v", err)
+			}
+
+			if passphrase != confirmation {
+				return "", fmt.Errorf("passphrases do not match")
+			}
+		}
+
+		return passphrase, nil
+	}
 }
 
 func promptForPassphrase(msg ...string) (string, error) {

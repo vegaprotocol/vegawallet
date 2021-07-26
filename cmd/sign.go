@@ -10,10 +10,11 @@ import (
 
 var (
 	signArgs struct {
-		name       string
-		passphrase string
-		message    string
-		pubkey     string
+		name           string
+		passphrase     string
+		passphraseFile string
+		message        string
+		pubkey         string
 	}
 
 	// signCmd represents the sign command
@@ -29,6 +30,7 @@ func init() {
 	rootCmd.AddCommand(signCmd)
 	signCmd.Flags().StringVarP(&signArgs.name, "name", "n", "", "Name of the wallet to use")
 	signCmd.Flags().StringVarP(&signArgs.passphrase, "passphrase", "p", "", "Passphrase to access the wallet")
+	signCmd.Flags().StringVar(&signArgs.passphraseFile, "passphrase-file", "", "Path of the file containing the passphrase to access the wallet")
 	signCmd.Flags().StringVarP(&signArgs.message, "message", "m", "", "Message to be signed (base64)")
 	signCmd.Flags().StringVarP(&signArgs.pubkey, "pubkey", "k", "", "Public key to be used (hex)")
 }
@@ -53,15 +55,12 @@ func runSign(cmd *cobra.Command, args []string) error {
 		return errors.New("message should be encoded into base64")
 	}
 
-	if len(signArgs.passphrase) <= 0 {
-		var err error
-		signArgs.passphrase, err = promptForPassphrase()
-		if err != nil {
-			return fmt.Errorf("could not get passphrase: %v", err)
-		}
+	passphrase, err := getPassphrase(signArgs.passphrase, signArgs.passphraseFile, false)
+	if err != nil {
+		return err
 	}
 
-	err = handler.LoginWallet(signArgs.name, signArgs.passphrase)
+	err = handler.LoginWallet(signArgs.name, passphrase)
 	if err != nil {
 		return fmt.Errorf("could not login to the wallet: %v", err)
 	}

@@ -10,11 +10,12 @@ import (
 
 var (
 	verifyArgs struct {
-		name       string
-		passphrase string
-		sig        string
-		message    string
-		pubkey     string
+		name           string
+		passphrase     string
+		passphraseFile string
+		sig            string
+		message        string
+		pubkey         string
 	}
 
 	verifyCmd = &cobra.Command{
@@ -29,6 +30,7 @@ func init() {
 	rootCmd.AddCommand(verifyCmd)
 	verifyCmd.Flags().StringVarP(&verifyArgs.name, "name", "n", "", "Name of the wallet to use")
 	verifyCmd.Flags().StringVarP(&verifyArgs.passphrase, "passphrase", "p", "", "Passphrase to access the wallet")
+	verifyCmd.Flags().StringVar(&verifyArgs.passphraseFile, "passphrase-file", "", "Path of the file containing the passphrase to access the wallet")
 	verifyCmd.Flags().StringVarP(&verifyArgs.message, "message", "m", "", "Message to be verified (base64)")
 	verifyCmd.Flags().StringVarP(&verifyArgs.sig, "signature", "s", "", "Signature to be verified (base64)")
 	verifyCmd.Flags().StringVarP(&verifyArgs.pubkey, "pubkey", "k", "", "Public key to be used (hex)")
@@ -61,15 +63,12 @@ func runVerify(cmd *cobra.Command, args []string) error {
 		return errors.New("signature should be encoded into base64")
 	}
 
-	if len(verifyArgs.passphrase) == 0 {
-		var err error
-		verifyArgs.passphrase, err = promptForPassphrase()
-		if err != nil {
-			return fmt.Errorf("could not get passphrase: %v", err)
-		}
+	passphrase, err := getPassphrase(verifyArgs.passphrase, verifyArgs.passphraseFile, false)
+	if err != nil {
+		return err
 	}
 
-	err = handler.LoginWallet(verifyArgs.name, verifyArgs.passphrase)
+	err = handler.LoginWallet(verifyArgs.name, passphrase)
 	if err != nil {
 		return fmt.Errorf("could not login to the wallet: %v", err)
 	}
