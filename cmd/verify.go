@@ -29,7 +29,7 @@ var (
 func init() {
 	rootCmd.AddCommand(verifyCmd)
 	verifyCmd.Flags().StringVarP(&verifyArgs.name, "name", "n", "", "Name of the wallet to use")
-	verifyCmd.Flags().StringVarP(&verifyArgs.passphrase, "passphrase", "p", "", "Passphrase to access the wallet")
+	verifyCmd.Flags().StringVar(&verifyArgs.passphrase, "passphrase", "", "Passphrase to access the wallet")
 	verifyCmd.Flags().StringVar(&verifyArgs.passphraseFile, "passphrase-file", "", "Path of the file containing the passphrase to access the wallet")
 	verifyCmd.Flags().StringVarP(&verifyArgs.message, "message", "m", "", "Message to be verified (base64)")
 	verifyCmd.Flags().StringVarP(&verifyArgs.sig, "signature", "s", "", "Signature to be verified (base64)")

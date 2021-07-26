@@ -27,7 +27,7 @@ var (
 func init() {
 	keyCmd.AddCommand(keyMetaCmd)
 	keyMetaCmd.Flags().StringVarP(&keyMetaArgs.name, "name", "n", "", "Name of the wallet to use")
-	keyMetaCmd.Flags().StringVarP(&keyMetaArgs.passphrase, "passphrase", "p", "", "Passphrase to access the wallet")
+	keyMetaCmd.Flags().StringVar(&keyMetaArgs.passphrase, "passphrase", "", "Passphrase to access the wallet")
 	keyMetaCmd.Flags().StringVar(&keyMetaArgs.passphraseFile, "passphrase-file", "", "Path of the file containing the passphrase to access the wallet")
 	keyMetaCmd.Flags().StringVarP(&keyMetaArgs.pubkey, "pubkey", "k", "", "Public key to be used (hex)")
 	keyMetaCmd.Flags().StringVarP(&keyMetaArgs.meta, "meta", "m", "", `A list of metadata e.g: "primary:true;asset:BTC"`)

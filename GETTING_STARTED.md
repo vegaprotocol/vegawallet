@@ -83,13 +83,13 @@ Replace "YOUR_CUSTOM_USERNAME" (below) with your chosen username:
 **MacOS & Linux**
 
 ```console
-./vegawallet key generate -n "YOUR_CUSTOM_USERNAME"
+./vegawallet key generate --name "YOUR_CUSTOM_USERNAME"
 ```
 
 **Windows**
 
 ```console
-vegawallet key generate -n "YOUR_CUSTOM_USERNAME"
+vegawallet key generate --name "YOUR_CUSTOM_USERNAME"
 ```
 
 It will then prompt you to **input a passphrase**, and then **confirm that passphrase**. You'll use this username and passphrase to login to Vega Console. (Instructions on connecting to Console are below.)
@@ -102,18 +102,35 @@ You’ll see an output with a "mnemonic" and a public and private key. DO NOT SH
 
 You don’t need to save your private key, as you’ll be able to retrieve it from your Wallet in the future.
 
-> Tip: You can give each new key a nickname/alias.
-> When creating a key, run
->
-> MacOS & Linux: `./vegawallet key generate -name="YOUR_CUSTOM_USERNAME" --metas="name:CHOOSE_CUSTOM_ALIAS_FOR_KEY"`.
->
-> Windows: `vegawallet key generate -name="YOUR_CUSTOM_USERNAME" --metas="name:CHOOSE_CUSTOM_ALIAS_FOR_KEY"`
+#### Give each new key a nickname/alias
 
-> Tip: To give an existing key a nickname/alias, run
->
-> MacOS & Linux: `./vegawallet key meta --metas="name:CHOOSE_CUSTOM_ALIAS_FOR_KEY" --name="YOUR_CUSTOM_USERNAME" --pubkey="REPLACE_THIS_WITH_YOUR_PUBLIC_KEY"`.
->
-> Windows: `vegawallet key meta --metas="name:CHOOSE_CUSTOM_ALIAS_FOR_KEY" --name="YOUR_CUSTOM_USERNAME" --pubkey="REPLACE_THIS_WITH_YOUR_PUBLIC_KEY"`
+When creating a key, you can give an alias by adding a metadata named `name`.
+
+**MacOS & Linux**
+
+```sh
+./vegawallet key generate --name "YOUR_CUSTOM_USERNAME" --metas "name:CHOOSE_CUSTOM_ALIAS_FOR_KEY"`
+```
+
+**Windows**
+
+```sh
+vegawallet key generate --name "YOUR_CUSTOM_USERNAME" --metas "name:CHOOSE_CUSTOM_ALIAS_FOR_KEY"
+```
+
+#### Give an existing key a nickname/alias
+
+**MacOS & Linux**
+
+```sh
+./vegawallet key meta --metas="name:CHOOSE_CUSTOM_ALIAS_FOR_KEY" --name="YOUR_CUSTOM_USERNAME" --pubkey="REPLACE_THIS_WITH_YOUR_PUBLIC_KEY"
+```
+
+**Windows**
+
+```sh
+vegawallet key meta --metas="name:CHOOSE_CUSTOM_ALIAS_FOR_KEY" --name="YOUR_CUSTOM_USERNAME" --pubkey="REPLACE_THIS_WITH_YOUR_PUBLIC_KEY"
+```
 
 > Tip: You can also use the meta command to tag a key with other data you might want, using a property name and a value. This will be useful for developing with Vega Wallet in the future.
 
@@ -123,12 +140,12 @@ Now, **connect your wallet to the Vega testnet (Fairground) nodes**. To trade, r
 **MacOS & Linux**
 
 ```console
-./vegawallet service run -p
+./vegawallet service run --console-proxy
 ```
 **Windows**
 
 ```console
-vegawallet service run -p
+vegawallet service run --console-proxy
 ```
 
 > Tip: If you're running an ad/tracker blocker, and you're getting errors, it may be blocking the node from connecting. Try allowlisting lb.testnet.vega.xyz and refreshing.
