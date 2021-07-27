@@ -6,9 +6,9 @@ import (
 	"sync/atomic"
 	"time"
 
-	vproto "code.vegaprotocol.io/go-wallet/internal/proto"
-	"code.vegaprotocol.io/go-wallet/internal/proto/api"
-	commandspb "code.vegaprotocol.io/go-wallet/internal/proto/commands/v1"
+	vproto "code.vegaprotocol.io/protos/vega"
+	"code.vegaprotocol.io/protos/vega/api"
+	commandspb "code.vegaprotocol.io/protos/vega/commands/v1"
 	"code.vegaprotocol.io/go-wallet/wallet"
 	"github.com/cenkalti/backoff/v4"
 	"go.uber.org/zap"

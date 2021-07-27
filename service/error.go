@@ -3,7 +3,7 @@ package service
 import (
 	"errors"
 
-	"code.vegaprotocol.io/go-wallet/commands"
+	"code.vegaprotocol.io/protos/commands"
 )
 
 var (

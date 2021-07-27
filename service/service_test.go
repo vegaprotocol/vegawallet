@@ -12,8 +12,8 @@ import (
 	"testing"
 
 	"code.vegaprotocol.io/go-wallet/crypto"
-	"code.vegaprotocol.io/go-wallet/internal/proto/api"
-	commandspb "code.vegaprotocol.io/go-wallet/internal/proto/commands/v1"
+	"code.vegaprotocol.io/protos/vega/api"
+	commandspb "code.vegaprotocol.io/protos/vega/commands/v1"
 	"code.vegaprotocol.io/go-wallet/service"
 	"code.vegaprotocol.io/go-wallet/service/mocks"
 	"code.vegaprotocol.io/go-wallet/wallet"
