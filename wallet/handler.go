@@ -239,7 +239,7 @@ func (h *Handler) SignTxV2(name string, req *walletpb.SubmitTransactionRequest, 
 		return nil, err
 	}
 
-	return commands.NewTransaction([]byte(pubKey), marshalledData, signature), nil
+	return commands.NewTransaction(pubKey, marshalledData, signature), nil
 }
 
 func (h *Handler) VerifyAny(name string, inputData, sig []byte, pubKey string) (bool, error) {

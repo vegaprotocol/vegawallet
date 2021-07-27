@@ -14,18 +14,14 @@ var (
 	ErrShouldBeHexEncoded = errors.New("should be hex encoded")
 )
 
-func NewTransaction(pubKey, data []byte, signature *commandspb.Signature) *commandspb.Transaction {
+func NewTransaction(pubKey string, data []byte, signature *commandspb.Signature) *commandspb.Transaction {
 	return &commandspb.Transaction{
 		InputData: data,
 		Signature: signature,
-		From:      NewTransactionPubKey(pubKey),
-		Version:   1,
-	}
-}
-
-func NewTransactionPubKey(pubKey []byte) *commandspb.Transaction_PubKey {
-	return &commandspb.Transaction_PubKey{
-		PubKey: hex.EncodeToString(pubKey),
+		From: &commandspb.Transaction_PubKey{
+			PubKey: pubKey,
+		},
+		Version: 1,
 	}
 }
 
