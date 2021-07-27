@@ -5,8 +5,8 @@ import (
 	"fmt"
 
 	"code.vegaprotocol.io/go-wallet/crypto"
-	typespb "code.vegaprotocol.io/go-wallet/internal/proto"
-	commandspb "code.vegaprotocol.io/go-wallet/internal/proto/commands/v1"
+	typespb "code.vegaprotocol.io/protos/vega"
+	commandspb "code.vegaprotocol.io/protos/vega/commands/v1"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/tyler-smith/go-bip39"

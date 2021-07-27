@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"sync"
 
-	"code.vegaprotocol.io/go-wallet/commands"
-	commandspb "code.vegaprotocol.io/go-wallet/internal/proto/commands/v1"
-	walletpb "code.vegaprotocol.io/go-wallet/internal/proto/wallet/v1"
+	"code.vegaprotocol.io/protos/commands"
+	commandspb "code.vegaprotocol.io/protos/vega/commands/v1"
+	walletpb "code.vegaprotocol.io/protos/vega/wallet/v1"
 
 	"github.com/golang/protobuf/proto"
 )

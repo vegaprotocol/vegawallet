@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 
 	"code.vegaprotocol.io/go-wallet/crypto"
-	commandspb "code.vegaprotocol.io/go-wallet/internal/proto/commands/v1"
+	commandspb "code.vegaprotocol.io/protos/vega/commands/v1"
 )
 
 type LegacyKeyPair struct {
