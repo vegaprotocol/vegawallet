@@ -7,9 +7,7 @@ name: Docker
     branches:
       - develop
       - main
-    paths:
-      - "proto/**"
-      - "external/**"
+      - master
   push:
     branches:
       - develop
