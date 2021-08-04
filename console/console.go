@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httputil"
+
+	"code.vegaprotocol.io/go-wallet/version"
 )
 
 type Console struct {
@@ -12,15 +14,13 @@ type Console struct {
 	consoleURL string
 	nodeURL    string
 	server     *http.Server
-	version    string
 }
 
-func NewConsole(port int, consoleURL, nodeURL, version string) *Console {
+func NewConsole(port int, consoleURL, nodeURL string) *Console {
 	return &Console{
 		port:       port,
 		consoleURL: consoleURL,
 		nodeURL:    nodeURL,
-		version:    version,
 	}
 }
 
@@ -30,9 +30,9 @@ func (c *Console) Start() error {
 			req.Header.Set("Referer", c.nodeURL)
 			req.Header.Set(
 				"User-Agent",
-				fmt.Sprintf("%v VegaWallet/%v", req.Header.Get("User-Agent"), c.version),
+				fmt.Sprintf("%v VegaWallet/%v", req.Header.Get("User-Agent"), version.Version),
 			)
-			req.Header.Set("X-Vega-Wallet-Version", c.version)
+			req.Header.Set("X-Vega-Wallet-Version", version.Version)
 
 			// To prevent IP spoofing, be sure to delete any pre-existing
 			// X-Forwarded-For header coming from the client
