@@ -10,24 +10,13 @@ import (
 )
 
 type Console struct {
-	port       int
-	consoleURL string
-	nodeURL    string
-	server     *http.Server
+	server      *http.Server
 }
 
 func NewConsole(port int, consoleURL, nodeURL string) *Console {
-	return &Console{
-		port:       port,
-		consoleURL: consoleURL,
-		nodeURL:    nodeURL,
-	}
-}
-
-func (c *Console) Start() error {
 	proxy := httputil.ReverseProxy{
 		Director: func(req *http.Request) {
-			req.Header.Set("Referer", c.nodeURL)
+			req.Header.Set("Referer", nodeURL)
 			req.Header.Set(
 				"User-Agent",
 				fmt.Sprintf("%v VegaWallet/%v", req.Header.Get("User-Agent"), version.Version),
@@ -39,16 +28,21 @@ func (c *Console) Start() error {
 			req.Header.Set("X-Forwarded-For", "")
 
 			req.URL.Scheme = "https"
-			req.URL.Host = c.consoleURL
-			req.Host = c.consoleURL
+			req.URL.Host = consoleURL
+			req.Host = consoleURL
 		},
 	}
-	consoleProxyAddr := fmt.Sprintf("127.0.0.1:%v", c.port)
-	c.server = &http.Server{
-		Addr:    consoleProxyAddr,
-		Handler: &proxy,
-	}
 
+	addr := fmt.Sprintf("127.0.0.1:%v", port)
+	return &Console{
+		server: &http.Server{
+			Addr:    addr,
+			Handler: &proxy,
+		},
+	}
+}
+
+func (c *Console) Start() error {
 	return c.server.ListenAndServe()
 }
 
@@ -57,5 +51,5 @@ func (c *Console) Stop() error {
 }
 
 func (c *Console) GetBrowserURL() string {
-	return c.server.Addr
+	return fmt.Sprintf("http://%s", c.server.Addr)
 }
