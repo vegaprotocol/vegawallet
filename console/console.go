@@ -1,26 +1,22 @@
-package cmd
+package console
 
 import (
 	"context"
 	"fmt"
 	"net/http"
 	"net/http/httputil"
-
-	"go.uber.org/zap"
 )
 
-type consoleProxy struct {
-	log        *zap.Logger
+type Console struct {
 	port       int
 	consoleURL string
 	nodeURL    string
-	s          *http.Server
+	server     *http.Server
 	version    string
 }
 
-func newConsoleProxy(log *zap.Logger, port int, consoleURL, nodeURL, version string) *consoleProxy {
-	return &consoleProxy{
-		log:        log,
+func NewConsole(port int, consoleURL, nodeURL, version string) *Console {
+	return &Console{
 		port:       port,
 		consoleURL: consoleURL,
 		nodeURL:    nodeURL,
@@ -28,7 +24,7 @@ func newConsoleProxy(log *zap.Logger, port int, consoleURL, nodeURL, version str
 	}
 }
 
-func (c *consoleProxy) Start() error {
+func (c *Console) Start() error {
 	proxy := httputil.ReverseProxy{
 		Director: func(req *http.Request) {
 			req.Header.Set("Referer", c.nodeURL)
@@ -36,24 +32,30 @@ func (c *consoleProxy) Start() error {
 				"User-Agent",
 				fmt.Sprintf("%v VegaWallet/%v", req.Header.Get("User-Agent"), c.version),
 			)
+			req.Header.Set("X-Vega-Wallet-Version", c.version)
+
+			// To prevent IP spoofing, be sure to delete any pre-existing
+			// X-Forwarded-For header coming from the client
+			req.Header.Set("X-Forwarded-For", "")
+
 			req.URL.Scheme = "https"
 			req.URL.Host = c.consoleURL
 			req.Host = c.consoleURL
 		},
 	}
 	consoleProxyAddr := fmt.Sprintf("127.0.0.1:%v", c.port)
-	c.s = &http.Server{
+	c.server = &http.Server{
 		Addr:    consoleProxyAddr,
 		Handler: &proxy,
 	}
 
-	return c.s.ListenAndServe()
+	return c.server.ListenAndServe()
 }
 
-func (c *consoleProxy) Stop() error {
-	return c.s.Shutdown(context.Background())
+func (c *Console) Stop() error {
+	return c.server.Shutdown(context.Background())
 }
 
-func (c *consoleProxy) GetBrowserURL() string {
-	return fmt.Sprintf("http://127.0.0.1:%v", c.port)
+func (c *Console) GetBrowserURL() string {
+	return c.server.Addr
 }
