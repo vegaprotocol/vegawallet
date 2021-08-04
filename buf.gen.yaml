@@ -1,6 +1,0 @@
----
-version: v1beta1
-plugins:
-  - name: go
-    out: internal
-    opt: plugins=grpc,paths=source_relative
