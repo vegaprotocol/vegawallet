@@ -32,7 +32,7 @@ var (
 
 func checkVersion(cmd *cobra.Command, args []string) {
 	if !rootArgs.noVersionCheck {
-		v, err := version.Check(Version)
+		v, err := version.Check(version.Version)
 		if err != nil {
 			fmt.Printf("could not check vega wallet version updates: %v\n", err)
 		}

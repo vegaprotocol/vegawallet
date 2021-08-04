@@ -11,12 +11,24 @@ import (
 )
 
 const (
-	ReleasesPage     = "https://github.com/vegaprotocol/go-wallet/releases"
-	ReleaseAPI       = "https://api.github.com/repos/vegaprotocol/go-wallet/releases"
-	TaggedReleaseURL = "https://github.com/vegaprotocol/go-wallet/releases/tag"
+	ReleasesPage       = "https://github.com/vegaprotocol/go-wallet/releases"
+	ReleaseAPI         = "https://api.github.com/repos/vegaprotocol/go-wallet/releases"
+	TaggedReleaseURL   = "https://github.com/vegaprotocol/go-wallet/releases/tag"
+	defaultVersionHash = "unknown"
+	defaultVersion     = "unknown"
 )
 
-// returns a newer version, or an error or nil for both
+var (
+	// VersionHash specifies the git commit used to build the application.
+	// See VERSION_HASH in Makefile for details.
+	VersionHash = defaultVersionHash
+
+	// Version specifies the version used to build the application.
+	// See VERSION in Makefile for details.
+	Version = defaultVersion
+)
+
+// Check returns a newer version, or an error or nil for both
 // if no error happened, and no updates are needed
 func Check(currentVersion string) (*semver.Version, error) {
 	req, err := http.NewRequest("GET", ReleaseAPI, nil)

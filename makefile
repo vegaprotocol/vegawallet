@@ -14,21 +14,21 @@ else
 endif
 
 install:
-	go install -v -ldflags "-X code.vegaprotocol.io/go-wallet/cmd.Version=${VERSION} -X code.vegaprotocol.io/go-wallet/cmd.VersionHash=${VERSION_HASH}"
+	go install -v -ldflags "-X code.vegaprotocol.io/go-wallet/version.Version=${VERSION} -X code.vegaprotocol.io/go-wallet/version.VersionHash=${VERSION_HASH}"
 
 proto:
 	buf generate
 
 release-windows:
-	GOOS=windows GOARCH=amd64 CGO_ENABLED=1 go build -o build/vegawallet.exe -ldflags "-X code.vegaprotocol.io/go-wallet/cmd.Version=${VERSION} -X code.vegaprotocol.io/go-wallet/cmd.VersionHash=${VERSION_HASH}"
+	GOOS=windows GOARCH=amd64 CGO_ENABLED=1 go build -o build/vegawallet.exe -ldflags "-X code.vegaprotocol.io/go-wallet/version.Version=${VERSION} -X code.vegaprotocol.io/go-wallet/version.VersionHash=${VERSION_HASH}"
 	cd build && 7z a -tzip vegawallet-windows-amd64.zip vegawallet.exe
 
 release-macos:
-	GOOS=darwin GOARCH=amd64 CGO_ENABLED=1 go build -o build/vegawallet -ldflags "-X code.vegaprotocol.io/go-wallet/cmd.Version=${VERSION} -X code.vegaprotocol.io/go-wallet/cmd.VersionHash=${VERSION_HASH}"
+	GOOS=darwin GOARCH=amd64 CGO_ENABLED=1 go build -o build/vegawallet -ldflags "-X code.vegaprotocol.io/go-wallet/version.Version=${VERSION} -X code.vegaprotocol.io/go-wallet/version.VersionHash=${VERSION_HASH}"
 	cd build && zip vegawallet-darwin-amd64.zip vegawallet
 
 release-linux:
-	GOOS=linux GOARCH=amd64 CGO_ENABLED=1 go build -o build/vegawallet -ldflags "-X code.vegaprotocol.io/go-wallet/cmd.Version=${VERSION} -X code.vegaprotocol.io/go-wallet/cmd.VersionHash=${VERSION_HASH}"
+	GOOS=linux GOARCH=amd64 CGO_ENABLED=1 go build -o build/vegawallet -ldflags "-X code.vegaprotocol.io/go-wallet/version.Version=${VERSION} -X code.vegaprotocol.io/go-wallet/version.VersionHash=${VERSION_HASH}"
 	cd build && zip vegawallet-linux-amd64.zip vegawallet
 
 
