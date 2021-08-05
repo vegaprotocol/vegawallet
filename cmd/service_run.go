@@ -8,6 +8,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"code.vegaprotocol.io/go-wallet/console"
 	"code.vegaprotocol.io/go-wallet/logger"
 	"code.vegaprotocol.io/go-wallet/service"
 	svcstore1 "code.vegaprotocol.io/go-wallet/service/store/v1"
@@ -18,7 +19,7 @@ import (
 
 var (
 	serviceRunArgs struct {
-		consoleProxy bool
+		startConsole bool
 		noBrowser    bool
 	}
 
@@ -32,7 +33,7 @@ var (
 
 func init() {
 	serviceCmd.AddCommand(serviceRunCmd)
-	serviceRunCmd.Flags().BoolVarP(&serviceRunArgs.consoleProxy, "console-proxy", "p", false, "Start the vega console proxy and open the console in the default browser")
+	serviceRunCmd.Flags().BoolVarP(&serviceRunArgs.startConsole, "console-proxy", "p", false, "Start the vega console proxy and open the console in the default browser")
 	serviceRunCmd.Flags().BoolVarP(&serviceRunArgs.noBrowser, "no-browser", "n", false, "Do not open the default browser if the console proxy is stated")
 }
 
@@ -61,7 +62,7 @@ func runServiceRun(cmd *cobra.Command, args []string) error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	srv, err := service.NewService(log, cfg, svcStore, handler, Version, VersionHash)
+	srv, err := service.NewService(log, cfg, svcStore, handler)
 	if err != nil {
 		return err
 	}
@@ -73,19 +74,19 @@ func runServiceRun(cmd *cobra.Command, args []string) error {
 		}
 	}()
 
-	var cproxy *consoleProxy
-	if serviceRunArgs.consoleProxy {
-		cproxy = newConsoleProxy(log, cfg.Console.LocalPort, cfg.Console.URL, cfg.Nodes.Hosts[0], Version)
+	var cs *console.Console
+	if serviceRunArgs.startConsole {
+		cs = console.NewConsole(cfg.Console.LocalPort, cfg.Console.URL, cfg.Nodes.Hosts[0])
 		go func() {
 			defer cancel()
-			err := cproxy.Start()
+			err := cs.Start()
 			if err != nil && err != http.ErrServerClosed {
 				log.Error("error starting console proxy server", zap.Error(err))
 			}
 		}()
 
 		if !serviceRunArgs.noBrowser {
-			err := open.Run(cproxy.GetBrowserURL())
+			err := open.Run(cs.GetBrowserURL())
 			if err != nil {
 				log.Error("unable to open the console in the default browser",
 					zap.Error(err))
@@ -108,8 +109,8 @@ func runServiceRun(cmd *cobra.Command, args []string) error {
 		log.Info("wallet http server stopped with success")
 	}
 
-	if serviceRunArgs.consoleProxy {
-		err = cproxy.Stop()
+	if serviceRunArgs.startConsole {
+		err = cs.Stop()
 		if err != nil {
 			log.Error("error stopping console proxy server", zap.Error(err))
 		} else {

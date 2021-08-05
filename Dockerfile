@@ -9,6 +9,7 @@ ADD logger logger
 ADD service service
 ADD version version
 ADD wallet wallet
+ADD console console
 RUN env CGO_ENABLED=0 go build -a -ldflags '-extldflags "-static"' -o go-wallet .
 
 # # #

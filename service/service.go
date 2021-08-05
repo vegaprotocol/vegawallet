@@ -9,12 +9,13 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"code.vegaprotocol.io/go-wallet/version"
+	"code.vegaprotocol.io/go-wallet/wallet"
 	"code.vegaprotocol.io/protos/commands"
 	typespb "code.vegaprotocol.io/protos/vega"
 	"code.vegaprotocol.io/protos/vega/api"
 	commandspb "code.vegaprotocol.io/protos/vega/commands/v1"
 	walletpb "code.vegaprotocol.io/protos/vega/wallet/v1"
-	"code.vegaprotocol.io/go-wallet/wallet"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/proto"
 	"github.com/julienschmidt/httprouter"
@@ -403,7 +404,7 @@ type NodeForward interface {
 	LastBlockHeight(context.Context) (uint64, error)
 }
 
-func NewService(log *zap.Logger, cfg *Config, rsaStore RSAStore, handler WalletHandler, v, vh string) (*Service, error) {
+func NewService(log *zap.Logger, cfg *Config, rsaStore RSAStore, handler WalletHandler) (*Service, error) {
 	log = log.Named("wallet")
 	auth, err := NewAuth(log, rsaStore, cfg.TokenExpiry.Get())
 	if err != nil {
@@ -413,10 +414,10 @@ func NewService(log *zap.Logger, cfg *Config, rsaStore RSAStore, handler WalletH
 	if err != nil {
 		return nil, err
 	}
-	return NewServiceWith(log, cfg, handler, auth, nodeForward, v, vh)
+	return NewServiceWith(log, cfg, handler, auth, nodeForward)
 }
 
-func NewServiceWith(log *zap.Logger, cfg *Config, h WalletHandler, a Auth, n NodeForward, v, vh string) (*Service, error) {
+func NewServiceWith(log *zap.Logger, cfg *Config, h WalletHandler, a Auth, n NodeForward) (*Service, error) {
 	s := &Service{
 		Router:      httprouter.New(),
 		log:         log,
@@ -424,9 +425,6 @@ func NewServiceWith(log *zap.Logger, cfg *Config, h WalletHandler, a Auth, n Nod
 		handler:     h,
 		auth:        a,
 		nodeForward: n,
-
-		version:     v,
-		versionHash: vh,
 	}
 
 	s.POST("/api/v1/auth/token", s.Login)
@@ -789,8 +787,8 @@ func (s *Service) signTxV2(token string, w http.ResponseWriter, r *http.Request,
 
 func (s *Service) Version(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	res := VersionResponse{
-		Version:     s.version,
-		VersionHash: s.versionHash,
+		Version:     version.Version,
+		VersionHash: version.VersionHash,
 	}
 
 	writeSuccess(w, res, http.StatusOK)
