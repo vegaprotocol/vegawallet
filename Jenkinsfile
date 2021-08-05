@@ -107,6 +107,9 @@ pipeline {
                     }
                 }
                 stage('unit tests with race') {
+                    environment {
+                        CGO_ENABLED = 1
+                    }
                     options { retry(3) }
                     steps {
                         sh 'go test -v -race ./... 2>&1 | tee unit-test-race-results.txt && cat unit-test-race-results.txt | go-junit-report > unit-test-race-report.xml'
