@@ -55,12 +55,22 @@ pipeline {
                 '''
             }
         }
-        stage('Test') {
-            options { retry(3) }
-            steps {
-                sh label: 'test', script: '''
-                    go test -v ./...
-                '''
+        stage('Tests') {
+            parallel {
+                stage('unit tests') {
+                    options { retry(3) }
+                    steps {
+                        sh 'go test -v ./... 2>&1 | tee unit-test-results.txt && cat unit-test-results.txt | go-junit-report > vega-unit-test-report.xml'
+                        junit checksName: 'Unit Tests', testResults: 'vega-unit-test-report.xml'
+                    }
+                }
+                stage('unit tests with race') {
+                    options { retry(3) }
+                    steps {
+                        sh 'go test -v -race ./... 2>&1 | tee unit-test-race-results.txt && cat unit-test-race-results.txt | go-junit-report > vega-unit-test-race-report.xml'
+                        junit checksName: 'Unit Tests with Race', testResults: 'vega-unit-test-race-report.xml'
+                    }
+                }
             }
         }
     }
