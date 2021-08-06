@@ -14,7 +14,7 @@ pipeline {
     environment {
         CGO_ENABLED = 0
         GO111MODULE = 'on'
-        SLACK_MESSAGE = "VegaWallet CI » <${RUN_DISPLAY_URL}|Jenkins ${BRANCH_NAME} Job>${ env.CHANGE_URL ? " » <${CHANGE_URL}|GitHub PR #${CHANGE_ID}>" : '' }"
+        SLACK_MESSAGE = "Go Wallet CI » <${RUN_DISPLAY_URL}|Jenkins ${BRANCH_NAME} Job>${ env.CHANGE_URL ? " » <${CHANGE_URL}|GitHub PR #${CHANGE_ID}>" : '' }"
     }
 
     stages {
