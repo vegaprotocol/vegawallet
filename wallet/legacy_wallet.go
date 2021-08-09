@@ -27,6 +27,10 @@ func (w *LegacyWallet) Name() string {
 	return w.Owner
 }
 
+func (w *LegacyWallet) SetName(newName string) {
+	w.Owner = newName
+}
+
 func (w *LegacyWallet) DescribePublicKey(pubKey string) (PublicKey, error) {
 	keyPair, err := w.KeyRing.FindPair(pubKey)
 	if err != nil {
