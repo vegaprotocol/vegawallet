@@ -78,6 +78,10 @@ func (w *HDWallet) Name() string {
 	return w.name
 }
 
+func (w *HDWallet) SetName(newName string) {
+	w.name = newName
+}
+
 // DescribePublicKey returns all the information associated to a public key,
 // except the private key.
 func (w *HDWallet) DescribePublicKey(pubKey string) (PublicKey, error) {

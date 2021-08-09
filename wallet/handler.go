@@ -19,6 +19,7 @@ var (
 type Wallet interface {
 	Version() uint32
 	Name() string
+	SetName(newName string)
 	DescribePublicKey(pubKey string) (PublicKey, error)
 	ListPublicKeys() []PublicKey
 	ListKeyPairs() []KeyPair
