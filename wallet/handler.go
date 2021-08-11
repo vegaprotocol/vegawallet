@@ -28,7 +28,6 @@ type Wallet interface {
 	UpdateMeta(pubKey string, meta []Meta) error
 	SignAny(pubKey string, data []byte) ([]byte, error)
 	VerifyAny(pubKey string, data, sig []byte) (bool, error)
-	SignTxV1(pubKey string, data []byte, blockHeight uint64) (SignedBundle, error)
 	SignTxV2(pubKey string, data []byte) (*commandspb.Signature, error)
 }
 

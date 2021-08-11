@@ -339,13 +339,6 @@ type KeysResponse struct {
 	Keys []wallet.PublicKey `json:"keys"`
 }
 
-// SignTxResponse describes the response for SignTx.
-type SignTxResponse struct {
-	SignedTx     wallet.SignedBundle `json:"signedTx"`
-	HexBundle    string              `json:"hexBundle"`
-	Base64Bundle string              `json:"base64Bundle"`
-}
-
 // SignAnyResponse describes the response for SignAny.
 type SignAnyResponse struct {
 	HexSignature    string `json:"hexSignature"`
@@ -378,7 +371,6 @@ type WalletHandler interface {
 	SecureGenerateKeyPair(name, passphrase string, meta []wallet.Meta) (string, error)
 	GetPublicKey(name, pubKey string) (wallet.PublicKey, error)
 	ListPublicKeys(name string) ([]wallet.PublicKey, error)
-	SignTx(name, tx, pubKey string, height uint64) (wallet.SignedBundle, error)
 	SignTxV2(name string, req *walletpb.SubmitTransactionRequest, height uint64) (*commandspb.Transaction, error)
 	SignAny(name string, inputData []byte, pubKey string) ([]byte, error)
 	VerifyAny(name string, inputData, sig []byte, pubKey string) (bool, error)
@@ -398,7 +390,6 @@ type Auth interface {
 // NodeForward ...
 //go:generate go run github.com/golang/mock/mockgen -destination mocks/node_forward_mock.go -package mocks code.vegaprotocol.io/go-wallet/service NodeForward
 type NodeForward interface {
-	Send(context.Context, *wallet.SignedBundle, api.SubmitTransactionRequest_Type) error
 	SendTxV2(context.Context, *commandspb.Transaction, api.SubmitTransactionV2Request_Type) error
 	HealthCheck(context.Context) error
 	LastBlockHeight(context.Context) (uint64, error)
@@ -444,11 +435,6 @@ func NewServiceWith(log *zap.Logger, cfg *Config, h WalletHandler, a Auth, n Nod
 	s.POST("/api/v1/command/commit", ExtractToken(s.SignTxCommitV2))
 	s.GET("/api/v1/wallets", ExtractToken(s.DownloadWallet))
 	s.GET("/api/v1/version", s.Version)
-
-	// DEPRECATED Use
-	s.POST("/api/v1/messages", ExtractToken(s.SignTx))
-	s.POST("/api/v1/messages/async", ExtractToken(s.SignTxAsync))
-	s.POST("/api/v1/messages/commit", ExtractToken(s.SignTxCommit))
 
 	return s, nil
 }

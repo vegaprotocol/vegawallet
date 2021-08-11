@@ -2,9 +2,7 @@ package wallet
 
 import (
 	"code.vegaprotocol.io/go-wallet/crypto"
-	typespb "code.vegaprotocol.io/protos/vega"
 	commandspb "code.vegaprotocol.io/protos/vega/commands/v1"
-	"github.com/golang/protobuf/proto"
 )
 
 type LegacyWallet struct {
@@ -120,45 +118,6 @@ func (w *LegacyWallet) VerifyAny(pubKey string, data, sig []byte) (bool, error) 
 	}
 
 	return keyPair.VerifyAny(data, sig)
-}
-
-func (w *LegacyWallet) SignTxV1(pubKey string, data []byte, blockHeight uint64) (SignedBundle, error) {
-	keyPair, err := w.KeyRing.FindPair(pubKey)
-	if err != nil {
-		return SignedBundle{}, err
-	}
-
-	if keyPair.Tainted {
-		return SignedBundle{}, ErrPubKeyIsTainted
-	}
-
-	txTy := &typespb.Transaction{
-		InputData:   data,
-		Nonce:       crypto.NewNonce(),
-		BlockHeight: blockHeight,
-		From: &typespb.Transaction_PubKey{
-			PubKey: keyPair.pubBytes,
-		},
-	}
-
-	rawTxTy, err := proto.Marshal(txTy)
-	if err != nil {
-		return SignedBundle{}, err
-	}
-
-	sig, err := keyPair.SignAny(rawTxTy)
-	if err != nil {
-		return SignedBundle{}, err
-	}
-
-	return SignedBundle{
-		Tx: rawTxTy,
-		Sig: Signature{
-			Sig:     sig,
-			Algo:    keyPair.AlgorithmName(),
-			Version: keyPair.AlgorithmVersion(),
-		},
-	}, nil
 }
 
 func (w *LegacyWallet) SignTxV2(pubKey string, data []byte) (*commandspb.Signature, error) {
