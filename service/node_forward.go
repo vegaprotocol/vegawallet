@@ -9,7 +9,6 @@ import (
 	vproto "code.vegaprotocol.io/protos/vega"
 	"code.vegaprotocol.io/protos/vega/api"
 	commandspb "code.vegaprotocol.io/protos/vega/commands/v1"
-	"code.vegaprotocol.io/go-wallet/wallet"
 	"github.com/cenkalti/backoff/v4"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
@@ -107,26 +106,6 @@ func (n *nodeForward) LastBlockHeight(ctx context.Context) (uint64, error) {
 	}
 
 	return height, err
-}
-
-func (n *nodeForward) Send(ctx context.Context, tx *wallet.SignedBundle, ty api.SubmitTransactionRequest_Type) error {
-	req := api.SubmitTransactionRequest{
-		Tx:   tx.IntoProto(),
-		Type: ty,
-	}
-	return backoff.Retry(
-		func() error {
-			clt := n.nextClt()
-			resp, err := clt.SubmitTransaction(ctx, &req)
-			if err != nil {
-				logError(n.log, err)
-				return err
-			}
-			n.log.Debug("response from SubmitTransaction", zap.Bool("success", resp.Success))
-			return nil
-		},
-		backoff.WithMaxRetries(backoff.NewExponentialBackOff(), n.nodeCfgs.Retries),
-	)
 }
 
 func (n *nodeForward) SendTxV2(ctx context.Context, tx *commandspb.Transaction, ty api.SubmitTransactionV2Request_Type) error {

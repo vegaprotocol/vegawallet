@@ -5,9 +5,9 @@
 package mocks
 
 import (
+	wallet "code.vegaprotocol.io/go-wallet/wallet"
 	v1 "code.vegaprotocol.io/protos/vega/commands/v1"
 	v10 "code.vegaprotocol.io/protos/vega/wallet/v1"
-	wallet "code.vegaprotocol.io/go-wallet/wallet"
 	gomock "github.com/golang/mock/gomock"
 	reflect "reflect"
 )
@@ -163,21 +163,6 @@ func (m *MockWalletHandler) SignAny(arg0 string, arg1 []byte, arg2 string) ([]by
 func (mr *MockWalletHandlerMockRecorder) SignAny(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SignAny", reflect.TypeOf((*MockWalletHandler)(nil).SignAny), arg0, arg1, arg2)
-}
-
-// SignTx mocks base method
-func (m *MockWalletHandler) SignTx(arg0, arg1, arg2 string, arg3 uint64) (wallet.SignedBundle, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SignTx", arg0, arg1, arg2, arg3)
-	ret0, _ := ret[0].(wallet.SignedBundle)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// SignTx indicates an expected call of SignTx
-func (mr *MockWalletHandlerMockRecorder) SignTx(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SignTx", reflect.TypeOf((*MockWalletHandler)(nil).SignTx), arg0, arg1, arg2, arg3)
 }
 
 // SignTxV2 mocks base method

@@ -7,7 +7,6 @@ package mocks
 import (
 	api "code.vegaprotocol.io/protos/vega/api"
 	v1 "code.vegaprotocol.io/protos/vega/commands/v1"
-	wallet "code.vegaprotocol.io/go-wallet/wallet"
 	context "context"
 	gomock "github.com/golang/mock/gomock"
 	reflect "reflect"
@@ -63,20 +62,6 @@ func (m *MockNodeForward) LastBlockHeight(arg0 context.Context) (uint64, error) 
 func (mr *MockNodeForwardMockRecorder) LastBlockHeight(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LastBlockHeight", reflect.TypeOf((*MockNodeForward)(nil).LastBlockHeight), arg0)
-}
-
-// Send mocks base method
-func (m *MockNodeForward) Send(arg0 context.Context, arg1 *wallet.SignedBundle, arg2 api.SubmitTransactionRequest_Type) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Send", arg0, arg1, arg2)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// Send indicates an expected call of Send
-func (mr *MockNodeForwardMockRecorder) Send(arg0, arg1, arg2 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Send", reflect.TypeOf((*MockNodeForward)(nil).Send), arg0, arg1, arg2)
 }
 
 // SendTxV2 mocks base method
