@@ -3,14 +3,13 @@ module code.vegaprotocol.io/go-wallet
 go 1.16
 
 require (
-	code.vegaprotocol.io/protos v0.41.1-0.20210811161808-d9f324dbc779
+	code.vegaprotocol.io/protos v0.41.1-0.20210816103952-3c985262f0be
 	github.com/blang/semver/v4 v4.0.0
 	github.com/cenkalti/backoff/v4 v4.0.2
 	github.com/dgrijalva/jwt-go/v4 v4.0.0-preview1
 	github.com/golang/mock v1.4.3
 	github.com/golang/protobuf v1.4.3
 	github.com/julienschmidt/httprouter v1.3.0
-	github.com/mwitkow/go-proto-validators v0.2.0 // indirect
 	github.com/oasisprotocol/curve25519-voi v0.0.0-20210716083614-f38f8e8b0b84
 	github.com/rs/cors v1.7.0
 	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
