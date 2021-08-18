@@ -12,6 +12,10 @@ cloud.google.com/go/pubsub v1.0.1/go.mod h1:R0Gpsv3s54REJCy4fxDixWD93lHJMoZTyQ2k
 cloud.google.com/go/storage v1.0.0/go.mod h1:IhtSnM/ZTZV8YYJWCY8RULGVqBDmpoyjwiyrjsg+URw=
 code.vegaprotocol.io/protos v0.41.1-0.20210816103952-3c985262f0be h1:4vbGYOxS+gY4lYCjdVcGRflidCREfwEalrU1lVeOVvg=
 code.vegaprotocol.io/protos v0.41.1-0.20210816103952-3c985262f0be/go.mod h1:17UdBxRpWLiJk1bq43Pl6HFfTjFnuoLHBsKfEZP0qjE=
+code.vegaprotocol.io/protos v0.41.1-0.20210816143147-a19a60b9d3d1 h1:0SQtPA9cYs+4UdF1Bcry5/LNaZ2vQfhsfsmDjqtxHHE=
+code.vegaprotocol.io/protos v0.41.1-0.20210816143147-a19a60b9d3d1/go.mod h1:17UdBxRpWLiJk1bq43Pl6HFfTjFnuoLHBsKfEZP0qjE=
+code.vegaprotocol.io/protos v0.41.1-0.20210818085909-433d56f64986 h1:vH0RnnE54jZChwG30JkUPw8ttAGx8NfhLZfC7YvH+pc=
+code.vegaprotocol.io/protos v0.41.1-0.20210818085909-433d56f64986/go.mod h1:17UdBxRpWLiJk1bq43Pl6HFfTjFnuoLHBsKfEZP0qjE=
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=
 github.com/BurntSushi/toml v0.3.1 h1:WXkYYl6Yr3qBf1K79EBnL4mak0OimBfB0XUf9Vl28OQ=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
