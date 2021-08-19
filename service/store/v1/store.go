@@ -8,7 +8,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"code.vegaprotocol.io/go-wallet/fsutil"
+	vgfs "code.vegaprotocol.io/go-wallet/libs/fs"
 	"code.vegaprotocol.io/go-wallet/service"
 	"github.com/zannen/toml"
 )
@@ -76,7 +76,7 @@ func (s *Store) GetConfig() (*service.Config, error) {
 }
 
 func (s *Store) SaveConfig(cfg *service.Config, overwrite bool) error {
-	confPathExists, _ := fsutil.FileExists(s.configFilePath)
+	confPathExists, _ := vgfs.FileExists(s.configFilePath)
 
 	if confPathExists {
 		if overwrite {
@@ -102,12 +102,12 @@ func (s *Store) SaveConfig(cfg *service.Config, overwrite bool) error {
 }
 
 func (s *Store) SaveRSAKeys(keys *service.RSAKeys, overwrite bool) error {
-	if ok, _ := fsutil.PathExists(s.keyFolderPath); !ok {
+	if ok, _ := vgfs.PathExists(s.keyFolderPath); !ok {
 		return ErrRSAFolderDoesNotExists
 	}
 
-	privKeyExists, _ := fsutil.FileExists(s.privRsaKeyFilePath)
-	pubKeyExists, _ := fsutil.FileExists(s.pubRsaKeyFilePath)
+	privKeyExists, _ := vgfs.FileExists(s.privRsaKeyFilePath)
+	pubKeyExists, _ := vgfs.FileExists(s.pubRsaKeyFilePath)
 	if privKeyExists && pubKeyExists {
 		if overwrite {
 			if err := s.removeExistingRSAKeys(); err != nil {
@@ -183,13 +183,13 @@ func writeFile(content []byte, fileName string) error {
 }
 
 func createFolder(folder string) error {
-	ok, err := fsutil.PathExists(folder)
+	ok, err := vgfs.PathExists(folder)
 	if !ok {
-		if _, ok := err.(*fsutil.PathNotFound); !ok {
+		if _, ok := err.(*vgfs.PathNotFound); !ok {
 			return fmt.Errorf("invalid directory path %s: %v", folder, err)
 		}
 
-		if err := fsutil.EnsureDir(folder); err != nil {
+		if err := vgfs.EnsureDir(folder); err != nil {
 			return fmt.Errorf("error creating directory %s: %v", folder, err)
 		}
 	}

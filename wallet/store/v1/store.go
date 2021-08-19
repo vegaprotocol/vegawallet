@@ -9,7 +9,7 @@ import (
 	"sort"
 
 	"code.vegaprotocol.io/go-wallet/crypto"
-	"code.vegaprotocol.io/go-wallet/fsutil"
+	vgfs "code.vegaprotocol.io/go-wallet/libs/fs"
 	"code.vegaprotocol.io/go-wallet/wallet"
 )
 
@@ -37,7 +37,7 @@ func (s *Store) Initialise() error {
 func (s *Store) WalletExists(name string) bool {
 	walletPath := s.walletPath(name)
 
-	ok, _ := fsutil.PathExists(walletPath)
+	ok, _ := vgfs.PathExists(walletPath)
 	return ok
 }
 
@@ -58,7 +58,7 @@ func (s *Store) ListWallets() ([]string, error) {
 func (s *Store) GetWallet(name, passphrase string) (wallet.Wallet, error) {
 	walletPath := s.walletPath(name)
 
-	if ok, _ := fsutil.PathExists(walletPath); !ok {
+	if ok, _ := vgfs.PathExists(walletPath); !ok {
 		return nil, wallet.ErrWalletDoesNotExists
 	}
 
@@ -136,13 +136,13 @@ func (s *Store) walletPath(name string) string {
 }
 
 func createFolder(folder string) error {
-	ok, err := fsutil.PathExists(folder)
+	ok, err := vgfs.PathExists(folder)
 	if !ok {
-		if _, ok := err.(*fsutil.PathNotFound); !ok {
+		if _, ok := err.(*vgfs.PathNotFound); !ok {
 			return fmt.Errorf("invalid directory path %s: %v", folder, err)
 		}
 
-		if err := fsutil.EnsureDir(folder); err != nil {
+		if err := vgfs.EnsureDir(folder); err != nil {
 			return fmt.Errorf("error creating directory %s: %v", folder, err)
 		}
 	}
