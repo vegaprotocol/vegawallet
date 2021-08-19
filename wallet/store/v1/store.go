@@ -6,6 +6,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"sort"
 
 	"code.vegaprotocol.io/go-wallet/crypto"
 	"code.vegaprotocol.io/go-wallet/fsutil"
@@ -38,6 +39,20 @@ func (s *Store) WalletExists(name string) bool {
 
 	ok, _ := fsutil.PathExists(walletPath)
 	return ok
+}
+
+func (s *Store) ListWallets() ([]string, error) {
+	walletsParentDir, walletsDir := filepath.Split(s.walletsPath)
+	entries, err := fs.ReadDir(os.DirFS(walletsParentDir),walletsDir)
+	if err != nil {
+		return nil, err
+	}
+	wallets := make([]string, len(entries))
+	for i, entry := range entries {
+		wallets[i] = entry.Name()
+	}
+	sort.Strings(wallets)
+	return wallets, nil
 }
 
 func (s *Store) GetWallet(name, passphrase string) (wallet.Wallet, error) {

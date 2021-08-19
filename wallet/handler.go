@@ -57,6 +57,7 @@ type Store interface {
 	SaveWallet(w Wallet, passphrase string) error
 	GetWallet(name, passphrase string) (Wallet, error)
 	GetWalletPath(name string) string
+	ListWallets() ([]string, error)
 }
 
 type Handler struct {
@@ -79,6 +80,13 @@ func (h *Handler) WalletExists(name string) bool {
 	defer h.mu.Unlock()
 
 	return h.store.WalletExists(name)
+}
+
+func (h *Handler) ListWallets() ([]string, error) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+
+	return h.store.ListWallets()
 }
 
 func (h *Handler) CreateWallet(name, passphrase string) (string, error) {
