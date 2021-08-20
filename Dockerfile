@@ -4,7 +4,7 @@ WORKDIR /go/src/project
 ADD *.go go.* ./
 ADD cmd cmd
 ADD crypto crypto
-ADD fsutil fsutil
+ADD libs libs
 ADD logger logger
 ADD service service
 ADD version version

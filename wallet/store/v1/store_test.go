@@ -1,10 +1,13 @@
 package v1_test
 
 import (
+	"fmt"
 	"io/fs"
 	"os"
 	"runtime"
+	"sort"
 	"testing"
+	"time"
 
 	"code.vegaprotocol.io/go-wallet/crypto"
 	"code.vegaprotocol.io/go-wallet/wallet"
@@ -16,6 +19,7 @@ import (
 func TestFileStoreV1(t *testing.T) {
 	t.Run("New store succeeds", testNewStoreSucceeds)
 	t.Run("Initialising new store succeeds", testInitialisingNewStoreSucceeds)
+	t.Run("Listing wallets succeeds", testFileStoreV1ListWalletsSucceeds)
 	t.Run("Getting wallet succeeds", testFileStoreV1GetWalletSucceeds)
 	t.Run("Getting wallet without wrong passphrase fails", testFileStoreV1GetWalletWithWrongPassphraseFails)
 	t.Run("Getting non-existing wallet fails", testFileStoreV1GetNonExistingWalletFails)
@@ -46,6 +50,36 @@ func testInitialisingNewStoreSucceeds(t *testing.T) {
 	err = s.Initialise()
 
 	assertDirAccess(t, walletsDir.WalletsPath())
+}
+
+func testFileStoreV1ListWalletsSucceeds(t *testing.T) {
+	walletsDir := newWalletsDir()
+	defer walletsDir.Remove()
+
+	// given
+	s := NewInitialisedStore(walletsDir)
+	passphrase := "passphrase"
+
+	var expectedWallets []string
+	for i := 0; i < 3; i++ {
+		w := newHDWalletWithKeys()
+
+		// when
+		err := s.SaveWallet(w, passphrase)
+
+		// then
+		require.NoError(t, err)
+
+		expectedWallets = append(expectedWallets, w.Name())
+	}
+	sort.Strings(expectedWallets)
+
+	// when
+	returnedWallets, err := s.ListWallets()
+
+	// then
+	require.NoError(t, err)
+	assert.Equal(t, expectedWallets, returnedWallets)
 }
 
 func testFileStoreV1GetWalletSucceeds(t *testing.T) {
@@ -220,7 +254,7 @@ func NewInitialisedStore(walletsDir walletsDir) *storev1.Store {
 }
 
 func newLegacyWalletWithKeys() *wallet.LegacyWallet {
-	w := wallet.NewLegacyWallet("my-wallet")
+	w := wallet.NewLegacyWallet(fmt.Sprintf("my-wallet-%v", time.Now().UnixNano()))
 
 	kp, err := wallet.GenKeyPair(crypto.Ed25519, 1)
 	if err != nil {
@@ -233,7 +267,7 @@ func newLegacyWalletWithKeys() *wallet.LegacyWallet {
 }
 
 func newHDWalletWithKeys() *wallet.HDWallet {
-	w, _, err := wallet.NewHDWallet("my-wallet")
+	w, _, err := wallet.NewHDWallet(fmt.Sprintf("my-wallet-%v", time.Now().UnixNano()))
 	if err != nil {
 		panic(err)
 	}

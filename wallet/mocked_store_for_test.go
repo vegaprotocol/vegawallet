@@ -24,6 +24,14 @@ func (m *mockedStore) WalletExists(name string) bool {
 	return ok
 }
 
+func (m *mockedStore) ListWallets() ([]string, error) {
+	wallets := make([]string, 0, len(m.wallets))
+	for k := range m.wallets {
+		wallets = append(wallets, k)
+	}
+	return wallets, nil
+}
+
 func (m *mockedStore) SaveWallet(w wallet.Wallet, passphrase string) error {
 	m.passphrase = passphrase
 	m.wallets[w.Name()] = w
