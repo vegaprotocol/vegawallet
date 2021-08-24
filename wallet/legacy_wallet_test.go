@@ -13,6 +13,7 @@ import (
 func TestLegacyWallet(t *testing.T) {
 	t.Run("Tainting key pair succeeds", testLegacyWalletTaintingKeyPairSucceeds)
 	t.Run("Tainting key pair that is already tainted fails", testLegacyWalletTaintingKeyThatIsAlreadyTaintedFails)
+	t.Run("Untainting key pair succeeds", testLegacyWalletUntaintingKeyPairSucceeds)
 	t.Run("Updating key pair metadata succeeds", testLegacyWalletUpdatingKeyPairMetaSucceeds)
 	t.Run("Updating key pair metadata with non-existing public key fails", testLegacyWalletUpdatingKeyPairMetaWithNonExistingPublicKeyFails)
 	t.Run("Signing transaction request (v2) succeeds", testLegacyWalletSigningTxV2Succeeds)
@@ -66,6 +67,44 @@ func testLegacyWalletTaintingKeyThatIsAlreadyTaintedFails(t *testing.T) {
 	require.NoError(t, err)
 	assert.NotNil(t, keyPair)
 	assert.True(t, keyPair.Tainted)
+}
+
+func testLegacyWalletUntaintingKeyPairSucceeds(t *testing.T) {
+	// given
+	kp := generateLegacyKeyPair()
+	name := "jeremy"
+
+	// setup
+	w := wallet.NewLegacyWallet(name)
+	w.KeyRing.Upsert(*kp)
+
+	// when
+	err := w.TaintKey(kp.Pub)
+
+	// then
+	require.NoError(t, err)
+
+	// when
+	keyPair, err := w.KeyRing.FindPair(kp.Pub)
+
+	// then
+	require.NoError(t, err)
+	assert.NotNil(t, keyPair)
+	assert.True(t, keyPair.Tainted)
+
+	// when
+	err = w.UntaintKey(kp.Pub)
+
+	// then
+	require.NoError(t, err)
+
+	// when
+	keyPair, err = w.KeyRing.FindPair(kp.Pub)
+
+	// then
+	require.NoError(t, err)
+	assert.NotNil(t, keyPair)
+	assert.False(t, keyPair.Tainted)
 }
 
 func testLegacyWalletUpdatingKeyPairMetaSucceeds(t *testing.T) {

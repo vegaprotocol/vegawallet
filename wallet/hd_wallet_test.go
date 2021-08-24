@@ -22,6 +22,9 @@ func TestHDWallet(t *testing.T) {
 	t.Run("Tainting key pair succeeds", testHDWalletTaintingKeyPairSucceeds)
 	t.Run("Tainting key pair that is already tainted fails", testHDWalletTaintingKeyThatIsAlreadyTaintedFails)
 	t.Run("Tainting unknown key pair fails", testHDWalletTaintingUnknownKeyFails)
+	t.Run("Untainting key pair succeeds", testHDWalletUntaintingKeyPairSucceeds)
+	t.Run("Untainting key pair that is not tainted fails", testHDWalletUntaintingKeyThatIsNotTaintedFails)
+	t.Run("Untainting unknown key pair fails", testHDWalletUntaintingUnknownKeyFails)
 	t.Run("Updating key pair metadata succeeds", testHDWalletUpdatingKeyPairMetaSucceeds)
 	t.Run("Updating key pair metadata with unknown public key fails", testHDWalletUpdatingKeyPairMetaWithUnknownPublicKeyFails)
 	t.Run("Describing public key succeeds", testHDWalletDescribingPublicKeysSucceeds)
@@ -187,6 +190,107 @@ func testHDWalletTaintingUnknownKeyFails(t *testing.T) {
 
 	// when
 	err = w.TaintKey("vladimirharkonnen")
+
+	// then
+	assert.EqualError(t, err, wallet.ErrPubKeyDoesNotExist.Error())
+}
+
+func testHDWalletUntaintingKeyPairSucceeds(t *testing.T) {
+	// given
+	name := "jeremy"
+
+	// when
+	w, mnemonic, err := wallet.NewHDWallet(name)
+
+	// then
+	require.NoError(t, err)
+	assert.NotEmpty(t, mnemonic)
+	assert.NotNil(t, w)
+
+	// when
+	kp, err := w.GenerateKeyPair([]wallet.Meta{})
+
+	// then
+	require.NoError(t, err)
+	assert.NotNil(t, kp)
+
+	// when
+	err = w.TaintKey(kp.PublicKey())
+
+	// then
+	require.NoError(t, err)
+
+	// when
+	pubKey, err := w.DescribePublicKey(kp.PublicKey())
+
+	// then
+	require.NoError(t, err)
+	assert.NotNil(t, pubKey)
+	assert.True(t, pubKey.IsTainted())
+
+	// when
+	err = w.UntaintKey(kp.PublicKey())
+
+	// then
+	require.NoError(t, err)
+
+	// when
+	pubKey, err = w.DescribePublicKey(kp.PublicKey())
+
+	// then
+	require.NoError(t, err)
+	assert.NotNil(t, pubKey)
+	assert.False(t, pubKey.IsTainted())
+}
+
+func testHDWalletUntaintingKeyThatIsNotTaintedFails(t *testing.T) {
+	// given
+	name := "jeremy"
+
+	// when
+	w, mnemonic, err := wallet.NewHDWallet(name)
+
+	// then
+	require.NoError(t, err)
+	assert.NotEmpty(t, mnemonic)
+	assert.NotNil(t, w)
+
+	// when
+	kp, err := w.GenerateKeyPair([]wallet.Meta{})
+
+	// then
+	require.NoError(t, err)
+	assert.NotNil(t, kp)
+
+	// when
+	err = w.UntaintKey(kp.PublicKey())
+
+	// then
+	assert.EqualError(t, err, wallet.ErrPubKeyNotTainted.Error())
+
+	// when
+	pubKey, err := w.DescribePublicKey(kp.PublicKey())
+
+	// then
+	require.NoError(t, err)
+	assert.NotNil(t, pubKey)
+	assert.False(t, pubKey.IsTainted())
+}
+
+func testHDWalletUntaintingUnknownKeyFails(t *testing.T) {
+	// given
+	name := "jeremy"
+
+	// when
+	w, mnemonic, err := wallet.NewHDWallet(name)
+
+	// then
+	require.NoError(t, err)
+	assert.NotEmpty(t, mnemonic)
+	assert.NotNil(t, w)
+
+	// when
+	err = w.UntaintKey("vladimirharkonnen")
 
 	// then
 	assert.EqualError(t, err, wallet.ErrPubKeyDoesNotExist.Error())

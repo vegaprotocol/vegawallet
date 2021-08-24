@@ -15,6 +15,8 @@ func TestHDKeypair(t *testing.T) {
 	t.Run("Deep copying key pair succeeds", testHDKeyPairDeepCopyingKeyPairSucceeds)
 	t.Run("Tainting a key pair succeeds", testHDKeyPairTaintingKeyPairSucceeds)
 	t.Run("Tainting an already tainted key pair fails", testHDKeyPairTaintingAlreadyTaintedKeyPairFails)
+	t.Run("Untainting a key pair succeeds", testHDKeyPairUntaintingKeyPairSucceeds)
+	t.Run("Untainting a not-tainted key pair fails", testHDKeyPairUntaintingNotTaintedKeyPairFails)
 	t.Run("Secure copy of key pair removes sensitive information", testHDKeyPairToPublicKeyRemovesSensitiveInformation)
 	t.Run("Signing a transaction succeeds", testHDKeyPairSigningTransactionSucceeds)
 	t.Run("Signing any message succeeds", testHDKeyPairSigningAnyMessageSucceeds)
@@ -93,6 +95,37 @@ func testHDKeyPairTaintingAlreadyTaintedKeyPairFails(t *testing.T) {
 	// then
 	assert.Error(t, err)
 	assert.True(t, kp.IsTainted())
+}
+
+func testHDKeyPairUntaintingKeyPairSucceeds(t *testing.T) {
+	// given
+	kp := generateHDKeyPair()
+
+	// when
+	err := kp.Taint()
+
+	// then
+	require.NoError(t, err)
+	assert.True(t, kp.IsTainted())
+
+	// when
+	err = kp.Untaint()
+
+	// then
+	require.NoError(t, err)
+	assert.False(t, kp.IsTainted())
+}
+
+func testHDKeyPairUntaintingNotTaintedKeyPairFails(t *testing.T) {
+	// given
+	kp := generateHDKeyPair()
+
+	// when
+	err := kp.Untaint()
+
+	// then
+	assert.Error(t, err)
+	assert.False(t, kp.IsTainted())
 }
 
 func testHDKeyPairToPublicKeyRemovesSensitiveInformation(t *testing.T) {

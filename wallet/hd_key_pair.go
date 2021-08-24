@@ -86,6 +86,15 @@ func (k *HDKeyPair) Taint() error {
 	return nil
 }
 
+func (k *HDKeyPair) Untaint() error {
+	if !k.tainted {
+		return ErrPubKeyNotTainted
+	}
+
+	k.tainted = false
+	return nil
+}
+
 func (k *HDKeyPair) SignAny(data []byte) ([]byte, error) {
 	return k.algo.Sign(k.privateKey.bytes, data)
 }
