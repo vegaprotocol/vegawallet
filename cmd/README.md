@@ -74,7 +74,7 @@ specify the passphrase with the ``--passphrase`` flag.
 This command is only able to import the wallet from which you can re-generate
 your key pairs.
 
-## List registered wallet
+## List registered wallets
 
 If you want to list all the registered wallets, use the following command:
 
