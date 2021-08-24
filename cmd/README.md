@@ -74,6 +74,14 @@ specify the passphrase with the ``--passphrase`` flag.
 This command is only able to import the wallet from which you can re-generate
 your key pairs.
 
+## List registered wallet
+
+If you want to list all the registered wallets, use the following command:
+
+```sh
+vegawallet list
+```
+
 ## Generate a key pair
 
 To generate a key pair on the given wallet, use the following command:
