@@ -123,16 +123,16 @@ vegawallet key generate --name "YOUR_CUSTOM_USERNAME" --metas "name:CHOOSE_CUSTO
 **MacOS & Linux**
 
 ```sh
-./vegawallet key meta --metas="name:CHOOSE_CUSTOM_ALIAS_FOR_KEY" --name="YOUR_CUSTOM_USERNAME" --pubkey="REPLACE_THIS_WITH_YOUR_PUBLIC_KEY"
+./vegawallet key annotate --metas="name:CHOOSE_CUSTOM_ALIAS_FOR_KEY" --name="YOUR_CUSTOM_USERNAME" --pubkey="REPLACE_THIS_WITH_YOUR_PUBLIC_KEY"
 ```
 
 **Windows**
 
 ```sh
-vegawallet key meta --metas="name:CHOOSE_CUSTOM_ALIAS_FOR_KEY" --name="YOUR_CUSTOM_USERNAME" --pubkey="REPLACE_THIS_WITH_YOUR_PUBLIC_KEY"
+vegawallet key annotate --metas="name:CHOOSE_CUSTOM_ALIAS_FOR_KEY" --name="YOUR_CUSTOM_USERNAME" --pubkey="REPLACE_THIS_WITH_YOUR_PUBLIC_KEY"
 ```
 
-> Tip: You can also use the meta command to tag a key with other data you might want, using a property name and a value. This will be useful for developing with Vega Wallet in the future.
+> Tip: You can also use the annotate command to tag a key with other data you might want, using a property name and a value. This will be useful for developing with Vega Wallet in the future.
 
 ## Run the Wallet service
 Now, **connect your wallet to the Vega testnet (Fairground) nodes**. To trade, run the wallet and **start the Vega Console** with the command below. (You'll need collateral to trade, and you can deposit it through Vega Console, once you're connected.)

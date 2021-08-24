@@ -97,17 +97,17 @@ For better key management, you may want to add metadata to your key pairs. This
 is done with the following command:
 
 ```sh
-vegawallet key meta --name "YOUR_USERNAME" --meta "key1:value1;key2:value2" --pubkey "YOUR_HEX_PUBLIC_KEY"
+vegawallet key annotate --name "YOUR_USERNAME" --meta "key1:value1;key2:value2" --pubkey "YOUR_HEX_PUBLIC_KEY"
 ```
 
 An item of metadata is represented as a key-value property.
 
 ### Give an alias to a key
 
-You can give to each key pair a nickname/alias with a meta `name`. For example:
+You can give to each key pair a nickname/alias with a metadata `name`. For example:
 
 ```sh
-vegawallet key meta --name "YOUR_USERNAME" --meta "name:my-alias" --pubkey "YOUR_HEX_PUBLIC_KEY"
+vegawallet key annotate --name "YOUR_USERNAME" --meta "name:my-alias" --pubkey "YOUR_HEX_PUBLIC_KEY"
 ```
 
 ### Important
