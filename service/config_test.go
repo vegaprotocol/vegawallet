@@ -49,7 +49,7 @@ func testGeneratingConfigSucceeds(t *testing.T) {
 		Return(nil)
 
 	// when
-	err := service.GenerateConfig(ts.log, ts.store, false)
+	err := service.GenerateConfig(ts.store, false)
 
 	// then
 	require.NoError(t, err)
@@ -68,7 +68,7 @@ func testGeneratingConfigWithErrorFails(t *testing.T) {
 		Times(0)
 
 	// when
-	err := service.GenerateConfig(ts.log, ts.store, false)
+	err := service.GenerateConfig(ts.store, false)
 
 	// then
 	require.Error(t, err, errors.New("some error"))
@@ -88,7 +88,7 @@ func testGeneratingConfigWithRSAKeysWithErrorFails(t *testing.T) {
 		Return(errors.New("some error"))
 
 	// when
-	err := service.GenerateConfig(ts.log, ts.store, false)
+	err := service.GenerateConfig(ts.store, false)
 
 	// then
 	require.Error(t, err, errors.New("some error"))
@@ -108,7 +108,7 @@ func testOverwritingConfigSucceeds(t *testing.T) {
 		Return(nil)
 
 	// when
-	err := service.GenerateConfig(ts.log, ts.store, true)
+	err := service.GenerateConfig(ts.store, true)
 
 	// then
 	require.NoError(t, err)
