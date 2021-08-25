@@ -151,6 +151,22 @@ func (w *HDWallet) TaintKey(pubKey string) error {
 	return nil
 }
 
+// UntaintKey remove the taint on a key.
+func (w *HDWallet) UntaintKey(pubKey string) error {
+	keyPair, ok := w.keyRing.FindPair(pubKey)
+	if !ok {
+		return ErrPubKeyDoesNotExist
+	}
+
+	if err := keyPair.Untaint(); err != nil {
+		return err
+	}
+
+	w.keyRing.Upsert(keyPair)
+
+	return nil
+}
+
 // UpdateMeta replaces the key's metadata by the new ones.
 func (w *HDWallet) UpdateMeta(pubKey string, meta []Meta) error {
 	keyPair, ok := w.keyRing.FindPair(pubKey)

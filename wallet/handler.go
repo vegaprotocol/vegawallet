@@ -25,6 +25,7 @@ type Wallet interface {
 	ListKeyPairs() []KeyPair
 	GenerateKeyPair(meta []Meta) (KeyPair, error)
 	TaintKey(pubKey string) error
+	UntaintKey(pubKey string) error
 	UpdateMeta(pubKey string, meta []Meta) error
 	SignAny(pubKey string, data []byte) ([]byte, error)
 	VerifyAny(pubKey string, data, sig []byte) (bool, error)
@@ -272,6 +273,23 @@ func (h *Handler) TaintKey(name, pubKey, passphrase string) error {
 	}
 
 	err = w.TaintKey(pubKey)
+	if err != nil {
+		return err
+	}
+
+	return h.saveWallet(w, passphrase)
+}
+
+func (h *Handler) UntaintKey(name string, pubKey string, passphrase string) error {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+
+	w, err := h.store.GetWallet(name, passphrase)
+	if err != nil {
+		return err
+	}
+
+	err = w.UntaintKey(pubKey)
 	if err != nil {
 		return err
 	}

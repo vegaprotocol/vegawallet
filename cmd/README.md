@@ -136,6 +136,23 @@ vegawallet key taint --name "YOUR_NAME" --pubkey "YOUR_HEX_PUBIC_KEY"
 It will then prompt you to input a passphrase. You can also specify the
 passphrase with the ``--passphrase`` flag.
 
+## Untainting a key pair
+
+You may have tainted a key by mistake. if you want to untaint it, use the
+following command:
+
+```sh
+vegawallet key untaint --name "YOUR_NAME" --pubkey "YOUR_HEX_PUBIC_KEY"
+```
+
+It will then prompt you to input a passphrase. You can also specify the
+passphrase with the ``--passphrase`` flag.
+
+### Important
+
+If you tainted a key for security reasons, you should not untaint it. 
+it.
+
 ## List the key pairs
 
 To list your key pairs, use the following command:

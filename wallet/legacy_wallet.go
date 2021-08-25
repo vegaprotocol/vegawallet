@@ -86,6 +86,19 @@ func (w *LegacyWallet) TaintKey(pubKey string) error {
 	return nil
 }
 
+func (w *LegacyWallet) UntaintKey(pubKey string) error {
+	keyPair, err := w.KeyRing.FindPair(pubKey)
+	if err != nil {
+		return err
+	}
+
+	keyPair.Tainted = false
+
+	w.KeyRing.Upsert(keyPair)
+
+	return nil
+}
+
 func (w *LegacyWallet) UpdateMeta(pubKey string, meta []Meta) error {
 	keyPair, err := w.KeyRing.FindPair(pubKey)
 	if err != nil {
