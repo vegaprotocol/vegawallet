@@ -151,7 +151,6 @@ passphrase with the ``--passphrase`` flag.
 ### Important
 
 If you tainted a key for security reasons, you should not untaint it. 
-it.
 
 ## List the key pairs
 
