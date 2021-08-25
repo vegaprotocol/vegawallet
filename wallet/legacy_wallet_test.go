@@ -13,8 +13,8 @@ import (
 func TestLegacyWallet(t *testing.T) {
 	t.Run("Tainting key pair succeeds", testLegacyWalletTaintingKeyPairSucceeds)
 	t.Run("Tainting key pair that is already tainted fails", testLegacyWalletTaintingKeyThatIsAlreadyTaintedFails)
-	t.Run("Updating key pair meta succeeds", testLegacyWalletUpdatingKeyPairMetaSucceeds)
-	t.Run("Updating key pair meta with non-existing public key fails", testLegacyWalletUpdatingKeyPairMetaWithNonExistingPublicKeyFails)
+	t.Run("Updating key pair metadata succeeds", testLegacyWalletUpdatingKeyPairMetaSucceeds)
+	t.Run("Updating key pair metadata with non-existing public key fails", testLegacyWalletUpdatingKeyPairMetaWithNonExistingPublicKeyFails)
 	t.Run("Signing transaction request (v2) succeeds", testLegacyWalletSigningTxV2Succeeds)
 	t.Run("Signing transaction request (v2) with tainted key fails", testLegacyWalletSigningTxV2WithTaintedKeyFails)
 }

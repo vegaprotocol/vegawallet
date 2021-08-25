@@ -91,7 +91,7 @@ func parseMeta(metaStr string) ([]wallet.Meta, error) {
 	for _, v := range rawMetas {
 		rawMeta := strings.Split(v, ":")
 		if len(rawMeta) != 2 {
-			return nil, fmt.Errorf("invalid meta format")
+			return nil, fmt.Errorf("invalid metadata format")
 		}
 		metas = append(metas, wallet.Meta{Key: rawMeta[0], Value: rawMeta[1]})
 	}

@@ -151,7 +151,7 @@ func (w *HDWallet) TaintKey(pubKey string) error {
 	return nil
 }
 
-// UpdateMeta replaces the key's meta by the new ones.
+// UpdateMeta replaces the key's metadata by the new ones.
 func (w *HDWallet) UpdateMeta(pubKey string, meta []Meta) error {
 	keyPair, ok := w.keyRing.FindPair(pubKey)
 	if !ok {
