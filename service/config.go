@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"code.vegaprotocol.io/go-wallet/service/encoding"
-
 	"go.uber.org/zap"
 )
 
@@ -38,14 +37,12 @@ type NodesConfig struct {
 	Retries uint64
 }
 
-func GenerateConfig(log *zap.Logger, store Store, overwrite bool) error {
+func GenerateConfig(store Store, overwrite bool) error {
 	config := NewDefaultConfig()
 	err := store.SaveConfig(&config, overwrite)
 	if err != nil {
 		return err
 	}
-
-	log.Info("wallet service configuration generated successfully")
 
 	keys, err := GenerateRSAKeys()
 	if err != nil {
@@ -54,8 +51,6 @@ func GenerateConfig(log *zap.Logger, store Store, overwrite bool) error {
 	if err := store.SaveRSAKeys(keys, overwrite); err != nil {
 		return err
 	}
-
-	log.Info("wallet RSA keys generated successfully")
 
 	return nil
 }
