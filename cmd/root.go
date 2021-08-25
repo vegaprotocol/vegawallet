@@ -27,6 +27,7 @@ var (
 		Short:            "The Vega wallet",
 		Long:             `The Vega wallet`,
 		PersistentPreRun: checkVersion,
+		SilenceUsage:     true,
 	}
 )
 
