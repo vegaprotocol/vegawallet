@@ -138,7 +138,7 @@ passphrase with the ``--passphrase`` flag.
 
 ## Untainting a key pair
 
-You may have tainted a key by mistake. if you want to untaint it, use the
+You may have tainted a key by mistake. If you want to untaint it, use the
 following command:
 
 ```sh

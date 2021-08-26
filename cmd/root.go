@@ -7,50 +7,80 @@ import (
 	"path/filepath"
 	"strings"
 
+	"code.vegaprotocol.io/go-wallet/cmd/printer"
 	vgfs "code.vegaprotocol.io/go-wallet/libs/fs"
 	"code.vegaprotocol.io/go-wallet/version"
 	"code.vegaprotocol.io/go-wallet/wallet"
 	wstorev1 "code.vegaprotocol.io/go-wallet/wallet/store/v1"
+	"github.com/muesli/termenv"
 	"github.com/spf13/cobra"
 	"golang.org/x/crypto/ssh/terminal"
 )
 
 var (
 	rootArgs struct {
+		output         string
 		rootPath       string
 		noVersionCheck bool
 	}
 
 	// rootCmd represents the base command when called without any subcommands
 	rootCmd = &cobra.Command{
-		Use:              "vegawallet",
-		Short:            "The Vega wallet",
-		Long:             `The Vega wallet`,
-		PersistentPreRun: checkVersion,
-		SilenceUsage:     true,
+		Use:               "vegawallet",
+		Short:             "The Vega wallet",
+		Long:              `The Vega wallet`,
+		PersistentPreRunE: rootPreRun,
+		SilenceUsage:      true,
+		SilenceErrors:     true,
 	}
 )
 
-func checkVersion(cmd *cobra.Command, args []string) {
-	if !rootArgs.noVersionCheck {
+func rootPreRun(_ *cobra.Command, _ []string) error {
+	err := parseOutputFlag()
+	if err != nil {
+		return err
+	}
+	if rootArgs.output == "human" {
+		checkVersion()
+	}
+	return nil
+}
+
+func parseOutputFlag() error {
+	supportedOutput := []string{"plain", "json", "human"}
+	for _, output := range supportedOutput {
+		if rootArgs.output == output {
+			return nil
+		}
+	}
+	return fmt.Errorf("unsupported output \"%s\"", rootArgs.output)
+}
+
+func checkVersion() {
+	if !rootArgs.noVersionCheck && rootArgs.output == "human" {
 		v, err := version.Check(version.Version)
 		if err != nil {
 			fmt.Printf("could not check vega wallet version updates: %v\n", err)
 		}
 		if v != nil {
-			fmt.Printf("A new version %v of vega wallet is available, you can download it at %v.\n",
-				v, version.GetReleaseURL(v))
+			p := termenv.ColorProfile()
+			xVersion := termenv.String(v.String()).Foreground(p.Color("6"))
+			xURL := termenv.String(version.GetReleaseURL(v)).Underline()
+			fmt.Printf("A new version %s of vega wallet is available!\nDownload it at %v\n\n", xVersion, xURL)
 		}
 	}
 }
 
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
+		p := printer.NewHumanPrinter()
+		p.CrossMark().DangerText(err.Error()).Jump()
 		os.Exit(1)
 	}
 }
 
 func init() {
+	rootCmd.PersistentFlags().StringVarP(&rootArgs.output, "output", "o", "human", "Specify the output format: plain,json,human")
 	rootCmd.PersistentFlags().StringVarP(&rootArgs.rootPath, "root-path", "r", vgfs.DefaultVegaDir(), "Root directory for the Vega wallet configuration")
 	rootCmd.PersistentFlags().BoolVar(&rootArgs.noVersionCheck, "no-version-check", false, "Do not check for new version of the Vega wallet")
 }
@@ -84,7 +114,7 @@ func getPassphrase(flaggedPassphrase, flaggedPassphraseFile string, confirmInput
 		}
 
 		if confirmInput {
-			confirmation, err := promptForPassphrase("please confirm passphrase:")
+			confirmation, err := promptForPassphrase("Confirm passphrase: ")
 			if err != nil {
 				return "", fmt.Errorf("could not get passphrase: %w", err)
 			}
@@ -93,6 +123,7 @@ func getPassphrase(flaggedPassphrase, flaggedPassphraseFile string, confirmInput
 				return "", fmt.Errorf("passphrases do not match")
 			}
 		}
+		fmt.Println()
 
 		return passphrase, nil
 	}
@@ -100,7 +131,7 @@ func getPassphrase(flaggedPassphrase, flaggedPassphraseFile string, confirmInput
 
 func promptForPassphrase(msg ...string) (string, error) {
 	if len(msg) <= 0 {
-		fmt.Print("please enter passphrase:")
+		fmt.Print("Enter passphrase: ")
 	} else {
 		fmt.Print(msg[0])
 	}

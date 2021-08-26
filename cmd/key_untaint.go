@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 
+	"code.vegaprotocol.io/go-wallet/cmd/printer"
 	"github.com/spf13/cobra"
 )
 
@@ -31,7 +32,7 @@ func init() {
 	keyUntaintCmd.Flags().StringVarP(&keyUntaintArgs.pubKey, "pubkey", "k", "", "Public key to be used (hex)")
 }
 
-func runKeyUntaint(cmd *cobra.Command, args []string) error {
+func runKeyUntaint(_ *cobra.Command, _ []string) error {
 	handler, err := newWalletHandler(rootArgs.rootPath)
 	if err != nil {
 		return err
@@ -51,6 +52,14 @@ func runKeyUntaint(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("could not untaint the key: %w", err)
 	}
 
-	fmt.Printf("The key has been untainted.\n")
+	if rootArgs.output == "human" {
+		p := printer.NewHumanPrinter()
+		p.CheckMark().Text("Key pair has been untainted").Jump()
+		p.CheckMark().SuccessText("Untainting succeeded").NJump(2)
+
+		p.RedArrow().DangerText("Important").Jump()
+		p.Text("If you tainted a key for security reasons, you should not use it.").Jump()
+	}
+
 	return nil
 }

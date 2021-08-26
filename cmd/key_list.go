@@ -1,10 +1,12 @@
 package cmd
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 
+	"code.vegaprotocol.io/go-wallet/cmd/printer"
+	vgjson "code.vegaprotocol.io/go-wallet/libs/json"
+	"code.vegaprotocol.io/go-wallet/wallet"
 	"github.com/spf13/cobra"
 )
 
@@ -30,7 +32,7 @@ func init() {
 	keyListCmd.Flags().StringVar(&keyListArgs.passphraseFile, "passphrase-file", "", "Path of the file containing the passphrase to access the wallet")
 }
 
-func runKeyList(cmd *cobra.Command, args []string) error {
+func runKeyList(_ *cobra.Command, _ []string) error {
 	handler, err := newWalletHandler(rootArgs.rootPath)
 	if err != nil {
 		return err
@@ -55,13 +57,45 @@ func runKeyList(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("could not list the public keys: %w", err)
 	}
 
-	buf, err := json.MarshalIndent(keys, " ", " ")
-	if err != nil {
-		return fmt.Errorf("unable to marshal message: %w", err)
+	if rootArgs.output == "human" {
+		p := printer.NewHumanPrinter()
+		for i, keyPair := range keys {
+			p.InfoText(fmt.Sprintf("# Key %d", i+1)).Jump()
+			printKeyPair(p, keyPair)
+			p.Jump()
+		}
+	} else if rootArgs.output == "json" {
+		return printJsonKeyPairs(keys)
 	}
 
-	fmt.Printf("List of all your keys:\n")
-	fmt.Printf("%v\n", string(buf))
-
 	return nil
+}
+
+func printJsonKeyPairs(keys []wallet.KeyPair) error {
+	var result []struct {
+		PrivateKey       string
+		PublicKey        string
+		AlgorithmName    string
+		AlgorithmVersion uint32
+		Meta             []wallet.Meta
+	}
+
+	for _, keyPair := range keys {
+		result = append(result,
+			struct {
+				PrivateKey       string
+				PublicKey        string
+				AlgorithmName    string
+				AlgorithmVersion uint32
+				Meta             []wallet.Meta
+			}{
+				PrivateKey:       keyPair.PrivateKey(),
+				PublicKey:        keyPair.PublicKey(),
+				AlgorithmName:    keyPair.AlgorithmName(),
+				AlgorithmVersion: keyPair.AlgorithmVersion(),
+				Meta:             keyPair.Meta(),
+			})
+	}
+
+	return vgjson.Print(keys)
 }

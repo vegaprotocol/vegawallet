@@ -37,7 +37,7 @@ func init() {
 	serviceRunCmd.Flags().BoolVarP(&serviceRunArgs.noBrowser, "no-browser", "n", false, "Do not open the default browser if the console proxy is stated")
 }
 
-func runServiceRun(cmd *cobra.Command, args []string) error {
+func runServiceRun(_ *cobra.Command, _ []string) error {
 	handler, err := newWalletHandler(rootArgs.rootPath)
 	if err != nil {
 		return err

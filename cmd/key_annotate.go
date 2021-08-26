@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 
+	"code.vegaprotocol.io/go-wallet/cmd/printer"
 	"github.com/spf13/cobra"
 )
 
@@ -33,7 +34,7 @@ func init() {
 	keyAnnotateCmd.Flags().StringVarP(&keyAnnotateArgs.metadata, "meta", "m", "", `A list of metadata e.g: "primary:true;asset:BTC"`)
 }
 
-func runKeyAnnotate(cmd *cobra.Command, args []string) error {
+func runKeyAnnotate(_ *cobra.Command, _ []string) error {
 	handler, err := newWalletHandler(rootArgs.rootPath)
 	if err != nil {
 		return err
@@ -66,6 +67,13 @@ func runKeyAnnotate(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("could not update the metadata: %w", err)
 	}
 
-	fmt.Printf("The metadata have been updated.\n")
+	if rootArgs.output == "human" {
+		p := printer.NewHumanPrinter()
+		p.CheckMark().Text("Metadata have been updated").Jump()
+		p.CheckMark().SuccessText("Annotation succeeded").NJump(2)
+
+		p.Text("New metadata:").Jump()
+		printMeta(p, metadata)
+	}
 	return nil
 }

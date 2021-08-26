@@ -1,14 +1,14 @@
 package cmd
 
 import (
-	vgjson "code.vegaprotocol.io/go-wallet/libs/json"
+	"fmt"
 
+	"code.vegaprotocol.io/go-wallet/cmd/printer"
+	vgjson "code.vegaprotocol.io/go-wallet/libs/json"
 	"github.com/spf13/cobra"
 )
 
 var (
-	listArgs struct{}
-
 	// listCmd represents the list command
 	listCmd = &cobra.Command{
 		Use:   "list",
@@ -22,7 +22,7 @@ func init() {
 	rootCmd.AddCommand(listCmd)
 }
 
-func runList(cmd *cobra.Command, args []string) error {
+func runList(_ *cobra.Command, _ []string) error {
 	handler, err := newWalletHandler(rootArgs.rootPath)
 	if err != nil {
 		return err
@@ -33,5 +33,14 @@ func runList(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return vgjson.PrettyPrint(wallets)
+	if rootArgs.output == "human" {
+		p := printer.NewHumanPrinter()
+		for _, w := range wallets {
+			p.Text(fmt.Sprintf("- %s", w)).Jump()
+		}
+	} else if rootArgs.output == "json" {
+		return vgjson.Print(wallets)
+	}
+
+	return nil
 }
