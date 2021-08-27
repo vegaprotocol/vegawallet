@@ -62,6 +62,10 @@ func (s *Store) ConfigExists() (bool, error) {
 	return vgfs.FileExists(s.configFilePath)
 }
 
+func (s *Store) GetConfigPath() string {
+	return s.configFilePath
+}
+
 func (s *Store) GetConfig() (*service.Config, error) {
 	buf, err := fs.ReadFile(os.DirFS(s.configPath), configFile)
 	if err != nil {
@@ -113,6 +117,13 @@ func (s *Store) RSAKeysExists() (bool, error) {
 		return false, err
 	}
 	return privKeyExists && pubKeyExists, nil
+}
+
+func (s *Store) GetRSAKeysPath() map[string]string {
+	return map[string]string{
+		"public":  s.pubRsaKeyFilePath,
+		"private": s.privRsaKeyFilePath,
+	}
 }
 
 func (s *Store) SaveRSAKeys(keys *service.RSAKeys, overwrite bool) error {
