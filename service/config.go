@@ -14,6 +14,8 @@ const (
 
 //go:generate go run github.com/golang/mock/mockgen -destination mocks/store_mock.go -package mocks code.vegaprotocol.io/go-wallet/service Store
 type Store interface {
+	ConfigExists() (bool, error)
+	RSAKeysExists() (bool, error)
 	SaveConfig(*Config, bool) error
 	SaveRSAKeys(*RSAKeys, bool) error
 }
@@ -53,6 +55,18 @@ func GenerateConfig(store Store, overwrite bool) error {
 	}
 
 	return nil
+}
+
+func ConfigExists(store Store) (bool, error) {
+	configFileExists, err := store.ConfigExists()
+	if err != nil {
+		return false, err
+	}
+	rsaKeysExists, err := store.RSAKeysExists()
+	if err != nil {
+		return false, err
+	}
+	return configFileExists && rsaKeysExists, nil
 }
 
 // NewDefaultConfig creates an instance of the package specific configuration,

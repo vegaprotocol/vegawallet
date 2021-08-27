@@ -33,6 +33,36 @@ func (m *MockStore) EXPECT() *MockStoreMockRecorder {
 	return m.recorder
 }
 
+// ConfigExists mocks base method
+func (m *MockStore) ConfigExists() (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ConfigExists")
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ConfigExists indicates an expected call of ConfigExists
+func (mr *MockStoreMockRecorder) ConfigExists() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ConfigExists", reflect.TypeOf((*MockStore)(nil).ConfigExists))
+}
+
+// RSAKeysExists mocks base method
+func (m *MockStore) RSAKeysExists() (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RSAKeysExists")
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// RSAKeysExists indicates an expected call of RSAKeysExists
+func (mr *MockStoreMockRecorder) RSAKeysExists() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RSAKeysExists", reflect.TypeOf((*MockStore)(nil).RSAKeysExists))
+}
+
 // SaveConfig mocks base method
 func (m *MockStore) SaveConfig(arg0 *service.Config, arg1 bool) error {
 	m.ctrl.T.Helper()

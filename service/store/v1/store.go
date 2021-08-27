@@ -47,17 +47,19 @@ func NewStore(configPath string) (*Store, error) {
 // Initialise creates the folders. It does nothing if a folder already
 // exists.
 func (s *Store) Initialise() error {
-	err := createFolder(s.configPath)
-	if err != nil {
-		return err
+	if err := vgfs.EnsureDir(s.configPath); err != nil {
+		return fmt.Errorf("error creating directory %s: %v", s.configPath, err)
 	}
 
-	err = createFolder(s.keyFolderPath)
-	if err != nil {
-		return err
+	if err := vgfs.EnsureDir(s.keyFolderPath); err != nil {
+		return fmt.Errorf("error creating directory %s: %v", s.keyFolderPath, err)
 	}
 
 	return nil
+}
+
+func (s *Store) ConfigExists() (bool, error) {
+	return vgfs.FileExists(s.configFilePath)
 }
 
 func (s *Store) GetConfig() (*service.Config, error) {
@@ -99,6 +101,18 @@ func (s *Store) SaveConfig(cfg *service.Config, overwrite bool) error {
 	}
 
 	return nil
+}
+
+func (s *Store) RSAKeysExists() (bool, error) {
+	privKeyExists, err := vgfs.FileExists(s.privRsaKeyFilePath)
+	if err != nil {
+		return false, err
+	}
+	pubKeyExists, err := vgfs.FileExists(s.pubRsaKeyFilePath)
+	if err != nil {
+		return false, err
+	}
+	return privKeyExists && pubKeyExists, nil
 }
 
 func (s *Store) SaveRSAKeys(keys *service.RSAKeys, overwrite bool) error {
@@ -159,7 +173,11 @@ func (s *Store) removeExistingRSAKeys() error {
 		return fmt.Errorf("unable to remove RSA keys: %v", err)
 	}
 
-	return createFolder(s.keyFolderPath)
+	if err := vgfs.EnsureDir(s.keyFolderPath); err != nil {
+		return fmt.Errorf("error creating directory %s: %v", s.keyFolderPath, err)
+	}
+
+	return nil
 }
 
 func writeFile(content []byte, fileName string) error {
@@ -179,19 +197,5 @@ func writeFile(content []byte, fileName string) error {
 		return err
 	}
 
-	return nil
-}
-
-func createFolder(folder string) error {
-	ok, err := vgfs.PathExists(folder)
-	if !ok {
-		if _, ok := err.(*vgfs.PathNotFound); !ok {
-			return fmt.Errorf("invalid directory path %s: %v", folder, err)
-		}
-
-		if err := vgfs.EnsureDir(folder); err != nil {
-			return fmt.Errorf("error creating directory %s: %v", folder, err)
-		}
-	}
 	return nil
 }

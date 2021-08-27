@@ -26,9 +26,8 @@ func NewStore(walletsPath string) (*Store, error) {
 // Initialise creates the folders. It does nothing if a folder already
 // exists.
 func (s *Store) Initialise() error {
-	err := createFolder(s.walletsPath)
-	if err != nil {
-		return err
+	if err := vgfs.EnsureDir(s.walletsPath); err != nil {
+		return fmt.Errorf("error creating directory %s: %v", s.walletsPath, err)
 	}
 
 	return nil
@@ -133,18 +132,4 @@ func (s *Store) GetWalletPath(name string) string {
 
 func (s *Store) walletPath(name string) string {
 	return filepath.Join(s.walletsPath, name)
-}
-
-func createFolder(folder string) error {
-	ok, err := vgfs.PathExists(folder)
-	if !ok {
-		if _, ok := err.(*vgfs.PathNotFound); !ok {
-			return fmt.Errorf("invalid directory path %s: %v", folder, err)
-		}
-
-		if err := vgfs.EnsureDir(folder); err != nil {
-			return fmt.Errorf("error creating directory %s: %v", folder, err)
-		}
-	}
-	return nil
 }
