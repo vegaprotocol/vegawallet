@@ -96,7 +96,7 @@ func (s *Store) SaveConfig(cfg *service.Config, overwrite bool) error {
 		return err
 	}
 
-	if err := writeFile(buf.Bytes(), s.configFilePath); err != nil {
+	if err := vgfs.WriteFile(buf.Bytes(), s.configFilePath); err != nil {
 		return fmt.Errorf("unable to save configuration: %v", err)
 	}
 
@@ -116,7 +116,7 @@ func (s *Store) RSAKeysExists() (bool, error) {
 }
 
 func (s *Store) SaveRSAKeys(keys *service.RSAKeys, overwrite bool) error {
-	if ok, _ := vgfs.PathExists(s.keyFolderPath); !ok {
+	if exists, _ := vgfs.PathExists(s.keyFolderPath); !exists {
 		return ErrRSAFolderDoesNotExists
 	}
 
@@ -132,11 +132,11 @@ func (s *Store) SaveRSAKeys(keys *service.RSAKeys, overwrite bool) error {
 		}
 	}
 
-	if err := writeFile(keys.Priv, s.privRsaKeyFilePath); err != nil {
+	if err := vgfs.WriteFile(keys.Priv, s.privRsaKeyFilePath); err != nil {
 		return fmt.Errorf("unable to save private key: %v", err)
 	}
 
-	if err := writeFile(keys.Pub, s.pubRsaKeyFilePath); err != nil {
+	if err := vgfs.WriteFile(keys.Pub, s.pubRsaKeyFilePath); err != nil {
 		return fmt.Errorf("unable to save public key: %v", err)
 	}
 
@@ -175,26 +175,6 @@ func (s *Store) removeExistingRSAKeys() error {
 
 	if err := vgfs.EnsureDir(s.keyFolderPath); err != nil {
 		return fmt.Errorf("error creating directory %s: %v", s.keyFolderPath, err)
-	}
-
-	return nil
-}
-
-func writeFile(content []byte, fileName string) error {
-	f, err := os.Create(fileName)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-
-	err = f.Chmod(0600)
-	if err != nil {
-		return err
-	}
-
-	_, err = f.Write(content)
-	if err != nil {
-		return err
 	}
 
 	return nil

@@ -77,3 +77,24 @@ func FileExists(path string) (bool, error) {
 	}
 	return false, err
 }
+
+
+func WriteFile(content []byte, fileName string) error {
+	f, err := os.Create(fileName)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	err = f.Chmod(0600)
+	if err != nil {
+		return err
+	}
+
+	_, err = f.Write(content)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
