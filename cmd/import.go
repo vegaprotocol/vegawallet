@@ -52,7 +52,7 @@ func runImport(cmd *cobra.Command, args []string) error {
 
 	err = handler.ImportWallet(importArgs.name, passphrase, importArgs.mnemonic)
 	if err != nil {
-		return fmt.Errorf("couldn't import wallet: %v", err)
+		return fmt.Errorf("couldn't import wallet: %w", err)
 	}
 
 	fmt.Printf("The wallet \"%s\" has been imported.\n", importArgs.name)

@@ -58,12 +58,12 @@ func runKeyAnnotate(cmd *cobra.Command, args []string) error {
 
 	err = handler.LoginWallet(keyAnnotateArgs.name, passphrase)
 	if err != nil {
-		return fmt.Errorf("could not login to the wallet: %v", err)
+		return fmt.Errorf("could not login to the wallet: %w", err)
 	}
 
 	err = handler.UpdateMeta(keyAnnotateArgs.name, keyAnnotateArgs.pubkey, passphrase, metadata)
 	if err != nil {
-		return fmt.Errorf("could not update the metadata: %v", err)
+		return fmt.Errorf("could not update the metadata: %w", err)
 	}
 
 	fmt.Printf("The metadata have been updated.\n")

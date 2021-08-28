@@ -48,7 +48,7 @@ func runKeyUntaint(cmd *cobra.Command, args []string) error {
 
 	err = handler.UntaintKey(keyUntaintArgs.name, keyUntaintArgs.pubKey, passphrase)
 	if err != nil {
-		return fmt.Errorf("could not untaint the key: %v", err)
+		return fmt.Errorf("could not untaint the key: %w", err)
 	}
 
 	fmt.Printf("The key has been untainted.\n")

@@ -43,11 +43,11 @@ func NewAuth(log *zap.Logger, cfgStore RSAStore, tokenExpiry time.Duration) (*au
 	}
 	priv, err := jwt.ParseRSAPrivateKeyFromPEM(keys.Priv)
 	if err != nil {
-		return nil, fmt.Errorf("couldn't parse private RSA key: %v", err)
+		return nil, fmt.Errorf("couldn't parse private RSA key: %w", err)
 	}
 	pub, err := jwt.ParseRSAPublicKeyFromPEM(keys.Pub)
 	if err != nil {
-		return nil, fmt.Errorf("couldn't parse public RSA key: %v", err)
+		return nil, fmt.Errorf("couldn't parse public RSA key: %w", err)
 	}
 
 	return &auth{

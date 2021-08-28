@@ -252,11 +252,11 @@ func (w *HDWallet) UnmarshalJSON(data []byte) error {
 func NewMnemonic() (string, error) {
 	entropy, err := bip39.NewEntropy(256)
 	if err != nil {
-		return "", fmt.Errorf("couldn't create new wallet: %v", err)
+		return "", fmt.Errorf("couldn't create new wallet: %w", err)
 	}
 	mnemonic, err := bip39.NewMnemonic(entropy)
 	if err != nil {
-		return "", fmt.Errorf("couldn't create new wallet: %v", err)
+		return "", fmt.Errorf("couldn't create new wallet: %w", err)
 	}
 	return mnemonic, nil
 }
@@ -265,11 +265,11 @@ func deriveWalletNodeFromMnemonic(mnemonic string) (*slip10.Node, error) {
 	seed := bip39.NewSeed(mnemonic, "")
 	masterNode, err := slip10.NewMasterNode(seed)
 	if err != nil {
-		return nil, fmt.Errorf("couldn't create master node: %v", err)
+		return nil, fmt.Errorf("couldn't create master node: %w", err)
 	}
 	walletNode, err := masterNode.Derive(OriginIndex)
 	if err != nil {
-		return nil, fmt.Errorf("couldn't derive wallet node: %v", err)
+		return nil, fmt.Errorf("couldn't derive wallet node: %w", err)
 	}
 	return walletNode, nil
 }

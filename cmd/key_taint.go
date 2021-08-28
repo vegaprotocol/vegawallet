@@ -48,7 +48,7 @@ func runKeyTaint(cmd *cobra.Command, args []string) error {
 
 	err = handler.TaintKey(keyTaintArgs.name, keyTaintArgs.pubkey, passphrase)
 	if err != nil {
-		return fmt.Errorf("could not taint the key: %v", err)
+		return fmt.Errorf("could not taint the key: %w", err)
 	}
 
 	fmt.Printf("The key has been tainted.\n")

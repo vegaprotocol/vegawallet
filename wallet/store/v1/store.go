@@ -27,7 +27,7 @@ func NewStore(walletsPath string) (*Store, error) {
 // exists.
 func (s *Store) Initialise() error {
 	if err := vgfs.EnsureDir(s.walletsPath); err != nil {
-		return fmt.Errorf("error creating directory %s: %v", s.walletsPath, err)
+		return fmt.Errorf("error creating directory %s: %w", s.walletsPath, err)
 	}
 
 	return nil

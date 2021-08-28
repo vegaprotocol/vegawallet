@@ -75,7 +75,7 @@ func getPassphrase(flaggedPassphrase, flaggedPassphraseFile string, confirmInput
 	} else {
 		passphrase, err := promptForPassphrase()
 		if err != nil {
-			return "", fmt.Errorf("could not get passphrase: %v", err)
+			return "", fmt.Errorf("could not get passphrase: %w", err)
 		}
 
 		if len(passphrase) == 0 {
@@ -85,7 +85,7 @@ func getPassphrase(flaggedPassphrase, flaggedPassphraseFile string, confirmInput
 		if confirmInput {
 			confirmation, err := promptForPassphrase("please confirm passphrase:")
 			if err != nil {
-				return "", fmt.Errorf("could not get passphrase: %v", err)
+				return "", fmt.Errorf("could not get passphrase: %w", err)
 			}
 
 			if passphrase != confirmation {
