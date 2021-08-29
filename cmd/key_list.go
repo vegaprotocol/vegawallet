@@ -13,7 +13,6 @@ import (
 var (
 	keyListArgs struct {
 		name           string
-		passphrase     string
 		passphraseFile string
 	}
 
@@ -28,8 +27,7 @@ var (
 func init() {
 	keyCmd.AddCommand(keyListCmd)
 	keyListCmd.Flags().StringVarP(&keyListArgs.name, "name", "n", "", "Name of the wallet to use")
-	keyListCmd.Flags().StringVar(&keyListArgs.passphrase, "passphrase", "", "Passphrase to access the wallet")
-	keyListCmd.Flags().StringVar(&keyListArgs.passphraseFile, "passphrase-file", "", "Path of the file containing the passphrase to access the wallet")
+	keyListCmd.Flags().StringVarP(&keyListArgs.passphraseFile, "passphrase-file", "p", "", "Path of the file containing the passphrase to access the wallet")
 }
 
 func runKeyList(_ *cobra.Command, _ []string) error {
@@ -42,7 +40,7 @@ func runKeyList(_ *cobra.Command, _ []string) error {
 		return errors.New("wallet name is required")
 	}
 
-	passphrase, err := getPassphrase(keyListArgs.passphrase, keyListArgs.passphraseFile, false)
+	passphrase, err := getPassphrase(keyListArgs.passphraseFile, false)
 	if err != nil {
 		return err
 	}

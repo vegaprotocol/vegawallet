@@ -15,7 +15,6 @@ import (
 var (
 	keyGenerateArgs struct {
 		name           string
-		passphrase     string
 		passphraseFile string
 		metas          string
 	}
@@ -31,8 +30,7 @@ var (
 func init() {
 	keyCmd.AddCommand(keyGenerateCmd)
 	keyGenerateCmd.Flags().StringVarP(&keyGenerateArgs.name, "name", "n", "", "Name of the wallet to use")
-	keyGenerateCmd.Flags().StringVar(&keyGenerateArgs.passphrase, "passphrase", "", "Passphrase to access the wallet")
-	keyGenerateCmd.Flags().StringVar(&keyGenerateArgs.passphraseFile, "passphrase-file", "", "Path of the file containing the passphrase to access the wallet")
+	keyGenerateCmd.Flags().StringVarP(&keyGenerateArgs.passphraseFile, "passphrase-file", "p", "", "Path of the file containing the passphrase to access the wallet")
 	keyGenerateCmd.Flags().StringVarP(&keyGenerateArgs.metas, "meta", "m", "", `A list of metadata e.g: "primary:true;asset:BTC"`)
 }
 
@@ -54,7 +52,7 @@ func runKeyGenerate(_ *cobra.Command, _ []string) error {
 
 	walletExists := handler.WalletExists(keyGenerateArgs.name)
 
-	passphrase, err := getPassphrase(keyGenerateArgs.passphrase, keyGenerateArgs.passphraseFile, !walletExists)
+	passphrase, err := getPassphrase(keyGenerateArgs.passphraseFile, !walletExists)
 	if err != nil {
 		return err
 	}

@@ -13,7 +13,6 @@ import (
 var (
 	importArgs struct {
 		name           string
-		passphrase     string
 		passphraseFile string
 		mnemonic       string
 	}
@@ -29,8 +28,7 @@ var (
 func init() {
 	rootCmd.AddCommand(importCmd)
 	importCmd.Flags().StringVarP(&importArgs.name, "name", "n", "", "Name of the wallet to use")
-	importCmd.Flags().StringVar(&importArgs.passphrase, "passphrase", "", "Passphrase to access the wallet")
-	importCmd.Flags().StringVar(&importArgs.passphraseFile, "passphrase-file", "", "Path of the file containing the passphrase to access the wallet")
+	importCmd.Flags().StringVarP(&importArgs.passphraseFile, "passphrase-file", "p", "", "Path of the file containing the passphrase to access the wallet")
 	importCmd.Flags().StringVarP(&importArgs.mnemonic, "mnemonic", "m", "", `Mnemonic of the wallet "swing ceiling chaos..."`)
 }
 
@@ -53,7 +51,7 @@ func runImport(_ *cobra.Command, _ []string) error {
 		return errors.New("wallet mnemonic is required")
 	}
 
-	passphrase, err := getPassphrase(importArgs.passphrase, importArgs.passphraseFile, true)
+	passphrase, err := getPassphrase(importArgs.passphraseFile, true)
 	if err != nil {
 		return err
 	}

@@ -10,10 +10,6 @@ cloud.google.com/go/datastore v1.0.0/go.mod h1:LXYbyblFSglQ5pkeyhO+Qmw7ukd3C+pD7
 cloud.google.com/go/firestore v1.1.0/go.mod h1:ulACoGHTpvq5r8rxGJ4ddJZBZqakUQqClKRT5SZwBmk=
 cloud.google.com/go/pubsub v1.0.1/go.mod h1:R0Gpsv3s54REJCy4fxDixWD93lHJMoZTyQ2kNxGRt3I=
 cloud.google.com/go/storage v1.0.0/go.mod h1:IhtSnM/ZTZV8YYJWCY8RULGVqBDmpoyjwiyrjsg+URw=
-code.vegaprotocol.io/protos v0.41.1-0.20210816103952-3c985262f0be h1:4vbGYOxS+gY4lYCjdVcGRflidCREfwEalrU1lVeOVvg=
-code.vegaprotocol.io/protos v0.41.1-0.20210816103952-3c985262f0be/go.mod h1:17UdBxRpWLiJk1bq43Pl6HFfTjFnuoLHBsKfEZP0qjE=
-code.vegaprotocol.io/protos v0.41.1-0.20210816143147-a19a60b9d3d1 h1:0SQtPA9cYs+4UdF1Bcry5/LNaZ2vQfhsfsmDjqtxHHE=
-code.vegaprotocol.io/protos v0.41.1-0.20210816143147-a19a60b9d3d1/go.mod h1:17UdBxRpWLiJk1bq43Pl6HFfTjFnuoLHBsKfEZP0qjE=
 code.vegaprotocol.io/protos v0.41.1-0.20210818085909-433d56f64986 h1:vH0RnnE54jZChwG30JkUPw8ttAGx8NfhLZfC7YvH+pc=
 code.vegaprotocol.io/protos v0.41.1-0.20210818085909-433d56f64986/go.mod h1:17UdBxRpWLiJk1bq43Pl6HFfTjFnuoLHBsKfEZP0qjE=
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=
@@ -189,7 +185,6 @@ github.com/google/go-cmp v0.5.0/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/
 github.com/google/go-cmp v0.5.5 h1:Khx7svrCpmxxtHBq5j2mp/xVjsi8hQMfNLvJFAlrGgU=
 github.com/google/go-cmp v0.5.5/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/gNBxE=
 github.com/google/gofuzz v1.0.0/go.mod h1:dBl0BpW6vV/+mYPU4Po3pmUjxk6FQPldtuIdl/M65Eg=
-github.com/google/goterm v0.0.0-20190703233501-fc88cf888a3f/go.mod h1:nOFQdrUlIlx6M6ODdSpBj1NVA+VgLC6kmw60mkw34H4=
 github.com/google/martian v2.1.0+incompatible/go.mod h1:9I4somxYTbIHy5NJKHRl3wXiIaQGbYVAs8BPL6v8lEs=
 github.com/google/orderedcode v0.0.1/go.mod h1:iVyU4/qPKHY5h/wSd6rZZCDcLJNxiWO6dvsYES2Sb20=
 github.com/google/pprof v0.0.0-20181206194817-3ea8567a2e57/go.mod h1:zfwlbNMJ+OItoe0UupaVj+oy1omPYYDuagoSzA8v9mc=

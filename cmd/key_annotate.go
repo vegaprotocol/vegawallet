@@ -12,7 +12,6 @@ var (
 	keyAnnotateArgs struct {
 		metadata       string
 		name           string
-		passphrase     string
 		passphraseFile string
 		pubkey         string
 	}
@@ -28,8 +27,7 @@ var (
 func init() {
 	keyCmd.AddCommand(keyAnnotateCmd)
 	keyAnnotateCmd.Flags().StringVarP(&keyAnnotateArgs.name, "name", "n", "", "Name of the wallet to use")
-	keyAnnotateCmd.Flags().StringVar(&keyAnnotateArgs.passphrase, "passphrase", "", "Passphrase to access the wallet")
-	keyAnnotateCmd.Flags().StringVar(&keyAnnotateArgs.passphraseFile, "passphrase-file", "", "Path of the file containing the passphrase to access the wallet")
+	keyAnnotateCmd.Flags().StringVarP(&keyAnnotateArgs.passphraseFile, "passphrase-file", "p", "", "Path of the file containing the passphrase to access the wallet")
 	keyAnnotateCmd.Flags().StringVarP(&keyAnnotateArgs.pubkey, "pubkey", "k", "", "Public key to be used (hex)")
 	keyAnnotateCmd.Flags().StringVarP(&keyAnnotateArgs.metadata, "meta", "m", "", `A list of metadata e.g: "primary:true;asset:BTC"`)
 }
@@ -47,7 +45,7 @@ func runKeyAnnotate(_ *cobra.Command, _ []string) error {
 		return errors.New("pubkey is required")
 	}
 
-	passphrase, err := getPassphrase(keyAnnotateArgs.passphrase, keyAnnotateArgs.passphraseFile, false)
+	passphrase, err := getPassphrase(keyAnnotateArgs.passphraseFile, false)
 	if err != nil {
 		return err
 	}

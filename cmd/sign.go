@@ -14,7 +14,6 @@ import (
 var (
 	signArgs struct {
 		name           string
-		passphrase     string
 		passphraseFile string
 		message        string
 		pubkey         string
@@ -32,8 +31,7 @@ var (
 func init() {
 	rootCmd.AddCommand(signCmd)
 	signCmd.Flags().StringVarP(&signArgs.name, "name", "n", "", "Name of the wallet to use")
-	signCmd.Flags().StringVar(&signArgs.passphrase, "passphrase", "", "Passphrase to access the wallet")
-	signCmd.Flags().StringVar(&signArgs.passphraseFile, "passphrase-file", "", "Path of the file containing the passphrase to access the wallet")
+	signCmd.Flags().StringVarP(&signArgs.passphraseFile, "passphrase-file", "p", "", "Path of the file containing the passphrase to access the wallet")
 	signCmd.Flags().StringVarP(&signArgs.message, "message", "m", "", "Message to be signed (base64)")
 	signCmd.Flags().StringVarP(&signArgs.pubkey, "pubkey", "k", "", "Public key to be used (hex)")
 }
@@ -58,7 +56,7 @@ func runSign(_ *cobra.Command, _ []string) error {
 		return errors.New("message should be encoded into base64")
 	}
 
-	passphrase, err := getPassphrase(signArgs.passphrase, signArgs.passphraseFile, false)
+	passphrase, err := getPassphrase(signArgs.passphraseFile, false)
 	if err != nil {
 		return err
 	}

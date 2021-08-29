@@ -12,7 +12,6 @@ import (
 var (
 	keyTaintArgs struct {
 		name           string
-		passphrase     string
 		passphraseFile string
 		pubkey         string
 	}
@@ -28,8 +27,7 @@ var (
 func init() {
 	keyCmd.AddCommand(keyTaintCmd)
 	keyTaintCmd.Flags().StringVarP(&keyTaintArgs.name, "name", "n", "", "Name of the wallet to use")
-	keyTaintCmd.Flags().StringVar(&keyTaintArgs.passphrase, "passphrase", "", "Passphrase to access the wallet")
-	keyTaintCmd.Flags().StringVar(&keyTaintArgs.passphraseFile, "passphrase-file", "", "Path of the file containing the passphrase to access the wallet")
+	keyTaintCmd.Flags().StringVarP(&keyTaintArgs.passphraseFile, "passphrase-file", "p", "", "Path of the file containing the passphrase to access the wallet")
 	keyTaintCmd.Flags().StringVarP(&keyTaintArgs.pubkey, "pubkey", "k", "", "Public key to be used (hex)")
 }
 
@@ -43,7 +41,7 @@ func runKeyTaint(_ *cobra.Command, _ []string) error {
 		return errors.New("wallet name is required")
 	}
 
-	passphrase, err := getPassphrase(keyTaintArgs.passphrase, keyTaintArgs.passphraseFile, false)
+	passphrase, err := getPassphrase(keyTaintArgs.passphraseFile, false)
 	if err != nil {
 		return err
 	}
