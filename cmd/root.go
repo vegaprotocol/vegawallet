@@ -26,7 +26,7 @@ var (
 
 	// rootCmd represents the base command when called without any subcommands
 	rootCmd = &cobra.Command{
-		Use:               "vegawallet",
+		Use:               os.Args[0],
 		Short:             "The Vega wallet",
 		Long:              `The Vega wallet`,
 		PersistentPreRunE: rootPreRun,
