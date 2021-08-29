@@ -39,7 +39,11 @@ func runList(_ *cobra.Command, _ []string) error {
 			p.Text(fmt.Sprintf("- %s", w)).Jump()
 		}
 	} else if rootArgs.output == "json" {
-		return vgjson.Print(wallets)
+		return vgjson.Print(struct {
+			Wallets []string
+		}{
+			Wallets: wallets,
+		})
 	}
 
 	return nil
