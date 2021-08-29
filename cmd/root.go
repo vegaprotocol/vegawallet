@@ -9,6 +9,7 @@ import (
 
 	"code.vegaprotocol.io/go-wallet/cmd/printer"
 	vgfs "code.vegaprotocol.io/go-wallet/libs/fs"
+	vgjson "code.vegaprotocol.io/go-wallet/libs/json"
 	"code.vegaprotocol.io/go-wallet/version"
 	"code.vegaprotocol.io/go-wallet/wallet"
 	wstorev1 "code.vegaprotocol.io/go-wallet/wallet/store/v1"
@@ -79,14 +80,26 @@ func checkVersion() {
 
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
-		p := printer.NewHumanPrinter()
-		p.CrossMark().DangerText(err.Error()).Jump()
+		if rootArgs.output == "human" {
+			p := printer.NewHumanPrinter()
+			p.CrossMark().DangerText(err.Error()).Jump()
+		} else if rootArgs.output == "json" {
+			jsonErr := vgjson.Print(struct {
+				Error string
+			}{
+				Error: err.Error(),
+			})
+			if jsonErr != nil {
+				fmt.Printf("couldn't format JSON: %v", jsonErr)
+				fmt.Printf("original error: %v", err)
+			}
+		}
 		os.Exit(1)
 	}
 }
 
 func init() {
-	rootCmd.PersistentFlags().StringVarP(&rootArgs.output, "output", "o", "human", "Specify the output format: plain,json,human")
+	rootCmd.PersistentFlags().StringVarP(&rootArgs.output, "output", "o", "human", "Specify the output format: json,human")
 	rootCmd.PersistentFlags().StringVarP(&rootArgs.rootPath, "root-path", "r", vgfs.DefaultVegaDir(), "Root directory for the Vega wallet configuration")
 	rootCmd.PersistentFlags().BoolVar(&rootArgs.noVersionCheck, "no-version-check", false, "Do not check for new version of the Vega wallet")
 }
