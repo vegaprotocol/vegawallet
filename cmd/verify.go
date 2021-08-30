@@ -70,12 +70,12 @@ func runVerify(cmd *cobra.Command, args []string) error {
 
 	err = handler.LoginWallet(verifyArgs.name, passphrase)
 	if err != nil {
-		return fmt.Errorf("could not login to the wallet: %v", err)
+		return fmt.Errorf("could not login to the wallet: %w", err)
 	}
 
 	verified, err := handler.VerifyAny(verifyArgs.name, decodedMessage, decodedSig, verifyArgs.pubkey)
 	if err != nil {
-		return fmt.Errorf("could not verify the message: %v", err)
+		return fmt.Errorf("could not verify the message: %w", err)
 	}
 
 	fmt.Printf("%v\n", verified)

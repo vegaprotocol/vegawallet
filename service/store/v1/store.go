@@ -47,17 +47,23 @@ func NewStore(configPath string) (*Store, error) {
 // Initialise creates the folders. It does nothing if a folder already
 // exists.
 func (s *Store) Initialise() error {
-	err := createFolder(s.configPath)
-	if err != nil {
-		return err
+	if err := vgfs.EnsureDir(s.configPath); err != nil {
+		return fmt.Errorf("error creating directory %s: %w", s.configPath, err)
 	}
 
-	err = createFolder(s.keyFolderPath)
-	if err != nil {
-		return err
+	if err := vgfs.EnsureDir(s.keyFolderPath); err != nil {
+		return fmt.Errorf("error creating directory %s: %w", s.keyFolderPath, err)
 	}
 
 	return nil
+}
+
+func (s *Store) ConfigExists() (bool, error) {
+	return vgfs.FileExists(s.configFilePath)
+}
+
+func (s *Store) GetConfigPath() string {
+	return s.configFilePath
 }
 
 func (s *Store) GetConfig() (*service.Config, error) {
@@ -94,15 +100,34 @@ func (s *Store) SaveConfig(cfg *service.Config, overwrite bool) error {
 		return err
 	}
 
-	if err := writeFile(buf.Bytes(), s.configFilePath); err != nil {
-		return fmt.Errorf("unable to save configuration: %v", err)
+	if err := vgfs.WriteFile(buf.Bytes(), s.configFilePath); err != nil {
+		return fmt.Errorf("unable to save configuration: %w", err)
 	}
 
 	return nil
 }
 
+func (s *Store) RSAKeysExists() (bool, error) {
+	privKeyExists, err := vgfs.FileExists(s.privRsaKeyFilePath)
+	if err != nil {
+		return false, err
+	}
+	pubKeyExists, err := vgfs.FileExists(s.pubRsaKeyFilePath)
+	if err != nil {
+		return false, err
+	}
+	return privKeyExists && pubKeyExists, nil
+}
+
+func (s *Store) GetRSAKeysPath() map[string]string {
+	return map[string]string{
+		"public":  s.pubRsaKeyFilePath,
+		"private": s.privRsaKeyFilePath,
+	}
+}
+
 func (s *Store) SaveRSAKeys(keys *service.RSAKeys, overwrite bool) error {
-	if ok, _ := vgfs.PathExists(s.keyFolderPath); !ok {
+	if exists, _ := vgfs.PathExists(s.keyFolderPath); !exists {
 		return ErrRSAFolderDoesNotExists
 	}
 
@@ -114,16 +139,16 @@ func (s *Store) SaveRSAKeys(keys *service.RSAKeys, overwrite bool) error {
 				return err
 			}
 		} else {
-			return fmt.Errorf("RSA keys already exist at path: %v", s.keyFolderPath)
+			return fmt.Errorf("RSA keys already exist at path: %vg", s.keyFolderPath)
 		}
 	}
 
-	if err := writeFile(keys.Priv, s.privRsaKeyFilePath); err != nil {
-		return fmt.Errorf("unable to save private key: %v", err)
+	if err := vgfs.WriteFile(keys.Priv, s.privRsaKeyFilePath); err != nil {
+		return fmt.Errorf("unable to save private key: %w", err)
 	}
 
-	if err := writeFile(keys.Pub, s.pubRsaKeyFilePath); err != nil {
-		return fmt.Errorf("unable to save public key: %v", err)
+	if err := vgfs.WriteFile(keys.Pub, s.pubRsaKeyFilePath); err != nil {
+		return fmt.Errorf("unable to save public key: %w", err)
 	}
 
 	return nil
@@ -148,7 +173,7 @@ func (s *Store) GetRsaKeys() (*service.RSAKeys, error) {
 
 func (s *Store) removeConfigFile() error {
 	if err := os.Remove(s.configFilePath); err != nil {
-		return fmt.Errorf("unable to remove configuration: %v", err)
+		return fmt.Errorf("unable to remove configuration: %w", err)
 	}
 
 	return nil
@@ -156,42 +181,12 @@ func (s *Store) removeConfigFile() error {
 
 func (s *Store) removeExistingRSAKeys() error {
 	if err := os.RemoveAll(s.keyFolderPath); err != nil {
-		return fmt.Errorf("unable to remove RSA keys: %v", err)
+		return fmt.Errorf("unable to remove RSA keys: %w", err)
 	}
 
-	return createFolder(s.keyFolderPath)
-}
-
-func writeFile(content []byte, fileName string) error {
-	f, err := os.Create(fileName)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-
-	err = f.Chmod(0600)
-	if err != nil {
-		return err
+	if err := vgfs.EnsureDir(s.keyFolderPath); err != nil {
+		return fmt.Errorf("error creating directory %s: %w", s.keyFolderPath, err)
 	}
 
-	_, err = f.Write(content)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func createFolder(folder string) error {
-	ok, err := vgfs.PathExists(folder)
-	if !ok {
-		if _, ok := err.(*vgfs.PathNotFound); !ok {
-			return fmt.Errorf("invalid directory path %s: %v", folder, err)
-		}
-
-		if err := vgfs.EnsureDir(folder); err != nil {
-			return fmt.Errorf("error creating directory %s: %v", folder, err)
-		}
-	}
 	return nil
 }

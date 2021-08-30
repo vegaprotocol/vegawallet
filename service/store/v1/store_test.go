@@ -19,6 +19,8 @@ func TestFileStoreV1(t *testing.T) {
 	t.Run("Saving new config succeeds", testFileStoreV1SavingNewConfigSucceeds)
 	t.Run("Overwriting existing config succeeds", testFileStoreV1OverwritingExistingConfigSucceeds)
 	t.Run("Overwriting non-existing config succeeds", testFileStoreV1OverwritingNonExistingConfigSucceeds)
+	t.Run("Verifying non-existing config succeeds", testFileStoreV1VerifyingNonExistingConfigSucceeds)
+	t.Run("Verifying config succeeds", testFileStoreV1VerifyingExistingConfigSucceeds)
 	t.Run("Getting non-existing config fails", testFileStoreV1GetNonExistingConfigFails)
 	t.Run("Getting config succeeds", testFileStoreV1GetConfigSucceeds)
 	t.Run("Saving RSA keys without folder fails", testFileStoreV1SaveRSAKeysWithoutFolderFails)
@@ -26,6 +28,8 @@ func TestFileStoreV1(t *testing.T) {
 	t.Run("Saving RSA keys succeeds", testFileStoreV1SaveRSAKeysSucceeds)
 	t.Run("Overwriting already existing RSA keys succeeds", testFileStoreV1OverwritingAlreadyExistingRSAKeysSucceeds)
 	t.Run("Overwriting non-existing RSA keys succeeds", testFileStoreV1OverwritingNonExistingRSAKeysSucceeds)
+	t.Run("Verifying non-existing RSA keys fails", testFileStoreV1VerifyingNonExistingRSAKeysFails)
+	t.Run("Verifying existing RSA keys succeeds", testFileStoreV1VerifyingExistingRSAKeysSucceeds)
 	t.Run("Getting non-existing RSA keys fails", testFileStoreV1GetNonExistingRSAKeysFails)
 	t.Run("Getting existing RSA keys succeeds", testFileStoreV1GetExistingRSAKeysSucceeds)
 }
@@ -151,6 +155,43 @@ func testFileStoreV1OverwritingExistingConfigSucceeds(t *testing.T) {
 	// then
 	require.NoError(t, err)
 	assert.Equal(t, &cfg, returnedCfg)
+}
+
+func testFileStoreV1VerifyingNonExistingConfigSucceeds(t *testing.T) {
+	configDir := newConfigDir()
+	defer configDir.Remove()
+
+	// given
+	s := NewInitialisedStore(configDir)
+
+	// when
+	exists, err := s.ConfigExists()
+
+	// then
+	assert.NoError(t, err)
+	assert.False(t, exists)
+}
+
+func testFileStoreV1VerifyingExistingConfigSucceeds(t *testing.T) {
+	configDir := newConfigDir()
+	defer configDir.Remove()
+
+	// given
+	s := NewInitialisedStore(configDir)
+	cfg := service.NewDefaultConfig()
+
+	// when
+	err := s.SaveConfig(&cfg, false)
+
+	// then
+	require.NoError(t, err)
+
+	// when
+	exists, err := s.ConfigExists()
+
+	// then
+	assert.NoError(t, err)
+	assert.True(t, exists)
 }
 
 func testFileStoreV1GetNonExistingConfigFails(t *testing.T) {
@@ -323,6 +364,48 @@ func testFileStoreV1OverwritingNonExistingRSAKeysSucceeds(t *testing.T) {
 	// then
 	require.NoError(t, err)
 	assert.Equal(t, keys, returnedKeys)
+}
+
+func testFileStoreV1VerifyingNonExistingRSAKeysFails(t *testing.T) {
+	configDir := newConfigDir()
+	defer configDir.Remove()
+
+	// given
+	s := NewInitialisedStore(configDir)
+
+	// when
+	exists, err := s.RSAKeysExists()
+
+	// then
+	assert.NoError(t, err)
+	assert.False(t, exists)
+}
+
+func testFileStoreV1VerifyingExistingRSAKeysSucceeds(t *testing.T) {
+	configDir := newConfigDir()
+	defer configDir.Remove()
+
+	// given
+	s := NewInitialisedStore(configDir)
+	keys := &service.RSAKeys{
+		Pub:  []byte("my public key"),
+		Priv: []byte("my private key"),
+	}
+
+	// when
+	err := s.SaveRSAKeys(keys, false)
+
+	// then
+	require.NoError(t, err)
+	assertFileAccess(t, configDir.PublicRSAKeyFilePath())
+	assertFileAccess(t, configDir.PrivateRSAKeyFilePath())
+
+	// when
+	exists, err := s.RSAKeysExists()
+
+	// then
+	require.NoError(t, err)
+	assert.True(t, exists)
 }
 
 func testFileStoreV1GetNonExistingRSAKeysFails(t *testing.T) {

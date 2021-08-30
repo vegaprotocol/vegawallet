@@ -26,9 +26,8 @@ func NewStore(walletsPath string) (*Store, error) {
 // Initialise creates the folders. It does nothing if a folder already
 // exists.
 func (s *Store) Initialise() error {
-	err := createFolder(s.walletsPath)
-	if err != nil {
-		return err
+	if err := vgfs.EnsureDir(s.walletsPath); err != nil {
+		return fmt.Errorf("error creating directory %s: %w", s.walletsPath, err)
 	}
 
 	return nil
@@ -37,13 +36,13 @@ func (s *Store) Initialise() error {
 func (s *Store) WalletExists(name string) bool {
 	walletPath := s.walletPath(name)
 
-	ok, _ := vgfs.PathExists(walletPath)
-	return ok
+	exists, _ := vgfs.PathExists(walletPath)
+	return exists
 }
 
 func (s *Store) ListWallets() ([]string, error) {
 	walletsParentDir, walletsDir := filepath.Split(s.walletsPath)
-	entries, err := fs.ReadDir(os.DirFS(walletsParentDir),walletsDir)
+	entries, err := fs.ReadDir(os.DirFS(walletsParentDir), walletsDir)
 	if err != nil {
 		return nil, err
 	}
@@ -58,7 +57,7 @@ func (s *Store) ListWallets() ([]string, error) {
 func (s *Store) GetWallet(name, passphrase string) (wallet.Wallet, error) {
 	walletPath := s.walletPath(name)
 
-	if ok, _ := vgfs.PathExists(walletPath); !ok {
+	if exists, _ := vgfs.FileExists(walletPath); !exists {
 		return nil, wallet.ErrWalletDoesNotExists
 	}
 
@@ -109,22 +108,7 @@ func (s *Store) SaveWallet(w wallet.Wallet, passphrase string) error {
 		return err
 	}
 
-	f, err := os.Create(s.walletPath(w.Name()))
-	if err != nil {
-		return err
-	}
-
-	err = f.Chmod(0600)
-	if err != nil {
-		return err
-	}
-
-	_, err = f.Write(encBuf)
-	if err != nil {
-		return err
-	}
-
-	return f.Close()
+	return vgfs.WriteFile(encBuf, s.walletPath(w.Name()))
 }
 
 func (s *Store) GetWalletPath(name string) string {
@@ -133,18 +117,4 @@ func (s *Store) GetWalletPath(name string) string {
 
 func (s *Store) walletPath(name string) string {
 	return filepath.Join(s.walletsPath, name)
-}
-
-func createFolder(folder string) error {
-	ok, err := vgfs.PathExists(folder)
-	if !ok {
-		if _, ok := err.(*vgfs.PathNotFound); !ok {
-			return fmt.Errorf("invalid directory path %s: %v", folder, err)
-		}
-
-		if err := vgfs.EnsureDir(folder); err != nil {
-			return fmt.Errorf("error creating directory %s: %v", folder, err)
-		}
-	}
-	return nil
 }

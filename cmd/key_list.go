@@ -47,17 +47,17 @@ func runKeyList(cmd *cobra.Command, args []string) error {
 
 	err = handler.LoginWallet(keyListArgs.name, passphrase)
 	if err != nil {
-		return fmt.Errorf("could not login to the wallet: %v", err)
+		return fmt.Errorf("could not login to the wallet: %w", err)
 	}
 
 	keys, err := handler.ListKeyPairs(keyListArgs.name)
 	if err != nil {
-		return fmt.Errorf("could not list the public keys: %v", err)
+		return fmt.Errorf("could not list the public keys: %w", err)
 	}
 
 	buf, err := json.MarshalIndent(keys, " ", " ")
 	if err != nil {
-		return fmt.Errorf("unable to marshal message: %v", err)
+		return fmt.Errorf("unable to marshal message: %w", err)
 	}
 
 	fmt.Printf("List of all your keys:\n")

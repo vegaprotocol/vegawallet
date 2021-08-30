@@ -62,7 +62,7 @@ func runSign(cmd *cobra.Command, args []string) error {
 
 	err = handler.LoginWallet(signArgs.name, passphrase)
 	if err != nil {
-		return fmt.Errorf("could not login to the wallet: %v", err)
+		return fmt.Errorf("could not login to the wallet: %w", err)
 	}
 	sig, err := handler.SignAny(signArgs.name, decodedMessage, signArgs.pubkey)
 	if err != nil {

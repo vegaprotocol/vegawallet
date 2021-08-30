@@ -19,7 +19,7 @@ func GenerateRSAKeys() (*RSAKeys, error) {
 
 	key, err := rsa.GenerateKey(rand.Reader, bitSize)
 	if err != nil {
-		return nil, fmt.Errorf("unable to generate rsa keys: %v", err)
+		return nil, fmt.Errorf("unable to generate rsa keys: %w", err)
 	}
 
 	privateKey, err := toPrivatePKCS1Key(key)

@@ -59,7 +59,7 @@ func runKeyGenerate(cmd *cobra.Command, args []string) error {
 	if !walletExists {
 		mnemonic, err := handler.CreateWallet(keyGenerateArgs.name, passphrase)
 		if err != nil {
-			return fmt.Errorf("couldn't create wallet: %v", err)
+			return fmt.Errorf("couldn't create wallet: %w", err)
 		}
 		fmt.Printf("new mnemonic:\n")
 		fmt.Printf("%s\n", mnemonic)
@@ -67,12 +67,12 @@ func runKeyGenerate(cmd *cobra.Command, args []string) error {
 
 	keyPair, err := handler.GenerateKeyPair(keyGenerateArgs.name, passphrase, metas)
 	if err != nil {
-		return fmt.Errorf("could not generate a key pair: %v", err)
+		return fmt.Errorf("could not generate a key pair: %w", err)
 	}
 
 	buf, err := json.MarshalIndent(keyPair, " ", " ")
 	if err != nil {
-		return fmt.Errorf("unable to marshal message: %v", err)
+		return fmt.Errorf("unable to marshal message: %w", err)
 	}
 	fmt.Printf("new generated keys:\n")
 	fmt.Printf("%s\n", string(buf))

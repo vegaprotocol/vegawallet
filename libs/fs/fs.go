@@ -1,7 +1,6 @@
 package fs
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -10,17 +9,6 @@ import (
 const (
 	dirPerms = 0700
 )
-
-// PathNotFound represent an error when a fd cannot be found
-// on the user filesystem
-type PathNotFound struct {
-	path string
-}
-
-// Error return an human readable formating of the error
-func (err *PathNotFound) Error() string {
-	return fmt.Sprintf("not found: %s", err.path)
-}
 
 // DefaultVegaDir returns the location to vega config files and data files:
 // binary is in /usr/bin/ -> look for /etc/vega/config.toml
@@ -72,21 +60,41 @@ func PathExists(path string) (bool, error) {
 		return true, nil
 	}
 	if os.IsNotExist(err) {
-		return false, &PathNotFound{path}
+		return false, nil
 	}
 	return false, err
 }
 
-// FileExists similar to PathExists, but ensures the path is to a file, not a directory
+// FileExists similar to PathExists, but ensures the path is to a file, not a
+// directory.
 func FileExists(path string) (bool, error) {
 	fs, err := os.Stat(path)
 	if err == nil {
-		// fileStat -> is not a directory
-		ok := !fs.IsDir()
-		return ok, nil
+		return !fs.IsDir(), nil
 	}
 	if os.IsNotExist(err) {
-		return false, &PathNotFound{path}
+		return false, nil
 	}
 	return false, err
+}
+
+
+func WriteFile(content []byte, fileName string) error {
+	f, err := os.Create(fileName)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	err = f.Chmod(0600)
+	if err != nil {
+		return err
+	}
+
+	_, err = f.Write(content)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
