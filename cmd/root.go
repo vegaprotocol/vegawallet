@@ -96,6 +96,8 @@ func Execute() {
 					fmt.Printf("couldn't format JSON: %v\n", jsonErr)
 					fmt.Printf("original error: %v\n", err)
 				}
+			} else {
+				fmt.Println(err)
 			}
 		}
 		os.Exit(1)

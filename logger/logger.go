@@ -5,10 +5,10 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-func New(level zapcore.Level) (*zap.Logger, error) {
+func New(level zapcore.Level, encoding string) (*zap.Logger, error) {
 	config := zap.Config{
 		Level:             zap.NewAtomicLevelAt(level),
-		Encoding:          "json",
+		Encoding:          encoding,
 		EncoderConfig:     zapcore.EncoderConfig{
 			MessageKey:     "message",
 			LevelKey:       "level",
