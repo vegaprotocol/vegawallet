@@ -57,7 +57,7 @@ pipeline {
                         '''
                         sh label: 'Sanity check', script: '''
                             file ${OUTPUT}
-                            ${OUTPUT} version
+                            ${OUTPUT} version --output json
                             ${OUTPUT} help
                         '''
                     }
