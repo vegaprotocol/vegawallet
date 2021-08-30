@@ -53,7 +53,6 @@ func runKeyTaint(_ *cobra.Command, _ []string) error {
 
 	if rootArgs.output == "human" {
 		p := printer.NewHumanPrinter()
-		p.CheckMark().Text("Key pair has been tainted").Jump()
 		p.CheckMark().SuccessText("Tainting succeeded").NJump(2)
 
 		p.RedArrow().DangerText("Important").Jump()

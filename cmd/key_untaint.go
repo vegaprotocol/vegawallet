@@ -52,7 +52,6 @@ func runKeyUntaint(_ *cobra.Command, _ []string) error {
 
 	if rootArgs.output == "human" {
 		p := printer.NewHumanPrinter()
-		p.CheckMark().Text("Key pair has been untainted").Jump()
 		p.CheckMark().SuccessText("Untainting succeeded").NJump(2)
 
 		p.RedArrow().DangerText("Important").Jump()
