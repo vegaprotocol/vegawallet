@@ -10,6 +10,8 @@ require (
 	github.com/golang/mock v1.4.3
 	github.com/golang/protobuf v1.4.3
 	github.com/julienschmidt/httprouter v1.3.0
+	github.com/mattn/go-isatty v0.0.13
+	github.com/muesli/termenv v0.9.0
 	github.com/oasisprotocol/curve25519-voi v0.0.0-20210716083614-f38f8e8b0b84
 	github.com/rs/cors v1.7.0
 	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966

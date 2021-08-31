@@ -40,7 +40,7 @@ The `--name` flag sets the name of your wallet.
 
 It will then prompt you to input a passphrase, and then confirm that passphrase.
 You'll use this username and passphrase to login to Vega Console. You can also
-specify the passphrase with the ``--passphrase`` flag.
+specify the passphrase with the `--passphrase-file` flag.
 
 You have the opportunity to attach metadata to your key with the ``--meta``
 flag (more on this below).
@@ -69,7 +69,7 @@ vegawallet import --name "YOUR_USERNAME" --mnemonic "YOUR_MNEMONIC"
 
 It will then prompt you to input a passphrase, and then confirm that passphrase.
 You'll use this username and passphrase to login to Vega Console. You can also
-specify the passphrase with the ``--passphrase`` flag.
+specify the passphrase with the `--passphrase-file` flag.
 
 This command is only able to import the wallet from which you can re-generate
 your key pairs.
@@ -91,7 +91,7 @@ vegawallet key generate --name "YOUR_USERNAME"
 ```
 
 It will then prompt you to input a passphrase. You can also specify the
-passphrase with the ``--passphrase`` flag.
+passphrase with the `--passphrase-file` flag.
 
 If the wallet does not exist, it will automatically create one. See
 ["Create a wallet"](#create-a-wallet) for more information.
@@ -134,11 +134,11 @@ vegawallet key taint --name "YOUR_NAME" --pubkey "YOUR_HEX_PUBIC_KEY"
 ```
 
 It will then prompt you to input a passphrase. You can also specify the
-passphrase with the ``--passphrase`` flag.
+passphrase with the `--passphrase-file` flag.
 
 ## Untainting a key pair
 
-You may have tainted a key by mistake. if you want to untaint it, use the
+You may have tainted a key by mistake. If you want to untaint it, use the
 following command:
 
 ```sh
@@ -146,7 +146,7 @@ vegawallet key untaint --name "YOUR_NAME" --pubkey "YOUR_HEX_PUBIC_KEY"
 ```
 
 It will then prompt you to input a passphrase. You can also specify the
-passphrase with the ``--passphrase`` flag.
+passphrase with the `--passphrase-file` flag.
 
 ### Important
 
@@ -161,7 +161,7 @@ vegawallet key list --name "YOUR_NAME"
 ```
 
 It will then prompt you to input a passphrase. You can also specify the
-passphrase with the ``--passphrase`` flag.
+passphrase with the `--passphrase-file` flag.
 
 ### Important
 
@@ -179,7 +179,7 @@ vegawallet verify --name "YOUR_NAME" --pubkey "YOUR_HEX_PUBIC_KEY" --message "c3
 ```
 
 It will then prompt you to input a passphrase. You can also specify the
-passphrase with the ``--passphrase`` flag.
+passphrase with the `--passphrase-file` flag.
 
 ## Run the service
 

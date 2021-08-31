@@ -8,6 +8,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"code.vegaprotocol.io/go-wallet/cmd/printer"
 	"code.vegaprotocol.io/go-wallet/console"
 	"code.vegaprotocol.io/go-wallet/logger"
 	"code.vegaprotocol.io/go-wallet/service"
@@ -25,8 +26,8 @@ var (
 
 	serviceRunCmd = &cobra.Command{
 		Use:   "run",
-		Short: "Start the vega wallet service",
-		Long:  "Start a vega wallet service behind an HTTP server",
+		Short: "Start the Vega wallet service",
+		Long:  "Start a Vega wallet service behind an HTTP server",
 		RunE:  runServiceRun,
 	}
 )
@@ -37,7 +38,9 @@ func init() {
 	serviceRunCmd.Flags().BoolVarP(&serviceRunArgs.noBrowser, "no-browser", "n", false, "Do not open the default browser if the console proxy is stated")
 }
 
-func runServiceRun(cmd *cobra.Command, args []string) error {
+func runServiceRun(_ *cobra.Command, _ []string) error {
+	p := printer.NewHumanPrinter()
+
 	handler, err := newWalletHandler(rootArgs.rootPath)
 	if err != nil {
 		return err
@@ -53,7 +56,12 @@ func runServiceRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	log, err := logger.New(cfg.Level.Level)
+	encoding := "json"
+	if rootArgs.output == "human" {
+		encoding = "console"
+	}
+
+	log, err := logger.New(cfg.Level.Level, encoding)
 	if err != nil {
 		return err
 	}
@@ -74,6 +82,13 @@ func runServiceRun(cmd *cobra.Command, args []string) error {
 		}
 	}()
 
+	serviceHost := fmt.Sprintf("http://%v:%v", cfg.Host, cfg.Port)
+	if rootArgs.output == "human" {
+		p.CheckMark().Text("HTTP service started at: ").SuccessText(serviceHost).Jump()
+	} else if rootArgs.output == "json" {
+		log.Info(fmt.Sprintf("HTTP service started at: %s", serviceHost))
+	}
+
 	var cs *console.Console
 	if serviceRunArgs.startConsole {
 		cs = console.NewConsole(cfg.Console.LocalPort, cfg.Console.URL, cfg.Nodes.Hosts[0])
@@ -85,6 +100,13 @@ func runServiceRun(cmd *cobra.Command, args []string) error {
 			}
 		}()
 
+		consoleLocalHost := fmt.Sprintf("http://127.0.0.1:%v", cfg.Console.LocalPort)
+		if rootArgs.output == "human" {
+			p.CheckMark().Text("Console proxy pointing to ").Bold(cfg.Console.URL).Text(" started at: ").SuccessText(consoleLocalHost).Jump()
+		} else if rootArgs.output == "json" {
+			log.Info(fmt.Sprintf("Console proxy pointing to %s started at: %s", cfg.Console.URL, consoleLocalHost))
+		}
+
 		if !serviceRunArgs.noBrowser {
 			err := open.Run(cs.GetBrowserURL())
 			if err != nil {
@@ -94,11 +116,13 @@ func runServiceRun(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	printStartupMessage(
-		cfg.Console.URL,
-		fmt.Sprintf("127.0.0.1:%v", cfg.Console.LocalPort),
-		fmt.Sprintf("%v:%v", cfg.Host, cfg.Port),
-	)
+	if rootArgs.output == "human" {
+		p.CheckMark().SuccessText("Starting successful").NJump(2)
+		p.BlueArrow().InfoText("Available endpoints").Jump()
+		printEndpoints(serviceHost)
+		p.NJump(2)
+		p.BlueArrow().InfoText("Logs").Jump()
+	}
 
 	waitSig(ctx, cancel, log)
 

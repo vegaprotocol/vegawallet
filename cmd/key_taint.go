@@ -3,14 +3,15 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"os"
 
+	"code.vegaprotocol.io/go-wallet/cmd/printer"
 	"github.com/spf13/cobra"
 )
 
 var (
 	keyTaintArgs struct {
 		name           string
-		passphrase     string
 		passphraseFile string
 		pubkey         string
 	}
@@ -26,12 +27,11 @@ var (
 func init() {
 	keyCmd.AddCommand(keyTaintCmd)
 	keyTaintCmd.Flags().StringVarP(&keyTaintArgs.name, "name", "n", "", "Name of the wallet to use")
-	keyTaintCmd.Flags().StringVar(&keyTaintArgs.passphrase, "passphrase", "", "Passphrase to access the wallet")
-	keyTaintCmd.Flags().StringVar(&keyTaintArgs.passphraseFile, "passphrase-file", "", "Path of the file containing the passphrase to access the wallet")
+	keyTaintCmd.Flags().StringVarP(&keyTaintArgs.passphraseFile, "passphrase-file", "p", "", "Path of the file containing the passphrase to access the wallet")
 	keyTaintCmd.Flags().StringVarP(&keyTaintArgs.pubkey, "pubkey", "k", "", "Public key to be used (hex)")
 }
 
-func runKeyTaint(cmd *cobra.Command, args []string) error {
+func runKeyTaint(_ *cobra.Command, _ []string) error {
 	handler, err := newWalletHandler(rootArgs.rootPath)
 	if err != nil {
 		return err
@@ -41,7 +41,7 @@ func runKeyTaint(cmd *cobra.Command, args []string) error {
 		return errors.New("wallet name is required")
 	}
 
-	passphrase, err := getPassphrase(keyTaintArgs.passphrase, keyTaintArgs.passphraseFile, false)
+	passphrase, err := getPassphrase(keyTaintArgs.passphraseFile, false)
 	if err != nil {
 		return err
 	}
@@ -51,6 +51,18 @@ func runKeyTaint(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("could not taint the key: %w", err)
 	}
 
-	fmt.Printf("The key has been tainted.\n")
+	if rootArgs.output == "human" {
+		p := printer.NewHumanPrinter()
+		p.CheckMark().SuccessText("Tainting succeeded").NJump(2)
+
+		p.RedArrow().DangerText("Important").Jump()
+		p.Text("If you tainted a key for security reasons, you should not untaint it.").NJump(2)
+
+		p.BlueArrow().InfoText("Untaint a key").Jump()
+		p.Text("You may have tainted a key by mistake. If you want to untaint it, use the following command:").NJump(2)
+		p.Code(fmt.Sprintf("%s key untaint --name \"%s\" --pubkey \"%s\"", os.Args[0], keyTaintArgs.name, keyTaintArgs.pubkey)).NJump(2)
+		p.Text("For more information, use ").Bold("--help").Text(" flag.").Jump()
+	}
+
 	return nil
 }

@@ -28,6 +28,10 @@ var (
 	Version = defaultVersion
 )
 
+func IsUnreleased(currentVersion string) bool {
+	return currentVersion == defaultVersion
+}
+
 // Check returns a newer version, or an error or nil for both
 // if no error happened, and no updates are needed
 func Check(currentVersion string) (*semver.Version, error) {

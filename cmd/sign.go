@@ -4,14 +4,16 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"os"
 
+	"code.vegaprotocol.io/go-wallet/cmd/printer"
+	vgjson "code.vegaprotocol.io/go-wallet/libs/json"
 	"github.com/spf13/cobra"
 )
 
 var (
 	signArgs struct {
 		name           string
-		passphrase     string
 		passphraseFile string
 		message        string
 		pubkey         string
@@ -29,13 +31,12 @@ var (
 func init() {
 	rootCmd.AddCommand(signCmd)
 	signCmd.Flags().StringVarP(&signArgs.name, "name", "n", "", "Name of the wallet to use")
-	signCmd.Flags().StringVar(&signArgs.passphrase, "passphrase", "", "Passphrase to access the wallet")
-	signCmd.Flags().StringVar(&signArgs.passphraseFile, "passphrase-file", "", "Path of the file containing the passphrase to access the wallet")
+	signCmd.Flags().StringVarP(&signArgs.passphraseFile, "passphrase-file", "p", "", "Path of the file containing the passphrase to access the wallet")
 	signCmd.Flags().StringVarP(&signArgs.message, "message", "m", "", "Message to be signed (base64)")
 	signCmd.Flags().StringVarP(&signArgs.pubkey, "pubkey", "k", "", "Public key to be used (hex)")
 }
 
-func runSign(cmd *cobra.Command, args []string) error {
+func runSign(_ *cobra.Command, _ []string) error {
 	handler, err := newWalletHandler(rootArgs.rootPath)
 	if err != nil {
 		return err
@@ -55,7 +56,7 @@ func runSign(cmd *cobra.Command, args []string) error {
 		return errors.New("message should be encoded into base64")
 	}
 
-	passphrase, err := getPassphrase(signArgs.passphrase, signArgs.passphraseFile, false)
+	passphrase, err := getPassphrase(signArgs.passphraseFile, false)
 	if err != nil {
 		return err
 	}
@@ -64,11 +65,34 @@ func runSign(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return fmt.Errorf("could not login to the wallet: %w", err)
 	}
+
 	sig, err := handler.SignAny(signArgs.name, decodedMessage, signArgs.pubkey)
 	if err != nil {
 		return err
 	}
 
-	fmt.Printf("%v\n", base64.StdEncoding.EncodeToString(sig))
+	encodedSig := base64.StdEncoding.EncodeToString(sig)
+
+	if rootArgs.output == "human" {
+		p := printer.NewHumanPrinter()
+		p.CheckMark().SuccessText("Message signature successful").NJump(2)
+		p.Text("Signature (base64):").Jump().WarningText(encodedSig).NJump(2)
+
+		p.BlueArrow().InfoText("Verify a signature").Jump()
+		p.Text("To verify a base-64 encoded message, use the following commands:").NJump(2)
+		p.Code(fmt.Sprintf("%s verify --name \"%s\" --pubkey %s --message \"%s\" --signature %s", os.Args[0], signArgs.name, signArgs.pubkey, signArgs.message, encodedSig)).NJump(2)
+		p.Text("For more information, use ").Bold("--help").Text(" flag.").Jump()
+	} else if rootArgs.output == "json" {
+		return printSignJson(encodedSig)
+	}
+
 	return nil
+}
+
+func printSignJson(sig string) error {
+	return vgjson.Print(struct {
+		Signature string
+	}{
+		Signature: sig,
+	})
 }

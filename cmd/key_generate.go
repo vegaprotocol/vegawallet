@@ -1,11 +1,13 @@
 package cmd
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
 	"strings"
 
+	"code.vegaprotocol.io/go-wallet/cmd/printer"
+	vgjson "code.vegaprotocol.io/go-wallet/libs/json"
 	"code.vegaprotocol.io/go-wallet/wallet"
 	"github.com/spf13/cobra"
 )
@@ -13,7 +15,6 @@ import (
 var (
 	keyGenerateArgs struct {
 		name           string
-		passphrase     string
 		passphraseFile string
 		metas          string
 	}
@@ -29,13 +30,18 @@ var (
 func init() {
 	keyCmd.AddCommand(keyGenerateCmd)
 	keyGenerateCmd.Flags().StringVarP(&keyGenerateArgs.name, "name", "n", "", "Name of the wallet to use")
-	keyGenerateCmd.Flags().StringVar(&keyGenerateArgs.passphrase, "passphrase", "", "Passphrase to access the wallet")
-	keyGenerateCmd.Flags().StringVar(&keyGenerateArgs.passphraseFile, "passphrase-file", "", "Path of the file containing the passphrase to access the wallet")
+	keyGenerateCmd.Flags().StringVarP(&keyGenerateArgs.passphraseFile, "passphrase-file", "p", "", "Path of the file containing the passphrase to access the wallet")
 	keyGenerateCmd.Flags().StringVarP(&keyGenerateArgs.metas, "meta", "m", "", `A list of metadata e.g: "primary:true;asset:BTC"`)
 }
 
-func runKeyGenerate(cmd *cobra.Command, args []string) error {
-	handler, err := newWalletHandler(rootArgs.rootPath)
+func runKeyGenerate(_ *cobra.Command, _ []string) error {
+	p := printer.NewHumanPrinter()
+	store, err := newWalletsStore(rootArgs.rootPath)
+	if err != nil {
+		return err
+	}
+
+	handler := wallet.NewHandler(store)
 	if err != nil {
 		return err
 	}
@@ -46,7 +52,7 @@ func runKeyGenerate(cmd *cobra.Command, args []string) error {
 
 	walletExists := handler.WalletExists(keyGenerateArgs.name)
 
-	passphrase, err := getPassphrase(keyGenerateArgs.passphrase, keyGenerateArgs.passphraseFile, !walletExists)
+	passphrase, err := getPassphrase(keyGenerateArgs.passphraseFile, !walletExists)
 	if err != nil {
 		return err
 	}
@@ -56,13 +62,20 @@ func runKeyGenerate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	var mnemonic string
 	if !walletExists {
-		mnemonic, err := handler.CreateWallet(keyGenerateArgs.name, passphrase)
+		if rootArgs.output == "human" {
+			p.BangMark().Text("Wallet ").Bold(keyGenerateArgs.name).Text(" does not exist yet").Jump()
+		}
+
+		mnemonic, err = handler.CreateWallet(keyGenerateArgs.name, passphrase)
 		if err != nil {
 			return fmt.Errorf("couldn't create wallet: %w", err)
 		}
-		fmt.Printf("new mnemonic:\n")
-		fmt.Printf("%s\n", mnemonic)
+
+		if rootArgs.output == "human" {
+			p.CheckMark().Text("Wallet ").Bold(keyGenerateArgs.name).Text(" has been created at: ").SuccessText(store.GetWalletPath(keyGenerateArgs.name)).Jump()
+		}
 	}
 
 	keyPair, err := handler.GenerateKeyPair(keyGenerateArgs.name, passphrase, metas)
@@ -70,14 +83,61 @@ func runKeyGenerate(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("could not generate a key pair: %w", err)
 	}
 
-	buf, err := json.MarshalIndent(keyPair, " ", " ")
-	if err != nil {
-		return fmt.Errorf("unable to marshal message: %w", err)
+	if rootArgs.output == "human" {
+		printHuman(p, mnemonic, keyPair)
+	} else if rootArgs.output == "json" {
+		return printJSON(mnemonic, keyPair)
+	} else {
+		return fmt.Errorf("output \"%s\" is not supported for this command", rootArgs.output)
 	}
-	fmt.Printf("new generated keys:\n")
-	fmt.Printf("%s\n", string(buf))
-
 	return nil
+}
+
+func printHuman(p *printer.HumanPrinter, mnemonic string, keyPair wallet.KeyPair) {
+	p.CheckMark().Text("Key pair has been generated for wallet ").Bold(keyGenerateArgs.name).Jump()
+	p.CheckMark().SuccessText("Generating a key pair succeeded").NJump(2)
+	if len(mnemonic) != 0 {
+		p.Text("Wallet mnemonic:").Jump().WarningText(mnemonic).Jump()
+	}
+	p.Text("Public key:").Jump().WarningText(keyPair.PublicKey()).Jump()
+	p.Text("Metadata:").Jump()
+	printMeta(p, keyPair.Meta())
+	p.Jump()
+
+	p.RedArrow().DangerText("Important").Jump()
+	if len(mnemonic) != 0 {
+		p.DangerText("1. ").Text("Write down the mnemonic and store it somewhere safe and secure, now, as it will ").Underline("not").Text(" be displayed ever again!").Jump()
+		p.DangerText("2. ").Text("Do not share the mnemonic nor the private key.").NJump(2)
+	} else {
+		p.Text("Do not share the mnemonic nor the private key.").NJump(2)
+	}
+
+	p.BlueArrow().InfoText("Run the service").Jump()
+	p.Text("Once you have a key pair generated, you can run the service with the following command:").NJump(2)
+	p.Code(fmt.Sprintf("%s service run", os.Args[0])).NJump(2)
+	p.Text("If you want to open up a local version of Vega Console alongside the service, use the following command:").NJump(2)
+	p.Code(fmt.Sprintf("%s service run --console-proxy", os.Args[0])).NJump(2)
+	p.Text("To terminate the process, hit ").Bold("ctrl+c").NJump(2)
+	p.Text("For more information, use ").Bold("--help").Text(" flag.").Jump()
+}
+
+func printJSON(mnemonic string, keyPair wallet.KeyPair) error {
+	result := struct {
+		WalletMnemonic   string `json:",omitempty"`
+		PrivateKey       string
+		PublicKey        string
+		AlgorithmName    string
+		AlgorithmVersion uint32
+		Meta             []wallet.Meta
+	}{
+		WalletMnemonic:   mnemonic,
+		PrivateKey:       keyPair.PrivateKey(),
+		PublicKey:        keyPair.PublicKey(),
+		AlgorithmName:    keyPair.AlgorithmName(),
+		AlgorithmVersion: keyPair.AlgorithmVersion(),
+		Meta:             keyPair.Meta(),
+	}
+	return vgjson.Print(result)
 }
 
 func parseMeta(metaStr string) ([]wallet.Meta, error) {

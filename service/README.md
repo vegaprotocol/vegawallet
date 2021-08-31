@@ -1,6 +1,6 @@
 # Wallet API
 
-This package provides the basic cryptography to sign vega transactions, and a
+This package provides the basic cryptography to sign Vega transactions, and a
 basic key management system: `wallet service`. It can be run alongside the core,
 but is not required for the operation of a Vega node, and API clients are free
 to implement their own transaction signing.
@@ -12,7 +12,7 @@ pairs (Ed25519) used to sign transactions for the user of a wallet.
 ## Generate configuration
 
 The package provides a way to generate the configuration of the service before
-starting it, it can be used through the vega command line like so:
+starting it, it can be used through the Vega command line like so:
 
 ```shell
 vegawallet init
@@ -23,7 +23,7 @@ found).
 
 ## Run the service
 
-Start the vega wallet service with:
+Start the Vega wallet service with:
 
 ```shell
 vegawallet service run
@@ -216,10 +216,10 @@ Sign a transaction using the specified keypair.
 ### Propagate
 
 As you can see the request payload has a field `propagate` (optional) if set to
-true, then the wallet service, if configured with a correct vega node address
+true, then the wallet service, if configured with a correct Vega node address
 will try to send the transaction on your behalf to the node after signing it
 successfully. The node address can be configured via the wallet service
-configuration file, by default it will point to a local instance of a vega node.
+configuration file, by default it will point to a local instance of a Vega node.
 
 ## Taint a key
 
