@@ -99,7 +99,9 @@ func printHuman(p *printer.HumanPrinter, mnemonic string, keyPair wallet.KeyPair
 	if len(mnemonic) != 0 {
 		p.Text("Wallet mnemonic:").Jump().WarningText(mnemonic).Jump()
 	}
-	printKeyPair(p, keyPair)
+	p.Text("Public key:").Jump().WarningText(keyPair.PublicKey()).Jump()
+	p.Text("Metadata:").Jump()
+	printMeta(p, keyPair.Meta())
 	p.Jump()
 
 	p.RedArrow().DangerText("Important").Jump()
