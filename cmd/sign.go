@@ -80,7 +80,7 @@ func runSign(_ *cobra.Command, _ []string) error {
 
 		p.BlueArrow().InfoText("Verify a signature").Jump()
 		p.Text("To verify a base-64 encoded message, use the following commands:").NJump(2)
-		p.Code(fmt.Sprintf("%s verify --name \"%s\" --pubkey %s --message \"%s\" --signature %s", os.Args[0], signArgs.name, signArgs.pubkey, signArgs.message, encodedSig)).NJump(2)
+		p.Code(fmt.Sprintf("%s verify --pubkey %s --message \"%s\" --signature %s", os.Args[0], signArgs.pubkey, signArgs.message, encodedSig)).NJump(2)
 		p.Text("For more information, use ").Bold("--help").Text(" flag.").Jump()
 	} else if rootArgs.output == "json" {
 		return printSignJson(encodedSig)

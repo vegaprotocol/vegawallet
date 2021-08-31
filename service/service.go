@@ -373,7 +373,7 @@ type WalletHandler interface {
 	ListPublicKeys(name string) ([]wallet.PublicKey, error)
 	SignTxV2(name string, req *walletpb.SubmitTransactionRequest, height uint64) (*commandspb.Transaction, error)
 	SignAny(name string, inputData []byte, pubKey string) ([]byte, error)
-	VerifyAny(name string, inputData, sig []byte, pubKey string) (bool, error)
+	VerifyAny(inputData, sig []byte, pubKey string) (bool, error)
 	TaintKey(name, pubKey, passphrase string) error
 	UpdateMeta(name, pubKey, passphrase string, meta []wallet.Meta) error
 	GetWalletPath(name string) (string, error)
@@ -698,13 +698,7 @@ func (s *Service) VerifyAny(t string, w http.ResponseWriter, r *http.Request, _ 
 		return
 	}
 
-	name, err := s.auth.VerifyToken(t)
-	if err != nil {
-		writeForbiddenError(w, err)
-		return
-	}
-
-	verified, err := s.handler.VerifyAny(name, req.decodedInputData, req.decodedSignature, req.PubKey)
+	verified, err := s.handler.VerifyAny(req.decodedInputData, req.decodedSignature, req.PubKey)
 	if err != nil {
 		writeForbiddenError(w, err)
 		return

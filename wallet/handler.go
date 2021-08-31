@@ -1,10 +1,12 @@
 package wallet
 
 import (
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"sync"
 
+	wcrypto "code.vegaprotocol.io/go-wallet/crypto"
 	"code.vegaprotocol.io/protos/commands"
 	commandspb "code.vegaprotocol.io/protos/vega/commands/v1"
 	walletpb "code.vegaprotocol.io/protos/vega/wallet/v1"
@@ -251,16 +253,17 @@ func (h *Handler) SignTxV2(name string, req *walletpb.SubmitTransactionRequest, 
 	return commands.NewTransaction(pubKey, marshalledData, signature), nil
 }
 
-func (h *Handler) VerifyAny(name string, inputData, sig []byte, pubKey string) (bool, error) {
+func (h *Handler) VerifyAny(inputData, sig []byte, pubKey string) (bool, error) {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
 
-	w, err := h.getLoggedWallet(name)
+	decodedPubKey, err := hex.DecodeString(pubKey)
 	if err != nil {
 		return false, err
 	}
 
-	return w.VerifyAny(pubKey, inputData, sig)
+	signatureAlgorithm := wcrypto.NewEd25519()
+	return signatureAlgorithm.Verify(decodedPubKey, inputData, sig)
 }
 
 func (h *Handler) TaintKey(name, pubKey, passphrase string) error {
