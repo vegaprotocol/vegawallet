@@ -106,10 +106,10 @@ func printHuman(p *printer.HumanPrinter, mnemonic string, keyPair wallet.KeyPair
 
 	p.RedArrow().DangerText("Important").Jump()
 	if len(mnemonic) != 0 {
-		p.DangerText("1. ").Text("Save the mnemonic somewhere safe and secure, now. It won’t be displayed ever again!").Jump()
-		p.DangerText("2. ").Text("Do not share your private key.").NJump(2)
+		p.DangerText("1. ").Text("Write down the mnemonic and store it somewhere safe and secure, now, as it will ").Underline("not").Text(" be displayed ever again!").Jump()
+		p.DangerText("2. ").Text("Do not share the mnemonic nor the private key.").NJump(2)
 	} else {
-		p.Text("Do not share your private key.").NJump(2)
+		p.Text("Do not share the mnemonic nor the private key.").NJump(2)
 	}
 
 	p.BlueArrow().InfoText("Run the service").Jump()
