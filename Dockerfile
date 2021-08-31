@@ -1,4 +1,5 @@
-FROM golang:1.16.2 AS builder
+FROM golang:1.17-alpine AS builder
+RUN apk add --no-cache git
 ENV GOPROXY=direct GOSUMDB=off
 WORKDIR /go/src/project
 ADD *.go go.* ./
@@ -14,10 +15,7 @@ RUN env CGO_ENABLED=0 go build -a -ldflags '-extldflags "-static"' -o go-wallet 
 
 # # #
 
-FROM ubuntu:20.04
-ENTRYPOINT ["/go-wallet"]
-RUN \
-	apt update && \
-	DEBIAN_FRONTEND=noninteractive apt install -y ca-certificates && \
-	rm -rf /var/lib/apt/lists
-COPY --from=builder /go/src/project/go-wallet /
+FROM alpine:3.14
+ENTRYPOINT ["go-wallet"]
+RUN apk add --no-cache ca-certificates
+COPY --from=builder /go/src/project/go-wallet /usr/local/bin/
