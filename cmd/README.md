@@ -64,8 +64,11 @@ able to retrieve it with specific commands.
 If you want to restore your wallet, use the following command:
 
 ```sh
-vegawallet import --name "YOUR_USERNAME" --mnemonic "YOUR_MNEMONIC"
+vegawallet import --name "YOUR_USERNAME" --mnemonic-file "PATH_TO_YOUR_MNEMONIC"
 ```
+
+The flag `--mnemonic-file` is used to locate the file that contains the
+mnemonic.
 
 It will then prompt you to input a passphrase, and then confirm that passphrase.
 You'll use this username and passphrase to login to Vega Console. You can also
@@ -112,7 +115,8 @@ An item of metadata is represented as a key-value property.
 
 ### Give an alias to a key
 
-You can give to each key pair a nickname/alias with a metadata `name`. For example:
+You can give to each key pair a nickname/alias with a metadata `name`. For
+example:
 
 ```sh
 vegawallet key annotate --name "YOUR_USERNAME" --meta "name:my-alias" --pubkey "YOUR_HEX_PUBLIC_KEY"
@@ -150,7 +154,7 @@ passphrase with the `--passphrase-file` flag.
 
 ### Important
 
-If you tainted a key for security reasons, you should not untaint it. 
+If you tainted a key for security reasons, you should not untaint it.
 
 ## List the key pairs
 
