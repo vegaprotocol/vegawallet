@@ -103,3 +103,8 @@ func (p *HumanPrinter) Bold(name string) *HumanPrinter {
 	fmt.Printf(termenv.String(name).Bold().String())
 	return p
 }
+
+func (p *HumanPrinter) Underline(name string) *HumanPrinter {
+	fmt.Printf(termenv.String(name).Underline().String())
+	return p
+}

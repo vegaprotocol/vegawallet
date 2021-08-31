@@ -14,7 +14,6 @@ import (
 	"code.vegaprotocol.io/go-wallet/wallet"
 	wstorev1 "code.vegaprotocol.io/go-wallet/wallet/store/v1"
 	"github.com/mattn/go-isatty"
-	"github.com/muesli/termenv"
 	"github.com/spf13/cobra"
 	"golang.org/x/crypto/ssh/terminal"
 )
@@ -43,7 +42,7 @@ func rootPreRun(_ *cobra.Command, _ []string) error {
 		return err
 	}
 	if rootArgs.output == "human" {
-		checkVersion()
+		return checkVersion()
 	}
 	return nil
 }
@@ -63,19 +62,19 @@ func parseOutputFlag() error {
 	return fmt.Errorf("unsupported output \"%s\"", rootArgs.output)
 }
 
-func checkVersion() {
+func checkVersion() error {
 	if !rootArgs.noVersionCheck {
 		v, err := version.Check(version.Version)
 		if err != nil {
-			fmt.Printf("could not check Vega wallet version updates: %v\n", err)
+			return fmt.Errorf("could not check Vega wallet version updates: %w", err)
 		}
 		if v != nil {
-			p := termenv.ColorProfile()
-			xVersion := termenv.String(v.String()).Foreground(p.Color("6"))
-			xURL := termenv.String(version.GetReleaseURL(v)).Underline()
-			fmt.Printf("A new version %s of Vega wallet is available!\nDownload it at %v\n\n", xVersion, xURL)
+			p := printer.NewHumanPrinter()
+			p.Text("A new version ").InfoText(v.String()).Text(" of Vega wallet is available!").Jump()
+			p.Text("Download it at: ").Underline(version.GetReleaseURL(v)).NJump(2)
 		}
 	}
+	return nil
 }
 
 func Execute() {
