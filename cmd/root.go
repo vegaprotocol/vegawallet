@@ -64,18 +64,18 @@ func parseOutputFlag() error {
 func checkVersion() error {
 	if !rootArgs.noVersionCheck {
 		p := printer.NewHumanPrinter()
-		if version.IsUnreleased(version.Version) {
-			p.CrossMark().DangerText("You are running an unreleased version of the Vega wallet. Use it at your own risk!").NJump(2)
-		} else {
+		// if version.IsUnreleased(version.Version) {
+		// 	p.CrossMark().DangerText("You are running an unreleased version of the Vega wallet. Use it at your own risk!").NJump(2)
+		// } else {
 			v, err := version.Check(version.Version)
 			if err != nil {
 				return fmt.Errorf("could not check Vega wallet version updates: %w", err)
 			}
 			if v != nil {
-				p.Text("A new version ").InfoText(v.String()).Text(" of Vega wallet is available!").Jump()
-				p.Text("Download it at: ").Underline(version.GetReleaseURL(v)).NJump(2)
+				p.Text("Version ").SuccessText(v.String()).Text(" is available. Your current version is ").DangerText(version.Version).Text(".").Jump()
+				p.Text("Download the latest version at: ").Underline(version.GetReleaseURL(v)).NJump(2)
 			}
-		}
+		// }
 	}
 	return nil
 }
