@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"code.vegaprotocol.io/go-wallet/cmd/printer"
+	"code.vegaprotocol.io/go-wallet/wallet"
 	"github.com/spf13/cobra"
 )
 
@@ -14,6 +15,7 @@ var (
 		name           string
 		passphraseFile string
 		pubkey         string
+		clear          bool
 	}
 
 	keyAnnotateCmd = &cobra.Command{
@@ -30,6 +32,7 @@ func init() {
 	keyAnnotateCmd.Flags().StringVarP(&keyAnnotateArgs.passphraseFile, "passphrase-file", "p", "", "Path of the file containing the passphrase to access the wallet")
 	keyAnnotateCmd.Flags().StringVarP(&keyAnnotateArgs.pubkey, "pubkey", "k", "", "Public key to be used (hex)")
 	keyAnnotateCmd.Flags().StringVarP(&keyAnnotateArgs.metadata, "meta", "m", "", `A list of metadata e.g: "primary:true;asset:BTC"`)
+	keyAnnotateCmd.Flags().BoolVar(&keyAnnotateArgs.clear, "clear", false, "Clear the metadata")
 }
 
 func runKeyAnnotate(_ *cobra.Command, _ []string) error {
@@ -44,15 +47,24 @@ func runKeyAnnotate(_ *cobra.Command, _ []string) error {
 	if len(keyAnnotateArgs.pubkey) == 0 {
 		return errors.New("pubkey is required")
 	}
+	if len(keyAnnotateArgs.metadata) == 0 && !keyAnnotateArgs.clear {
+		return errors.New("meta is required")
+	}
+	if len(keyAnnotateArgs.metadata) != 0 && keyAnnotateArgs.clear {
+		return errors.New("can't have `--meta` and `--clear` flags at the same time")
+	}
 
 	passphrase, err := getPassphrase(keyAnnotateArgs.passphraseFile, false)
 	if err != nil {
 		return err
 	}
 
-	metadata, err := parseMeta(keyAnnotateArgs.metadata)
-	if err != nil {
-		return err
+	var metadata []wallet.Meta
+	if !keyAnnotateArgs.clear {
+		metadata, err = parseMeta(keyAnnotateArgs.metadata)
+		if err != nil {
+			return err
+		}
 	}
 
 	err = handler.LoginWallet(keyAnnotateArgs.name, passphrase)
@@ -67,10 +79,13 @@ func runKeyAnnotate(_ *cobra.Command, _ []string) error {
 
 	if rootArgs.output == "human" {
 		p := printer.NewHumanPrinter()
-		p.CheckMark().SuccessText("Annotation succeeded").NJump(2)
-
-		p.Text("New metadata:").Jump()
-		printMeta(p, metadata)
+		if keyAnnotateArgs.clear {
+			p.CheckMark().SuccessText("Annotation cleared").Jump()
+		} else {
+			p.CheckMark().SuccessText("Annotation succeeded").NJump(2)
+			p.Text("New metadata:").Jump()
+			printMeta(p, metadata)
+		}
 	}
 	return nil
 }
