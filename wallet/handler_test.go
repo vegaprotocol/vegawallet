@@ -3,9 +3,9 @@ package wallet_test
 import (
 	"testing"
 
+	"code.vegaprotocol.io/go-wallet/wallet"
 	commandspb "code.vegaprotocol.io/protos/vega/commands/v1"
 	walletpb "code.vegaprotocol.io/protos/vega/wallet/v1"
-	"code.vegaprotocol.io/go-wallet/wallet"
 	"github.com/stretchr/testify/require"
 
 	"github.com/golang/mock/gomock"
@@ -80,7 +80,7 @@ func TestHandler(t *testing.T) {
 	t.Run("Signing transaction request (v2) with tainted key fails", testHandlerSigningTxV2WithTaintedKeyFails)
 	t.Run("Signing and verifying a message succeeds", testHandlerSigningAndVerifyingMessageSucceeds)
 	t.Run("Signing a message with logged out wallet fails", testHandlerSigningMessageWithLoggedOutWalletFails)
-	t.Run("Verifying a message with logged out wallet fails", testHandlerVerifyingMessageWithLoggedOutWalletSucceeds)
+	t.Run("Verifying a message with logged out wallet succeeds", testHandlerVerifyingMessageWithLoggedOutWalletSucceeds)
 }
 
 func testHandlerCreatingWalletSucceeds(t *testing.T) {
@@ -1375,7 +1375,7 @@ func testHandlerSigningAndVerifyingMessageSucceeds(t *testing.T) {
 	assert.NotEmpty(t, sig)
 
 	// when
-	verified, err := h.VerifyAny(name, data, sig, pubKey)
+	verified, err := h.VerifyAny(data, sig, pubKey)
 
 	// then
 	require.NoError(t, err)
@@ -1458,9 +1458,9 @@ func testHandlerVerifyingMessageWithLoggedOutWalletSucceeds(t *testing.T) {
 	})
 
 	// when
-	verified, err := h.VerifyAny(name, data, sig, pubKey)
+	verified, err := h.VerifyAny(data, sig, pubKey)
 
 	// then
-	require.EqualError(t, err, wallet.ErrWalletNotLoggedIn.Error())
-	assert.False(t, verified)
+	require.NoError(t, err)
+	assert.True(t, verified)
 }

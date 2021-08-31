@@ -13,11 +13,9 @@ import (
 
 var (
 	verifyArgs struct {
-		name           string
-		passphraseFile string
-		sig            string
-		message        string
-		pubkey         string
+		sig     string
+		message string
+		pubkey  string
 	}
 
 	verifyCmd = &cobra.Command{
@@ -30,8 +28,6 @@ var (
 
 func init() {
 	rootCmd.AddCommand(verifyCmd)
-	verifyCmd.Flags().StringVarP(&verifyArgs.name, "name", "n", "", "Name of the wallet to use")
-	verifyCmd.Flags().StringVarP(&verifyArgs.passphraseFile, "passphrase-file", "p", "", "Path of the file containing the passphrase to access the wallet")
 	verifyCmd.Flags().StringVarP(&verifyArgs.message, "message", "m", "", "Message to be verified (base64)")
 	verifyCmd.Flags().StringVarP(&verifyArgs.sig, "signature", "s", "", "Signature to be verified (base64)")
 	verifyCmd.Flags().StringVarP(&verifyArgs.pubkey, "pubkey", "k", "", "Public key to be used (hex)")
@@ -43,9 +39,6 @@ func runVerify(_ *cobra.Command, _ []string) error {
 		return err
 	}
 
-	if len(verifyArgs.name) == 0 {
-		return errors.New("wallet name is required")
-	}
 	if len(verifyArgs.pubkey) == 0 {
 		return errors.New("pubkey is required")
 	}
@@ -64,17 +57,7 @@ func runVerify(_ *cobra.Command, _ []string) error {
 		return errors.New("signature should be encoded into base64")
 	}
 
-	passphrase, err := getPassphrase(verifyArgs.passphraseFile, false)
-	if err != nil {
-		return err
-	}
-
-	err = handler.LoginWallet(verifyArgs.name, passphrase)
-	if err != nil {
-		return fmt.Errorf("could not login to the wallet: %w", err)
-	}
-
-	isValid, err := handler.VerifyAny(verifyArgs.name, decodedMessage, decodedSig, verifyArgs.pubkey)
+	isValid, err := handler.VerifyAny(decodedMessage, decodedSig, verifyArgs.pubkey)
 	if err != nil {
 		return fmt.Errorf("could not verify the message: %w", err)
 	}
@@ -89,7 +72,7 @@ func runVerify(_ *cobra.Command, _ []string) error {
 
 		p.BlueArrow().InfoText("Sign a message").Jump()
 		p.Text("To sign a base-64 encoded message, use the following commands:").NJump(2)
-		p.Code(fmt.Sprintf("%s sign --name \"%s\" --pubkey %s --message \"YOUR_MESSAGE\"", os.Args[0], verifyArgs.name, verifyArgs.pubkey)).NJump(2)
+		p.Code(fmt.Sprintf("%s sign --name \"YOUR_NAME\" --pubkey %s --message \"YOUR_MESSAGE\"", os.Args[0], verifyArgs.pubkey)).NJump(2)
 		p.Text("For more information, use ").Bold("--help").Text(" flag.").Jump()
 	} else if rootArgs.output == "json" {
 		return printVerifyJson(isValid)

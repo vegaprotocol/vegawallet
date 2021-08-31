@@ -175,7 +175,7 @@ commands:
 
 ```sh
 vegawallet sign --name "YOUR_NAME" --pubkey "YOUR_HEX_PUBIC_KEY" --message "c3BpY2Ugb2YgZHVuZQo="
-vegawallet verify --name "YOUR_NAME" --pubkey "YOUR_HEX_PUBIC_KEY" --message "c3BpY2Ugb2YgZHVuZQo=" --signature "76f978asd6fa8s76f"
+vegawallet verify --pubkey "YOUR_HEX_PUBIC_KEY" --message "c3BpY2Ugb2YgZHVuZQo=" --signature "76f978asd6fa8s76f"
 ```
 
 It will then prompt you to input a passphrase. You can also specify the

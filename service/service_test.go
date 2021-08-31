@@ -12,11 +12,11 @@ import (
 	"testing"
 
 	"code.vegaprotocol.io/go-wallet/crypto"
-	"code.vegaprotocol.io/protos/vega/api"
-	commandspb "code.vegaprotocol.io/protos/vega/commands/v1"
 	"code.vegaprotocol.io/go-wallet/service"
 	"code.vegaprotocol.io/go-wallet/service/mocks"
 	"code.vegaprotocol.io/go-wallet/wallet"
+	"code.vegaprotocol.io/protos/vega/api"
+	commandspb "code.vegaprotocol.io/protos/vega/commands/v1"
 	"github.com/stretchr/testify/require"
 
 	"github.com/golang/mock/gomock"
@@ -849,8 +849,7 @@ func testVerifyingAnythingSucceeds(t *testing.T) {
 	s := getTestService(t)
 	defer s.ctrl.Finish()
 
-	s.auth.EXPECT().VerifyToken("eyXXzA").Times(1).Return("jeremy", nil)
-	s.handler.EXPECT().VerifyAny("jeremy", []byte("spice of dune"), []byte("Sietch Tabr"), "asdasasdasd").
+	s.handler.EXPECT().VerifyAny([]byte("spice of dune"), []byte("Sietch Tabr"), "asdasasdasd").
 		Times(1).Return(true, nil)
 	payload := `{"inputData": "c3BpY2Ugb2YgZHVuZQ==", "pubKey": "asdasasdasd", "signature": "U2lldGNoIFRhYnI="}`
 	r := httptest.NewRequest("POST", "scheme://host/path", bytes.NewBufferString(payload))
@@ -871,8 +870,7 @@ func testVerifyingAnythingFails(t *testing.T) {
 	s := getTestService(t)
 	defer s.ctrl.Finish()
 
-	s.auth.EXPECT().VerifyToken("eyXXzA").Times(1).Return("jeremy", nil)
-	s.handler.EXPECT().VerifyAny("jeremy", []byte("spice of dune"), []byte("Sietch Tabr"), "asdasasdasd").
+	s.handler.EXPECT().VerifyAny([]byte("spice of dune"), []byte("Sietch Tabr"), "asdasasdasd").
 		Times(1).Return(false, nil)
 	payload := `{"inputData":"c3BpY2Ugb2YgZHVuZQ==", "pubKey": "asdasasdasd", "signature": "U2lldGNoIFRhYnI="}`
 	r := httptest.NewRequest("POST", "scheme://host/path", bytes.NewBufferString(payload))
