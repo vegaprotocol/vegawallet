@@ -67,13 +67,13 @@ func checkVersion() {
 	if !rootArgs.noVersionCheck {
 		v, err := version.Check(version.Version)
 		if err != nil {
-			fmt.Printf("could not check vega wallet version updates: %v\n", err)
+			fmt.Printf("could not check Vega wallet version updates: %v\n", err)
 		}
 		if v != nil {
 			p := termenv.ColorProfile()
 			xVersion := termenv.String(v.String()).Foreground(p.Color("6"))
 			xURL := termenv.String(version.GetReleaseURL(v)).Underline()
-			fmt.Printf("A new version %s of vega wallet is available!\nDownload it at %v\n\n", xVersion, xURL)
+			fmt.Printf("A new version %s of Vega wallet is available!\nDownload it at %v\n\n", xVersion, xURL)
 		}
 	}
 }

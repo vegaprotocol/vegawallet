@@ -130,14 +130,14 @@ func (n *nodeForward) SendTxV2(ctx context.Context, tx *commandspb.Transaction, 
 
 func (n *nodeForward) nextClt() api.TradingServiceClient {
 	i := atomic.AddUint64(&n.next, 1)
-	n.log.Info("sending transaction to vega node",
+	n.log.Info("sending transaction to Vega node",
 		zap.String("host", n.nodeCfgs.Hosts[(int(i)-1)%len(n.clts)]))
 	return n.clts[(int(i)-1)%len(n.clts)]
 }
 
 func (n *nodeForward) nextCltData() api.TradingDataServiceClient {
 	i := atomic.AddUint64(&n.next, 1)
-	n.log.Info("sending healthcheck to vega node",
+	n.log.Info("sending health check to Vega node",
 		zap.String("host", n.nodeCfgs.Hosts[(int(i)-1)%len(n.clts)]))
 	return n.cltDatas[(int(i)-1)%len(n.clts)]
 }

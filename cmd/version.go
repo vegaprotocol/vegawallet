@@ -10,8 +10,8 @@ import (
 
 var versionCmd = &cobra.Command{
 	Use:   "version",
-	Short: "Show the version of the vega wallet",
-	Long:  "Show the version of the vega wallet",
+	Short: "Show the version of the Vega wallet",
+	Long:  "Show the version of the Vega wallet",
 	RunE:  runVersion,
 }
 

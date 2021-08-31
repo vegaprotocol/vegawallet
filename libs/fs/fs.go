@@ -10,7 +10,7 @@ const (
 	dirPerms = 0700
 )
 
-// DefaultVegaDir returns the location to vega config files and data files:
+// DefaultVegaDir returns the location to Vega config files and data files:
 // binary is in /usr/bin/ -> look for /etc/vega/config.toml
 // binary is in /usr/local/vega/bin/ -> look for /usr/local/vega/etc/config.toml
 // binary is in /usr/local/bin/ -> look for /usr/local/etc/vega/config.toml

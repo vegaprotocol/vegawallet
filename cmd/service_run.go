@@ -26,8 +26,8 @@ var (
 
 	serviceRunCmd = &cobra.Command{
 		Use:   "run",
-		Short: "Start the vega wallet service",
-		Long:  "Start a vega wallet service behind an HTTP server",
+		Short: "Start the Vega wallet service",
+		Long:  "Start a Vega wallet service behind an HTTP server",
 		RunE:  runServiceRun,
 	}
 )
