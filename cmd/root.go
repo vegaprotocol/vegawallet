@@ -3,6 +3,7 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
@@ -116,7 +117,8 @@ func getPassphrase(flaggedPassphraseFile string, confirmInput bool) (string, err
 	hasPassphraseFileFlag := len(flaggedPassphraseFile) != 0
 
 	if hasPassphraseFileFlag {
-		rawPassphrase, err := os.ReadFile(flaggedPassphraseFile)
+		passphraseDir, passphraseFileName := filepath.Split(flaggedPassphraseFile)
+		rawPassphrase, err := fs.ReadFile(os.DirFS(passphraseDir), passphraseFileName)
 		if err != nil {
 			return "", err
 		}

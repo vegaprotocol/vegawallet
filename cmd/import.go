@@ -3,7 +3,10 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"io/fs"
 	"os"
+	"path/filepath"
+	"strings"
 
 	"code.vegaprotocol.io/go-wallet/cmd/printer"
 	"code.vegaprotocol.io/go-wallet/wallet"
@@ -14,7 +17,7 @@ var (
 	importArgs struct {
 		name           string
 		passphraseFile string
-		mnemonic       string
+		mnemonicFile   string
 	}
 
 	importCmd = &cobra.Command{
@@ -29,7 +32,7 @@ func init() {
 	rootCmd.AddCommand(importCmd)
 	importCmd.Flags().StringVarP(&importArgs.name, "name", "n", "", "Name of the wallet to use")
 	importCmd.Flags().StringVarP(&importArgs.passphraseFile, "passphrase-file", "p", "", "Path of the file containing the passphrase to access the wallet")
-	importCmd.Flags().StringVarP(&importArgs.mnemonic, "mnemonic", "m", "", `Mnemonic of the wallet "swing ceiling chaos..."`)
+	importCmd.Flags().StringVarP(&importArgs.mnemonicFile, "mnemonic-file", "m", "", `Path of the file containing the mnemonic of the wallet "swing ceiling chaos..."`)
 }
 
 func runImport(_ *cobra.Command, _ []string) error {
@@ -47,8 +50,8 @@ func runImport(_ *cobra.Command, _ []string) error {
 		return errors.New("wallet name is required")
 	}
 
-	if len(importArgs.mnemonic) == 0 {
-		return errors.New("wallet mnemonic is required")
+	if len(importArgs.mnemonicFile) == 0 {
+		return errors.New("path to wallet mnemonic is required")
 	}
 
 	passphrase, err := getPassphrase(importArgs.passphraseFile, true)
@@ -56,15 +59,20 @@ func runImport(_ *cobra.Command, _ []string) error {
 		return err
 	}
 
-	err = handler.ImportWallet(importArgs.name, passphrase, importArgs.mnemonic)
+	mnemonicDir, mnemonicFileName := filepath.Split(importArgs.mnemonicFile)
+	rawMnemonic, err := fs.ReadFile(os.DirFS(mnemonicDir), mnemonicFileName)
+	if err != nil {
+		return fmt.Errorf("couldn't read mnemonic file: %w", err)
+	}
+	mnemonic := strings.Trim(string(rawMnemonic), "\n")
+
+	err = handler.ImportWallet(importArgs.name, passphrase, mnemonic)
 	if err != nil {
 		return fmt.Errorf("couldn't import wallet: %w", err)
 	}
 
 	if rootArgs.output == "human" {
 		p := printer.NewHumanPrinter()
-		p.CheckMark().Text("Service configuration created at: ").SuccessText(rootArgs.rootPath).Jump()
-		p.CheckMark().Text("Service RSA keys created at: ").SuccessText(rootArgs.rootPath).Jump()
 		p.CheckMark().SuccessText("Importing the wallet succeeded").NJump(2)
 
 		p.BlueArrow().InfoText("Generate a key pair").Jump()
