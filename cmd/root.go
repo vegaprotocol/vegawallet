@@ -25,7 +25,6 @@ var (
 		noVersionCheck bool
 	}
 
-	// rootCmd represents the base command when called without any subcommands
 	rootCmd = &cobra.Command{
 		Use:               os.Args[0],
 		Short:             "The Vega wallet",
@@ -64,14 +63,18 @@ func parseOutputFlag() error {
 
 func checkVersion() error {
 	if !rootArgs.noVersionCheck {
-		v, err := version.Check(version.Version)
-		if err != nil {
-			return fmt.Errorf("could not check Vega wallet version updates: %w", err)
-		}
-		if v != nil {
-			p := printer.NewHumanPrinter()
-			p.Text("A new version ").InfoText(v.String()).Text(" of Vega wallet is available!").Jump()
-			p.Text("Download it at: ").Underline(version.GetReleaseURL(v)).NJump(2)
+		p := printer.NewHumanPrinter()
+		if version.IsUnreleased(version.Version) {
+			p.CrossMark().DangerText("You are running an unreleased version of the Vega wallet. Use it at your own risk!").NJump(2)
+		} else {
+			v, err := version.Check(version.Version)
+			if err != nil {
+				return fmt.Errorf("could not check Vega wallet version updates: %w", err)
+			}
+			if v != nil {
+				p.Text("A new version ").InfoText(v.String()).Text(" of Vega wallet is available!").Jump()
+				p.Text("Download it at: ").Underline(version.GetReleaseURL(v)).NJump(2)
+			}
 		}
 	}
 	return nil
