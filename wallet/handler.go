@@ -382,6 +382,14 @@ func wrapRequestCommandIntoInputData(data *commandspb.InputData, req *walletpb.S
 		data.Command = &commandspb.InputData_OracleDataSubmission{
 			OracleDataSubmission: req.GetOracleDataSubmission(),
 		}
+	case *walletpb.SubmitTransactionRequest_DelegateSubmission:
+		data.Command = &commandspb.InputData_DelegateSubmission{
+			DelegateSubmission: req.GetDelegateSubmission(),
+		}
+	case *walletpb.SubmitTransactionRequest_UndelegateSubmission:
+		data.Command = &commandspb.InputData_UndelegateSubmission{
+			UndelegateSubmission: req.GetUndelegateSubmission(),
+		}
 	default:
 		panic(fmt.Errorf("command %v is not supported", cmd))
 	}
