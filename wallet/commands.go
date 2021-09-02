@@ -42,6 +42,10 @@ func CheckSubmitTransactionRequest(req *walletpb.SubmitTransactionRequest) comma
 		cmdErr = commands.CheckChainEvent(cmd.ChainEvent)
 	case *walletpb.SubmitTransactionRequest_OracleDataSubmission:
 		cmdErr = commands.CheckOracleDataSubmission(cmd.OracleDataSubmission)
+	case *walletpb.SubmitTransactionRequest_UndelegateSubmission:
+		cmdErr = commands.CheckUndelegateSubmission(cmd.UndelegateSubmission)
+	case *walletpb.SubmitTransactionRequest_DelegateSubmission:
+		cmdErr = commands.CheckDelegateSubmission(cmd.DelegateSubmission)
 	default:
 		errs.AddForProperty("input_data.command", commands.ErrIsNotSupported)
 	}
