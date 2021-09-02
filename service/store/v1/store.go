@@ -94,13 +94,12 @@ func (s *Store) SaveConfig(cfg *service.Config, overwrite bool) error {
 		}
 	}
 
-	// write configuration to toml
 	buf := new(bytes.Buffer)
 	if err := toml.NewEncoder(buf).Encode(cfg); err != nil {
 		return err
 	}
 
-	if err := vgfs.WriteFile(buf.Bytes(), s.configFilePath); err != nil {
+	if err := vgfs.WriteFile(s.configFilePath, buf.Bytes()); err != nil {
 		return fmt.Errorf("unable to save configuration: %w", err)
 	}
 
@@ -143,11 +142,11 @@ func (s *Store) SaveRSAKeys(keys *service.RSAKeys, overwrite bool) error {
 		}
 	}
 
-	if err := vgfs.WriteFile(keys.Priv, s.privRsaKeyFilePath); err != nil {
+	if err := vgfs.WriteFile(s.privRsaKeyFilePath, keys.Priv); err != nil {
 		return fmt.Errorf("unable to save private key: %w", err)
 	}
 
-	if err := vgfs.WriteFile(keys.Pub, s.pubRsaKeyFilePath); err != nil {
+	if err := vgfs.WriteFile(s.pubRsaKeyFilePath, keys.Pub); err != nil {
 		return fmt.Errorf("unable to save public key: %w", err)
 	}
 

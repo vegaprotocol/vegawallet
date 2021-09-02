@@ -4,6 +4,7 @@ go 1.16
 
 require (
 	code.vegaprotocol.io/protos v0.42.0-pre6
+	github.com/adrg/xdg v0.3.3
 	github.com/blang/semver/v4 v4.0.0
 	github.com/cenkalti/backoff/v4 v4.0.2
 	github.com/dgrijalva/jwt-go/v4 v4.0.0-preview1
