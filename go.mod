@@ -3,7 +3,7 @@ module code.vegaprotocol.io/go-wallet
 go 1.16
 
 require (
-	code.vegaprotocol.io/protos v0.42.0-pre5.0.20210902104331-1351af698f68
+	code.vegaprotocol.io/protos v0.42.0-pre5.0.20210902111405-6fa3f5feac09
 	github.com/blang/semver/v4 v4.0.0
 	github.com/cenkalti/backoff/v4 v4.0.2
 	github.com/dgrijalva/jwt-go/v4 v4.0.0-preview1
