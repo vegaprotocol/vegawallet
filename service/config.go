@@ -1,6 +1,8 @@
 package service
 
 import (
+	"errors"
+	"fmt"
 	"time"
 
 	"code.vegaprotocol.io/go-wallet/service/encoding"
@@ -16,8 +18,8 @@ const (
 type Store interface {
 	ConfigExists() (bool, error)
 	RSAKeysExists() (bool, error)
-	SaveConfig(*Config, bool) error
-	SaveRSAKeys(*RSAKeys, bool) error
+	SaveConfig(*Config) error
+	SaveRSAKeys(*RSAKeys) error
 }
 
 type Config struct {
@@ -41,7 +43,18 @@ type NodesConfig struct {
 
 func GenerateConfig(store Store, overwrite bool) error {
 	config := NewDefaultConfig()
-	err := store.SaveConfig(&config, overwrite)
+
+	if !overwrite {
+		configFileExists, err := store.ConfigExists()
+		if err != nil {
+			return fmt.Errorf("couldn't verify config existance: %w", err)
+		}
+		if configFileExists {
+			return errors.New("configuration already exists")
+		}
+	}
+
+	err := store.SaveConfig(&config)
 	if err != nil {
 		return err
 	}
@@ -50,7 +63,18 @@ func GenerateConfig(store Store, overwrite bool) error {
 	if err != nil {
 		return err
 	}
-	if err := store.SaveRSAKeys(keys, overwrite); err != nil {
+
+	if !overwrite {
+		rsaKeysExists, err := store.RSAKeysExists()
+		if err != nil {
+			return fmt.Errorf("couldn't verify RSA keys existance: %w", err)
+		}
+		if rsaKeysExists {
+			return errors.New("RSA keys already exist")
+		}
+	}
+
+	if err := store.SaveRSAKeys(keys); err != nil {
 		return err
 	}
 

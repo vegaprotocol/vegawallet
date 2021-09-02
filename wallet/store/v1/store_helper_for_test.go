@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"code.vegaprotocol.io/go-wallet/crypto"
+	vgrand "code.vegaprotocol.io/shared/libs/rand"
 )
 
 type walletsDir struct {
@@ -13,7 +13,7 @@ type walletsDir struct {
 }
 
 func newWalletsDir() walletsDir {
-	rootPath := filepath.Join("/tmp", "vegatests", "wallet", crypto.RandomStr(10))
+	rootPath := filepath.Join("/tmp", "vegatests", "wallet", vgrand.RandomStr(10))
 
 	return walletsDir{
 		path: rootPath,

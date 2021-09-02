@@ -13,6 +13,7 @@ import (
 	"code.vegaprotocol.io/go-wallet/logger"
 	"code.vegaprotocol.io/go-wallet/service"
 	svcstore1 "code.vegaprotocol.io/go-wallet/service/store/v1"
+	"code.vegaprotocol.io/shared/paths"
 	"github.com/skratchdot/open-golang/open"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
@@ -46,7 +47,7 @@ func runServiceRun(_ *cobra.Command, _ []string) error {
 		return err
 	}
 
-	svcStore, err := svcstore1.NewStore(rootArgs.vegaHome)
+	svcStore, err := svcstore1.InitialiseStore(paths.NewPaths(rootArgs.vegaHome))
 	if err != nil {
 		return err
 	}

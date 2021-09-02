@@ -64,29 +64,29 @@ func (mr *MockStoreMockRecorder) RSAKeysExists() *gomock.Call {
 }
 
 // SaveConfig mocks base method
-func (m *MockStore) SaveConfig(arg0 *service.Config, arg1 bool) error {
+func (m *MockStore) SaveConfig(arg0 *service.Config) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SaveConfig", arg0, arg1)
+	ret := m.ctrl.Call(m, "SaveConfig", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // SaveConfig indicates an expected call of SaveConfig
-func (mr *MockStoreMockRecorder) SaveConfig(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockStoreMockRecorder) SaveConfig(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveConfig", reflect.TypeOf((*MockStore)(nil).SaveConfig), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveConfig", reflect.TypeOf((*MockStore)(nil).SaveConfig), arg0)
 }
 
 // SaveRSAKeys mocks base method
-func (m *MockStore) SaveRSAKeys(arg0 *service.RSAKeys, arg1 bool) error {
+func (m *MockStore) SaveRSAKeys(arg0 *service.RSAKeys) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SaveRSAKeys", arg0, arg1)
+	ret := m.ctrl.Call(m, "SaveRSAKeys", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // SaveRSAKeys indicates an expected call of SaveRSAKeys
-func (mr *MockStoreMockRecorder) SaveRSAKeys(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockStoreMockRecorder) SaveRSAKeys(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveRSAKeys", reflect.TypeOf((*MockStore)(nil).SaveRSAKeys), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveRSAKeys", reflect.TypeOf((*MockStore)(nil).SaveRSAKeys), arg0)
 }

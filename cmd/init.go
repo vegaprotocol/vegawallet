@@ -7,6 +7,7 @@ import (
 	"code.vegaprotocol.io/go-wallet/cmd/printer"
 	"code.vegaprotocol.io/go-wallet/service"
 	"code.vegaprotocol.io/go-wallet/service/store/v1"
+	"code.vegaprotocol.io/shared/paths"
 	"github.com/spf13/cobra"
 )
 
@@ -38,12 +39,8 @@ func runInit(_ *cobra.Command, _ []string) error {
 		return err
 	}
 
-	svcStore, err := v1.NewStore(rootArgs.vegaHome)
+	svcStore, err := v1.InitialiseStore(paths.NewPaths(rootArgs.vegaHome))
 	if err != nil {
-		return err
-	}
-
-	if err := svcStore.Initialise(); err != nil {
 		return err
 	}
 
