@@ -108,7 +108,7 @@ func (s *Store) SaveWallet(w wallet.Wallet, passphrase string) error {
 		return err
 	}
 
-	return vgfs.WriteFile(encBuf, s.walletPath(w.Name()))
+	return vgfs.WriteFile(s.walletPath(w.Name()), encBuf)
 }
 
 func (s *Store) GetWalletPath(name string) string {

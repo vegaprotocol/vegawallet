@@ -1,6 +1,8 @@
 package fs
 
 import (
+	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -68,9 +70,9 @@ func PathExists(path string) (bool, error) {
 // FileExists similar to PathExists, but ensures the path is to a file, not a
 // directory.
 func FileExists(path string) (bool, error) {
-	fs, err := os.Stat(path)
+	fileInfo, err := os.Stat(path)
 	if err == nil {
-		return !fs.IsDir(), nil
+		return !fileInfo.IsDir(), nil
 	}
 	if os.IsNotExist(err) {
 		return false, nil
@@ -78,22 +80,32 @@ func FileExists(path string) (bool, error) {
 	return false, err
 }
 
+func ReadFile(path string) ([]byte, error) {
+	dir, fileName := filepath.Split(path)
 
-func WriteFile(content []byte, fileName string) error {
-	f, err := os.Create(fileName)
+	buf, err := fs.ReadFile(os.DirFS(dir), fileName)
 	if err != nil {
-		return err
+		return nil, fmt.Errorf("couldn't read file at %s: %w", path, err)
+	}
+
+	return buf, nil
+}
+
+func WriteFile(path string, content []byte) error {
+	f, err := os.Create(path)
+	if err != nil {
+		return fmt.Errorf("couldn't create file at %s: %w", path, err)
 	}
 	defer f.Close()
 
 	err = f.Chmod(0600)
 	if err != nil {
-		return err
+		return fmt.Errorf("couldn't change file mode at %s: %w", path, err)
 	}
 
 	_, err = f.Write(content)
 	if err != nil {
-		return err
+		return fmt.Errorf("couldn't write file at %s: %w", path, err)
 	}
 
 	return nil
