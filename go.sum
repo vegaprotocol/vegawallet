@@ -14,6 +14,8 @@ code.vegaprotocol.io/protos v0.41.1-0.20210831105504-a2fb8fcd9c11 h1:iKP6H/9iX64
 code.vegaprotocol.io/protos v0.41.1-0.20210831105504-a2fb8fcd9c11/go.mod h1:NORK22Evpwn0GoetL7H6/oVUzGcfjAJEJTzw+zTkSyE=
 code.vegaprotocol.io/protos v0.42.0-pre5.0.20210902093524-f2d1ae86c440 h1:0+CI4ijtGsr9dTICMnEvtndAhJmFlnPKbcW07Va/Qb4=
 code.vegaprotocol.io/protos v0.42.0-pre5.0.20210902093524-f2d1ae86c440/go.mod h1:NORK22Evpwn0GoetL7H6/oVUzGcfjAJEJTzw+zTkSyE=
+code.vegaprotocol.io/protos v0.42.0-pre5.0.20210902104331-1351af698f68 h1:7QWhd1Eoo+Id9pi2j2nAv+Y9ayZTgvvhHaHcsxq6eJ4=
+code.vegaprotocol.io/protos v0.42.0-pre5.0.20210902104331-1351af698f68/go.mod h1:NORK22Evpwn0GoetL7H6/oVUzGcfjAJEJTzw+zTkSyE=
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=
 github.com/BurntSushi/toml v0.3.1 h1:WXkYYl6Yr3qBf1K79EBnL4mak0OimBfB0XUf9Vl28OQ=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
