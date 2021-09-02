@@ -41,12 +41,12 @@ func init() {
 func runServiceRun(_ *cobra.Command, _ []string) error {
 	p := printer.NewHumanPrinter()
 
-	handler, err := newWalletHandler(rootArgs.rootPath)
+	handler, err := newWalletHandler(rootArgs.vegaHome)
 	if err != nil {
 		return err
 	}
 
-	svcStore, err := svcstore1.NewStore(rootArgs.rootPath)
+	svcStore, err := svcstore1.NewStore(rootArgs.vegaHome)
 	if err != nil {
 		return err
 	}

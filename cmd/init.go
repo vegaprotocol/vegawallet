@@ -29,7 +29,7 @@ func init() {
 }
 
 func runInit(_ *cobra.Command, _ []string) error {
-	wStore, err := newWalletsStore(rootArgs.rootPath)
+	wStore, err := newWalletsStore(rootArgs.vegaHome)
 	if err != nil {
 		return err
 	}
@@ -38,7 +38,7 @@ func runInit(_ *cobra.Command, _ []string) error {
 		return err
 	}
 
-	svcStore, err := v1.NewStore(rootArgs.rootPath)
+	svcStore, err := v1.NewStore(rootArgs.vegaHome)
 	if err != nil {
 		return err
 	}

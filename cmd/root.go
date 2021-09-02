@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"code.vegaprotocol.io/go-wallet/cmd/printer"
-	vgfs "code.vegaprotocol.io/go-wallet/libs/fs"
 	vgjson "code.vegaprotocol.io/go-wallet/libs/json"
 	"code.vegaprotocol.io/go-wallet/version"
 	"code.vegaprotocol.io/go-wallet/wallet"
@@ -22,7 +21,7 @@ import (
 var (
 	rootArgs struct {
 		output         string
-		rootPath       string
+		vegaHome       string
 		noVersionCheck bool
 	}
 
@@ -109,7 +108,7 @@ func Execute() {
 
 func init() {
 	rootCmd.PersistentFlags().StringVarP(&rootArgs.output, "output", "o", "human", "Specify the output format: json,human")
-	rootCmd.PersistentFlags().StringVarP(&rootArgs.rootPath, "root-path", "r", vgfs.DefaultVegaDir(), "Root directory for the Vega wallet configuration")
+	rootCmd.PersistentFlags().StringVar(&rootArgs.vegaHome, "vega-home", "", "Specify the location of a custom Vega home")
 	rootCmd.PersistentFlags().BoolVar(&rootArgs.noVersionCheck, "no-version-check", false, "Do not check for new version of the Vega wallet")
 }
 
@@ -172,7 +171,7 @@ func promptForPassphrase(msg ...string) (string, error) {
 
 // newWalletsStore builds a wallets store with the following structure
 //
-// root-path/
+// vega-home/
 // └── wallets/
 //    ├── my-wallet-1
 //    └── my-wallet-2
