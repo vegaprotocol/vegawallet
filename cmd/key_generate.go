@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"code.vegaprotocol.io/go-wallet/cmd/printer"
-	vgjson "code.vegaprotocol.io/go-wallet/libs/json"
+	vgjson "code.vegaprotocol.io/shared/libs/json"
 	"code.vegaprotocol.io/go-wallet/wallet"
 	"github.com/spf13/cobra"
 )

@@ -8,9 +8,9 @@ import (
 	"path/filepath"
 	"sort"
 
-	"code.vegaprotocol.io/go-wallet/crypto"
-	vgfs "code.vegaprotocol.io/go-wallet/libs/fs"
 	"code.vegaprotocol.io/go-wallet/wallet"
+	vgcrypto "code.vegaprotocol.io/shared/libs/crypto"
+	vgfs "code.vegaprotocol.io/shared/libs/fs"
 )
 
 type Store struct {
@@ -66,7 +66,7 @@ func (s *Store) GetWallet(name, passphrase string) (wallet.Wallet, error) {
 		return nil, err
 	}
 
-	decBuf, err := crypto.Decrypt(buf, passphrase)
+	decBuf, err := vgcrypto.Decrypt(buf, passphrase)
 	if err != nil {
 		return nil, err
 	}
@@ -103,7 +103,7 @@ func (s *Store) SaveWallet(w wallet.Wallet, passphrase string) error {
 		return err
 	}
 
-	encBuf, err := crypto.Encrypt(buf, passphrase)
+	encBuf, err := vgcrypto.Encrypt(buf, passphrase)
 	if err != nil {
 		return err
 	}
