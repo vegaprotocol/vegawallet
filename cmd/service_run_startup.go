@@ -5,24 +5,23 @@ import (
 	"text/template"
 )
 
-const startupT = ` - status:          GET    http://{{.WalletServiceLocalAddress}}/api/v1/status
- - login:           POST   http://{{.WalletServiceLocalAddress}}/api/v1/auth/token
- - logout:          DELETE http://{{.WalletServiceLocalAddress}}/api/v1/auth/token
- - create wallet:   POST   http://{{.WalletServiceLocalAddress}}/api/v1/wallets
- - import wallet:   POST   http://{{.WalletServiceLocalAddress}}/api/v1/wallets/import
- - create key:      POST   http://{{.WalletServiceLocalAddress}}/api/v1/keys
- - list keys:       GET    http://{{.WalletServiceLocalAddress}}/api/v1/keys
- - get key:         GET    http://{{.WalletServiceLocalAddress}}/api/v1/keys/:keyid
- - taint key:       PUT    http://{{.WalletServiceLocalAddress}}/api/v1/keys/:keyid/taint
- - update meta:     PUT    http://{{.WalletServiceLocalAddress}}/api/v1/keys/:keyid/metadata
- - sign data:       POST   http://{{.WalletServiceLocalAddress}}/api/v1/sign
- - sign v2:         POST   http://{{.WalletServiceLocalAddress}}/api/v1/command
- - sign sync v2:    POST   http://{{.WalletServiceLocalAddress}}/api/v1/command/sync
- - sign commit v2:  POST   http://{{.WalletServiceLocalAddress}}/api/v1/command/commit
- - sign:            POST   http://{{.WalletServiceLocalAddress}}/api/v1/messages
- - sign sync:       POST   http://{{.WalletServiceLocalAddress}}/api/v1/messages/sync
- - sign commit:     POST   http://{{.WalletServiceLocalAddress}}/api/v1/messages/commit
- - download wallet: GET    http://{{.WalletServiceLocalAddress}}/api/v1/wallets
+const startupT = ` - get service status:      GET    {{.WalletServiceLocalAddress}}/api/v1/status
+ - login:                   POST   {{.WalletServiceLocalAddress}}/api/v1/auth/token
+ - logout:                  DELETE {{.WalletServiceLocalAddress}}/api/v1/auth/token
+ - create a wallet:         POST   {{.WalletServiceLocalAddress}}/api/v1/wallets
+ - import a wallet:         POST   {{.WalletServiceLocalAddress}}/api/v1/wallets/import
+ - create a key:            POST   {{.WalletServiceLocalAddress}}/api/v1/keys
+ - list keys:               GET    {{.WalletServiceLocalAddress}}/api/v1/keys
+ - get a key:               GET    {{.WalletServiceLocalAddress}}/api/v1/keys/:keyid
+ - taint a key:             PUT    {{.WalletServiceLocalAddress}}/api/v1/keys/:keyid/taint
+ - annotate a key:          PUT    {{.WalletServiceLocalAddress}}/api/v1/keys/:keyid/metadata
+ - sign data:               POST   {{.WalletServiceLocalAddress}}/api/v1/sign
+ - verify data:             POST   {{.WalletServiceLocalAddress}}/api/v1/verify
+ - sign a command:          POST   {{.WalletServiceLocalAddress}}/api/v1/command
+ - sign a command (sync):   POST   {{.WalletServiceLocalAddress}}/api/v1/command/sync
+ - sign a command (commit): POST   {{.WalletServiceLocalAddress}}/api/v1/command/commit
+ - download a wallet:       GET    {{.WalletServiceLocalAddress}}/api/v1/wallets
+ - get the version:         GET    {{.WalletServiceLocalAddress}}/api/v1/wallets
 `
 
 func printEndpoints(serviceHost string) {
