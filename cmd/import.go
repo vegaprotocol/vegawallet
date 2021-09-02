@@ -60,6 +60,9 @@ func runImport(_ *cobra.Command, _ []string) error {
 	}
 
 	mnemonicDir, mnemonicFileName := filepath.Split(importArgs.mnemonicFile)
+	if len(mnemonicDir) == 0 {
+		mnemonicDir = "."
+	}
 	rawMnemonic, err := fs.ReadFile(os.DirFS(mnemonicDir), mnemonicFileName)
 	if err != nil {
 		return fmt.Errorf("couldn't read mnemonic file: %w", err)
