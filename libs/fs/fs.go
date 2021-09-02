@@ -5,50 +5,14 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
-	"runtime"
 )
-
-const (
-	dirPerms = 0700
-)
-
-// DefaultVegaDir returns the location to Vega config files and data files:
-// binary is in /usr/bin/ -> look for /etc/vega/config.toml
-// binary is in /usr/local/vega/bin/ -> look for /usr/local/vega/etc/config.toml
-// binary is in /usr/local/bin/ -> look for /usr/local/etc/vega/config.toml
-// otherwise, look for $HOME/.vega/config.toml
-func DefaultVegaDir() string {
-	if runtime.GOOS == "windows" {
-		// shortcut for windows
-		p, err := os.UserHomeDir()
-		if err == nil {
-			return filepath.Join(p, ".vega")
-		}
-	}
-
-	ex, err := os.Executable()
-	if err != nil {
-		panic(err)
-	}
-	exPath := filepath.Dir(ex)
-	if exPath == "/usr/bin" {
-		return "/etc/vega"
-	}
-	if exPath == "/usr/local/vega/bin" {
-		return "/usr/local/vega/etc"
-	}
-	if exPath == "/usr/local/bin" {
-		return "/usr/local/etc/vega"
-	}
-	return os.ExpandEnv("$HOME/.vega")
-}
 
 // EnsureDir will make sure a directory exists or is created at a given filesystem path.
 func EnsureDir(path string) error {
 	_, err := os.Stat(path)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return os.MkdirAll(path, dirPerms)
+			return os.MkdirAll(path, os.ModeDir|0700)
 		}
 		return err
 	}
@@ -82,6 +46,9 @@ func FileExists(path string) (bool, error) {
 
 func ReadFile(path string) ([]byte, error) {
 	dir, fileName := filepath.Split(path)
+	if len(dir) == 0 {
+		dir = "."
+	}
 
 	buf, err := fs.ReadFile(os.DirFS(dir), fileName)
 	if err != nil {

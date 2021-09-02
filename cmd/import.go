@@ -36,7 +36,7 @@ func init() {
 }
 
 func runImport(_ *cobra.Command, _ []string) error {
-	store, err := newWalletsStore(rootArgs.rootPath)
+	store, err := newWalletsStore(rootArgs.vegaHome)
 	if err != nil {
 		return err
 	}

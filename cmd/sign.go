@@ -37,7 +37,7 @@ func init() {
 }
 
 func runSign(_ *cobra.Command, _ []string) error {
-	handler, err := newWalletHandler(rootArgs.rootPath)
+	handler, err := newWalletHandler(rootArgs.vegaHome)
 	if err != nil {
 		return err
 	}
