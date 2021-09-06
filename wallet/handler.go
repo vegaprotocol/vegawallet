@@ -31,7 +31,7 @@ type Wallet interface {
 	UpdateMeta(pubKey string, meta []Meta) error
 	SignAny(pubKey string, data []byte) ([]byte, error)
 	VerifyAny(pubKey string, data, sig []byte) (bool, error)
-	SignTxV2(pubKey string, data []byte) (*Signature, error)
+	SignTx(pubKey string, data []byte) (*Signature, error)
 }
 
 type KeyPair interface {
@@ -228,7 +228,7 @@ func (h *Handler) SignAny(name string, inputData []byte, pubKey string) ([]byte,
 	return w.SignAny(pubKey, inputData)
 }
 
-func (h *Handler) SignTxV2(name string, req *walletpb.SubmitTransactionRequest, height uint64) (*commandspb.Transaction, error) {
+func (h *Handler) SignTx(name string, req *walletpb.SubmitTransactionRequest, height uint64) (*commandspb.Transaction, error) {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
 
@@ -245,7 +245,7 @@ func (h *Handler) SignTxV2(name string, req *walletpb.SubmitTransactionRequest, 
 	}
 
 	pubKey := req.GetPubKey()
-	signature, err := w.SignTxV2(pubKey, marshalledData)
+	signature, err := w.SignTx(pubKey, marshalledData)
 	if err != nil {
 		return nil, err
 	}

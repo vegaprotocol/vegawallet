@@ -31,9 +31,9 @@ func TestHDWallet(t *testing.T) {
 	t.Run("Describing unknown public key fails", testHDWalletDescribingUnknownPublicKeysFails)
 	t.Run("Listing public keys succeeds", testHDWalletListingPublicKeysSucceeds)
 	t.Run("Listing key pairs succeeds", testHDWalletListingKeyPairsSucceeds)
-	t.Run("Signing transaction request (v2) succeeds", testHDWalletSigningTxV2Succeeds)
-	t.Run("Signing transaction request (v2) with tainted key fails", testHDWalletSigningTxV2WithTaintedKeyFails)
-	t.Run("Signing transaction request (v2) with unknown key fails", testHDWalletSigningTxV2WithUnknownKeyFails)
+	t.Run("Signing transaction request succeeds", testHDWalletSigningTxSucceeds)
+	t.Run("Signing transaction request with tainted key fails", testHDWalletSigningTxWithTaintedKeyFails)
+	t.Run("Signing transaction request with unknown key fails", testHDWalletSigningTxWithUnknownKeyFails)
 	t.Run("Signing any message succeeds", testHDWalletSigningAnyMessageSucceeds)
 	t.Run("Signing any message with tainted key fails", testHDWalletSigningAnyMessageWithTaintedKeyFails)
 	t.Run("Signing any message with unknown key fails", testHDWalletSigningAnyMessageWithUnknownKeyFails)
@@ -466,7 +466,7 @@ func testHDWalletListingKeyPairsSucceeds(t *testing.T) {
 	assert.Equal(t, keys, []wallet.KeyPair{kp1, kp2})
 }
 
-func testHDWalletSigningTxV2Succeeds(t *testing.T) {
+func testHDWalletSigningTxSucceeds(t *testing.T) {
 	// given
 	name := "jeremy"
 	data := []byte("Je ne connaîtrai pas la peur car la peur tue l'esprit.")
@@ -486,7 +486,7 @@ func testHDWalletSigningTxV2Succeeds(t *testing.T) {
 	assert.NotNil(t, kp)
 
 	// when
-	signature, err := w.SignTxV2(kp.PublicKey(), data)
+	signature, err := w.SignTx(kp.PublicKey(), data)
 
 	// then
 	require.NoError(t, err)
@@ -495,7 +495,7 @@ func testHDWalletSigningTxV2Succeeds(t *testing.T) {
 	assert.Equal(t, "3849965c2f327f0b148e3b122cdc89a17fa07611e2a4178b1605dea5442ab7cfadb35d0b0ef527522f6477a5633b8f22d3b2d1e619d306111b7851a9d6100d02", signature.Value)
 }
 
-func testHDWalletSigningTxV2WithTaintedKeyFails(t *testing.T) {
+func testHDWalletSigningTxWithTaintedKeyFails(t *testing.T) {
 	// given
 	name := "jeremy"
 	data := []byte("Je ne connaîtrai pas la peur car la peur tue l'esprit.")
@@ -521,14 +521,14 @@ func testHDWalletSigningTxV2WithTaintedKeyFails(t *testing.T) {
 	require.NoError(t, err)
 
 	// when
-	signature, err := w.SignTxV2(kp.PublicKey(), data)
+	signature, err := w.SignTx(kp.PublicKey(), data)
 
 	// then
 	require.EqualError(t, err, wallet.ErrPubKeyIsTainted.Error())
 	assert.Nil(t, signature)
 }
 
-func testHDWalletSigningTxV2WithUnknownKeyFails(t *testing.T) {
+func testHDWalletSigningTxWithUnknownKeyFails(t *testing.T) {
 	// given
 	name := "jeremy"
 	data := []byte("Je ne connaîtrai pas la peur car la peur tue l'esprit.")
@@ -548,7 +548,7 @@ func testHDWalletSigningTxV2WithUnknownKeyFails(t *testing.T) {
 	assert.NotNil(t, kp)
 
 	// when
-	signature, err := w.SignTxV2("vladimirharkonnen", data)
+	signature, err := w.SignTx("vladimirharkonnen", data)
 
 	// then
 	require.EqualError(t, err, wallet.ErrPubKeyDoesNotExist.Error())

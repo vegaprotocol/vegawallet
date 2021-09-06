@@ -200,7 +200,7 @@ func (w *HDWallet) VerifyAny(pubKey string, data, sig []byte) (bool, error) {
 	return keyPair.VerifyAny(data, sig)
 }
 
-func (w *HDWallet) SignTxV2(pubKey string, data []byte) (*Signature, error) {
+func (w *HDWallet) SignTx(pubKey string, data []byte) (*Signature, error) {
 	keyPair, ok := w.keyRing.FindPair(pubKey)
 	if !ok {
 		return nil, ErrPubKeyDoesNotExist

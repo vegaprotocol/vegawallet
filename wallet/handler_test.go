@@ -74,9 +74,9 @@ func TestHandler(t *testing.T) {
 	t.Run("Updating key pair metadata without wallet fails", testHandlerUpdatingKeyPairMetaWithoutWalletFails)
 	t.Run("Updating key pair metadata with non-existing public key fails", testHandlerUpdatingKeyPairMetaWithNonExistingPublicKeyFails)
 	t.Run("Get wallet path succeeds", testHandlerGettingWalletPathSucceeds)
-	t.Run("Signing transaction request (v2) succeeds", testHandlerSigningTxV2Succeeds)
-	t.Run("Signing transaction request (v2) with logged out wallet fails", testHandlerSigningTxV2WithLoggedOutWalletFails)
-	t.Run("Signing transaction request (v2) with tainted key fails", testHandlerSigningTxV2WithTaintedKeyFails)
+	t.Run("Signing transaction request succeeds", testHandlerSigningTxSucceeds)
+	t.Run("Signing transaction request with logged out wallet fails", testHandlerSigningTxWithLoggedOutWalletFails)
+	t.Run("Signing transaction request with tainted key fails", testHandlerSigningTxWithTaintedKeyFails)
 	t.Run("Signing and verifying a message succeeds", testHandlerSigningAndVerifyingMessageSucceeds)
 	t.Run("Signing a message with logged out wallet fails", testHandlerSigningMessageWithLoggedOutWalletFails)
 	t.Run("Verifying a message with logged out wallet succeeds", testHandlerVerifyingMessageWithLoggedOutWalletSucceeds)
@@ -1184,7 +1184,7 @@ func testHandlerGettingWalletPathSucceeds(t *testing.T) {
 	assert.NotEmpty(t, path)
 }
 
-func testHandlerSigningTxV2Succeeds(t *testing.T) {
+func testHandlerSigningTxSucceeds(t *testing.T) {
 	h := getTestHandler(t)
 	defer h.ctrl.Finish()
 
@@ -1215,7 +1215,7 @@ func testHandlerSigningTxV2Succeeds(t *testing.T) {
 	}
 
 	// when
-	tx, err := h.SignTxV2(name, req, 42)
+	tx, err := h.SignTx(name, req, 42)
 
 	// then
 	require.NoError(t, err)
@@ -1230,7 +1230,7 @@ func testHandlerSigningTxV2Succeeds(t *testing.T) {
 	assert.NotEmpty(t, tx.Signature.Value)
 }
 
-func testHandlerSigningTxV2WithLoggedOutWalletFails(t *testing.T) {
+func testHandlerSigningTxWithLoggedOutWalletFails(t *testing.T) {
 	h := getTestHandler(t)
 	defer h.ctrl.Finish()
 
@@ -1266,14 +1266,14 @@ func testHandlerSigningTxV2WithLoggedOutWalletFails(t *testing.T) {
 	}
 
 	// when
-	tx, err := h.SignTxV2(name, req, 42)
+	tx, err := h.SignTx(name, req, 42)
 
 	// then
 	require.EqualError(t, err, wallet.ErrWalletNotLoggedIn.Error())
 	assert.Nil(t, tx)
 }
 
-func testHandlerSigningTxV2WithTaintedKeyFails(t *testing.T) {
+func testHandlerSigningTxWithTaintedKeyFails(t *testing.T) {
 	h := getTestHandler(t)
 	defer h.ctrl.Finish()
 
@@ -1311,7 +1311,7 @@ func testHandlerSigningTxV2WithTaintedKeyFails(t *testing.T) {
 	}
 
 	// when
-	tx, err := h.SignTxV2(name, req, 42)
+	tx, err := h.SignTx(name, req, 42)
 
 	// then
 	assert.Error(t, err)

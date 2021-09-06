@@ -104,7 +104,7 @@ func (n *nodeForward) LastBlockHeight(ctx context.Context) (uint64, error) {
 	return height, err
 }
 
-func (n *nodeForward) SendTxV2(ctx context.Context, tx *commandspb.Transaction, ty api.SubmitTransactionV2Request_Type) error {
+func (n *nodeForward) SendTx(ctx context.Context, tx *commandspb.Transaction, ty api.SubmitTransactionV2Request_Type) error {
 	req := api.SubmitTransactionV2Request{
 		Tx:   tx,
 		Type: ty,
@@ -114,7 +114,7 @@ func (n *nodeForward) SendTxV2(ctx context.Context, tx *commandspb.Transaction, 
 			clt := n.nextClt()
 			resp, err := clt.SubmitTransactionV2(ctx, &req)
 			if err != nil {
-				n.log.Error("failed to send transaction v2", zap.Error(err))
+				n.log.Error("failed to send transaction", zap.Error(err))
 				return err
 			}
 			n.log.Debug("response from SubmitTransactionV2", zap.Bool("success", resp.Success))
