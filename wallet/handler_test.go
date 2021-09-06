@@ -32,7 +32,6 @@ func getTestHandler(t *testing.T) *testHandler {
 
 func TestHandler(t *testing.T) {
 	t.Run("Creating a wallet succeeds", testHandlerCreatingWalletSucceeds)
-	t.Run("Creating a HD wallet whereas a legacy wallet exists fails", testHandlerCreatingHDWalletWhereasLegacyWalletExistsFails)
 	t.Run("Creating an already existing wallet fails", testHandlerCreatingAlreadyExistingWalletFails)
 	t.Run("Importing a wallet succeeds", testHandlerImportingWalletSucceeds)
 	t.Run("Importing a wallet with invalid mnemonic fails", testHandlerImportingWalletWithInvalidMnemonicFails)
@@ -97,29 +96,6 @@ func testHandlerCreatingWalletSucceeds(t *testing.T) {
 	// then
 	require.NoError(t, err)
 	assert.NotEmpty(t, mnemonic)
-}
-
-func testHandlerCreatingHDWalletWhereasLegacyWalletExistsFails(t *testing.T) {
-	h := getTestHandler(t)
-	defer h.ctrl.Finish()
-
-	// given
-	name := "jeremy"
-	passphrase := "Th1isisasecurep@ssphraseinnit"
-	legacyWallet := wallet.NewLegacyWallet(name)
-
-	// given
-	err := h.store.SaveWallet(legacyWallet, passphrase)
-
-	// then
-	require.NoError(t, err)
-
-	// when
-	mnemonic, err := h.CreateWallet(name, passphrase)
-
-	// then
-	assert.EqualError(t, err, wallet.ErrWalletAlreadyExists.Error())
-	assert.Empty(t, mnemonic)
 }
 
 func testHandlerCreatingAlreadyExistingWalletFails(t *testing.T) {

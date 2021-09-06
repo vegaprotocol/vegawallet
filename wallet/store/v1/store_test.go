@@ -9,7 +9,6 @@ import (
 	"testing"
 	"time"
 
-	"code.vegaprotocol.io/go-wallet/crypto"
 	"code.vegaprotocol.io/go-wallet/wallet"
 	storev1 "code.vegaprotocol.io/go-wallet/wallet/store/v1"
 	"github.com/stretchr/testify/assert"
@@ -26,7 +25,6 @@ func TestFileStoreV1(t *testing.T) {
 	t.Run("Getting wallet path succeeds", testFileStoreV1GetWalletPathSucceeds)
 	t.Run("Verifying non-existing wallet fails", testFileStoreV1NonExistingWalletFails)
 	t.Run("Verifying existing wallet succeeds", testFileStoreV1ExistingWalletSucceeds)
-	t.Run("Saving legacy wallet succeeds", testFileStoreV1SaveLegacyWalletSucceeds)
 	t.Run("Saving HD wallet succeeds", testFileStoreV1SaveHDWalletSucceeds)
 }
 
@@ -88,7 +86,7 @@ func testFileStoreV1GetWalletSucceeds(t *testing.T) {
 
 	// given
 	s := NewInitialisedStore(walletsDir)
-	w := newLegacyWalletWithKeys()
+	w := newHDWalletWithKeys()
 	passphrase := "passphrase"
 
 	// when
@@ -111,7 +109,7 @@ func testFileStoreV1GetWalletWithWrongPassphraseFails(t *testing.T) {
 
 	// given
 	s := NewInitialisedStore(walletsDir)
-	w := newLegacyWalletWithKeys()
+	w := newHDWalletWithKeys()
 	passphrase := "passphrase"
 	othPassphrase := "not-original-passphrase"
 
@@ -182,7 +180,7 @@ func testFileStoreV1ExistingWalletSucceeds(t *testing.T) {
 
 	// given
 	s := NewInitialisedStore(walletsDir)
-	w := newLegacyWalletWithKeys()
+	w := newHDWalletWithKeys()
 	passphrase := "passphrase"
 
 	// when
@@ -196,23 +194,6 @@ func testFileStoreV1ExistingWalletSucceeds(t *testing.T) {
 
 	// then
 	assert.True(t, exists)
-}
-
-func testFileStoreV1SaveLegacyWalletSucceeds(t *testing.T) {
-	walletsDir := newWalletsDir()
-	defer walletsDir.Remove()
-
-	// given
-	s := NewInitialisedStore(walletsDir)
-	w := newLegacyWalletWithKeys()
-
-	// when
-	err := s.SaveWallet(w, "passphrase")
-
-	// then
-	require.NoError(t, err)
-	assertFileAccess(t, walletsDir.WalletPath(w.Name()))
-	assert.NotEmpty(t, walletsDir.WalletContent(w.Name()))
 }
 
 func testFileStoreV1SaveHDWalletSucceeds(t *testing.T) {
@@ -251,19 +232,6 @@ func NewInitialisedStore(walletsDir walletsDir) *storev1.Store {
 	}
 
 	return s
-}
-
-func newLegacyWalletWithKeys() *wallet.LegacyWallet {
-	w := wallet.NewLegacyWallet(fmt.Sprintf("my-wallet-%v", time.Now().UnixNano()))
-
-	kp, err := wallet.GenKeyPair(crypto.Ed25519, 1)
-	if err != nil {
-		panic(err)
-	}
-
-	w.KeyRing.Upsert(*kp)
-
-	return w
 }
 
 func newHDWalletWithKeys() *wallet.HDWallet {

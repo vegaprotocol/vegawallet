@@ -5,13 +5,13 @@ import (
 	"testing"
 
 	wcrypto "code.vegaprotocol.io/go-wallet/crypto"
+	"github.com/oasisprotocol/curve25519-voi/primitives/ed25519"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestSignature(t *testing.T) {
 	t.Run("create signature ed25519 success", testCreateEd25519SignatureOK)
 	t.Run("create signature ed25519 fail", testCreateSignatureFailureNotAnAlgo)
-	t.Run("generate key success", testGenerateKey)
 	t.Run("verify success", testVerifyOK)
 	t.Run("verify fail wrong message", testVerifyFailWrongMessage)
 	t.Run("verify fail wrong pubkey", testVerifyFailWrongPubKey)
@@ -29,17 +29,10 @@ func testCreateSignatureFailureNotAnAlgo(t *testing.T) {
 	assert.EqualError(t, err, wcrypto.ErrUnsupportedSignatureAlgorithm.Error())
 }
 
-func testGenerateKey(t *testing.T) {
-	s, err := wcrypto.NewSignatureAlgorithm(wcrypto.Ed25519, 1)
-	assert.NoError(t, err)
-	_, _, err = s.GenKey()
-	assert.NoError(t, err)
-}
-
 func testVerifyOK(t *testing.T) {
 	s, err := wcrypto.NewSignatureAlgorithm(wcrypto.Ed25519, 1)
 	assert.NoError(t, err)
-	pub, priv, err := s.GenKey()
+	pub, priv := generateKey()
 	assert.NoError(t, err)
 
 	message := []byte("hello world")
@@ -56,7 +49,7 @@ func testVerifyOK(t *testing.T) {
 func testSignBadKeyLength(t *testing.T) {
 	s, err := wcrypto.NewSignatureAlgorithm(wcrypto.Ed25519, 1)
 	assert.NoError(t, err)
-	_, priv, err := s.GenKey()
+	_, priv := generateKey()
 
 	assert.NoError(t, err)
 
@@ -73,7 +66,7 @@ func testSignBadKeyLength(t *testing.T) {
 func testVerifyBadKeyLength(t *testing.T) {
 	s, err := wcrypto.NewSignatureAlgorithm(wcrypto.Ed25519, 1)
 	assert.NoError(t, err)
-	pub, priv, err := s.GenKey()
+	pub, priv := generateKey()
 
 	assert.NoError(t, err)
 
@@ -94,7 +87,7 @@ func testVerifyBadKeyLength(t *testing.T) {
 func testVerifyFailWrongMessage(t *testing.T) {
 	s, err := wcrypto.NewSignatureAlgorithm(wcrypto.Ed25519, 1)
 	assert.NoError(t, err)
-	pub, priv, err := s.GenKey()
+	pub, priv := generateKey()
 	assert.NoError(t, err)
 
 	message := []byte("hello world")
@@ -113,9 +106,9 @@ func testVerifyFailWrongPubKey(t *testing.T) {
 	s, err := wcrypto.NewSignatureAlgorithm(wcrypto.Ed25519, 1)
 	assert.NoError(t, err)
 	// gen 2 sets of  keys
-	_, priv, err := s.GenKey()
+	_, priv := generateKey()
 	assert.NoError(t, err)
-	pub, _, err := s.GenKey()
+	pub, _ := generateKey()
 	assert.NoError(t, err)
 
 	message := []byte("hello world")
@@ -127,4 +120,13 @@ func testVerifyFailWrongPubKey(t *testing.T) {
 	ok, err := s.Verify(pub, message, sig)
 	assert.NoError(t, err)
 	assert.False(t, ok)
+}
+
+func generateKey() (crypto.PublicKey, crypto.PrivateKey) {
+	pub, priv, err := ed25519.GenerateKey(nil)
+	if err != nil {
+		panic(err)
+	}
+
+	return []byte(pub), []byte(priv)
 }
