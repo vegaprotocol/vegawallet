@@ -371,7 +371,7 @@ type WalletHandler interface {
 	SecureGenerateKeyPair(name, passphrase string, meta []wallet.Meta) (string, error)
 	GetPublicKey(name, pubKey string) (wallet.PublicKey, error)
 	ListPublicKeys(name string) ([]wallet.PublicKey, error)
-	SignTxV2(name string, req *walletpb.SubmitTransactionRequest, height uint64) (*commandspb.Transaction, error)
+	SignTx(name string, req *walletpb.SubmitTransactionRequest, height uint64) (*commandspb.Transaction, error)
 	SignAny(name string, inputData []byte, pubKey string) ([]byte, error)
 	VerifyAny(inputData, sig []byte, pubKey string) (bool, error)
 	TaintKey(name, pubKey, passphrase string) error
@@ -390,7 +390,7 @@ type Auth interface {
 // NodeForward ...
 //go:generate go run github.com/golang/mock/mockgen -destination mocks/node_forward_mock.go -package mocks code.vegaprotocol.io/go-wallet/service NodeForward
 type NodeForward interface {
-	SendTxV2(context.Context, *commandspb.Transaction, api.SubmitTransactionV2Request_Type) error
+	SendTx(context.Context, *commandspb.Transaction, api.SubmitTransactionV2Request_Type) error
 	HealthCheck(context.Context) error
 	LastBlockHeight(context.Context) (uint64, error)
 }
@@ -430,9 +430,9 @@ func NewServiceWith(log *zap.Logger, cfg *Config, h WalletHandler, a Auth, n Nod
 	s.PUT("/api/v1/keys/:keyid/metadata", ExtractToken(s.UpdateMeta))
 	s.POST("/api/v1/sign", ExtractToken(s.SignAny))
 	s.POST("/api/v1/verify", ExtractToken(s.VerifyAny))
-	s.POST("/api/v1/command", ExtractToken(s.SignTxV2))
-	s.POST("/api/v1/command/sync", ExtractToken(s.SignTxSyncV2))
-	s.POST("/api/v1/command/commit", ExtractToken(s.SignTxCommitV2))
+	s.POST("/api/v1/command", ExtractToken(s.SignTx))
+	s.POST("/api/v1/command/sync", ExtractToken(s.SignTxSync))
+	s.POST("/api/v1/command/commit", ExtractToken(s.SignTxCommit))
 	s.GET("/api/v1/wallets", ExtractToken(s.DownloadWallet))
 	s.GET("/api/v1/version", s.Version)
 
@@ -707,19 +707,19 @@ func (s *Service) VerifyAny(t string, w http.ResponseWriter, r *http.Request, _ 
 	writeSuccess(w, SuccessResponse{Success: verified}, http.StatusOK)
 }
 
-func (s *Service) SignTxSyncV2(token string, w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	s.signTxV2(token, w, r, p, api.SubmitTransactionV2Request_TYPE_SYNC)
+func (s *Service) SignTxSync(token string, w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	s.signTx(token, w, r, p, api.SubmitTransactionV2Request_TYPE_SYNC)
 }
 
-func (s *Service) SignTxCommitV2(token string, w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	s.signTxV2(token, w, r, p, api.SubmitTransactionV2Request_TYPE_COMMIT)
+func (s *Service) SignTxCommit(token string, w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	s.signTx(token, w, r, p, api.SubmitTransactionV2Request_TYPE_COMMIT)
 }
 
-func (s *Service) SignTxV2(token string, w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	s.signTxV2(token, w, r, p, api.SubmitTransactionV2Request_TYPE_ASYNC)
+func (s *Service) SignTx(token string, w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	s.signTx(token, w, r, p, api.SubmitTransactionV2Request_TYPE_ASYNC)
 }
 
-func (s *Service) signTxV2(token string, w http.ResponseWriter, r *http.Request, _ httprouter.Params, ty api.SubmitTransactionV2Request_Type) {
+func (s *Service) signTx(token string, w http.ResponseWriter, r *http.Request, _ httprouter.Params, ty api.SubmitTransactionV2Request_Type) {
 	defer r.Body.Close()
 
 	req, errs := ParseSubmitTransactionRequest(r)
@@ -740,14 +740,14 @@ func (s *Service) signTxV2(token string, w http.ResponseWriter, r *http.Request,
 		return
 	}
 
-	tx, err := s.handler.SignTxV2(name, req, height)
+	tx, err := s.handler.SignTx(name, req, height)
 	if err != nil {
 		writeForbiddenError(w, err)
 		return
 	}
 
 	if req.Propagate {
-		if err := s.nodeForward.SendTxV2(r.Context(), tx, ty); err != nil {
+		if err := s.nodeForward.SendTx(r.Context(), tx, ty); err != nil {
 			if s, ok := status.FromError(err); ok {
 				details := []string{}
 				for _, v := range s.Details() {
