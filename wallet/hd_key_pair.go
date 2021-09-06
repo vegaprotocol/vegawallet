@@ -126,7 +126,7 @@ func (k *HDKeyPair) ToPublicKey() HDPublicKey {
 	return HDPublicKey{
 		Idx:       k.Index(),
 		PublicKey: k.PublicKey(),
-		Algorithm: jsonAlgorithm{
+		Algorithm: Algorithm{
 			Name:    k.algo.Name(),
 			Version: k.algo.Version(),
 		},
@@ -136,17 +136,12 @@ func (k *HDKeyPair) ToPublicKey() HDPublicKey {
 }
 
 type jsonHDKeyPair struct {
-	Index      uint32        `json:"index"`
-	PublicKey  string        `json:"public_key"`
-	PrivateKey string        `json:"private_key"`
-	Meta       []Meta        `json:"meta"`
-	Tainted    bool          `json:"tainted"`
-	Algorithm  jsonAlgorithm `json:"algorithm"`
-}
-
-type jsonAlgorithm struct {
-	Name    string `json:"name"`
-	Version uint32 `json:"version"`
+	Index      uint32    `json:"index"`
+	PublicKey  string    `json:"public_key"`
+	PrivateKey string    `json:"private_key"`
+	Meta       []Meta    `json:"meta"`
+	Tainted    bool      `json:"tainted"`
+	Algorithm  Algorithm `json:"algorithm"`
 }
 
 func (k *HDKeyPair) MarshalJSON() ([]byte, error) {
@@ -156,7 +151,7 @@ func (k *HDKeyPair) MarshalJSON() ([]byte, error) {
 		PrivateKey: k.privateKey.encoded,
 		Meta:       k.meta,
 		Tainted:    k.tainted,
-		Algorithm: jsonAlgorithm{
+		Algorithm: Algorithm{
 			Name:    k.algo.Name(),
 			Version: k.algo.Version(),
 		},
@@ -170,7 +165,7 @@ func (k *HDKeyPair) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	algo, err := crypto.NewSignatureAlgorithm(crypto.Ed25519, 1)
+	algo, err := crypto.NewSignatureAlgorithm(jsonKp.Algorithm.Name, jsonKp.Algorithm.Version)
 	if err != nil {
 		return err
 	}

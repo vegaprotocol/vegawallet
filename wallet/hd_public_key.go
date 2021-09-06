@@ -5,11 +5,11 @@ import (
 )
 
 type HDPublicKey struct {
-	Idx       uint32        `json:"index"`
-	PublicKey string        `json:"pub"`
-	Algorithm jsonAlgorithm `json:"algorithm"`
-	Tainted   bool          `json:"tainted"`
-	MetaList  []Meta        `json:"meta"`
+	Idx       uint32    `json:"index"`
+	PublicKey string    `json:"pub"`
+	Algorithm Algorithm `json:"algorithm"`
+	Tainted   bool      `json:"tainted"`
+	MetaList  []Meta    `json:"meta"`
 }
 
 func (k *HDPublicKey) Index() uint32 {

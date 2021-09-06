@@ -315,11 +315,15 @@ func testServiceGenKeypairOK(t *testing.T) {
 	s := getTestService(t)
 	defer s.ctrl.Finish()
 
-	key := &wallet.LegacyPublicKey{
-		Pub:       "0xdeadbeef",
-		Algorithm: crypto.NewEd25519(),
-		Tainted:   false,
-		MetaList:  nil,
+	ed25519 := crypto.NewEd25519()
+	key := &wallet.HDPublicKey{
+		PublicKey: "0xdeadbeef",
+		Algorithm: wallet.Algorithm{
+			Name:    ed25519.Name(),
+			Version: ed25519.Version(),
+		},
+		Tainted:  false,
+		MetaList: nil,
 	}
 
 	s.auth.EXPECT().VerifyToken("eyXXzA").Times(1).Return("jeremy", nil)
@@ -423,15 +427,18 @@ func testServiceGetPublicKeyOK(t *testing.T) {
 	defer s.ctrl.Finish()
 
 	s.auth.EXPECT().VerifyToken("eyXXzA").Times(1).Return("jeremy", nil)
-	kp := wallet.LegacyKeyPair{
-		Pub:       "pub",
-		Priv:      "",
-		Algorithm: crypto.NewEd25519(),
-		Tainted:   false,
-		MetaList:  []wallet.Meta{{Key: "a", Value: "b"}},
+	hdPubKey := &wallet.HDPublicKey{
+		Idx:       1,
+		PublicKey: "0xdeadbeef",
+		Algorithm: wallet.Algorithm{
+			Name:    "some/algo",
+			Version: 1,
+		},
+		Tainted:  false,
+		MetaList: []wallet.Meta{{Key: "a", Value: "b"}},
 	}
 	s.handler.EXPECT().GetPublicKey(gomock.Any(), gomock.Any()).Times(1).
-		Return(kp.ToPublicKey(), nil)
+		Return(hdPubKey, nil)
 
 	r := httptest.NewRequest("GET", "scheme://host/path", nil)
 	r.Header.Add("Authorization", "Bearer eyXXzA")

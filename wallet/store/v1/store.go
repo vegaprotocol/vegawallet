@@ -82,9 +82,6 @@ func (s *Store) GetWallet(name, passphrase string) (wallet.Wallet, error) {
 
 	var w wallet.Wallet
 	switch versionedWallet.Version {
-	case 0:
-		w = &wallet.LegacyWallet{}
-		break
 	case 1:
 		w = &wallet.HDWallet{}
 		break

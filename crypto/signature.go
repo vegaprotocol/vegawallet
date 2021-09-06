@@ -19,7 +19,6 @@ type SignatureAlgorithm struct {
 }
 
 type signatureAlgorithmImpl interface {
-	GenKey() (crypto.PublicKey, crypto.PrivateKey, error)
 	Sign(priv crypto.PrivateKey, buf []byte) ([]byte, error)
 	Verify(pub crypto.PublicKey, message, sig []byte) (bool, error)
 	Name() string
@@ -37,10 +36,6 @@ func NewSignatureAlgorithm(name string, version uint32) (SignatureAlgorithm, err
 		return NewEd25519(), nil
 	}
 	return SignatureAlgorithm{}, ErrUnsupportedSignatureAlgorithm
-}
-
-func (s *SignatureAlgorithm) GenKey() (crypto.PublicKey, crypto.PrivateKey, error) {
-	return s.impl.GenKey()
 }
 
 func (s *SignatureAlgorithm) Sign(priv crypto.PrivateKey, buf []byte) ([]byte, error) {
