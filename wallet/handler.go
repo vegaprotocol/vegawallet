@@ -31,7 +31,7 @@ type Wallet interface {
 	UpdateMeta(pubKey string, meta []Meta) error
 	SignAny(pubKey string, data []byte) ([]byte, error)
 	VerifyAny(pubKey string, data, sig []byte) (bool, error)
-	SignTxV2(pubKey string, data []byte) (*commandspb.Signature, error)
+	SignTxV2(pubKey string, data []byte) (*Signature, error)
 }
 
 type KeyPair interface {
@@ -250,7 +250,12 @@ func (h *Handler) SignTxV2(name string, req *walletpb.SubmitTransactionRequest, 
 		return nil, err
 	}
 
-	return commands.NewTransaction(pubKey, marshalledData, signature), nil
+	protoSignature := &commandspb.Signature{
+		Value:   signature.Value,
+		Algo:    signature.Algo,
+		Version: signature.Version,
+	}
+	return commands.NewTransaction(pubKey, marshalledData, protoSignature), nil
 }
 
 func (h *Handler) VerifyAny(inputData, sig []byte, pubKey string) (bool, error) {

@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 
 	"code.vegaprotocol.io/go-wallet/crypto"
-	commandspb "code.vegaprotocol.io/protos/vega/commands/v1"
 )
 
 type HDKeyPair struct {
@@ -103,13 +102,13 @@ func (k *HDKeyPair) VerifyAny(data, sig []byte) (bool, error) {
 	return k.algo.Verify(k.publicKey.bytes, data, sig)
 }
 
-func (k *HDKeyPair) Sign(data []byte) (*commandspb.Signature, error) {
+func (k *HDKeyPair) Sign(data []byte) (*Signature, error) {
 	sig, err := k.algo.Sign(k.privateKey.bytes, data)
 	if err != nil {
 		return nil, err
 	}
 
-	return &commandspb.Signature{
+	return &Signature{
 		Value:   hex.EncodeToString(sig),
 		Algo:    k.algo.Name(),
 		Version: k.algo.Version(),
