@@ -4,7 +4,7 @@
 
 By default, the wallet will be stored at a specific location. If you want to
 specify a different location for test or isolation purposes, use
-the `--vega-home` flag to do so.
+the `--home` flag to do so.
 
 ## List of available commands
 

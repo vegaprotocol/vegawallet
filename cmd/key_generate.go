@@ -36,7 +36,7 @@ func init() {
 
 func runKeyGenerate(_ *cobra.Command, _ []string) error {
 	p := printer.NewHumanPrinter()
-	store, err := newWalletsStore(rootArgs.vegaHome)
+	store, err := newWalletsStore(rootArgs.home)
 	if err != nil {
 		return err
 	}
