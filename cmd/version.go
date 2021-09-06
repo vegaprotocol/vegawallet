@@ -2,8 +2,8 @@ package cmd
 
 import (
 	"code.vegaprotocol.io/go-wallet/cmd/printer"
-	vgjson "code.vegaprotocol.io/shared/libs/json"
 	"code.vegaprotocol.io/go-wallet/version"
+	vgjson "code.vegaprotocol.io/shared/libs/json"
 
 	"github.com/spf13/cobra"
 )

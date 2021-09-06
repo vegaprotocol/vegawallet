@@ -1,12 +1,12 @@
-package wallet
+package wallets
 
 import (
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"sync"
 
 	wcrypto "code.vegaprotocol.io/go-wallet/crypto"
+	"code.vegaprotocol.io/go-wallet/wallet"
 	"code.vegaprotocol.io/protos/commands"
 	commandspb "code.vegaprotocol.io/protos/vega/commands/v1"
 	walletpb "code.vegaprotocol.io/protos/vega/wallet/v1"
@@ -14,51 +14,11 @@ import (
 	"github.com/golang/protobuf/proto"
 )
 
-var (
-	ErrPubKeyIsTainted = errors.New("public key is tainted")
-)
-
-type Wallet interface {
-	Version() uint32
-	Name() string
-	SetName(newName string)
-	DescribePublicKey(pubKey string) (PublicKey, error)
-	ListPublicKeys() []PublicKey
-	ListKeyPairs() []KeyPair
-	GenerateKeyPair(meta []Meta) (KeyPair, error)
-	TaintKey(pubKey string) error
-	UntaintKey(pubKey string) error
-	UpdateMeta(pubKey string, meta []Meta) error
-	SignAny(pubKey string, data []byte) ([]byte, error)
-	VerifyAny(pubKey string, data, sig []byte) (bool, error)
-	SignTx(pubKey string, data []byte) (*Signature, error)
-}
-
-type KeyPair interface {
-	PublicKey() string
-	PrivateKey() string
-	IsTainted() bool
-	Meta() []Meta
-	AlgorithmVersion() uint32
-	AlgorithmName() string
-}
-
-type PublicKey interface {
-	Key() string
-	IsTainted() bool
-	Meta() []Meta
-	AlgorithmVersion() uint32
-	AlgorithmName() string
-
-	MarshalJSON() ([]byte, error)
-	UnmarshalJSON(data []byte) error
-}
-
 // Store abstracts the underlying storage for wallet data.
 type Store interface {
 	WalletExists(name string) bool
-	SaveWallet(w Wallet, passphrase string) error
-	GetWallet(name, passphrase string) (Wallet, error)
+	SaveWallet(w wallet.Wallet, passphrase string) error
+	GetWallet(name, passphrase string) (wallet.Wallet, error)
 	GetWalletPath(name string) string
 	ListWallets() ([]string, error)
 }
@@ -97,10 +57,10 @@ func (h *Handler) CreateWallet(name, passphrase string) (string, error) {
 	defer h.mu.Unlock()
 
 	if h.store.WalletExists(name) {
-		return "", ErrWalletAlreadyExists
+		return "", wallet.ErrWalletAlreadyExists
 	}
 
-	w, mnemonic, err := NewHDWallet(name)
+	w, mnemonic, err := wallet.NewHDWallet(name)
 	if err != nil {
 		return "", err
 	}
@@ -118,10 +78,10 @@ func (h *Handler) ImportWallet(name, passphrase, mnemonic string) error {
 	defer h.mu.Unlock()
 
 	if h.store.WalletExists(name) {
-		return ErrWalletAlreadyExists
+		return wallet.ErrWalletAlreadyExists
 	}
 
-	w, err := ImportHDWallet(name, mnemonic)
+	w, err := wallet.ImportHDWallet(name, mnemonic)
 	if err != nil {
 		return err
 	}
@@ -135,7 +95,7 @@ func (h *Handler) LoginWallet(name, passphrase string) error {
 
 	w, err := h.store.GetWallet(name, passphrase)
 	if err != nil {
-		return ErrWalletDoesNotExists
+		return wallet.ErrWalletDoesNotExists
 	}
 
 	h.loggedWallets.Add(w)
@@ -147,7 +107,7 @@ func (h *Handler) LogoutWallet(name string) {
 	h.loggedWallets.Remove(name)
 }
 
-func (h *Handler) GenerateKeyPair(name, passphrase string, meta []Meta) (KeyPair, error) {
+func (h *Handler) GenerateKeyPair(name, passphrase string, meta []wallet.Meta) (wallet.KeyPair, error) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 
@@ -171,7 +131,7 @@ func (h *Handler) GenerateKeyPair(name, passphrase string, meta []Meta) (KeyPair
 	return kp, nil
 }
 
-func (h *Handler) SecureGenerateKeyPair(name, passphrase string, meta []Meta) (string, error) {
+func (h *Handler) SecureGenerateKeyPair(name, passphrase string, meta []wallet.Meta) (string, error) {
 	kp, err := h.GenerateKeyPair(name, passphrase, meta)
 	if err != nil {
 		return "", err
@@ -180,7 +140,7 @@ func (h *Handler) SecureGenerateKeyPair(name, passphrase string, meta []Meta) (s
 	return kp.PublicKey(), nil
 }
 
-func (h *Handler) GetPublicKey(name, pubKey string) (PublicKey, error) {
+func (h *Handler) GetPublicKey(name, pubKey string) (wallet.PublicKey, error) {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
 
@@ -192,7 +152,7 @@ func (h *Handler) GetPublicKey(name, pubKey string) (PublicKey, error) {
 	return w.DescribePublicKey(pubKey)
 }
 
-func (h *Handler) ListPublicKeys(name string) ([]PublicKey, error) {
+func (h *Handler) ListPublicKeys(name string) ([]wallet.PublicKey, error) {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
 
@@ -204,7 +164,7 @@ func (h *Handler) ListPublicKeys(name string) ([]PublicKey, error) {
 	return w.ListPublicKeys(), nil
 }
 
-func (h *Handler) ListKeyPairs(name string) ([]KeyPair, error) {
+func (h *Handler) ListKeyPairs(name string) ([]wallet.KeyPair, error) {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
 
@@ -305,7 +265,7 @@ func (h *Handler) UntaintKey(name string, pubKey string, passphrase string) erro
 	return h.saveWallet(w, passphrase)
 }
 
-func (h *Handler) UpdateMeta(name, pubKey, passphrase string, meta []Meta) error {
+func (h *Handler) UpdateMeta(name, pubKey, passphrase string, meta []wallet.Meta) error {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 
@@ -326,7 +286,7 @@ func (h *Handler) GetWalletPath(name string) (string, error) {
 	return h.store.GetWalletPath(name), nil
 }
 
-func (h *Handler) saveWallet(w Wallet, passphrase string) error {
+func (h *Handler) saveWallet(w wallet.Wallet, passphrase string) error {
 	err := h.store.SaveWallet(w, passphrase)
 	if err != nil {
 		return err
@@ -400,20 +360,20 @@ func WrapRequestCommandIntoInputData(data *commandspb.InputData, req *walletpb.S
 	}
 }
 
-func (h *Handler) getLoggedWallet(name string) (Wallet, error) {
+func (h *Handler) getLoggedWallet(name string) (wallet.Wallet, error) {
 	exists := h.store.WalletExists(name)
 	if !exists {
-		return nil, ErrWalletDoesNotExists
+		return nil, wallet.ErrWalletDoesNotExists
 	}
 
 	w, loggedIn := h.loggedWallets.Get(name)
 	if !loggedIn {
-		return nil, ErrWalletNotLoggedIn
+		return nil, wallet.ErrWalletNotLoggedIn
 	}
 	return w, nil
 }
 
-func addDefaultAlias(meta []Meta, w Wallet) []Meta {
+func addDefaultAlias(meta []wallet.Meta, w wallet.Wallet) []wallet.Meta {
 	hasName := false
 	for _, m := range meta {
 		if m.Key == "name" {
@@ -423,7 +383,7 @@ func addDefaultAlias(meta []Meta, w Wallet) []Meta {
 	if !hasName {
 		nextId := len(w.ListKeyPairs()) + 1
 
-		meta = append(meta, Meta{
+		meta = append(meta, wallet.Meta{
 			Key:   "name",
 			Value: fmt.Sprintf("%s key %d", w.Name(), nextId),
 		})
@@ -431,19 +391,19 @@ func addDefaultAlias(meta []Meta, w Wallet) []Meta {
 	return meta
 }
 
-type wallets map[string]Wallet
+type wallets map[string]wallet.Wallet
 
 func newWallets() wallets {
-	return map[string]Wallet{}
+	return map[string]wallet.Wallet{}
 }
 
-func (w wallets) Add(wallet Wallet) {
+func (w wallets) Add(wallet wallet.Wallet) {
 	w[wallet.Name()] = wallet
 }
 
-func (w wallets) Get(name string) (Wallet, bool) {
-	wallet, ok := w[name]
-	return wallet, ok
+func (w wallets) Get(name string) (wallet.Wallet, bool) {
+	wal, ok := w[name]
+	return wal, ok
 }
 
 func (w wallets) Remove(name string) {

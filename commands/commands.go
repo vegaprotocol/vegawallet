@@ -1,4 +1,4 @@
-package wallet
+package commands
 
 import (
 	"code.vegaprotocol.io/protos/commands"

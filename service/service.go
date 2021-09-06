@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	commands2 "code.vegaprotocol.io/go-wallet/commands"
 	"code.vegaprotocol.io/go-wallet/version"
 	"code.vegaprotocol.io/go-wallet/wallet"
 	"code.vegaprotocol.io/protos/commands"
@@ -322,7 +323,7 @@ func ParseSubmitTransactionRequest(r *http.Request) (*walletpb.SubmitTransaction
 		return nil, errs.FinalAdd(err)
 	}
 
-	if errs = wallet.CheckSubmitTransactionRequest(req); !errs.Empty() {
+	if errs = commands2.CheckSubmitTransactionRequest(req); !errs.Empty() {
 		return nil, errs
 	}
 

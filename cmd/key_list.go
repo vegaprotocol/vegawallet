@@ -5,8 +5,8 @@ import (
 	"fmt"
 
 	"code.vegaprotocol.io/go-wallet/cmd/printer"
-	vgjson "code.vegaprotocol.io/shared/libs/json"
 	"code.vegaprotocol.io/go-wallet/wallet"
+	vgjson "code.vegaprotocol.io/shared/libs/json"
 	"github.com/spf13/cobra"
 )
 

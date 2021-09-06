@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"code.vegaprotocol.io/go-wallet/cmd/printer"
-	"code.vegaprotocol.io/go-wallet/wallet"
+	"code.vegaprotocol.io/go-wallet/wallets"
 	"github.com/spf13/cobra"
 )
 
@@ -41,7 +41,7 @@ func runImport(_ *cobra.Command, _ []string) error {
 		return err
 	}
 
-	handler := wallet.NewHandler(store)
+	handler := wallets.NewHandler(store)
 	if err != nil {
 		return err
 	}
