@@ -1,4 +1,4 @@
-package wallet_test
+package wallets_test
 
 import (
 	"errors"

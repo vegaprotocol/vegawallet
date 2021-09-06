@@ -10,8 +10,8 @@ import (
 
 	"code.vegaprotocol.io/go-wallet/cmd/printer"
 	"code.vegaprotocol.io/go-wallet/version"
-	"code.vegaprotocol.io/go-wallet/wallet"
 	wstorev1 "code.vegaprotocol.io/go-wallet/wallet/store/v1"
+	"code.vegaprotocol.io/go-wallet/wallets"
 	vgjson "code.vegaprotocol.io/shared/libs/json"
 	"github.com/mattn/go-isatty"
 	"github.com/spf13/cobra"
@@ -181,11 +181,11 @@ func newWalletsStore(rootPath string) (*wstorev1.Store, error) {
 	return wstorev1.NewStore(walletsPath)
 }
 
-func newWalletHandler(rootPath string) (*wallet.Handler, error) {
+func newWalletHandler(rootPath string) (*wallets.Handler, error) {
 	store, err := newWalletsStore(rootPath)
 	if err != nil {
 		return nil, err
 	}
 
-	return wallet.NewHandler(store), nil
+	return wallets.NewHandler(store), nil
 }

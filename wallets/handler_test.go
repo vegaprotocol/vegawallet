@@ -1,9 +1,10 @@
-package wallet_test
+package wallets_test
 
 import (
 	"testing"
 
 	"code.vegaprotocol.io/go-wallet/wallet"
+	"code.vegaprotocol.io/go-wallet/wallets"
 	commandspb "code.vegaprotocol.io/protos/vega/commands/v1"
 	walletpb "code.vegaprotocol.io/protos/vega/wallet/v1"
 	"github.com/stretchr/testify/require"
@@ -12,8 +13,13 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+const (
+	TestMnemonic1 = "swing ceiling chaos green put insane ripple desk match tip melt usual shrug turkey renew icon parade veteran lens govern path rough page render"
+	TestMnemonic2 = "green put insane ripple desk match tip melt usual shrug turkey renew icon parade veteran lens govern path rough page render swing ceiling chaos"
+)
+
 type testHandler struct {
-	*wallet.Handler
+	*wallets.Handler
 	ctrl  *gomock.Controller
 	store *mockedStore
 }
@@ -22,7 +28,7 @@ func getTestHandler(t *testing.T) *testHandler {
 	ctrl := gomock.NewController(t)
 	store := newMockedStore()
 
-	h := wallet.NewHandler(store)
+	h := wallets.NewHandler(store)
 	return &testHandler{
 		Handler: h,
 		ctrl:    ctrl,
