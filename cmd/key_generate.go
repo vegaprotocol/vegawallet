@@ -7,8 +7,8 @@ import (
 	"strings"
 
 	"code.vegaprotocol.io/go-wallet/cmd/printer"
-	vgjson "code.vegaprotocol.io/shared/libs/json"
 	"code.vegaprotocol.io/go-wallet/wallet"
+	vgjson "code.vegaprotocol.io/shared/libs/json"
 	"github.com/spf13/cobra"
 )
 
@@ -86,7 +86,7 @@ func runKeyGenerate(_ *cobra.Command, _ []string) error {
 	if rootArgs.output == "human" {
 		printHuman(p, mnemonic, keyPair)
 	} else if rootArgs.output == "json" {
-		return printJSON(mnemonic, keyPair)
+		return printKeyGenerateJSON(mnemonic, keyPair)
 	} else {
 		return fmt.Errorf("output \"%s\" is not supported for this command", rootArgs.output)
 	}
@@ -121,7 +121,7 @@ func printHuman(p *printer.HumanPrinter, mnemonic string, keyPair wallet.KeyPair
 	p.Text("For more information, use ").Bold("--help").Text(" flag.").Jump()
 }
 
-func printJSON(mnemonic string, keyPair wallet.KeyPair) error {
+func printKeyGenerateJSON(mnemonic string, keyPair wallet.KeyPair) error {
 	result := struct {
 		WalletMnemonic   string `json:",omitempty"`
 		PrivateKey       string
