@@ -9,10 +9,10 @@ import (
 	"strings"
 
 	"code.vegaprotocol.io/go-wallet/cmd/printer"
-	vgjson "code.vegaprotocol.io/shared/libs/json"
 	"code.vegaprotocol.io/go-wallet/version"
 	"code.vegaprotocol.io/go-wallet/wallet"
 	wstorev1 "code.vegaprotocol.io/go-wallet/wallet/store/v1"
+	vgjson "code.vegaprotocol.io/shared/libs/json"
 	"github.com/mattn/go-isatty"
 	"github.com/spf13/cobra"
 	"golang.org/x/crypto/ssh/terminal"
@@ -21,14 +21,14 @@ import (
 var (
 	rootArgs struct {
 		output         string
-		vegaHome       string
+		home           string
 		noVersionCheck bool
 	}
 
 	rootCmd = &cobra.Command{
 		Use:               os.Args[0],
 		Short:             "The Vega wallet",
-		Long:              `The Vega wallet`,
+		Long:              "The Vega wallet",
 		PersistentPreRunE: rootPreRun,
 		SilenceUsage:      true,
 		SilenceErrors:     true,
@@ -108,7 +108,7 @@ func Execute() {
 
 func init() {
 	rootCmd.PersistentFlags().StringVarP(&rootArgs.output, "output", "o", "human", "Specify the output format: json,human")
-	rootCmd.PersistentFlags().StringVar(&rootArgs.vegaHome, "vega-home", "", "Specify the location of a custom Vega home")
+	rootCmd.PersistentFlags().StringVar(&rootArgs.home, "home", "", "Specify the location of a custom Vega home")
 	rootCmd.PersistentFlags().BoolVar(&rootArgs.noVersionCheck, "no-version-check", false, "Do not check for new version of the Vega wallet")
 }
 
@@ -171,7 +171,7 @@ func promptForPassphrase(msg ...string) (string, error) {
 
 // newWalletsStore builds a wallets store with the following structure
 //
-// vega-home/
+// home/
 // └── wallets/
 //    ├── my-wallet-1
 //    └── my-wallet-2

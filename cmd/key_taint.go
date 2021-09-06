@@ -32,7 +32,7 @@ func init() {
 }
 
 func runKeyTaint(_ *cobra.Command, _ []string) error {
-	handler, err := newWalletHandler(rootArgs.vegaHome)
+	handler, err := newWalletHandler(rootArgs.home)
 	if err != nil {
 		return err
 	}

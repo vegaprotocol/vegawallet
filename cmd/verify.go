@@ -34,7 +34,7 @@ func init() {
 }
 
 func runVerify(_ *cobra.Command, _ []string) error {
-	handler, err := newWalletHandler(rootArgs.vegaHome)
+	handler, err := newWalletHandler(rootArgs.home)
 	if err != nil {
 		return err
 	}
