@@ -38,44 +38,48 @@ func NewSignatureAlgorithm(name string, version uint32) (SignatureAlgorithm, err
 	return SignatureAlgorithm{}, ErrUnsupportedSignatureAlgorithm
 }
 
-func (s *SignatureAlgorithm) Sign(priv crypto.PrivateKey, buf []byte) ([]byte, error) {
-	return s.impl.Sign(priv, buf)
+func (a *SignatureAlgorithm) Sign(priv crypto.PrivateKey, buf []byte) ([]byte, error) {
+	return a.impl.Sign(priv, buf)
 }
 
-func (s *SignatureAlgorithm) Verify(pub crypto.PublicKey, message, sig []byte) (bool, error) {
-	return s.impl.Verify(pub, message, sig)
+func (a *SignatureAlgorithm) Verify(pub crypto.PublicKey, message, sig []byte) (bool, error) {
+	return a.impl.Verify(pub, message, sig)
 }
 
-func (s *SignatureAlgorithm) Name() string {
-	return s.impl.Name()
+func (a *SignatureAlgorithm) Name() string {
+	return a.impl.Name()
 }
 
-func (s *SignatureAlgorithm) Version() uint32 {
-	return s.impl.Version()
+func (a *SignatureAlgorithm) Version() uint32 {
+	return a.impl.Version()
 }
 
-// TODO We should rethink this to include the version, based on the
-//		jsonAlgorithm implementation.
-func (s *SignatureAlgorithm) MarshalJSON() ([]byte, error) {
-	if s != nil {
-		return json.Marshal(s.Name())
+func (a *SignatureAlgorithm) MarshalJSON() ([]byte, error) {
+	if a == nil {
+		return nil, errors.New("nil signature")
 	}
-	return nil, errors.New("nil signature")
+	return json.Marshal(&jsonAlgorithm{
+		Name:    a.Name(),
+		Version: a.Version(),
+	})
 }
 
-// TODO We should rethink this to include the version, based on the
-//		jsonAlgorithm implementation.
-func (s *SignatureAlgorithm) UnmarshalJSON(data []byte) error {
-	var name string
-	if err := json.Unmarshal(data, &name); err != nil {
+func (a *SignatureAlgorithm) UnmarshalJSON(data []byte) error {
+	jsonAlgo := &jsonAlgorithm{}
+	if err := json.Unmarshal(data, &jsonAlgo); err != nil {
 		return err
 	}
 
-	switch name {
-	case Ed25519:
-		s.impl = newEd25519()
-		return nil
-	default:
-		return ErrUnsupportedSignatureAlgorithm
+	algo, err := NewSignatureAlgorithm(jsonAlgo.Name, jsonAlgo.Version)
+	if err != nil {
+		return err
 	}
+
+	*a = algo
+	return nil
+}
+
+type jsonAlgorithm struct {
+	Name    string `json:"name"`
+	Version uint32 `json:"version"`
 }
