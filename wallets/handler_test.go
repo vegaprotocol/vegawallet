@@ -293,7 +293,7 @@ func testHandlerLoginToNonExistingWalletFails(t *testing.T) {
 	err := h.LoginWallet(name, passphrase)
 
 	// then
-	assert.EqualError(t, err, wallet.ErrWalletDoesNotExists.Error())
+	assert.EqualError(t, err, wallets.ErrWalletDoesNotExists.Error())
 }
 
 func testHandlerLogoutLoggedInWalletSucceeds(t *testing.T) {
@@ -381,7 +381,7 @@ func testHandlerGeneratingNewKeyPairSecurelyWithInvalidNameFails(t *testing.T) {
 	key, err := h.SecureGenerateKeyPair(otherName, passphrase, []wallet.Meta{})
 
 	// then
-	assert.EqualError(t, err, wallet.ErrWalletDoesNotExists.Error())
+	assert.EqualError(t, err, "couldn't get wallet bad name: wallet does not exist")
 	assert.Empty(t, key)
 }
 
@@ -397,7 +397,7 @@ func testHandlerGeneratingNewKeyPairSecurelyWithoutWalletFails(t *testing.T) {
 	key, err := h.SecureGenerateKeyPair(name, passphrase, []wallet.Meta{})
 
 	// then
-	assert.EqualError(t, err, wallet.ErrWalletDoesNotExists.Error())
+	assert.EqualError(t, err, "couldn't get wallet jeremy: wallet does not exist")
 	assert.Empty(t, key)
 }
 
@@ -512,7 +512,7 @@ func testHandlerGeneratingNewKeyPairWithInvalidNameFails(t *testing.T) {
 	keyPair, err := h.GenerateKeyPair(otherName, passphrase, nil)
 
 	// then
-	assert.EqualError(t, err, wallet.ErrWalletDoesNotExists.Error())
+	assert.EqualError(t, err, "couldn't get wallet bad name: wallet does not exist")
 	assert.Empty(t, keyPair)
 }
 
@@ -528,7 +528,7 @@ func testHandlerGeneratingNewKeyPairWithoutWalletFails(t *testing.T) {
 	keyPair, err := h.GenerateKeyPair(name, passphrase, nil)
 
 	// then
-	assert.EqualError(t, err, wallet.ErrWalletDoesNotExists.Error())
+	assert.EqualError(t, err, "couldn't get wallet jeremy: wallet does not exist")
 	assert.Empty(t, keyPair)
 }
 
@@ -623,7 +623,7 @@ func testHandlerListingPublicKeysWithInvalidNameFails(t *testing.T) {
 	key, err := h.ListPublicKeys(otherName)
 
 	// then
-	assert.EqualError(t, err, wallet.ErrWalletDoesNotExists.Error())
+	assert.EqualError(t, err, wallets.ErrWalletDoesNotExists.Error())
 	assert.Empty(t, key)
 }
 
@@ -638,7 +638,7 @@ func testHandlerListingPublicKeysWithoutWalletFails(t *testing.T) {
 	key, err := h.ListPublicKeys(name)
 
 	// then
-	assert.EqualError(t, err, wallet.ErrWalletDoesNotExists.Error())
+	assert.EqualError(t, err, wallets.ErrWalletDoesNotExists.Error())
 	assert.Empty(t, key)
 }
 
@@ -734,7 +734,7 @@ func testHandlerListingKeyPairsWithInvalidNameFails(t *testing.T) {
 	key, err := h.ListKeyPairs(otherName)
 
 	// then
-	assert.EqualError(t, err, wallet.ErrWalletDoesNotExists.Error())
+	assert.EqualError(t, err, wallets.ErrWalletDoesNotExists.Error())
 	assert.Empty(t, key)
 }
 
@@ -749,7 +749,7 @@ func testHandlerListingKeyPairsWithoutWalletFails(t *testing.T) {
 	key, err := h.ListKeyPairs(name)
 
 	// then
-	assert.EqualError(t, err, wallet.ErrWalletDoesNotExists.Error())
+	assert.EqualError(t, err, wallets.ErrWalletDoesNotExists.Error())
 	assert.Empty(t, key)
 }
 
@@ -764,7 +764,7 @@ func testHandlerGettingPublicKeyWithoutWalletFails(t *testing.T) {
 	key, err := h.GetPublicKey(name, name)
 
 	// then
-	assert.EqualError(t, err, wallet.ErrWalletDoesNotExists.Error())
+	assert.EqualError(t, err, wallets.ErrWalletDoesNotExists.Error())
 	assert.Empty(t, key)
 }
 
@@ -859,7 +859,7 @@ func testHandlerGettingPublicKeyWithInvalidNameFails(t *testing.T) {
 	keyPair, err := h.GetPublicKey(otherName, key)
 
 	// then
-	assert.EqualError(t, err, wallet.ErrWalletDoesNotExists.Error())
+	assert.EqualError(t, err, wallets.ErrWalletDoesNotExists.Error())
 	assert.Nil(t, keyPair)
 }
 
@@ -980,7 +980,7 @@ func testHandlerTaintingKeyPairWithoutWalletFails(t *testing.T) {
 	err := h.TaintKey(name, "non-existing-pub-key", passphrase)
 
 	// then
-	assert.EqualError(t, err, wallet.ErrWalletDoesNotExists.Error())
+	assert.EqualError(t, err, "couldn't get wallet jeremy: wallet does not exist")
 }
 
 func testHandlerTaintingKeyThatIsAlreadyTaintedFails(t *testing.T) {

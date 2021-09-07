@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"code.vegaprotocol.io/go-wallet/wallet"
+	"code.vegaprotocol.io/go-wallet/wallets"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -348,7 +349,7 @@ func testHDWalletUpdatingKeyPairMetaWithUnknownPublicKeyFails(t *testing.T) {
 	err = w.UpdateMeta("somekey", meta)
 
 	// then
-	require.Error(t, err, wallet.ErrWalletDoesNotExists)
+	require.Error(t, err, wallets.ErrWalletDoesNotExists)
 }
 
 func testHDWalletDescribingPublicKeysSucceeds(t *testing.T) {

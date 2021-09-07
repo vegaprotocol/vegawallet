@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"code.vegaprotocol.io/go-wallet/wallet"
+	"code.vegaprotocol.io/go-wallet/wallets"
 )
 
 type mockedStore struct {
@@ -41,10 +42,10 @@ func (m *mockedStore) SaveWallet(w wallet.Wallet, passphrase string) error {
 func (m *mockedStore) GetWallet(name, passphrase string) (wallet.Wallet, error) {
 	w, ok := m.wallets[name]
 	if !ok {
-		return nil, wallet.ErrWalletDoesNotExists
+		return nil, wallets.ErrWalletDoesNotExists
 	}
 	if passphrase != m.passphrase {
-		return nil, errors.New("invalid passphrase")
+		return nil, errors.New("wrong passphrase")
 	}
 	return w, nil
 }
