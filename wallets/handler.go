@@ -2,16 +2,22 @@ package wallets
 
 import (
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"sync"
 
 	wcrypto "code.vegaprotocol.io/go-wallet/crypto"
 	"code.vegaprotocol.io/go-wallet/wallet"
+	wstorev1 "code.vegaprotocol.io/go-wallet/wallet/store/v1"
 	"code.vegaprotocol.io/protos/commands"
 	commandspb "code.vegaprotocol.io/protos/vega/commands/v1"
 	walletpb "code.vegaprotocol.io/protos/vega/wallet/v1"
 
 	"github.com/golang/protobuf/proto"
+)
+
+var (
+	ErrWalletDoesNotExists = errors.New("wallet does not exist")
 )
 
 // Store abstracts the underlying storage for wallet data.
@@ -93,9 +99,16 @@ func (h *Handler) LoginWallet(name, passphrase string) error {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 
+	if !h.store.WalletExists(name) {
+		return ErrWalletDoesNotExists
+	}
+
 	w, err := h.store.GetWallet(name, passphrase)
 	if err != nil {
-		return wallet.ErrWalletDoesNotExists
+		if err == wstorev1.ErrWrongPassphrase {
+			return err
+		}
+		return fmt.Errorf("couldn't get wallet %s: %w", name, err)
 	}
 
 	h.loggedWallets.Add(w)
@@ -113,7 +126,10 @@ func (h *Handler) GenerateKeyPair(name, passphrase string, meta []wallet.Meta) (
 
 	w, err := h.store.GetWallet(name, passphrase)
 	if err != nil {
-		return nil, err
+		if err == wstorev1.ErrWrongPassphrase {
+			return nil, err
+		}
+		return nil, fmt.Errorf("couldn't get wallet %s: %w", name, err)
 	}
 
 	meta = addDefaultAlias(meta, w)
@@ -201,13 +217,13 @@ func (h *Handler) SignTx(name string, req *walletpb.SubmitTransactionRequest, he
 	WrapRequestCommandIntoInputData(data, req)
 	marshalledData, err := proto.Marshal(data)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("couldn't marshal transaction: %w", err)
 	}
 
 	pubKey := req.GetPubKey()
 	signature, err := w.SignTx(pubKey, marshalledData)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("couldn't sign transaction: %w", err)
 	}
 
 	protoSignature := &commandspb.Signature{
@@ -224,7 +240,7 @@ func (h *Handler) VerifyAny(inputData, sig []byte, pubKey string) (bool, error) 
 
 	decodedPubKey, err := hex.DecodeString(pubKey)
 	if err != nil {
-		return false, err
+		return false, fmt.Errorf("couldn't decode public key: %w", err)
 	}
 
 	signatureAlgorithm := wcrypto.NewEd25519()
@@ -237,7 +253,10 @@ func (h *Handler) TaintKey(name, pubKey, passphrase string) error {
 
 	w, err := h.store.GetWallet(name, passphrase)
 	if err != nil {
-		return err
+		if err == wstorev1.ErrWrongPassphrase {
+			return err
+		}
+		return fmt.Errorf("couldn't get wallet %s: %w", name, err)
 	}
 
 	err = w.TaintKey(pubKey)
@@ -254,7 +273,10 @@ func (h *Handler) UntaintKey(name string, pubKey string, passphrase string) erro
 
 	w, err := h.store.GetWallet(name, passphrase)
 	if err != nil {
-		return err
+		if err == wstorev1.ErrWrongPassphrase {
+			return err
+		}
+		return fmt.Errorf("couldn't get wallet %s: %w", name, err)
 	}
 
 	err = w.UntaintKey(pubKey)
@@ -271,7 +293,10 @@ func (h *Handler) UpdateMeta(name, pubKey, passphrase string, meta []wallet.Meta
 
 	w, err := h.store.GetWallet(name, passphrase)
 	if err != nil {
-		return err
+		if err == wstorev1.ErrWrongPassphrase {
+			return err
+		}
+		return fmt.Errorf("couldn't get wallet %s: %w", name, err)
 	}
 
 	err = w.UpdateMeta(pubKey, meta)
@@ -361,9 +386,8 @@ func WrapRequestCommandIntoInputData(data *commandspb.InputData, req *walletpb.S
 }
 
 func (h *Handler) getLoggedWallet(name string) (wallet.Wallet, error) {
-	exists := h.store.WalletExists(name)
-	if !exists {
-		return nil, wallet.ErrWalletDoesNotExists
+	if exists := h.store.WalletExists(name); !exists {
+		return nil, ErrWalletDoesNotExists
 	}
 
 	w, loggedIn := h.loggedWallets.Get(name)
