@@ -13,6 +13,7 @@ import (
 	"code.vegaprotocol.io/go-wallet/logger"
 	"code.vegaprotocol.io/go-wallet/service"
 	svcstore1 "code.vegaprotocol.io/go-wallet/service/store/v1"
+	"code.vegaprotocol.io/go-wallet/wallets"
 	"code.vegaprotocol.io/shared/paths"
 	"github.com/skratchdot/open-golang/open"
 	"github.com/spf13/cobra"
@@ -42,10 +43,12 @@ func init() {
 func runServiceRun(_ *cobra.Command, _ []string) error {
 	p := printer.NewHumanPrinter()
 
-	handler, err := newWalletHandler(rootArgs.home)
+	store, err := wallets.InitialiseStore(rootArgs.home)
 	if err != nil {
-		return err
+		return fmt.Errorf("couldn't initialise wallets store: %w", err)
 	}
+
+	handler := wallets.NewHandler(store)
 
 	svcStore, err := svcstore1.InitialiseStore(paths.NewPaths(rootArgs.home))
 	if err != nil {

@@ -3,13 +3,12 @@ package cmd
 import (
 	"errors"
 	"fmt"
-	"io/fs"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"code.vegaprotocol.io/go-wallet/cmd/printer"
 	"code.vegaprotocol.io/go-wallet/wallets"
+	vgfs "code.vegaprotocol.io/shared/libs/fs"
 	"github.com/spf13/cobra"
 )
 
@@ -36,15 +35,12 @@ func init() {
 }
 
 func runImport(_ *cobra.Command, _ []string) error {
-	store, err := newWalletsStore(rootArgs.home)
+	store, err := wallets.InitialiseStore(rootArgs.home)
 	if err != nil {
-		return err
+		return fmt.Errorf("couldn't initialise wallets store: %w", err)
 	}
 
 	handler := wallets.NewHandler(store)
-	if err != nil {
-		return err
-	}
 
 	if len(importArgs.name) == 0 {
 		return errors.New("wallet name is required")
@@ -59,11 +55,7 @@ func runImport(_ *cobra.Command, _ []string) error {
 		return err
 	}
 
-	mnemonicDir, mnemonicFileName := filepath.Split(importArgs.mnemonicFile)
-	if len(mnemonicDir) == 0 {
-		mnemonicDir = "."
-	}
-	rawMnemonic, err := fs.ReadFile(os.DirFS(mnemonicDir), mnemonicFileName)
+	rawMnemonic, err := vgfs.ReadFile(importArgs.mnemonicFile)
 	if err != nil {
 		return fmt.Errorf("couldn't read mnemonic file: %w", err)
 	}

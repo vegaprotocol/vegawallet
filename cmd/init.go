@@ -7,6 +7,7 @@ import (
 	"code.vegaprotocol.io/go-wallet/cmd/printer"
 	"code.vegaprotocol.io/go-wallet/service"
 	"code.vegaprotocol.io/go-wallet/service/store/v1"
+	"code.vegaprotocol.io/go-wallet/wallets"
 	vgjson "code.vegaprotocol.io/shared/libs/json"
 	"code.vegaprotocol.io/shared/paths"
 	"github.com/spf13/cobra"
@@ -31,13 +32,9 @@ func init() {
 }
 
 func runInit(_ *cobra.Command, _ []string) error {
-	wStore, err := newWalletsStore(rootArgs.home)
+	_, err := wallets.InitialiseStore(rootArgs.home)
 	if err != nil {
-		return err
-	}
-
-	if err := wStore.Initialise(); err != nil {
-		return err
+		return fmt.Errorf("couldn't initialise wallets store: %w", err)
 	}
 
 	svcStore, err := v1.InitialiseStore(paths.NewPaths(rootArgs.home))

@@ -29,4 +29,3 @@ func printMeta(p *printer.HumanPrinter, meta []wallet.Meta) {
 		p.WarningText(fmt.Sprintf("%-*s", padding, m.Key)).Text(" | ").WarningText(m.Value).Jump()
 	}
 }
-

@@ -10,8 +10,6 @@ import (
 
 	"code.vegaprotocol.io/go-wallet/cmd/printer"
 	"code.vegaprotocol.io/go-wallet/version"
-	wstorev1 "code.vegaprotocol.io/go-wallet/wallet/store/v1"
-	"code.vegaprotocol.io/go-wallet/wallets"
 	vgjson "code.vegaprotocol.io/shared/libs/json"
 	"github.com/mattn/go-isatty"
 	"github.com/spf13/cobra"
@@ -167,25 +165,4 @@ func promptForPassphrase(msg ...string) (string, error) {
 	fmt.Println()
 
 	return string(password), nil
-}
-
-// newWalletsStore builds a wallets store with the following structure
-//
-// home/
-// └── wallets/
-//    ├── my-wallet-1
-//    └── my-wallet-2
-func newWalletsStore(rootPath string) (*wstorev1.Store, error) {
-	walletsPath := filepath.Join(rootPath, "wallets")
-
-	return wstorev1.NewStore(walletsPath)
-}
-
-func newWalletHandler(rootPath string) (*wallets.Handler, error) {
-	store, err := newWalletsStore(rootPath)
-	if err != nil {
-		return nil, err
-	}
-
-	return wallets.NewHandler(store), nil
 }

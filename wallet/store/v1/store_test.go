@@ -2,22 +2,20 @@ package v1_test
 
 import (
 	"fmt"
-	"io/fs"
-	"os"
-	"runtime"
 	"sort"
 	"testing"
 	"time"
 
 	"code.vegaprotocol.io/go-wallet/wallet"
 	storev1 "code.vegaprotocol.io/go-wallet/wallet/store/v1"
+	vgtest "code.vegaprotocol.io/shared/libs/test"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestFileStoreV1(t *testing.T) {
-	t.Run("New store succeeds", testNewStoreSucceeds)
-	t.Run("Initialising new store succeeds", testInitialisingNewStoreSucceeds)
+	t.Run("Initialising store succeeds", testInitialisingStoreSucceeds)
 	t.Run("Listing wallets succeeds", testFileStoreV1ListWalletsSucceeds)
 	t.Run("Getting wallet succeeds", testFileStoreV1GetWalletSucceeds)
 	t.Run("Getting wallet without wrong passphrase fails", testFileStoreV1GetWalletWithWrongPassphraseFails)
@@ -28,26 +26,14 @@ func TestFileStoreV1(t *testing.T) {
 	t.Run("Saving HD wallet succeeds", testFileStoreV1SaveHDWalletSucceeds)
 }
 
-func testNewStoreSucceeds(t *testing.T) {
+func testInitialisingStoreSucceeds(t *testing.T) {
 	walletsDir := newWalletsDir()
 
-	s, err := storev1.NewStore(walletsDir.WalletsPath())
+	s, err := storev1.InitialiseStore(walletsDir.WalletsPath())
 
 	require.NoError(t, err)
 	assert.NotNil(t, s)
-}
-
-func testInitialisingNewStoreSucceeds(t *testing.T) {
-	walletsDir := newWalletsDir()
-
-	s, err := storev1.NewStore(walletsDir.WalletsPath())
-
-	require.NoError(t, err)
-	assert.NotNil(t, s)
-
-	err = s.Initialise()
-
-	assertDirAccess(t, walletsDir.WalletsPath())
+	vgtest.AssertDirAccess(t, walletsDir.WalletsPath())
 }
 
 func testFileStoreV1ListWalletsSucceeds(t *testing.T) {
@@ -55,7 +41,7 @@ func testFileStoreV1ListWalletsSucceeds(t *testing.T) {
 	defer walletsDir.Remove()
 
 	// given
-	s := NewInitialisedStore(walletsDir)
+	s := InitialiseStore(walletsDir)
 	passphrase := "passphrase"
 
 	var expectedWallets []string
@@ -85,7 +71,7 @@ func testFileStoreV1GetWalletSucceeds(t *testing.T) {
 	defer walletsDir.Remove()
 
 	// given
-	s := NewInitialisedStore(walletsDir)
+	s := InitialiseStore(walletsDir)
 	w := newHDWalletWithKeys()
 	passphrase := "passphrase"
 
@@ -108,7 +94,7 @@ func testFileStoreV1GetWalletWithWrongPassphraseFails(t *testing.T) {
 	defer walletsDir.Remove()
 
 	// given
-	s := NewInitialisedStore(walletsDir)
+	s := InitialiseStore(walletsDir)
 	w := newHDWalletWithKeys()
 	passphrase := "passphrase"
 	othPassphrase := "not-original-passphrase"
@@ -132,7 +118,7 @@ func testFileStoreV1GetNonExistingWalletFails(t *testing.T) {
 	defer walletsDir.Remove()
 
 	// given
-	s := NewInitialisedStore(walletsDir)
+	s := InitialiseStore(walletsDir)
 	name := "john"
 	passphrase := "passphrase"
 
@@ -149,7 +135,7 @@ func testFileStoreV1GetWalletPathSucceeds(t *testing.T) {
 	defer walletsDir.Remove()
 
 	// given
-	s := NewInitialisedStore(walletsDir)
+	s := InitialiseStore(walletsDir)
 	name := "john"
 
 	// when
@@ -164,7 +150,7 @@ func testFileStoreV1NonExistingWalletFails(t *testing.T) {
 	defer walletsDir.Remove()
 
 	// given
-	s := NewInitialisedStore(walletsDir)
+	s := InitialiseStore(walletsDir)
 	name := "john"
 
 	// when
@@ -179,7 +165,7 @@ func testFileStoreV1ExistingWalletSucceeds(t *testing.T) {
 	defer walletsDir.Remove()
 
 	// given
-	s := NewInitialisedStore(walletsDir)
+	s := InitialiseStore(walletsDir)
 	w := newHDWalletWithKeys()
 	passphrase := "passphrase"
 
@@ -202,7 +188,7 @@ func testFileStoreV1SaveHDWalletSucceeds(t *testing.T) {
 
 	// given
 	passphrase := "passphrase"
-	s := NewInitialisedStore(walletsDir)
+	s := InitialiseStore(walletsDir)
 	w := newHDWalletWithKeys()
 
 	// when
@@ -210,23 +196,12 @@ func testFileStoreV1SaveHDWalletSucceeds(t *testing.T) {
 
 	// then
 	require.NoError(t, err)
-	assertFileAccess(t, walletsDir.WalletPath(w.Name()))
+	vgtest.AssertFileAccess(t, walletsDir.WalletPath(w.Name()))
 	assert.NotEmpty(t, walletsDir.WalletContent(w.Name()))
 }
 
-func NewStore(walletsDir walletsDir) *storev1.Store {
-	s, err := storev1.NewStore(walletsDir.WalletsPath())
-	if err != nil {
-		panic(err)
-	}
-
-	return s
-}
-
-func NewInitialisedStore(walletsDir walletsDir) *storev1.Store {
-	s := NewStore(walletsDir)
-
-	err := s.Initialise()
+func InitialiseStore(walletsDir walletsDir) *storev1.Store {
+	s, err := storev1.InitialiseStore(walletsDir.WalletsPath())
 	if err != nil {
 		panic(err)
 	}
@@ -246,24 +221,4 @@ func newHDWalletWithKeys() *wallet.HDWallet {
 	}
 
 	return w
-}
-
-func assertDirAccess(t *testing.T, dirPath string) {
-	stats, err := os.Stat(dirPath)
-	assert.NoError(t, err)
-	if runtime.GOOS == "windows" {
-		assert.Equal(t, fs.FileMode(0777), stats.Mode().Perm())
-	} else {
-		assert.Equal(t, fs.FileMode(0700), stats.Mode().Perm())
-	}
-}
-
-func assertFileAccess(t *testing.T, filePath string) {
-	stats, err := os.Stat(filePath)
-	assert.NoError(t, err)
-	if runtime.GOOS == "windows" {
-		assert.Equal(t, fs.FileMode(0666), stats.Mode().Perm())
-	} else {
-		assert.Equal(t, fs.FileMode(0600), stats.Mode().Perm())
-	}
 }
