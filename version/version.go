@@ -11,7 +11,6 @@ import (
 )
 
 const (
-	ReleasesPage       = "https://github.com/vegaprotocol/go-wallet/releases"
 	ReleaseAPI         = "https://api.github.com/repos/vegaprotocol/go-wallet/releases"
 	TaggedReleaseURL   = "https://github.com/vegaprotocol/go-wallet/releases/tag"
 	defaultVersionHash = "unknown"

@@ -6,13 +6,12 @@ import (
 	"sync/atomic"
 	"time"
 
-	vproto "code.vegaprotocol.io/protos/vega"
 	"code.vegaprotocol.io/protos/vega/api"
 	commandspb "code.vegaprotocol.io/protos/vega/commands/v1"
+
 	"github.com/cenkalti/backoff/v4"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/status"
 )
 
 type nodeForward struct {
@@ -129,17 +128,4 @@ func (n *nodeForward) nextClt() api.TradingServiceClient {
 	n.log.Info("sending transaction to Vega node",
 		zap.String("host", n.nodeCfgs.Hosts[(int(i)-1)%len(n.clts)]))
 	return n.clts[(int(i)-1)%len(n.clts)]
-}
-
-func logError(log *zap.Logger, err error) {
-	if st, ok := status.FromError(err); ok {
-		details := []string{}
-		for _, v := range st.Details() {
-			v := v.(*vproto.ErrorDetail)
-			details = append(details, v.Message)
-		}
-		log.Info("could not submit transaction", zap.Strings("error", details))
-	} else {
-		log.Info("could not submit transaction", zap.String("error", err.Error()))
-	}
 }

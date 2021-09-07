@@ -581,7 +581,7 @@ func (s *Service) GenerateKeyPair(t string, w http.ResponseWriter, r *http.Reque
 	writeSuccess(w, KeyResponse{Key: key}, http.StatusOK)
 }
 
-func (s *Service) GetPublicKey(t string, w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (s *Service) GetPublicKey(t string, w http.ResponseWriter, _ *http.Request, ps httprouter.Params) {
 	name, err := s.auth.VerifyToken(t)
 	if err != nil {
 		writeForbiddenError(w, err)
@@ -603,7 +603,7 @@ func (s *Service) GetPublicKey(t string, w http.ResponseWriter, r *http.Request,
 	writeSuccess(w, KeyResponse{Key: key}, http.StatusOK)
 }
 
-func (s *Service) ListPublicKeys(t string, w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (s *Service) ListPublicKeys(t string, w http.ResponseWriter, _ *http.Request, _ httprouter.Params) {
 	name, err := s.auth.VerifyToken(t)
 	if err != nil {
 		writeForbiddenError(w, err)
@@ -692,7 +692,7 @@ func (s *Service) SignAny(t string, w http.ResponseWriter, r *http.Request, _ ht
 	writeSuccess(w, res, http.StatusOK)
 }
 
-func (s *Service) VerifyAny(t string, w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (s *Service) VerifyAny(_ string, w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	req, errs := ParseVerifyAnyRequest(r)
 	if !errs.Empty() {
 		s.writeBadRequest(w, errs)
@@ -750,7 +750,7 @@ func (s *Service) signTx(token string, w http.ResponseWriter, r *http.Request, _
 	if req.Propagate {
 		if err := s.nodeForward.SendTx(r.Context(), tx, ty); err != nil {
 			if s, ok := status.FromError(err); ok {
-				details := []string{}
+				var details []string
 				for _, v := range s.Details() {
 					v := v.(*typespb.ErrorDetail)
 					details = append(details, v.Message)
@@ -766,7 +766,7 @@ func (s *Service) signTx(token string, w http.ResponseWriter, r *http.Request, _
 	writeSuccessProto(w, tx, http.StatusOK)
 }
 
-func (s *Service) Version(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (s *Service) Version(w http.ResponseWriter, _ *http.Request, _ httprouter.Params) {
 	res := VersionResponse{
 		Version:     version.Version,
 		VersionHash: version.VersionHash,
