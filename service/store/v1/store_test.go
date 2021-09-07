@@ -1,13 +1,11 @@
 package v1_test
 
 import (
-	"io/fs"
-	"os"
-	"runtime"
 	"testing"
 
 	"code.vegaprotocol.io/go-wallet/service"
 	"code.vegaprotocol.io/go-wallet/service/store/v1"
+	vgtest "code.vegaprotocol.io/shared/libs/test"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -36,8 +34,8 @@ func testNewStoreSucceeds(t *testing.T) {
 	require.NoError(t, err)
 	assert.NotNil(t, s)
 
-	assertDirAccess(t, configDir.ConfigHome())
-	assertDirAccess(t, configDir.RSAKeysHome())
+	vgtest.AssertDirAccess(t, configDir.ConfigHome())
+	vgtest.AssertDirAccess(t, configDir.RSAKeysHome())
 }
 
 func testFileStoreV1SavingAlreadyExistingConfigSucceeds(t *testing.T) {
@@ -74,7 +72,7 @@ func testFileStoreV1SavingNewConfigSucceeds(t *testing.T) {
 
 	// then
 	require.NoError(t, err)
-	assertFileAccess(t, configDir.ConfigFilePath())
+	vgtest.AssertFileAccess(t, configDir.ConfigFilePath())
 
 	// when
 	returnedCfg, err := s.GetConfig()
@@ -198,8 +196,8 @@ func testFileStoreV1SaveRSAKeysSucceeds(t *testing.T) {
 
 	// then
 	require.NoError(t, err)
-	assertFileAccess(t, configDir.PublicRSAKeyFilePath())
-	assertFileAccess(t, configDir.PrivateRSAKeyFilePath())
+	vgtest.AssertFileAccess(t, configDir.PublicRSAKeyFilePath())
+	vgtest.AssertFileAccess(t, configDir.PrivateRSAKeyFilePath())
 
 	// when
 	returnedKeys, err := s.GetRsaKeys()
@@ -240,8 +238,8 @@ func testFileStoreV1VerifyingExistingRSAKeysSucceeds(t *testing.T) {
 
 	// then
 	require.NoError(t, err)
-	assertFileAccess(t, configDir.PublicRSAKeyFilePath())
-	assertFileAccess(t, configDir.PrivateRSAKeyFilePath())
+	vgtest.AssertFileAccess(t, configDir.PublicRSAKeyFilePath())
+	vgtest.AssertFileAccess(t, configDir.PrivateRSAKeyFilePath())
 
 	// when
 	exists, err := s.RSAKeysExists()
@@ -282,8 +280,8 @@ func testFileStoreV1GetExistingRSAKeysSucceeds(t *testing.T) {
 
 	// then
 	require.NoError(t, err)
-	assertFileAccess(t, configDir.PublicRSAKeyFilePath())
-	assertFileAccess(t, configDir.PrivateRSAKeyFilePath())
+	vgtest.AssertFileAccess(t, configDir.PublicRSAKeyFilePath())
+	vgtest.AssertFileAccess(t, configDir.PrivateRSAKeyFilePath())
 
 	// when
 	returnedKeys, err := s.GetRsaKeys()
@@ -293,32 +291,11 @@ func testFileStoreV1GetExistingRSAKeysSucceeds(t *testing.T) {
 	assert.Equal(t, keys, returnedKeys)
 }
 
-func InitialiseFromPath(configDir vegaHome) *v1.Store {
-	s, err := v1.InitialiseStore(configDir.Paths())
+func InitialiseFromPath(h vegaHome) *v1.Store {
+	s, err := v1.InitialiseStore(h.Paths())
 	if err != nil {
 		panic(err)
 	}
 
 	return s
-}
-
-func assertDirAccess(t *testing.T, dirPath string) {
-	stats, err := os.Stat(dirPath)
-	require.NoError(t, err)
-	assert.True(t, stats.IsDir())
-	if runtime.GOOS == "windows" {
-		assert.Equal(t, fs.FileMode(0777), stats.Mode().Perm())
-	} else {
-		assert.Equal(t, fs.FileMode(0700), stats.Mode().Perm())
-	}
-}
-
-func assertFileAccess(t *testing.T, filePath string) {
-	stats, err := os.Stat(filePath)
-	assert.NoError(t, err)
-	if runtime.GOOS == "windows" {
-		assert.Equal(t, fs.FileMode(0666), stats.Mode().Perm())
-	} else {
-		assert.Equal(t, fs.FileMode(0600), stats.Mode().Perm())
-	}
 }

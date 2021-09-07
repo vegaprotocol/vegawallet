@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"code.vegaprotocol.io/go-wallet/cmd/printer"
+	"code.vegaprotocol.io/go-wallet/wallets"
 	"github.com/spf13/cobra"
 )
 
@@ -31,10 +32,12 @@ func init() {
 }
 
 func runKeyUntaint(_ *cobra.Command, _ []string) error {
-	handler, err := newWalletHandler(rootArgs.home)
+	store, err := wallets.InitialiseStore(rootArgs.home)
 	if err != nil {
-		return err
+		return fmt.Errorf("couldn't initialise wallets store: %w", err)
 	}
+
+	handler := wallets.NewHandler(store)
 
 	if len(keyUntaintArgs.name) == 0 {
 		return errors.New("wallet name is required")

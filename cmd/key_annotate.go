@@ -6,6 +6,7 @@ import (
 
 	"code.vegaprotocol.io/go-wallet/cmd/printer"
 	"code.vegaprotocol.io/go-wallet/wallet"
+	"code.vegaprotocol.io/go-wallet/wallets"
 	"github.com/spf13/cobra"
 )
 
@@ -36,10 +37,12 @@ func init() {
 }
 
 func runKeyAnnotate(_ *cobra.Command, _ []string) error {
-	handler, err := newWalletHandler(rootArgs.home)
+	store, err := wallets.InitialiseStore(rootArgs.home)
 	if err != nil {
-		return err
+		return fmt.Errorf("couldn't initialise wallets store: %w", err)
 	}
+
+	handler := wallets.NewHandler(store)
 
 	if len(keyAnnotateArgs.name) == 0 {
 		return errors.New("wallet name is required")

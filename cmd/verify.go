@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"code.vegaprotocol.io/go-wallet/cmd/printer"
+	"code.vegaprotocol.io/go-wallet/wallets"
 	vgjson "code.vegaprotocol.io/shared/libs/json"
 	"github.com/spf13/cobra"
 )
@@ -34,10 +35,12 @@ func init() {
 }
 
 func runVerify(_ *cobra.Command, _ []string) error {
-	handler, err := newWalletHandler(rootArgs.home)
+	store, err := wallets.InitialiseStore(rootArgs.home)
 	if err != nil {
-		return err
+		return fmt.Errorf("couldn't initialise wallets store: %w", err)
 	}
+
+	handler := wallets.NewHandler(store)
 
 	if len(verifyArgs.pubkey) == 0 {
 		return errors.New("pubkey is required")

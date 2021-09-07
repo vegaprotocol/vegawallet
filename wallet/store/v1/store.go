@@ -19,23 +19,17 @@ var (
 )
 
 type Store struct {
-	walletsPath string
+	walletsHome string
 }
 
-func NewStore(walletsPath string) (*Store, error) {
-	return &Store{
-		walletsPath: walletsPath,
-	}, nil
-}
-
-// Initialise creates the folders. It does nothing if a folder already
-// exists.
-func (s *Store) Initialise() error {
-	if err := vgfs.EnsureDir(s.walletsPath); err != nil {
-		return fmt.Errorf("error creating directory %s: %w", s.walletsPath, err)
+func InitialiseStore(walletsHome string) (*Store, error) {
+	if err := vgfs.EnsureDir(walletsHome); err != nil {
+		return nil, fmt.Errorf("couldn't ensure directories at %s: %w", walletsHome, err)
 	}
 
-	return nil
+	return &Store{
+		walletsHome: walletsHome,
+	}, nil
 }
 
 func (s *Store) WalletExists(name string) bool {
@@ -46,10 +40,10 @@ func (s *Store) WalletExists(name string) bool {
 }
 
 func (s *Store) ListWallets() ([]string, error) {
-	walletsParentDir, walletsDir := filepath.Split(s.walletsPath)
+	walletsParentDir, walletsDir := filepath.Split(s.walletsHome)
 	entries, err := fs.ReadDir(os.DirFS(walletsParentDir), walletsDir)
 	if err != nil {
-		return nil, fmt.Errorf("couldn't read directory at %s: %w", s.walletsPath, err)
+		return nil, fmt.Errorf("couldn't read directory at %s: %w", s.walletsHome, err)
 	}
 	wallets := make([]string, len(entries))
 	for i, entry := range entries {
@@ -66,9 +60,9 @@ func (s *Store) GetWallet(name, passphrase string) (wallet.Wallet, error) {
 		return nil, fmt.Errorf("couldn't verify file presence at %s: %w", walletPath, err)
 	}
 
-	buf, err := fs.ReadFile(os.DirFS(s.walletsPath), name)
+	buf, err := fs.ReadFile(os.DirFS(s.walletsHome), name)
 	if err != nil {
-		return nil, fmt.Errorf("couldn't read file at %s: %w", s.walletsPath, err)
+		return nil, fmt.Errorf("couldn't read file at %s: %w", s.walletsHome, err)
 	}
 
 	decBuf, err := vgcrypto.Decrypt(buf, passphrase)
@@ -129,5 +123,5 @@ func (s *Store) GetWalletPath(name string) string {
 }
 
 func (s *Store) walletPath(name string) string {
-	return filepath.Join(s.walletsPath, name)
+	return filepath.Join(s.walletsHome, name)
 }

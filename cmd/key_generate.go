@@ -37,15 +37,13 @@ func init() {
 
 func runKeyGenerate(_ *cobra.Command, _ []string) error {
 	p := printer.NewHumanPrinter()
-	store, err := newWalletsStore(rootArgs.home)
+
+	store, err := wallets.InitialiseStore(rootArgs.home)
 	if err != nil {
-		return err
+		return fmt.Errorf("couldn't initialise wallets store: %w", err)
 	}
 
 	handler := wallets.NewHandler(store)
-	if err != nil {
-		return err
-	}
 
 	if len(keyGenerateArgs.name) == 0 {
 		return errors.New("wallet name is required")
@@ -85,17 +83,17 @@ func runKeyGenerate(_ *cobra.Command, _ []string) error {
 	}
 
 	if rootArgs.output == "human" {
-		printHuman(p, mnemonic, keyPair)
+		printHuman(p, mnemonic, keyPair, store.GetWalletPath(keyGenerateArgs.name))
 	} else if rootArgs.output == "json" {
-		return printKeyGenerateJSON(mnemonic, keyPair)
+		return printKeyGenerateJSON(mnemonic, keyPair, store.GetWalletPath(keyGenerateArgs.name))
 	} else {
 		return fmt.Errorf("output \"%s\" is not supported for this command", rootArgs.output)
 	}
 	return nil
 }
 
-func printHuman(p *printer.HumanPrinter, mnemonic string, keyPair wallet.KeyPair) {
-	p.CheckMark().Text("Key pair has been generated for wallet ").Bold(keyGenerateArgs.name).Jump()
+func printHuman(p *printer.HumanPrinter, mnemonic string, keyPair wallet.KeyPair, walletPath string) {
+	p.CheckMark().Text("Key pair has been generated for wallet ").Bold(keyGenerateArgs.name).Text(" at: ").SuccessText(walletPath).Jump()
 	p.CheckMark().SuccessText("Generating a key pair succeeded").NJump(2)
 	if len(mnemonic) != 0 {
 		p.Text("Wallet mnemonic:").Jump().WarningText(mnemonic).Jump()
@@ -122,8 +120,9 @@ func printHuman(p *printer.HumanPrinter, mnemonic string, keyPair wallet.KeyPair
 	p.Text("For more information, use ").Bold("--help").Text(" flag.").Jump()
 }
 
-func printKeyGenerateJSON(mnemonic string, keyPair wallet.KeyPair) error {
+func printKeyGenerateJSON(mnemonic string, keyPair wallet.KeyPair, walletPath string) error {
 	result := struct {
+		WalletPath       string
 		WalletMnemonic   string `json:",omitempty"`
 		PrivateKey       string
 		PublicKey        string
@@ -131,6 +130,7 @@ func printKeyGenerateJSON(mnemonic string, keyPair wallet.KeyPair) error {
 		AlgorithmVersion uint32
 		Meta             []wallet.Meta
 	}{
+		WalletPath:       walletPath,
 		WalletMnemonic:   mnemonic,
 		PrivateKey:       keyPair.PrivateKey(),
 		PublicKey:        keyPair.PublicKey(),
