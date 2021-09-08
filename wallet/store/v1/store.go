@@ -56,8 +56,12 @@ func (s *Store) ListWallets() ([]string, error) {
 func (s *Store) GetWallet(name, passphrase string) (wallet.Wallet, error) {
 	walletPath := s.walletPath(name)
 
-	if exists, err := vgfs.FileExists(walletPath); !exists {
+	exists, err := vgfs.FileExists(walletPath)
+	if err != nil {
 		return nil, fmt.Errorf("couldn't verify file presence at %s: %w", walletPath, err)
+	}
+	if !exists {
+		return nil, fmt.Errorf("no wallet file at %s", walletPath)
 	}
 
 	buf, err := fs.ReadFile(os.DirFS(s.walletsHome), name)
