@@ -238,7 +238,7 @@ func (h *Handler) SignTxV2(name string, req *walletpb.SubmitTransactionRequest, 
 	}
 
 	data := commands.NewInputData(height)
-	wrapRequestCommandIntoInputData(data, req)
+	WrapRequestCommandIntoInputData(data, req)
 	marshalledData, err := proto.Marshal(data)
 	if err != nil {
 		return nil, err
@@ -332,7 +332,7 @@ func (h *Handler) saveWallet(w Wallet, passphrase string) error {
 	return nil
 }
 
-func wrapRequestCommandIntoInputData(data *commandspb.InputData, req *walletpb.SubmitTransactionRequest) {
+func WrapRequestCommandIntoInputData(data *commandspb.InputData, req *walletpb.SubmitTransactionRequest) {
 	switch cmd := req.Command.(type) {
 	case *walletpb.SubmitTransactionRequest_OrderSubmission:
 		data.Command = &commandspb.InputData_OrderSubmission{
