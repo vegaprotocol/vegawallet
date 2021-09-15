@@ -31,21 +31,21 @@ func runList(_ *cobra.Command, _ []string) error {
 
 	handler := wallets.NewHandler(store)
 
-	wallets, err := handler.ListWallets()
+	ws, err := handler.ListWallets()
 	if err != nil {
 		return err
 	}
 
 	if rootArgs.output == "human" {
 		p := printer.NewHumanPrinter()
-		for _, w := range wallets {
+		for _, w := range ws {
 			p.Text(fmt.Sprintf("- %s", w)).Jump()
 		}
 	} else if rootArgs.output == "json" {
 		return vgjson.Print(struct {
-			Wallets []string
+			Wallets []string `json:"wallets"`
 		}{
-			Wallets: wallets,
+			Wallets: ws,
 		})
 	}
 

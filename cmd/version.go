@@ -32,8 +32,8 @@ func runVersion(_ *cobra.Command, _ []string) error {
 
 func printVersionJson() error {
 	return vgjson.Print(struct {
-		Version string
-		GitHash string
+		Version string `json:"version"`
+		GitHash string `json:"gitHash"`
 	}{
 		Version: version.Version,
 		GitHash: version.VersionHash,

@@ -86,7 +86,7 @@ func runVerify(_ *cobra.Command, _ []string) error {
 
 func printVerifyJson(isValid bool) error {
 	return vgjson.Print(struct {
-		IsValid bool
+		IsValid bool `json:"isValid"`
 	}{
 		IsValid: isValid,
 	})

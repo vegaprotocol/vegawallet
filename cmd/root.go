@@ -88,7 +88,7 @@ func Execute() {
 				p.CrossMark().DangerText(err.Error()).Jump()
 			} else if rootArgs.output == "json" {
 				jsonErr := vgjson.Print(struct {
-					Error string
+					Error string `json:"error"`
 				}{
 					Error: err.Error(),
 				})

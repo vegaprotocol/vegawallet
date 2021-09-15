@@ -94,7 +94,7 @@ func runSign(_ *cobra.Command, _ []string) error {
 
 func printSignJson(sig string) error {
 	return vgjson.Print(struct {
-		Signature string
+		Signature string `json:"signature"`
 	}{
 		Signature: sig,
 	})

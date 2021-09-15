@@ -72,11 +72,8 @@ func (s *Store) RSAKeysExists() (bool, error) {
 	return privKeyExists && pubKeyExists, nil
 }
 
-func (s *Store) GetRSAKeysPath() map[string]string {
-	return map[string]string{
-		"public":  s.pubRsaKeyFilePath,
-		"private": s.privRsaKeyFilePath,
-	}
+func (s *Store) GetRSAKeysPath() (string, string) {
+	return s.pubRsaKeyFilePath, s.privRsaKeyFilePath
 }
 
 func (s *Store) SaveRSAKeys(keys *service.RSAKeys) error {

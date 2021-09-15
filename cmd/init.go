@@ -60,9 +60,9 @@ func runInit(_ *cobra.Command, _ []string) error {
 func printInitHuman(svcStore *v1.Store) {
 	p := printer.NewHumanPrinter()
 	p.CheckMark().Text("Service configuration created at: ").SuccessText(svcStore.GetConfigPath()).Jump()
-	rsaKeysPath := svcStore.GetRSAKeysPath()
-	p.CheckMark().Text("Service public RSA keys created at: ").SuccessText(rsaKeysPath["public"]).Jump()
-	p.CheckMark().Text("Service private RSA keys created at: ").SuccessText(rsaKeysPath["private"]).Jump()
+	pubRSAKeysPath, privRSAKeysPath := svcStore.GetRSAKeysPath()
+	p.CheckMark().Text("Service public RSA keys created at: ").SuccessText(pubRSAKeysPath).Jump()
+	p.CheckMark().Text("Service private RSA keys created at: ").SuccessText(privRSAKeysPath).Jump()
 	p.CheckMark().SuccessText("Initialisation succeeded").NJump(2)
 
 	p.BlueArrow().InfoText("Create a wallet").Jump()
@@ -73,21 +73,21 @@ func printInitHuman(svcStore *v1.Store) {
 }
 
 type initJson struct {
-	RSAKeys               initRsaKeysJson
-	ServiceConfigFilePath string
+	RSAKeys               initRsaKeysJson `json:"rsaKeys"`
+	ServiceConfigFilePath string          `json:"serviceConfigFilePath"`
 }
 
 type initRsaKeysJson struct {
-	PublicFilePath  string
-	PrivateFilePath string
+	PublicKeyFilePath  string `json:"publicKeyFilePath"`
+	PrivateKeyFilePath string `json:"privateKeyFilePath"`
 }
 
 func printInitJson(svcStore *v1.Store) error {
-	rsaKeysPath := svcStore.GetRSAKeysPath()
-	result := initJson {
-		RSAKeys: initRsaKeysJson {
-			PublicFilePath:  rsaKeysPath["public"],
-			PrivateFilePath: rsaKeysPath["private"],
+	pubRSAKeysPath, privRSAKeysPath := svcStore.GetRSAKeysPath()
+	result := initJson{
+		RSAKeys: initRsaKeysJson{
+			PublicKeyFilePath:  pubRSAKeysPath,
+			PrivateKeyFilePath: privRSAKeysPath,
 		},
 		ServiceConfigFilePath: svcStore.GetConfigPath(),
 	}

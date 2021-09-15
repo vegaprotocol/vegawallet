@@ -121,29 +121,29 @@ func printHuman(p *printer.HumanPrinter, mnemonic string, keyPair wallet.KeyPair
 }
 
 type keyGenerateJson struct {
-	Wallet keyGenerateWalletJson
-	Key    keyGenerateKeyJson
+	Wallet keyGenerateWalletJson `json:"wallet"`
+	Key    keyGenerateKeyJson `json:"key"`
 }
 
 type keyGenerateWalletJson struct {
-	FilePath string
-	Mnemonic string `json:",omitempty"`
+	FilePath string `json:"filePath"`
+	Mnemonic string `json:"mnemonic,omitempty"`
 }
 
 type keyGenerateKeyJson struct {
-	KeyPair   keyGenerateKeyPairJson
-	Algorithm keyGenerateAlgorithmJson
-	Meta      []wallet.Meta
+	KeyPair   keyGenerateKeyPairJson `json:"keyPair"`
+	Algorithm keyGenerateAlgorithmJson `json:"algorithm"`
+	Meta      []wallet.Meta `json:"meta"`
 }
 
 type keyGenerateKeyPairJson struct {
-	PrivateKey string
-	PublicKey  string
+	PrivateKey string `json:"privateKey"`
+	PublicKey  string `json:"publicKey"`
 }
 
 type keyGenerateAlgorithmJson struct {
-	Name    string
-	Version uint32
+	Name    string `json:"name"`
+	Version uint32 `json:"version"`
 }
 
 func printKeyGenerateJSON(mnemonic string, keyPair wallet.KeyPair, walletPath string) error {
