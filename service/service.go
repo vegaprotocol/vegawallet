@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	wcommands "code.vegaprotocol.io/go-wallet/commands"
 	"code.vegaprotocol.io/go-wallet/version"
 	"code.vegaprotocol.io/go-wallet/wallet"
 	"code.vegaprotocol.io/protos/commands"
@@ -16,6 +17,7 @@ import (
 	"code.vegaprotocol.io/protos/vega/api"
 	commandspb "code.vegaprotocol.io/protos/vega/commands/v1"
 	walletpb "code.vegaprotocol.io/protos/vega/wallet/v1"
+
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/proto"
 	"github.com/julienschmidt/httprouter"
@@ -27,9 +29,8 @@ import (
 type Service struct {
 	*httprouter.Router
 
-	cfg         *Config
 	log         *zap.Logger
-	s           *http.Server
+	server      *http.Server
 	handler     WalletHandler
 	auth        Auth
 	nodeForward NodeForward
@@ -322,7 +323,7 @@ func ParseSubmitTransactionRequest(r *http.Request) (*walletpb.SubmitTransaction
 		return nil, errs.FinalAdd(err)
 	}
 
-	if errs = wallet.CheckSubmitTransactionRequest(req); !errs.Empty() {
+	if errs = wcommands.CheckSubmitTransactionRequest(req); !errs.Empty() {
 		return nil, errs
 	}
 
@@ -371,7 +372,7 @@ type WalletHandler interface {
 	SecureGenerateKeyPair(name, passphrase string, meta []wallet.Meta) (string, error)
 	GetPublicKey(name, pubKey string) (wallet.PublicKey, error)
 	ListPublicKeys(name string) ([]wallet.PublicKey, error)
-	SignTxV2(name string, req *walletpb.SubmitTransactionRequest, height uint64) (*commandspb.Transaction, error)
+	SignTx(name string, req *walletpb.SubmitTransactionRequest, height uint64) (*commandspb.Transaction, error)
 	SignAny(name string, inputData []byte, pubKey string) ([]byte, error)
 	VerifyAny(inputData, sig []byte, pubKey string) (bool, error)
 	TaintKey(name, pubKey, passphrase string) error
@@ -390,32 +391,23 @@ type Auth interface {
 // NodeForward ...
 //go:generate go run github.com/golang/mock/mockgen -destination mocks/node_forward_mock.go -package mocks code.vegaprotocol.io/go-wallet/service NodeForward
 type NodeForward interface {
-	SendTxV2(context.Context, *commandspb.Transaction, api.SubmitTransactionV2Request_Type) error
+	SendTx(context.Context, *commandspb.Transaction, api.SubmitTransactionV2Request_Type) error
 	HealthCheck(context.Context) error
 	LastBlockHeight(context.Context) (uint64, error)
 }
 
-func NewService(log *zap.Logger, cfg *Config, rsaStore RSAStore, handler WalletHandler) (*Service, error) {
-	log = log.Named("wallet")
-	auth, err := NewAuth(log, rsaStore, cfg.TokenExpiry.Get())
-	if err != nil {
-		return nil, err
-	}
-	nodeForward, err := newNodeForward(log, cfg.Nodes)
-	if err != nil {
-		return nil, err
-	}
-	return NewServiceWith(log, cfg, handler, auth, nodeForward)
-}
-
-func NewServiceWith(log *zap.Logger, cfg *Config, h WalletHandler, a Auth, n NodeForward) (*Service, error) {
+func NewService(log *zap.Logger, cfg *Config, h WalletHandler, a Auth, n NodeForward) (*Service, error) {
 	s := &Service{
 		Router:      httprouter.New(),
 		log:         log,
-		cfg:         cfg,
 		handler:     h,
 		auth:        a,
 		nodeForward: n,
+	}
+
+	s.server = &http.Server{
+		Addr:    fmt.Sprintf("%s:%v", cfg.Host, cfg.Port),
+		Handler: cors.AllowAll().Handler(s),
 	}
 
 	s.POST("/api/v1/auth/token", s.Login)
@@ -430,9 +422,9 @@ func NewServiceWith(log *zap.Logger, cfg *Config, h WalletHandler, a Auth, n Nod
 	s.PUT("/api/v1/keys/:keyid/metadata", ExtractToken(s.UpdateMeta))
 	s.POST("/api/v1/sign", ExtractToken(s.SignAny))
 	s.POST("/api/v1/verify", ExtractToken(s.VerifyAny))
-	s.POST("/api/v1/command", ExtractToken(s.SignTxV2))
-	s.POST("/api/v1/command/sync", ExtractToken(s.SignTxSyncV2))
-	s.POST("/api/v1/command/commit", ExtractToken(s.SignTxCommitV2))
+	s.POST("/api/v1/command", ExtractToken(s.SignTx))
+	s.POST("/api/v1/command/sync", ExtractToken(s.SignTxSync))
+	s.POST("/api/v1/command/commit", ExtractToken(s.SignTxCommit))
 	s.GET("/api/v1/wallets", ExtractToken(s.DownloadWallet))
 	s.GET("/api/v1/version", s.Version)
 
@@ -440,16 +432,11 @@ func NewServiceWith(log *zap.Logger, cfg *Config, h WalletHandler, a Auth, n Nod
 }
 
 func (s *Service) Start() error {
-	s.s = &http.Server{
-		Addr:    fmt.Sprintf("%s:%v", s.cfg.Host, s.cfg.Port),
-		Handler: cors.AllowAll().Handler(s),
-	}
-
-	return s.s.ListenAndServe()
+	return s.server.ListenAndServe()
 }
 
 func (s *Service) Stop() error {
-	return s.s.Shutdown(context.Background())
+	return s.server.Shutdown(context.Background())
 }
 
 func (s *Service) CreateWallet(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
@@ -580,7 +567,7 @@ func (s *Service) GenerateKeyPair(t string, w http.ResponseWriter, r *http.Reque
 	writeSuccess(w, KeyResponse{Key: key}, http.StatusOK)
 }
 
-func (s *Service) GetPublicKey(t string, w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (s *Service) GetPublicKey(t string, w http.ResponseWriter, _ *http.Request, ps httprouter.Params) {
 	name, err := s.auth.VerifyToken(t)
 	if err != nil {
 		writeForbiddenError(w, err)
@@ -602,7 +589,7 @@ func (s *Service) GetPublicKey(t string, w http.ResponseWriter, r *http.Request,
 	writeSuccess(w, KeyResponse{Key: key}, http.StatusOK)
 }
 
-func (s *Service) ListPublicKeys(t string, w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (s *Service) ListPublicKeys(t string, w http.ResponseWriter, _ *http.Request, _ httprouter.Params) {
 	name, err := s.auth.VerifyToken(t)
 	if err != nil {
 		writeForbiddenError(w, err)
@@ -691,7 +678,7 @@ func (s *Service) SignAny(t string, w http.ResponseWriter, r *http.Request, _ ht
 	writeSuccess(w, res, http.StatusOK)
 }
 
-func (s *Service) VerifyAny(t string, w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (s *Service) VerifyAny(_ string, w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	req, errs := ParseVerifyAnyRequest(r)
 	if !errs.Empty() {
 		s.writeBadRequest(w, errs)
@@ -707,19 +694,19 @@ func (s *Service) VerifyAny(t string, w http.ResponseWriter, r *http.Request, _ 
 	writeSuccess(w, SuccessResponse{Success: verified}, http.StatusOK)
 }
 
-func (s *Service) SignTxSyncV2(token string, w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	s.signTxV2(token, w, r, p, api.SubmitTransactionV2Request_TYPE_SYNC)
+func (s *Service) SignTxSync(token string, w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	s.signTx(token, w, r, p, api.SubmitTransactionV2Request_TYPE_SYNC)
 }
 
-func (s *Service) SignTxCommitV2(token string, w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	s.signTxV2(token, w, r, p, api.SubmitTransactionV2Request_TYPE_COMMIT)
+func (s *Service) SignTxCommit(token string, w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	s.signTx(token, w, r, p, api.SubmitTransactionV2Request_TYPE_COMMIT)
 }
 
-func (s *Service) SignTxV2(token string, w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	s.signTxV2(token, w, r, p, api.SubmitTransactionV2Request_TYPE_ASYNC)
+func (s *Service) SignTx(token string, w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	s.signTx(token, w, r, p, api.SubmitTransactionV2Request_TYPE_ASYNC)
 }
 
-func (s *Service) signTxV2(token string, w http.ResponseWriter, r *http.Request, _ httprouter.Params, ty api.SubmitTransactionV2Request_Type) {
+func (s *Service) signTx(token string, w http.ResponseWriter, r *http.Request, _ httprouter.Params, ty api.SubmitTransactionV2Request_Type) {
 	defer r.Body.Close()
 
 	req, errs := ParseSubmitTransactionRequest(r)
@@ -740,16 +727,16 @@ func (s *Service) signTxV2(token string, w http.ResponseWriter, r *http.Request,
 		return
 	}
 
-	tx, err := s.handler.SignTxV2(name, req, height)
+	tx, err := s.handler.SignTx(name, req, height)
 	if err != nil {
 		writeForbiddenError(w, err)
 		return
 	}
 
 	if req.Propagate {
-		if err := s.nodeForward.SendTxV2(r.Context(), tx, ty); err != nil {
+		if err := s.nodeForward.SendTx(r.Context(), tx, ty); err != nil {
 			if s, ok := status.FromError(err); ok {
-				details := []string{}
+				var details []string
 				for _, v := range s.Details() {
 					v := v.(*typespb.ErrorDetail)
 					details = append(details, v.Message)
@@ -765,7 +752,7 @@ func (s *Service) signTxV2(token string, w http.ResponseWriter, r *http.Request,
 	writeSuccessProto(w, tx, http.StatusOK)
 }
 
-func (s *Service) Version(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (s *Service) Version(w http.ResponseWriter, _ *http.Request, _ httprouter.Params) {
 	res := VersionResponse{
 		Version:     version.Version,
 		VersionHash: version.VersionHash,

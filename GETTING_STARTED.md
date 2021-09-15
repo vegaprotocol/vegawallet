@@ -72,7 +72,7 @@ The `init` command (below) will initialise the configuration. A configuration fi
 vegawallet init
 ```
 
-> Tip: If you want to specify a root-path, it will not go into the default path, but a folder you choose to create. If you want to create a new config for a new wallet, or test or isolate it, you should specify the root path.
+> Tip: If you want to specify a custom Vega home folder, it will not go into the default path, but a folder you choose to create. If you want to create a new config for a new wallet, or test or isolate it, you should specify the `--home` flag.
 
 
 ### Create name and passphrase

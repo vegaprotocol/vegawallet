@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	commandspb "code.vegaprotocol.io/protos/vega/commands/v1"
-
 	"github.com/tyler-smith/go-bip39"
 	"github.com/vegaprotocol/go-slip10"
 )
@@ -30,7 +28,7 @@ type HDWallet struct {
 }
 
 // NewHDWallet creates a wallet with auto-generated mnemonic. This is useful to
-// create a brand new wallet, without having to take care of the mnemonic
+// create a brand-new wallet, without having to take care of the mnemonic
 // generation.
 // The generated mnemonic is returned alongside the created wallet.
 func NewHDWallet(name string) (*HDWallet, string, error) {
@@ -202,7 +200,7 @@ func (w *HDWallet) VerifyAny(pubKey string, data, sig []byte) (bool, error) {
 	return keyPair.VerifyAny(data, sig)
 }
 
-func (w *HDWallet) SignTxV2(pubKey string, data []byte) (*commandspb.Signature, error) {
+func (w *HDWallet) SignTx(pubKey string, data []byte) (*Signature, error) {
 	keyPair, ok := w.keyRing.FindPair(pubKey)
 	if !ok {
 		return nil, ErrPubKeyDoesNotExist

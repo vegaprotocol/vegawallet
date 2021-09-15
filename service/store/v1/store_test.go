@@ -1,33 +1,25 @@
 package v1_test
 
 import (
-	"io/fs"
-	"os"
-	"runtime"
 	"testing"
 
 	"code.vegaprotocol.io/go-wallet/service"
 	"code.vegaprotocol.io/go-wallet/service/store/v1"
+	vgtest "code.vegaprotocol.io/shared/libs/test"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestFileStoreV1(t *testing.T) {
 	t.Run("New store succeeds", testNewStoreSucceeds)
-	t.Run("Initialising new store succeeds", testInitialisingNewStoreSucceeds)
-	t.Run("Saving already existing config fails", testFileStoreV1SavingAlreadyExistingConfigFails)
+	t.Run("Saving already existing config succeeds", testFileStoreV1SavingAlreadyExistingConfigSucceeds)
 	t.Run("Saving new config succeeds", testFileStoreV1SavingNewConfigSucceeds)
-	t.Run("Overwriting existing config succeeds", testFileStoreV1OverwritingExistingConfigSucceeds)
-	t.Run("Overwriting non-existing config succeeds", testFileStoreV1OverwritingNonExistingConfigSucceeds)
 	t.Run("Verifying non-existing config succeeds", testFileStoreV1VerifyingNonExistingConfigSucceeds)
 	t.Run("Verifying config succeeds", testFileStoreV1VerifyingExistingConfigSucceeds)
 	t.Run("Getting non-existing config fails", testFileStoreV1GetNonExistingConfigFails)
 	t.Run("Getting config succeeds", testFileStoreV1GetConfigSucceeds)
-	t.Run("Saving RSA keys without folder fails", testFileStoreV1SaveRSAKeysWithoutFolderFails)
-	t.Run("Saving RSA keys already existing RSA keys fails", testFileStoreV1SaveAlreadyExistingRSAKeysFails)
+	t.Run("Saving RSA keys already existing RSA keys succeeds", testFileStoreV1SaveAlreadyExistingRSAKeysSucceeds)
 	t.Run("Saving RSA keys succeeds", testFileStoreV1SaveRSAKeysSucceeds)
-	t.Run("Overwriting already existing RSA keys succeeds", testFileStoreV1OverwritingAlreadyExistingRSAKeysSucceeds)
-	t.Run("Overwriting non-existing RSA keys succeeds", testFileStoreV1OverwritingNonExistingRSAKeysSucceeds)
 	t.Run("Verifying non-existing RSA keys fails", testFileStoreV1VerifyingNonExistingRSAKeysFails)
 	t.Run("Verifying existing RSA keys succeeds", testFileStoreV1VerifyingExistingRSAKeysSucceeds)
 	t.Run("Getting non-existing RSA keys fails", testFileStoreV1GetNonExistingRSAKeysFails)
@@ -35,119 +27,52 @@ func TestFileStoreV1(t *testing.T) {
 }
 
 func testNewStoreSucceeds(t *testing.T) {
-	configDir := newConfigDir()
+	configDir := newVegaHome()
 
-	s, err := v1.NewStore(configDir.RootPath())
-
-	require.NoError(t, err)
-	assert.NotNil(t, s)
-}
-
-func testInitialisingNewStoreSucceeds(t *testing.T) {
-	configDir := newConfigDir()
-
-	s, err := v1.NewStore(configDir.RootPath())
+	s, err := v1.InitialiseStore(configDir.Paths())
 
 	require.NoError(t, err)
 	assert.NotNil(t, s)
 
-	err = s.Initialise()
-
-	assertDirAccess(t, configDir.RootPath())
-	assertDirAccess(t, configDir.RSAKeysPath())
+	vgtest.AssertDirAccess(t, configDir.ConfigHome())
+	vgtest.AssertDirAccess(t, configDir.RSAKeysHome())
 }
 
-func testFileStoreV1SavingAlreadyExistingConfigFails(t *testing.T) {
-	configDir := newConfigDir()
+func testFileStoreV1SavingAlreadyExistingConfigSucceeds(t *testing.T) {
+	configDir := newVegaHome()
 	defer configDir.Remove()
 
 	// given
-	s := NewInitialisedStore(configDir)
+	s := InitialiseFromPath(configDir)
 	cfg := service.NewDefaultConfig()
 
 	// when
-	err := s.SaveConfig(&cfg, false)
+	err := s.SaveConfig(&cfg)
 
 	// then
 	require.NoError(t, err)
 
 	// when
-	err = s.SaveConfig(&cfg, false)
+	err = s.SaveConfig(&cfg)
 
 	// then
-	require.Error(t, err)
+	require.NoError(t, err)
 }
 
 func testFileStoreV1SavingNewConfigSucceeds(t *testing.T) {
-	configDir := newConfigDir()
+	configDir := newVegaHome()
 	defer configDir.Remove()
 
 	// given
-	s := NewInitialisedStore(configDir)
+	s := InitialiseFromPath(configDir)
 	cfg := service.NewDefaultConfig()
 
 	// when
-	err := s.SaveConfig(&cfg, false)
+	err := s.SaveConfig(&cfg)
 
 	// then
 	require.NoError(t, err)
-	assertFileAccess(t, configDir.ConfigFilePath())
-
-	// when
-	returnedCfg, err := s.GetConfig()
-
-	// then
-	require.NoError(t, err)
-	assert.Equal(t, &cfg, returnedCfg)
-}
-
-func testFileStoreV1OverwritingNonExistingConfigSucceeds(t *testing.T) {
-	configDir := newConfigDir()
-	defer configDir.Remove()
-
-	// given
-	s := NewInitialisedStore(configDir)
-	cfg := service.NewDefaultConfig()
-
-	// when
-	err := s.SaveConfig(&cfg, true)
-
-	// then
-	require.NoError(t, err)
-	assertFileAccess(t, configDir.ConfigFilePath())
-
-	// when
-	returnedCfg, err := s.GetConfig()
-
-	// then
-	require.NoError(t, err)
-	assert.Equal(t, &cfg, returnedCfg)
-}
-
-func testFileStoreV1OverwritingExistingConfigSucceeds(t *testing.T) {
-	configDir := newConfigDir()
-	defer configDir.Remove()
-
-	// given
-	s := NewInitialisedStore(configDir)
-	cfg := service.NewDefaultConfig()
-
-	// when
-	err := s.SaveConfig(&cfg, false)
-
-	// then
-	require.NoError(t, err)
-	assertFileAccess(t, configDir.ConfigFilePath())
-
-	// given
-	cfg.Host = "my.new.host.com"
-
-	// when
-	err = s.SaveConfig(&cfg, true)
-
-	// then
-	require.NoError(t, err)
-	assertFileAccess(t, configDir.ConfigFilePath())
+	vgtest.AssertFileAccess(t, configDir.ConfigFilePath())
 
 	// when
 	returnedCfg, err := s.GetConfig()
@@ -158,11 +83,11 @@ func testFileStoreV1OverwritingExistingConfigSucceeds(t *testing.T) {
 }
 
 func testFileStoreV1VerifyingNonExistingConfigSucceeds(t *testing.T) {
-	configDir := newConfigDir()
+	configDir := newVegaHome()
 	defer configDir.Remove()
 
 	// given
-	s := NewInitialisedStore(configDir)
+	s := InitialiseFromPath(configDir)
 
 	// when
 	exists, err := s.ConfigExists()
@@ -173,15 +98,15 @@ func testFileStoreV1VerifyingNonExistingConfigSucceeds(t *testing.T) {
 }
 
 func testFileStoreV1VerifyingExistingConfigSucceeds(t *testing.T) {
-	configDir := newConfigDir()
+	configDir := newVegaHome()
 	defer configDir.Remove()
 
 	// given
-	s := NewInitialisedStore(configDir)
+	s := InitialiseFromPath(configDir)
 	cfg := service.NewDefaultConfig()
 
 	// when
-	err := s.SaveConfig(&cfg, false)
+	err := s.SaveConfig(&cfg)
 
 	// then
 	require.NoError(t, err)
@@ -195,11 +120,11 @@ func testFileStoreV1VerifyingExistingConfigSucceeds(t *testing.T) {
 }
 
 func testFileStoreV1GetNonExistingConfigFails(t *testing.T) {
-	configDir := newConfigDir()
+	configDir := newVegaHome()
 	defer configDir.Remove()
 
 	// given
-	s := NewInitialisedStore(configDir)
+	s := InitialiseFromPath(configDir)
 
 	// when
 	cfg, err := s.GetConfig()
@@ -210,15 +135,15 @@ func testFileStoreV1GetNonExistingConfigFails(t *testing.T) {
 }
 
 func testFileStoreV1GetConfigSucceeds(t *testing.T) {
-	configDir := newConfigDir()
+	configDir := newVegaHome()
 	defer configDir.Remove()
 
 	// given
-	s := NewInitialisedStore(configDir)
+	s := InitialiseFromPath(configDir)
 	cfg := service.NewDefaultConfig()
 
 	// when
-	err := s.SaveConfig(&cfg, false)
+	err := s.SaveConfig(&cfg)
 
 	// then
 	require.NoError(t, err)
@@ -231,132 +156,48 @@ func testFileStoreV1GetConfigSucceeds(t *testing.T) {
 	assert.Equal(t, &cfg, returnedCfg)
 }
 
-func testFileStoreV1SaveRSAKeysWithoutFolderFails(t *testing.T) {
-	configDir := newConfigDir()
-
-	// given
-	s := NewStore(configDir)
-	keys := &service.RSAKeys{
-		Pub:  []byte("my public key"),
-		Priv: []byte("my private key"),
-	}
-
-	// when
-	err := s.SaveRSAKeys(keys, false)
-
-	// then
-	require.Error(t, err)
-}
-
-func testFileStoreV1SaveAlreadyExistingRSAKeysFails(t *testing.T) {
-	configDir := newConfigDir()
+func testFileStoreV1SaveAlreadyExistingRSAKeysSucceeds(t *testing.T) {
+	configDir := newVegaHome()
 	defer configDir.Remove()
 
 	// given
-	s := NewInitialisedStore(configDir)
+	s := InitialiseFromPath(configDir)
 	keys := &service.RSAKeys{
 		Pub:  []byte("my public key"),
 		Priv: []byte("my private key"),
 	}
 
 	// when
-	err := s.SaveRSAKeys(keys, false)
+	err := s.SaveRSAKeys(keys)
 
 	// then
 	require.NoError(t, err)
 
 	// when
-	err = s.SaveRSAKeys(keys, false)
+	err = s.SaveRSAKeys(keys)
 
 	// then
-	require.Error(t, err)
+	require.NoError(t, err)
 }
 
 func testFileStoreV1SaveRSAKeysSucceeds(t *testing.T) {
-	configDir := newConfigDir()
+	configDir := newVegaHome()
 	defer configDir.Remove()
 
 	// given
-	s := NewInitialisedStore(configDir)
+	s := InitialiseFromPath(configDir)
 	keys := &service.RSAKeys{
 		Pub:  []byte("my public key"),
 		Priv: []byte("my private key"),
 	}
 
 	// when
-	err := s.SaveRSAKeys(keys, false)
+	err := s.SaveRSAKeys(keys)
 
 	// then
 	require.NoError(t, err)
-	assertFileAccess(t, configDir.PublicRSAKeyFilePath())
-	assertFileAccess(t, configDir.PrivateRSAKeyFilePath())
-
-	// when
-	returnedKeys, err := s.GetRsaKeys()
-
-	// then
-	require.NoError(t, err)
-	assert.Equal(t, keys, returnedKeys)
-}
-
-func testFileStoreV1OverwritingAlreadyExistingRSAKeysSucceeds(t *testing.T) {
-	configDir := newConfigDir()
-	defer configDir.Remove()
-
-	// given
-	s := NewInitialisedStore(configDir)
-	keys := &service.RSAKeys{
-		Pub:  []byte("my public key"),
-		Priv: []byte("my private key"),
-	}
-
-	// when
-	err := s.SaveRSAKeys(keys, false)
-
-	// then
-	require.NoError(t, err)
-	assertFileAccess(t, configDir.PublicRSAKeyFilePath())
-	assertFileAccess(t, configDir.PrivateRSAKeyFilePath())
-
-	// given
-	newKeys := &service.RSAKeys{
-		Pub:  []byte("my public key 2"),
-		Priv: []byte("my private key 2"),
-	}
-
-	// when
-	err = s.SaveRSAKeys(newKeys, true)
-
-	// then
-	assertFileAccess(t, configDir.PublicRSAKeyFilePath())
-	assertFileAccess(t, configDir.PrivateRSAKeyFilePath())
-
-	// when
-	returnedKeys, err := s.GetRsaKeys()
-
-	// then
-	require.NoError(t, err)
-	assert.Equal(t, newKeys, returnedKeys)
-}
-
-func testFileStoreV1OverwritingNonExistingRSAKeysSucceeds(t *testing.T) {
-	configDir := newConfigDir()
-	defer configDir.Remove()
-
-	// given
-	s := NewInitialisedStore(configDir)
-	keys := &service.RSAKeys{
-		Pub:  []byte("my public key"),
-		Priv: []byte("my private key"),
-	}
-
-	// when
-	err := s.SaveRSAKeys(keys, true)
-
-	// then
-	require.NoError(t, err)
-	assertFileAccess(t, configDir.PublicRSAKeyFilePath())
-	assertFileAccess(t, configDir.PrivateRSAKeyFilePath())
+	vgtest.AssertFileAccess(t, configDir.PublicRSAKeyFilePath())
+	vgtest.AssertFileAccess(t, configDir.PrivateRSAKeyFilePath())
 
 	// when
 	returnedKeys, err := s.GetRsaKeys()
@@ -367,11 +208,11 @@ func testFileStoreV1OverwritingNonExistingRSAKeysSucceeds(t *testing.T) {
 }
 
 func testFileStoreV1VerifyingNonExistingRSAKeysFails(t *testing.T) {
-	configDir := newConfigDir()
+	configDir := newVegaHome()
 	defer configDir.Remove()
 
 	// given
-	s := NewInitialisedStore(configDir)
+	s := InitialiseFromPath(configDir)
 
 	// when
 	exists, err := s.RSAKeysExists()
@@ -382,23 +223,23 @@ func testFileStoreV1VerifyingNonExistingRSAKeysFails(t *testing.T) {
 }
 
 func testFileStoreV1VerifyingExistingRSAKeysSucceeds(t *testing.T) {
-	configDir := newConfigDir()
+	configDir := newVegaHome()
 	defer configDir.Remove()
 
 	// given
-	s := NewInitialisedStore(configDir)
+	s := InitialiseFromPath(configDir)
 	keys := &service.RSAKeys{
 		Pub:  []byte("my public key"),
 		Priv: []byte("my private key"),
 	}
 
 	// when
-	err := s.SaveRSAKeys(keys, false)
+	err := s.SaveRSAKeys(keys)
 
 	// then
 	require.NoError(t, err)
-	assertFileAccess(t, configDir.PublicRSAKeyFilePath())
-	assertFileAccess(t, configDir.PrivateRSAKeyFilePath())
+	vgtest.AssertFileAccess(t, configDir.PublicRSAKeyFilePath())
+	vgtest.AssertFileAccess(t, configDir.PrivateRSAKeyFilePath())
 
 	// when
 	exists, err := s.RSAKeysExists()
@@ -409,11 +250,11 @@ func testFileStoreV1VerifyingExistingRSAKeysSucceeds(t *testing.T) {
 }
 
 func testFileStoreV1GetNonExistingRSAKeysFails(t *testing.T) {
-	configDir := newConfigDir()
+	configDir := newVegaHome()
 	defer configDir.Remove()
 
 	// given
-	s := NewInitialisedStore(configDir)
+	s := InitialiseFromPath(configDir)
 
 	// when
 	keys, err := s.GetRsaKeys()
@@ -424,23 +265,23 @@ func testFileStoreV1GetNonExistingRSAKeysFails(t *testing.T) {
 }
 
 func testFileStoreV1GetExistingRSAKeysSucceeds(t *testing.T) {
-	configDir := newConfigDir()
+	configDir := newVegaHome()
 	defer configDir.Remove()
 
 	// given
-	s := NewInitialisedStore(configDir)
+	s := InitialiseFromPath(configDir)
 	keys := &service.RSAKeys{
 		Pub:  []byte("my public key"),
 		Priv: []byte("my private key"),
 	}
 
 	// when
-	err := s.SaveRSAKeys(keys, false)
+	err := s.SaveRSAKeys(keys)
 
 	// then
 	require.NoError(t, err)
-	assertFileAccess(t, configDir.PublicRSAKeyFilePath())
-	assertFileAccess(t, configDir.PrivateRSAKeyFilePath())
+	vgtest.AssertFileAccess(t, configDir.PublicRSAKeyFilePath())
+	vgtest.AssertFileAccess(t, configDir.PrivateRSAKeyFilePath())
 
 	// when
 	returnedKeys, err := s.GetRsaKeys()
@@ -450,42 +291,11 @@ func testFileStoreV1GetExistingRSAKeysSucceeds(t *testing.T) {
 	assert.Equal(t, keys, returnedKeys)
 }
 
-func NewStore(configDir configDir) *v1.Store {
-	s, err := v1.NewStore(configDir.RootPath())
+func InitialiseFromPath(h vegaHome) *v1.Store {
+	s, err := v1.InitialiseStore(h.Paths())
 	if err != nil {
 		panic(err)
 	}
 
 	return s
-}
-
-func NewInitialisedStore(configDir configDir) *v1.Store {
-	s := NewStore(configDir)
-
-	err := s.Initialise()
-	if err != nil {
-		panic(err)
-	}
-
-	return s
-}
-
-func assertDirAccess(t *testing.T, dirPath string) {
-	stats, err := os.Stat(dirPath)
-	assert.NoError(t, err)
-	if runtime.GOOS == "windows" {
-		assert.Equal(t, fs.FileMode(0777), stats.Mode().Perm())
-	} else {
-		assert.Equal(t, fs.FileMode(0700), stats.Mode().Perm())
-	}
-}
-
-func assertFileAccess(t *testing.T, filePath string) {
-	stats, err := os.Stat(filePath)
-	assert.NoError(t, err)
-	if runtime.GOOS == "windows" {
-		assert.Equal(t, fs.FileMode(0666), stats.Mode().Perm())
-	} else {
-		assert.Equal(t, fs.FileMode(0600), stats.Mode().Perm())
-	}
 }

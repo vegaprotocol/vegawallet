@@ -165,19 +165,19 @@ func (mr *MockWalletHandlerMockRecorder) SignAny(arg0, arg1, arg2 interface{}) *
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SignAny", reflect.TypeOf((*MockWalletHandler)(nil).SignAny), arg0, arg1, arg2)
 }
 
-// SignTxV2 mocks base method
-func (m *MockWalletHandler) SignTxV2(arg0 string, arg1 *v10.SubmitTransactionRequest, arg2 uint64) (*v1.Transaction, error) {
+// SignTx mocks base method
+func (m *MockWalletHandler) SignTx(arg0 string, arg1 *v10.SubmitTransactionRequest, arg2 uint64) (*v1.Transaction, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SignTxV2", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "SignTx", arg0, arg1, arg2)
 	ret0, _ := ret[0].(*v1.Transaction)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// SignTxV2 indicates an expected call of SignTxV2
-func (mr *MockWalletHandlerMockRecorder) SignTxV2(arg0, arg1, arg2 interface{}) *gomock.Call {
+// SignTx indicates an expected call of SignTx
+func (mr *MockWalletHandlerMockRecorder) SignTx(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SignTxV2", reflect.TypeOf((*MockWalletHandler)(nil).SignTxV2), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SignTx", reflect.TypeOf((*MockWalletHandler)(nil).SignTx), arg0, arg1, arg2)
 }
 
 // TaintKey mocks base method

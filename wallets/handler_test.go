@@ -1,9 +1,10 @@
-package wallet_test
+package wallets_test
 
 import (
 	"testing"
 
 	"code.vegaprotocol.io/go-wallet/wallet"
+	"code.vegaprotocol.io/go-wallet/wallets"
 	commandspb "code.vegaprotocol.io/protos/vega/commands/v1"
 	walletpb "code.vegaprotocol.io/protos/vega/wallet/v1"
 	"github.com/stretchr/testify/require"
@@ -12,8 +13,13 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+const (
+	TestMnemonic1 = "swing ceiling chaos green put insane ripple desk match tip melt usual shrug turkey renew icon parade veteran lens govern path rough page render"
+	TestMnemonic2 = "green put insane ripple desk match tip melt usual shrug turkey renew icon parade veteran lens govern path rough page render swing ceiling chaos"
+)
+
 type testHandler struct {
-	*wallet.Handler
+	*wallets.Handler
 	ctrl  *gomock.Controller
 	store *mockedStore
 }
@@ -22,7 +28,7 @@ func getTestHandler(t *testing.T) *testHandler {
 	ctrl := gomock.NewController(t)
 	store := newMockedStore()
 
-	h := wallet.NewHandler(store)
+	h := wallets.NewHandler(store)
 	return &testHandler{
 		Handler: h,
 		ctrl:    ctrl,
@@ -32,7 +38,6 @@ func getTestHandler(t *testing.T) *testHandler {
 
 func TestHandler(t *testing.T) {
 	t.Run("Creating a wallet succeeds", testHandlerCreatingWalletSucceeds)
-	t.Run("Creating a HD wallet whereas a legacy wallet exists fails", testHandlerCreatingHDWalletWhereasLegacyWalletExistsFails)
 	t.Run("Creating an already existing wallet fails", testHandlerCreatingAlreadyExistingWalletFails)
 	t.Run("Importing a wallet succeeds", testHandlerImportingWalletSucceeds)
 	t.Run("Importing a wallet with invalid mnemonic fails", testHandlerImportingWalletWithInvalidMnemonicFails)
@@ -75,9 +80,9 @@ func TestHandler(t *testing.T) {
 	t.Run("Updating key pair metadata without wallet fails", testHandlerUpdatingKeyPairMetaWithoutWalletFails)
 	t.Run("Updating key pair metadata with non-existing public key fails", testHandlerUpdatingKeyPairMetaWithNonExistingPublicKeyFails)
 	t.Run("Get wallet path succeeds", testHandlerGettingWalletPathSucceeds)
-	t.Run("Signing transaction request (v2) succeeds", testHandlerSigningTxV2Succeeds)
-	t.Run("Signing transaction request (v2) with logged out wallet fails", testHandlerSigningTxV2WithLoggedOutWalletFails)
-	t.Run("Signing transaction request (v2) with tainted key fails", testHandlerSigningTxV2WithTaintedKeyFails)
+	t.Run("Signing transaction request succeeds", testHandlerSigningTxSucceeds)
+	t.Run("Signing transaction request with logged out wallet fails", testHandlerSigningTxWithLoggedOutWalletFails)
+	t.Run("Signing transaction request with tainted key fails", testHandlerSigningTxWithTaintedKeyFails)
 	t.Run("Signing and verifying a message succeeds", testHandlerSigningAndVerifyingMessageSucceeds)
 	t.Run("Signing a message with logged out wallet fails", testHandlerSigningMessageWithLoggedOutWalletFails)
 	t.Run("Verifying a message with logged out wallet succeeds", testHandlerVerifyingMessageWithLoggedOutWalletSucceeds)
@@ -97,29 +102,6 @@ func testHandlerCreatingWalletSucceeds(t *testing.T) {
 	// then
 	require.NoError(t, err)
 	assert.NotEmpty(t, mnemonic)
-}
-
-func testHandlerCreatingHDWalletWhereasLegacyWalletExistsFails(t *testing.T) {
-	h := getTestHandler(t)
-	defer h.ctrl.Finish()
-
-	// given
-	name := "jeremy"
-	passphrase := "Th1isisasecurep@ssphraseinnit"
-	legacyWallet := wallet.NewLegacyWallet(name)
-
-	// given
-	err := h.store.SaveWallet(legacyWallet, passphrase)
-
-	// then
-	require.NoError(t, err)
-
-	// when
-	mnemonic, err := h.CreateWallet(name, passphrase)
-
-	// then
-	assert.EqualError(t, err, wallet.ErrWalletAlreadyExists.Error())
-	assert.Empty(t, mnemonic)
 }
 
 func testHandlerCreatingAlreadyExistingWalletFails(t *testing.T) {
@@ -311,7 +293,7 @@ func testHandlerLoginToNonExistingWalletFails(t *testing.T) {
 	err := h.LoginWallet(name, passphrase)
 
 	// then
-	assert.EqualError(t, err, wallet.ErrWalletDoesNotExists.Error())
+	assert.EqualError(t, err, wallets.ErrWalletDoesNotExists.Error())
 }
 
 func testHandlerLogoutLoggedInWalletSucceeds(t *testing.T) {
@@ -399,7 +381,7 @@ func testHandlerGeneratingNewKeyPairSecurelyWithInvalidNameFails(t *testing.T) {
 	key, err := h.SecureGenerateKeyPair(otherName, passphrase, []wallet.Meta{})
 
 	// then
-	assert.EqualError(t, err, wallet.ErrWalletDoesNotExists.Error())
+	assert.EqualError(t, err, "couldn't get wallet bad name: wallet does not exist")
 	assert.Empty(t, key)
 }
 
@@ -415,7 +397,7 @@ func testHandlerGeneratingNewKeyPairSecurelyWithoutWalletFails(t *testing.T) {
 	key, err := h.SecureGenerateKeyPair(name, passphrase, []wallet.Meta{})
 
 	// then
-	assert.EqualError(t, err, wallet.ErrWalletDoesNotExists.Error())
+	assert.EqualError(t, err, "couldn't get wallet jeremy: wallet does not exist")
 	assert.Empty(t, key)
 }
 
@@ -530,7 +512,7 @@ func testHandlerGeneratingNewKeyPairWithInvalidNameFails(t *testing.T) {
 	keyPair, err := h.GenerateKeyPair(otherName, passphrase, nil)
 
 	// then
-	assert.EqualError(t, err, wallet.ErrWalletDoesNotExists.Error())
+	assert.EqualError(t, err, "couldn't get wallet bad name: wallet does not exist")
 	assert.Empty(t, keyPair)
 }
 
@@ -546,7 +528,7 @@ func testHandlerGeneratingNewKeyPairWithoutWalletFails(t *testing.T) {
 	keyPair, err := h.GenerateKeyPair(name, passphrase, nil)
 
 	// then
-	assert.EqualError(t, err, wallet.ErrWalletDoesNotExists.Error())
+	assert.EqualError(t, err, "couldn't get wallet jeremy: wallet does not exist")
 	assert.Empty(t, keyPair)
 }
 
@@ -641,7 +623,7 @@ func testHandlerListingPublicKeysWithInvalidNameFails(t *testing.T) {
 	key, err := h.ListPublicKeys(otherName)
 
 	// then
-	assert.EqualError(t, err, wallet.ErrWalletDoesNotExists.Error())
+	assert.EqualError(t, err, wallets.ErrWalletDoesNotExists.Error())
 	assert.Empty(t, key)
 }
 
@@ -656,7 +638,7 @@ func testHandlerListingPublicKeysWithoutWalletFails(t *testing.T) {
 	key, err := h.ListPublicKeys(name)
 
 	// then
-	assert.EqualError(t, err, wallet.ErrWalletDoesNotExists.Error())
+	assert.EqualError(t, err, wallets.ErrWalletDoesNotExists.Error())
 	assert.Empty(t, key)
 }
 
@@ -752,7 +734,7 @@ func testHandlerListingKeyPairsWithInvalidNameFails(t *testing.T) {
 	key, err := h.ListKeyPairs(otherName)
 
 	// then
-	assert.EqualError(t, err, wallet.ErrWalletDoesNotExists.Error())
+	assert.EqualError(t, err, wallets.ErrWalletDoesNotExists.Error())
 	assert.Empty(t, key)
 }
 
@@ -767,7 +749,7 @@ func testHandlerListingKeyPairsWithoutWalletFails(t *testing.T) {
 	key, err := h.ListKeyPairs(name)
 
 	// then
-	assert.EqualError(t, err, wallet.ErrWalletDoesNotExists.Error())
+	assert.EqualError(t, err, wallets.ErrWalletDoesNotExists.Error())
 	assert.Empty(t, key)
 }
 
@@ -782,7 +764,7 @@ func testHandlerGettingPublicKeyWithoutWalletFails(t *testing.T) {
 	key, err := h.GetPublicKey(name, name)
 
 	// then
-	assert.EqualError(t, err, wallet.ErrWalletDoesNotExists.Error())
+	assert.EqualError(t, err, wallets.ErrWalletDoesNotExists.Error())
 	assert.Empty(t, key)
 }
 
@@ -877,7 +859,7 @@ func testHandlerGettingPublicKeyWithInvalidNameFails(t *testing.T) {
 	keyPair, err := h.GetPublicKey(otherName, key)
 
 	// then
-	assert.EqualError(t, err, wallet.ErrWalletDoesNotExists.Error())
+	assert.EqualError(t, err, wallets.ErrWalletDoesNotExists.Error())
 	assert.Nil(t, keyPair)
 }
 
@@ -998,7 +980,7 @@ func testHandlerTaintingKeyPairWithoutWalletFails(t *testing.T) {
 	err := h.TaintKey(name, "non-existing-pub-key", passphrase)
 
 	// then
-	assert.EqualError(t, err, wallet.ErrWalletDoesNotExists.Error())
+	assert.EqualError(t, err, "couldn't get wallet jeremy: wallet does not exist")
 }
 
 func testHandlerTaintingKeyThatIsAlreadyTaintedFails(t *testing.T) {
@@ -1208,7 +1190,7 @@ func testHandlerGettingWalletPathSucceeds(t *testing.T) {
 	assert.NotEmpty(t, path)
 }
 
-func testHandlerSigningTxV2Succeeds(t *testing.T) {
+func testHandlerSigningTxSucceeds(t *testing.T) {
 	h := getTestHandler(t)
 	defer h.ctrl.Finish()
 
@@ -1239,7 +1221,7 @@ func testHandlerSigningTxV2Succeeds(t *testing.T) {
 	}
 
 	// when
-	tx, err := h.SignTxV2(name, req, 42)
+	tx, err := h.SignTx(name, req, 42)
 
 	// then
 	require.NoError(t, err)
@@ -1254,7 +1236,7 @@ func testHandlerSigningTxV2Succeeds(t *testing.T) {
 	assert.NotEmpty(t, tx.Signature.Value)
 }
 
-func testHandlerSigningTxV2WithLoggedOutWalletFails(t *testing.T) {
+func testHandlerSigningTxWithLoggedOutWalletFails(t *testing.T) {
 	h := getTestHandler(t)
 	defer h.ctrl.Finish()
 
@@ -1290,14 +1272,14 @@ func testHandlerSigningTxV2WithLoggedOutWalletFails(t *testing.T) {
 	}
 
 	// when
-	tx, err := h.SignTxV2(name, req, 42)
+	tx, err := h.SignTx(name, req, 42)
 
 	// then
 	require.EqualError(t, err, wallet.ErrWalletNotLoggedIn.Error())
 	assert.Nil(t, tx)
 }
 
-func testHandlerSigningTxV2WithTaintedKeyFails(t *testing.T) {
+func testHandlerSigningTxWithTaintedKeyFails(t *testing.T) {
 	h := getTestHandler(t)
 	defer h.ctrl.Finish()
 
@@ -1335,7 +1317,7 @@ func testHandlerSigningTxV2WithTaintedKeyFails(t *testing.T) {
 	}
 
 	// when
-	tx, err := h.SignTxV2(name, req, 42)
+	tx, err := h.SignTx(name, req, 42)
 
 	// then
 	assert.Error(t, err)

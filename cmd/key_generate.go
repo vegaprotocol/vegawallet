@@ -7,8 +7,9 @@ import (
 	"strings"
 
 	"code.vegaprotocol.io/go-wallet/cmd/printer"
-	vgjson "code.vegaprotocol.io/go-wallet/libs/json"
 	"code.vegaprotocol.io/go-wallet/wallet"
+	"code.vegaprotocol.io/go-wallet/wallets"
+	vgjson "code.vegaprotocol.io/shared/libs/json"
 	"github.com/spf13/cobra"
 )
 
@@ -36,15 +37,13 @@ func init() {
 
 func runKeyGenerate(_ *cobra.Command, _ []string) error {
 	p := printer.NewHumanPrinter()
-	store, err := newWalletsStore(rootArgs.rootPath)
+
+	store, err := wallets.InitialiseStore(rootArgs.home)
 	if err != nil {
-		return err
+		return fmt.Errorf("couldn't initialise wallets store: %w", err)
 	}
 
-	handler := wallet.NewHandler(store)
-	if err != nil {
-		return err
-	}
+	handler := wallets.NewHandler(store)
 
 	if len(keyGenerateArgs.name) == 0 {
 		return errors.New("wallet name is required")
@@ -84,17 +83,17 @@ func runKeyGenerate(_ *cobra.Command, _ []string) error {
 	}
 
 	if rootArgs.output == "human" {
-		printHuman(p, mnemonic, keyPair)
+		printHuman(p, mnemonic, keyPair, store.GetWalletPath(keyGenerateArgs.name))
 	} else if rootArgs.output == "json" {
-		return printJSON(mnemonic, keyPair)
+		return printKeyGenerateJSON(mnemonic, keyPair, store.GetWalletPath(keyGenerateArgs.name))
 	} else {
 		return fmt.Errorf("output \"%s\" is not supported for this command", rootArgs.output)
 	}
 	return nil
 }
 
-func printHuman(p *printer.HumanPrinter, mnemonic string, keyPair wallet.KeyPair) {
-	p.CheckMark().Text("Key pair has been generated for wallet ").Bold(keyGenerateArgs.name).Jump()
+func printHuman(p *printer.HumanPrinter, mnemonic string, keyPair wallet.KeyPair, walletPath string) {
+	p.CheckMark().Text("Key pair has been generated for wallet ").Bold(keyGenerateArgs.name).Text(" at: ").SuccessText(walletPath).Jump()
 	p.CheckMark().SuccessText("Generating a key pair succeeded").NJump(2)
 	if len(mnemonic) != 0 {
 		p.Text("Wallet mnemonic:").Jump().WarningText(mnemonic).Jump()
@@ -121,21 +120,49 @@ func printHuman(p *printer.HumanPrinter, mnemonic string, keyPair wallet.KeyPair
 	p.Text("For more information, use ").Bold("--help").Text(" flag.").Jump()
 }
 
-func printJSON(mnemonic string, keyPair wallet.KeyPair) error {
-	result := struct {
-		WalletMnemonic   string `json:",omitempty"`
-		PrivateKey       string
-		PublicKey        string
-		AlgorithmName    string
-		AlgorithmVersion uint32
-		Meta             []wallet.Meta
-	}{
-		WalletMnemonic:   mnemonic,
-		PrivateKey:       keyPair.PrivateKey(),
-		PublicKey:        keyPair.PublicKey(),
-		AlgorithmName:    keyPair.AlgorithmName(),
-		AlgorithmVersion: keyPair.AlgorithmVersion(),
-		Meta:             keyPair.Meta(),
+type keyGenerateJson struct {
+	Wallet keyGenerateWalletJson `json:"wallet"`
+	Key    keyGenerateKeyJson `json:"key"`
+}
+
+type keyGenerateWalletJson struct {
+	FilePath string `json:"filePath"`
+	Mnemonic string `json:"mnemonic,omitempty"`
+}
+
+type keyGenerateKeyJson struct {
+	KeyPair   keyGenerateKeyPairJson `json:"keyPair"`
+	Algorithm keyGenerateAlgorithmJson `json:"algorithm"`
+	Meta      []wallet.Meta `json:"meta"`
+}
+
+type keyGenerateKeyPairJson struct {
+	PrivateKey string `json:"privateKey"`
+	PublicKey  string `json:"publicKey"`
+}
+
+type keyGenerateAlgorithmJson struct {
+	Name    string `json:"name"`
+	Version uint32 `json:"version"`
+}
+
+func printKeyGenerateJSON(mnemonic string, keyPair wallet.KeyPair, walletPath string) error {
+	result := keyGenerateJson{
+		Wallet: keyGenerateWalletJson{
+			FilePath: walletPath,
+			Mnemonic: mnemonic,
+		},
+		Key: keyGenerateKeyJson{
+			KeyPair: keyGenerateKeyPairJson{
+				PrivateKey: keyPair.PrivateKey(),
+				PublicKey:  keyPair.PublicKey(),
+			},
+			Algorithm: keyGenerateAlgorithmJson{
+				Name:    keyPair.AlgorithmName(),
+				Version: keyPair.AlgorithmVersion(),
+			},
+			Meta: keyPair.Meta(),
+		},
 	}
 	return vgjson.Print(result)
 }

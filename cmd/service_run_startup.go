@@ -28,9 +28,8 @@ func printEndpoints(serviceHost string) {
 	params := struct {
 		WalletServiceLocalAddress string
 	}{
-		WalletServiceLocalAddress:  serviceHost,
+		WalletServiceLocalAddress: serviceHost,
 	}
-
 
 	tmpl, err := template.New("wallet-cmdline").Parse(startupT)
 	if err != nil {

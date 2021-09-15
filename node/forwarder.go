@@ -1,4 +1,4 @@
-package service
+package node
 
 import (
 	"context"
@@ -6,16 +6,15 @@ import (
 	"sync/atomic"
 	"time"
 
-	vproto "code.vegaprotocol.io/protos/vega"
 	"code.vegaprotocol.io/protos/vega/api"
 	commandspb "code.vegaprotocol.io/protos/vega/commands/v1"
+
 	"github.com/cenkalti/backoff/v4"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/status"
 )
 
-type nodeForward struct {
+type Forwarder struct {
 	log      *zap.Logger
 	nodeCfgs NodesConfig
 	clts     []api.TradingServiceClient
@@ -23,7 +22,7 @@ type nodeForward struct {
 	next     uint64
 }
 
-func newNodeForward(log *zap.Logger, nodeConfigs NodesConfig) (*nodeForward, error) {
+func NewForwarder(log *zap.Logger, nodeConfigs NodesConfig) (*Forwarder, error) {
 	if len(nodeConfigs.Hosts) <= 0 {
 		return nil, errors.New("no node specified for node forwarding")
 	}
@@ -41,7 +40,7 @@ func newNodeForward(log *zap.Logger, nodeConfigs NodesConfig) (*nodeForward, err
 		clts = append(clts, api.NewTradingServiceClient(conn))
 	}
 
-	return &nodeForward{
+	return &Forwarder{
 		log:      log,
 		nodeCfgs: nodeConfigs,
 		clts:     clts,
@@ -49,7 +48,7 @@ func newNodeForward(log *zap.Logger, nodeConfigs NodesConfig) (*nodeForward, err
 	}, nil
 }
 
-func (n *nodeForward) Stop() error {
+func (n *Forwarder) Stop() error {
 	for i, v := range n.nodeCfgs.Hosts {
 		n.log.Info("closing grpc client", zap.String("address", v))
 		if err := n.conns[i].Close(); err != nil {
@@ -59,7 +58,7 @@ func (n *nodeForward) Stop() error {
 	return nil
 }
 
-func (n *nodeForward) HealthCheck(ctx context.Context) error {
+func (n *Forwarder) HealthCheck(ctx context.Context) error {
 	req := api.GetVegaTimeRequest{}
 	return backoff.Retry(
 		func() error {
@@ -75,7 +74,7 @@ func (n *nodeForward) HealthCheck(ctx context.Context) error {
 	)
 }
 
-func (n *nodeForward) LastBlockHeight(ctx context.Context) (uint64, error) {
+func (n *Forwarder) LastBlockHeight(ctx context.Context) (uint64, error) {
 	req := api.LastBlockHeightRequest{}
 	var height uint64
 	err := backoff.Retry(
@@ -104,7 +103,7 @@ func (n *nodeForward) LastBlockHeight(ctx context.Context) (uint64, error) {
 	return height, err
 }
 
-func (n *nodeForward) SendTxV2(ctx context.Context, tx *commandspb.Transaction, ty api.SubmitTransactionV2Request_Type) error {
+func (n *Forwarder) SendTx(ctx context.Context, tx *commandspb.Transaction, ty api.SubmitTransactionV2Request_Type) error {
 	req := api.SubmitTransactionV2Request{
 		Tx:   tx,
 		Type: ty,
@@ -114,7 +113,7 @@ func (n *nodeForward) SendTxV2(ctx context.Context, tx *commandspb.Transaction, 
 			clt := n.nextClt()
 			resp, err := clt.SubmitTransactionV2(ctx, &req)
 			if err != nil {
-				n.log.Error("failed to send transaction v2", zap.Error(err))
+				n.log.Error("failed to send transaction", zap.Error(err))
 				return err
 			}
 			n.log.Debug("response from SubmitTransactionV2", zap.Bool("success", resp.Success))
@@ -124,22 +123,9 @@ func (n *nodeForward) SendTxV2(ctx context.Context, tx *commandspb.Transaction, 
 	)
 }
 
-func (n *nodeForward) nextClt() api.TradingServiceClient {
+func (n *Forwarder) nextClt() api.TradingServiceClient {
 	i := atomic.AddUint64(&n.next, 1)
 	n.log.Info("sending transaction to Vega node",
 		zap.String("host", n.nodeCfgs.Hosts[(int(i)-1)%len(n.clts)]))
 	return n.clts[(int(i)-1)%len(n.clts)]
-}
-
-func logError(log *zap.Logger, err error) {
-	if st, ok := status.FromError(err); ok {
-		details := []string{}
-		for _, v := range st.Details() {
-			v := v.(*vproto.ErrorDetail)
-			details = append(details, v.Message)
-		}
-		log.Info("could not submit transaction", zap.Strings("error", details))
-	} else {
-		log.Info("could not submit transaction", zap.String("error", err.Error()))
-	}
 }

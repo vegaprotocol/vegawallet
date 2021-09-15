@@ -64,16 +64,16 @@ func (mr *MockNodeForwardMockRecorder) LastBlockHeight(arg0 interface{}) *gomock
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LastBlockHeight", reflect.TypeOf((*MockNodeForward)(nil).LastBlockHeight), arg0)
 }
 
-// SendTxV2 mocks base method
-func (m *MockNodeForward) SendTxV2(arg0 context.Context, arg1 *v1.Transaction, arg2 api.SubmitTransactionV2Request_Type) error {
+// SendTx mocks base method
+func (m *MockNodeForward) SendTx(arg0 context.Context, arg1 *v1.Transaction, arg2 api.SubmitTransactionV2Request_Type) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SendTxV2", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "SendTx", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// SendTxV2 indicates an expected call of SendTxV2
-func (mr *MockNodeForwardMockRecorder) SendTxV2(arg0, arg1, arg2 interface{}) *gomock.Call {
+// SendTx indicates an expected call of SendTx
+func (mr *MockNodeForwardMockRecorder) SendTx(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendTxV2", reflect.TypeOf((*MockNodeForward)(nil).SendTxV2), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendTx", reflect.TypeOf((*MockNodeForward)(nil).SendTx), arg0, arg1, arg2)
 }

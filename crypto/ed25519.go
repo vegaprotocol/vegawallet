@@ -4,6 +4,8 @@ import (
 	"crypto"
 	"errors"
 
+	vgcrypto "code.vegaprotocol.io/shared/libs/crypto"
+
 	"github.com/oasisprotocol/curve25519-voi/primitives/ed25519"
 )
 
@@ -15,22 +17,10 @@ var (
 	ErrBadED25519PublicKeyLength = errors.New("bad ed25519 public key length")
 )
 
-// TODO Rethink this struct to hold a ed25519 key pair
 type ed25519Sig struct{}
 
 func newEd25519() *ed25519Sig {
 	return &ed25519Sig{}
-}
-
-// TODO Remove once the LegacyWallet is removed since the key generation will
-//   	be handled by the slip10 library
-func (e *ed25519Sig) GenKey() (crypto.PublicKey, crypto.PrivateKey, error) {
-	pub, priv, err := ed25519.GenerateKey(nil)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	return []byte(pub), []byte(priv), nil
 }
 
 func (e *ed25519Sig) Sign(priv crypto.PrivateKey, buf []byte) ([]byte, error) {
@@ -39,7 +29,7 @@ func (e *ed25519Sig) Sign(priv crypto.PrivateKey, buf []byte) ([]byte, error) {
 	if len(privBytes) != ed25519.PrivateKeySize {
 		return nil, ErrBadED25519PrivateKeyLength
 	}
-	return ed25519.Sign(privBytes, Hash(buf)), nil
+	return ed25519.Sign(privBytes, vgcrypto.Hash(buf)), nil
 }
 
 func (e *ed25519Sig) Verify(pub crypto.PublicKey, message, sig []byte) (bool, error) {
@@ -48,7 +38,7 @@ func (e *ed25519Sig) Verify(pub crypto.PublicKey, message, sig []byte) (bool, er
 	if len(pubBytes) != ed25519.PublicKeySize {
 		return false, ErrBadED25519PublicKeyLength
 	}
-	return ed25519.Verify(pubBytes, Hash(message), sig), nil
+	return ed25519.Verify(pubBytes, vgcrypto.Hash(message), sig), nil
 }
 
 func (e *ed25519Sig) Name() string {

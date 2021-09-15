@@ -10,7 +10,9 @@ import (
 	"sync"
 	"time"
 
-	"code.vegaprotocol.io/go-wallet/crypto"
+	vgcrypto "code.vegaprotocol.io/shared/libs/crypto"
+	vgrand "code.vegaprotocol.io/shared/libs/rand"
+
 	"github.com/dgrijalva/jwt-go/v4"
 	"github.com/julienschmidt/httprouter"
 	"go.uber.org/zap"
@@ -161,5 +163,5 @@ func ExtractToken(f func(string, http.ResponseWriter, *http.Request, httprouter.
 }
 
 func genSession() string {
-	return hex.EncodeToString(crypto.Hash(crypto.RandomBytes(10)))
+	return hex.EncodeToString(vgcrypto.Hash(vgrand.RandomBytes(10)))
 }

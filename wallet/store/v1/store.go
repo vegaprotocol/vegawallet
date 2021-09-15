@@ -2,35 +2,34 @@ package v1
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
 	"sort"
 
-	"code.vegaprotocol.io/go-wallet/crypto"
-	vgfs "code.vegaprotocol.io/go-wallet/libs/fs"
 	"code.vegaprotocol.io/go-wallet/wallet"
+	vgcrypto "code.vegaprotocol.io/shared/libs/crypto"
+	vgfs "code.vegaprotocol.io/shared/libs/fs"
+)
+
+var (
+	ErrWrongPassphrase = errors.New("wrong passphrase")
 )
 
 type Store struct {
-	walletsPath string
+	walletsHome string
 }
 
-func NewStore(walletsPath string) (*Store, error) {
-	return &Store{
-		walletsPath: walletsPath,
-	}, nil
-}
-
-// Initialise creates the folders. It does nothing if a folder already
-// exists.
-func (s *Store) Initialise() error {
-	if err := vgfs.EnsureDir(s.walletsPath); err != nil {
-		return fmt.Errorf("error creating directory %s: %w", s.walletsPath, err)
+func InitialiseStore(walletsHome string) (*Store, error) {
+	if err := vgfs.EnsureDir(walletsHome); err != nil {
+		return nil, fmt.Errorf("couldn't ensure directories at %s: %w", walletsHome, err)
 	}
 
-	return nil
+	return &Store{
+		walletsHome: walletsHome,
+	}, nil
 }
 
 func (s *Store) WalletExists(name string) bool {
@@ -41,10 +40,10 @@ func (s *Store) WalletExists(name string) bool {
 }
 
 func (s *Store) ListWallets() ([]string, error) {
-	walletsParentDir, walletsDir := filepath.Split(s.walletsPath)
+	walletsParentDir, walletsDir := filepath.Split(s.walletsHome)
 	entries, err := fs.ReadDir(os.DirFS(walletsParentDir), walletsDir)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("couldn't read directory at %s: %w", s.walletsHome, err)
 	}
 	wallets := make([]string, len(entries))
 	for i, entry := range entries {
@@ -57,17 +56,24 @@ func (s *Store) ListWallets() ([]string, error) {
 func (s *Store) GetWallet(name, passphrase string) (wallet.Wallet, error) {
 	walletPath := s.walletPath(name)
 
-	if exists, _ := vgfs.FileExists(walletPath); !exists {
-		return nil, wallet.ErrWalletDoesNotExists
+	exists, err := vgfs.FileExists(walletPath)
+	if err != nil {
+		return nil, fmt.Errorf("couldn't verify file presence at %s: %w", walletPath, err)
+	}
+	if !exists {
+		return nil, fmt.Errorf("no wallet file at %s", walletPath)
 	}
 
-	buf, err := fs.ReadFile(os.DirFS(s.walletsPath), name)
+	buf, err := fs.ReadFile(os.DirFS(s.walletsHome), name)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("couldn't read file at %s: %w", s.walletsHome, err)
 	}
 
-	decBuf, err := crypto.Decrypt(buf, passphrase)
+	decBuf, err := vgcrypto.Decrypt(buf, passphrase)
 	if err != nil {
+		if err.Error() == "cipher: message authentication failed" {
+			return nil, ErrWrongPassphrase
+		}
 		return nil, err
 	}
 
@@ -77,14 +83,11 @@ func (s *Store) GetWallet(name, passphrase string) (wallet.Wallet, error) {
 
 	err = json.Unmarshal(decBuf, versionedWallet)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("couldn't unmarshal wallet verion: %w", err)
 	}
 
 	var w wallet.Wallet
 	switch versionedWallet.Version {
-	case 0:
-		w = &wallet.LegacyWallet{}
-		break
 	case 1:
 		w = &wallet.HDWallet{}
 		break
@@ -93,6 +96,9 @@ func (s *Store) GetWallet(name, passphrase string) (wallet.Wallet, error) {
 	}
 
 	err = json.Unmarshal(decBuf, w)
+	if err != nil {
+		return nil, fmt.Errorf("couldn't unmarshal wallet: %w", err)
+	}
 
 	return w, nil
 }
@@ -100,15 +106,20 @@ func (s *Store) GetWallet(name, passphrase string) (wallet.Wallet, error) {
 func (s *Store) SaveWallet(w wallet.Wallet, passphrase string) error {
 	buf, err := json.Marshal(w)
 	if err != nil {
-		return err
+		return fmt.Errorf("couldn't marshal wallet: %w", err)
 	}
 
-	encBuf, err := crypto.Encrypt(buf, passphrase)
+	encBuf, err := vgcrypto.Encrypt(buf, passphrase)
 	if err != nil {
-		return err
+		return fmt.Errorf("couldn't encrypt wallet: %w", err)
 	}
 
-	return vgfs.WriteFile(encBuf, s.walletPath(w.Name()))
+	walletPath := s.walletPath(w.Name())
+	err = vgfs.WriteFile(walletPath, encBuf)
+	if err != nil {
+		return fmt.Errorf("couldn't write wallet file at %s: %w", walletPath, err)
+	}
+	return nil
 }
 
 func (s *Store) GetWalletPath(name string) string {
@@ -116,5 +127,5 @@ func (s *Store) GetWalletPath(name string) string {
 }
 
 func (s *Store) walletPath(name string) string {
-	return filepath.Join(s.walletsPath, name)
+	return filepath.Join(s.walletsHome, name)
 }

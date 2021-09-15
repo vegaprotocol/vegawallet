@@ -7,7 +7,8 @@ import (
 	"os"
 
 	"code.vegaprotocol.io/go-wallet/cmd/printer"
-	vgjson "code.vegaprotocol.io/go-wallet/libs/json"
+	"code.vegaprotocol.io/go-wallet/wallets"
+	vgjson "code.vegaprotocol.io/shared/libs/json"
 	"github.com/spf13/cobra"
 )
 
@@ -37,10 +38,12 @@ func init() {
 }
 
 func runSign(_ *cobra.Command, _ []string) error {
-	handler, err := newWalletHandler(rootArgs.rootPath)
+	store, err := wallets.InitialiseStore(rootArgs.home)
 	if err != nil {
-		return err
+		return fmt.Errorf("couldn't initialise wallets store: %w", err)
 	}
+
+	handler := wallets.NewHandler(store)
 
 	if len(signArgs.name) == 0 {
 		return errors.New("wallet name is required")
@@ -91,7 +94,7 @@ func runSign(_ *cobra.Command, _ []string) error {
 
 func printSignJson(sig string) error {
 	return vgjson.Print(struct {
-		Signature string
+		Signature string `json:"signature"`
 	}{
 		Signature: sig,
 	})

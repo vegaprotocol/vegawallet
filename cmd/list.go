@@ -4,7 +4,8 @@ import (
 	"fmt"
 
 	"code.vegaprotocol.io/go-wallet/cmd/printer"
-	vgjson "code.vegaprotocol.io/go-wallet/libs/json"
+	"code.vegaprotocol.io/go-wallet/wallets"
+	vgjson "code.vegaprotocol.io/shared/libs/json"
 	"github.com/spf13/cobra"
 )
 
@@ -23,26 +24,28 @@ func init() {
 }
 
 func runList(_ *cobra.Command, _ []string) error {
-	handler, err := newWalletHandler(rootArgs.rootPath)
+	store, err := wallets.InitialiseStore(rootArgs.home)
 	if err != nil {
-		return err
+		return fmt.Errorf("couldn't initialise wallets store: %w", err)
 	}
 
-	wallets, err := handler.ListWallets()
+	handler := wallets.NewHandler(store)
+
+	ws, err := handler.ListWallets()
 	if err != nil {
 		return err
 	}
 
 	if rootArgs.output == "human" {
 		p := printer.NewHumanPrinter()
-		for _, w := range wallets {
+		for _, w := range ws {
 			p.Text(fmt.Sprintf("- %s", w)).Jump()
 		}
 	} else if rootArgs.output == "json" {
 		return vgjson.Print(struct {
-			Wallets []string
+			Wallets []string `json:"wallets"`
 		}{
-			Wallets: wallets,
+			Wallets: ws,
 		})
 	}
 

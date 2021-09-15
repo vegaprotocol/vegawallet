@@ -5,8 +5,9 @@ import (
 	"fmt"
 
 	"code.vegaprotocol.io/go-wallet/cmd/printer"
-	vgjson "code.vegaprotocol.io/go-wallet/libs/json"
 	"code.vegaprotocol.io/go-wallet/wallet"
+	"code.vegaprotocol.io/go-wallet/wallets"
+	vgjson "code.vegaprotocol.io/shared/libs/json"
 	"github.com/spf13/cobra"
 )
 
@@ -31,10 +32,12 @@ func init() {
 }
 
 func runKeyList(_ *cobra.Command, _ []string) error {
-	handler, err := newWalletHandler(rootArgs.rootPath)
+	store, err := wallets.InitialiseStore(rootArgs.home)
 	if err != nil {
-		return err
+		return fmt.Errorf("couldn't initialise wallets store: %w", err)
 	}
+
+	handler := wallets.NewHandler(store)
 
 	if len(keyListArgs.name) == 0 {
 		return errors.New("wallet name is required")
@@ -70,29 +73,22 @@ func runKeyList(_ *cobra.Command, _ []string) error {
 }
 
 func printJsonKeyPairs(keys []wallet.KeyPair) error {
-	var result []struct {
-		PrivateKey       string
-		PublicKey        string
-		AlgorithmName    string
-		AlgorithmVersion uint32
-		Meta             []wallet.Meta
-	}
+	var result []keyGenerateKeyJson
 
 	for _, keyPair := range keys {
 		result = append(result,
-			struct {
-				PrivateKey       string
-				PublicKey        string
-				AlgorithmName    string
-				AlgorithmVersion uint32
-				Meta             []wallet.Meta
-			}{
-				PrivateKey:       keyPair.PrivateKey(),
-				PublicKey:        keyPair.PublicKey(),
-				AlgorithmName:    keyPair.AlgorithmName(),
-				AlgorithmVersion: keyPair.AlgorithmVersion(),
-				Meta:             keyPair.Meta(),
-			})
+			keyGenerateKeyJson{
+				KeyPair: keyGenerateKeyPairJson{
+					PrivateKey: keyPair.PrivateKey(),
+					PublicKey:  keyPair.PublicKey(),
+				},
+				Algorithm: keyGenerateAlgorithmJson{
+					Name:    keyPair.AlgorithmName(),
+					Version: keyPair.AlgorithmVersion(),
+				},
+				Meta: keyPair.Meta(),
+			},
+		)
 	}
 
 	return vgjson.Print(keys)

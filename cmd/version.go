@@ -2,8 +2,8 @@ package cmd
 
 import (
 	"code.vegaprotocol.io/go-wallet/cmd/printer"
-	vgjson "code.vegaprotocol.io/go-wallet/libs/json"
 	"code.vegaprotocol.io/go-wallet/version"
+	vgjson "code.vegaprotocol.io/shared/libs/json"
 
 	"github.com/spf13/cobra"
 )
@@ -32,8 +32,8 @@ func runVersion(_ *cobra.Command, _ []string) error {
 
 func printVersionJson() error {
 	return vgjson.Print(struct {
-		Version string
-		GitHash string
+		Version string `json:"version"`
+		GitHash string `json:"gitHash"`
 	}{
 		Version: version.Version,
 		GitHash: version.VersionHash,

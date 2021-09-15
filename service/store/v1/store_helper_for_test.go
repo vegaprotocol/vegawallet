@@ -4,44 +4,74 @@ import (
 	"os"
 	"path/filepath"
 
-	"code.vegaprotocol.io/go-wallet/crypto"
+	vgrand "code.vegaprotocol.io/shared/libs/rand"
+	"code.vegaprotocol.io/shared/paths"
 )
 
-type configDir struct {
-	rootPath string
+type vegaHome struct {
+	customPaths *paths.CustomPaths
 }
 
-func newConfigDir() configDir {
-	rootPath := filepath.Join("/tmp", "vegatests", "wallet", crypto.RandomStr(10))
+func newVegaHome() vegaHome {
+	rootPath := filepath.Join("/tmp", "vega_tests", vgrand.RandomStr(10))
 
-	return configDir{
-		rootPath: rootPath,
+	return vegaHome{
+		customPaths: &paths.CustomPaths{CustomHome: rootPath},
 	}
 }
 
-func (d configDir) RootPath() string {
-	return d.rootPath
+func (h *vegaHome) Paths() paths.Paths {
+	return h.customPaths
 }
 
-func (d configDir) RSAKeysPath() string {
-	return filepath.Join(d.rootPath, "wallet_rsa")
-}
-
-func (d configDir) Remove() {
-	err := os.RemoveAll(d.rootPath)
+func (h *vegaHome) Remove() {
+	err := os.RemoveAll(h.customPaths.CustomHome)
 	if err != nil {
 		panic(err)
 	}
 }
 
-func (d configDir) ConfigFilePath() string {
-	return filepath.Join(d.rootPath, "wallet-service-config.toml")
+func (h *vegaHome) ConfigFilePath() string {
+	serviceConfigFilePath, err := h.customPaths.ConfigPathFor(paths.WalletServiceDefaultConfigFile)
+	if err != nil {
+		panic(err)
+	}
+
+	return serviceConfigFilePath
 }
 
-func (d configDir) PublicRSAKeyFilePath() string {
-	return filepath.Join(d.RSAKeysPath(), "public.pem")
+func (h *vegaHome) ConfigHome() string {
+	configHome, err := h.customPaths.ConfigPathFor(paths.WalletServiceConfigHome)
+	if err != nil {
+		panic(err)
+	}
+
+	return configHome
 }
 
-func (d configDir) PrivateRSAKeyFilePath() string {
-	return filepath.Join(d.RSAKeysPath(), "private.pem")
+func (h *vegaHome) RSAKeysHome() string {
+	rsaKeyHome, err := h.customPaths.DataPathFor(paths.WalletServiceRSAKeysDataHome)
+	if err != nil {
+		panic(err)
+	}
+
+	return rsaKeyHome
+}
+
+func (h *vegaHome) PublicRSAKeyFilePath() string {
+	pubRsaKeyFilePath, err := h.customPaths.DataPathFor(paths.WalletServicePublicRSAKeyDataFile)
+	if err != nil {
+		panic(err)
+	}
+
+	return pubRsaKeyFilePath
+}
+
+func (h *vegaHome) PrivateRSAKeyFilePath() string {
+	privRsaKeyFilePath, err := h.customPaths.DataPathFor(paths.WalletServicePrivateRSAKeyDataFile)
+	if err != nil {
+		panic(err)
+	}
+
+	return privRsaKeyFilePath
 }

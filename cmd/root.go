@@ -9,11 +9,8 @@ import (
 	"strings"
 
 	"code.vegaprotocol.io/go-wallet/cmd/printer"
-	vgfs "code.vegaprotocol.io/go-wallet/libs/fs"
-	vgjson "code.vegaprotocol.io/go-wallet/libs/json"
 	"code.vegaprotocol.io/go-wallet/version"
-	"code.vegaprotocol.io/go-wallet/wallet"
-	wstorev1 "code.vegaprotocol.io/go-wallet/wallet/store/v1"
+	vgjson "code.vegaprotocol.io/shared/libs/json"
 	"github.com/mattn/go-isatty"
 	"github.com/spf13/cobra"
 	"golang.org/x/crypto/ssh/terminal"
@@ -22,14 +19,14 @@ import (
 var (
 	rootArgs struct {
 		output         string
-		rootPath       string
+		home           string
 		noVersionCheck bool
 	}
 
 	rootCmd = &cobra.Command{
 		Use:               os.Args[0],
 		Short:             "The Vega wallet",
-		Long:              `The Vega wallet`,
+		Long:              "The Vega wallet",
 		PersistentPreRunE: rootPreRun,
 		SilenceUsage:      true,
 		SilenceErrors:     true,
@@ -84,23 +81,23 @@ func checkVersion() error {
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
 		if rootArgs.output == "human" && !isatty.IsTerminal(os.Stdout.Fd()) && !isatty.IsCygwinTerminal(os.Stdout.Fd()) {
-			fmt.Println(err)
+			_, _ = fmt.Fprintln(os.Stderr, err)
 		} else {
 			if rootArgs.output == "human" {
 				p := printer.NewHumanPrinter()
 				p.CrossMark().DangerText(err.Error()).Jump()
 			} else if rootArgs.output == "json" {
 				jsonErr := vgjson.Print(struct {
-					Error string
+					Error string `json:"error"`
 				}{
 					Error: err.Error(),
 				})
 				if jsonErr != nil {
-					fmt.Printf("couldn't format JSON: %v\n", jsonErr)
-					fmt.Printf("original error: %v\n", err)
+					_, _ = fmt.Fprintf(os.Stderr, "couldn't format JSON: %v\n", jsonErr)
+					_, _ = fmt.Fprintf(os.Stderr, "original error: %v\n", err)
 				}
 			} else {
-				fmt.Println(err)
+				_, _ = fmt.Fprintln(os.Stderr, err)
 			}
 		}
 		os.Exit(1)
@@ -109,7 +106,7 @@ func Execute() {
 
 func init() {
 	rootCmd.PersistentFlags().StringVarP(&rootArgs.output, "output", "o", "human", "Specify the output format: json,human")
-	rootCmd.PersistentFlags().StringVarP(&rootArgs.rootPath, "root-path", "r", vgfs.DefaultVegaDir(), "Root directory for the Vega wallet configuration")
+	rootCmd.PersistentFlags().StringVar(&rootArgs.home, "home", "", "Specify the location of a custom Vega home")
 	rootCmd.PersistentFlags().BoolVar(&rootArgs.noVersionCheck, "no-version-check", false, "Do not check for new version of the Vega wallet")
 }
 
@@ -168,25 +165,4 @@ func promptForPassphrase(msg ...string) (string, error) {
 	fmt.Println()
 
 	return string(password), nil
-}
-
-// newWalletsStore builds a wallets store with the following structure
-//
-// root-path/
-// └── wallets/
-//    ├── my-wallet-1
-//    └── my-wallet-2
-func newWalletsStore(rootPath string) (*wstorev1.Store, error) {
-	walletsPath := filepath.Join(rootPath, "wallets")
-
-	return wstorev1.NewStore(walletsPath)
-}
-
-func newWalletHandler(rootPath string) (*wallet.Handler, error) {
-	store, err := newWalletsStore(rootPath)
-	if err != nil {
-		return nil, err
-	}
-
-	return wallet.NewHandler(store), nil
 }
