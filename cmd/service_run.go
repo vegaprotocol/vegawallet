@@ -11,8 +11,9 @@ import (
 	"code.vegaprotocol.io/go-wallet/cmd/printer"
 	"code.vegaprotocol.io/go-wallet/console"
 	"code.vegaprotocol.io/go-wallet/logger"
+	"code.vegaprotocol.io/go-wallet/node"
 	"code.vegaprotocol.io/go-wallet/service"
-	svcstore1 "code.vegaprotocol.io/go-wallet/service/store/v1"
+	svcstore "code.vegaprotocol.io/go-wallet/service/store/v1"
 	"code.vegaprotocol.io/go-wallet/wallets"
 	"code.vegaprotocol.io/shared/paths"
 	"github.com/skratchdot/open-golang/open"
@@ -50,7 +51,7 @@ func runServiceRun(_ *cobra.Command, _ []string) error {
 
 	handler := wallets.NewHandler(store)
 
-	svcStore, err := svcstore1.InitialiseStore(paths.NewPaths(rootArgs.home))
+	svcStore, err := svcstore.InitialiseStore(paths.NewPaths(rootArgs.home))
 	if err != nil {
 		return err
 	}
@@ -74,7 +75,17 @@ func runServiceRun(_ *cobra.Command, _ []string) error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	srv, err := service.NewService(log, cfg, svcStore, handler)
+	auth, err := service.NewAuth(log.Named("auth"), svcStore, cfg.TokenExpiry.Get())
+	if err != nil {
+		return fmt.Errorf("couldn't initialise authentication: %w", err)
+	}
+
+	forwarder, err := node.NewForwarder(log.Named("forwarder"), cfg.Nodes)
+	if err != nil {
+		return fmt.Errorf("couldn't initialise the node forwarder: %w", err)
+	}
+
+	srv, err := service.NewService(log.Named("service"), cfg, handler, auth, forwarder)
 	if err != nil {
 		return err
 	}
@@ -108,7 +119,7 @@ func runServiceRun(_ *cobra.Command, _ []string) error {
 		if rootArgs.output == "human" {
 			p.CheckMark().Text("Console proxy pointing to ").Bold(cfg.Console.URL).Text(" started at: ").SuccessText(consoleLocalHost).Jump()
 		} else if rootArgs.output == "json" {
-			log.Info(fmt.Sprintf("Console proxy pointing to %s started at: %s", cfg.Console.URL, consoleLocalHost))
+			log.Info(fmt.Sprintf("console proxy pointing to %s started at: %s", cfg.Console.URL, consoleLocalHost))
 		}
 
 		if !serviceRunArgs.noBrowser {
@@ -158,7 +169,7 @@ func waitSig(ctx context.Context, cfunc func(), log *zap.Logger) {
 
 	select {
 	case sig := <-gracefulStop:
-		log.Info("Caught signal", zap.String("name", fmt.Sprintf("%+v", sig)))
+		log.Info("caught signal", zap.String("name", fmt.Sprintf("%+v", sig)))
 		cfunc()
 	case <-ctx.Done():
 		// nothing to do

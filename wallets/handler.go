@@ -6,14 +6,13 @@ import (
 	"fmt"
 	"sync"
 
+	wcommands "code.vegaprotocol.io/go-wallet/commands"
 	wcrypto "code.vegaprotocol.io/go-wallet/crypto"
 	"code.vegaprotocol.io/go-wallet/wallet"
 	wstorev1 "code.vegaprotocol.io/go-wallet/wallet/store/v1"
 	"code.vegaprotocol.io/protos/commands"
 	commandspb "code.vegaprotocol.io/protos/vega/commands/v1"
 	walletpb "code.vegaprotocol.io/protos/vega/wallet/v1"
-
-	"github.com/golang/protobuf/proto"
 )
 
 var (
@@ -213,15 +212,13 @@ func (h *Handler) SignTx(name string, req *walletpb.SubmitTransactionRequest, he
 		return nil, err
 	}
 
-	data := commands.NewInputData(height)
-	WrapRequestCommandIntoInputData(data, req)
-	marshalledData, err := proto.Marshal(data)
+	data, err := wcommands.ToMarshaledInputData(req, height)
 	if err != nil {
-		return nil, fmt.Errorf("couldn't marshal transaction: %w", err)
+		return nil, fmt.Errorf("couldn't marshal input data: %w", err)
 	}
 
 	pubKey := req.GetPubKey()
-	signature, err := w.SignTx(pubKey, marshalledData)
+	signature, err := w.SignTx(pubKey, data)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't sign transaction: %w", err)
 	}
@@ -231,7 +228,7 @@ func (h *Handler) SignTx(name string, req *walletpb.SubmitTransactionRequest, he
 		Algo:    signature.Algo,
 		Version: signature.Version,
 	}
-	return commands.NewTransaction(pubKey, marshalledData, protoSignature), nil
+	return commands.NewTransaction(pubKey, data, protoSignature), nil
 }
 
 func (h *Handler) VerifyAny(inputData, sig []byte, pubKey string) (bool, error) {
@@ -320,69 +317,6 @@ func (h *Handler) saveWallet(w wallet.Wallet, passphrase string) error {
 	h.loggedWallets.Add(w)
 
 	return nil
-}
-
-func WrapRequestCommandIntoInputData(data *commandspb.InputData, req *walletpb.SubmitTransactionRequest) {
-	switch cmd := req.Command.(type) {
-	case *walletpb.SubmitTransactionRequest_OrderSubmission:
-		data.Command = &commandspb.InputData_OrderSubmission{
-			OrderSubmission: req.GetOrderSubmission(),
-		}
-	case *walletpb.SubmitTransactionRequest_OrderCancellation:
-		data.Command = &commandspb.InputData_OrderCancellation{
-			OrderCancellation: req.GetOrderCancellation(),
-		}
-	case *walletpb.SubmitTransactionRequest_OrderAmendment:
-		data.Command = &commandspb.InputData_OrderAmendment{
-			OrderAmendment: req.GetOrderAmendment(),
-		}
-	case *walletpb.SubmitTransactionRequest_VoteSubmission:
-		data.Command = &commandspb.InputData_VoteSubmission{
-			VoteSubmission: req.GetVoteSubmission(),
-		}
-	case *walletpb.SubmitTransactionRequest_WithdrawSubmission:
-		data.Command = &commandspb.InputData_WithdrawSubmission{
-			WithdrawSubmission: req.GetWithdrawSubmission(),
-		}
-	case *walletpb.SubmitTransactionRequest_LiquidityProvisionSubmission:
-		data.Command = &commandspb.InputData_LiquidityProvisionSubmission{
-			LiquidityProvisionSubmission: req.GetLiquidityProvisionSubmission(),
-		}
-	case *walletpb.SubmitTransactionRequest_ProposalSubmission:
-		data.Command = &commandspb.InputData_ProposalSubmission{
-			ProposalSubmission: req.GetProposalSubmission(),
-		}
-	case *walletpb.SubmitTransactionRequest_NodeRegistration:
-		data.Command = &commandspb.InputData_NodeRegistration{
-			NodeRegistration: req.GetNodeRegistration(),
-		}
-	case *walletpb.SubmitTransactionRequest_NodeVote:
-		data.Command = &commandspb.InputData_NodeVote{
-			NodeVote: req.GetNodeVote(),
-		}
-	case *walletpb.SubmitTransactionRequest_NodeSignature:
-		data.Command = &commandspb.InputData_NodeSignature{
-			NodeSignature: req.GetNodeSignature(),
-		}
-	case *walletpb.SubmitTransactionRequest_ChainEvent:
-		data.Command = &commandspb.InputData_ChainEvent{
-			ChainEvent: req.GetChainEvent(),
-		}
-	case *walletpb.SubmitTransactionRequest_OracleDataSubmission:
-		data.Command = &commandspb.InputData_OracleDataSubmission{
-			OracleDataSubmission: req.GetOracleDataSubmission(),
-		}
-	case *walletpb.SubmitTransactionRequest_DelegateSubmission:
-		data.Command = &commandspb.InputData_DelegateSubmission{
-			DelegateSubmission: req.GetDelegateSubmission(),
-		}
-	case *walletpb.SubmitTransactionRequest_UndelegateSubmission:
-		data.Command = &commandspb.InputData_UndelegateSubmission{
-			UndelegateSubmission: req.GetUndelegateSubmission(),
-		}
-	default:
-		panic(fmt.Errorf("command %v is not supported", cmd))
-	}
 }
 
 func (h *Handler) getLoggedWallet(name string) (wallet.Wallet, error) {

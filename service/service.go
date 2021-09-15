@@ -9,7 +9,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	commands2 "code.vegaprotocol.io/go-wallet/commands"
+	wcommands "code.vegaprotocol.io/go-wallet/commands"
 	"code.vegaprotocol.io/go-wallet/version"
 	"code.vegaprotocol.io/go-wallet/wallet"
 	"code.vegaprotocol.io/protos/commands"
@@ -17,6 +17,7 @@ import (
 	"code.vegaprotocol.io/protos/vega/api"
 	commandspb "code.vegaprotocol.io/protos/vega/commands/v1"
 	walletpb "code.vegaprotocol.io/protos/vega/wallet/v1"
+
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/proto"
 	"github.com/julienschmidt/httprouter"
@@ -28,9 +29,8 @@ import (
 type Service struct {
 	*httprouter.Router
 
-	cfg         *Config
 	log         *zap.Logger
-	s           *http.Server
+	server      *http.Server
 	handler     WalletHandler
 	auth        Auth
 	nodeForward NodeForward
@@ -323,7 +323,7 @@ func ParseSubmitTransactionRequest(r *http.Request) (*walletpb.SubmitTransaction
 		return nil, errs.FinalAdd(err)
 	}
 
-	if errs = commands2.CheckSubmitTransactionRequest(req); !errs.Empty() {
+	if errs = wcommands.CheckSubmitTransactionRequest(req); !errs.Empty() {
 		return nil, errs
 	}
 
@@ -396,27 +396,18 @@ type NodeForward interface {
 	LastBlockHeight(context.Context) (uint64, error)
 }
 
-func NewService(log *zap.Logger, cfg *Config, rsaStore RSAStore, handler WalletHandler) (*Service, error) {
-	log = log.Named("wallet")
-	auth, err := NewAuth(log, rsaStore, cfg.TokenExpiry.Get())
-	if err != nil {
-		return nil, err
-	}
-	nodeForward, err := newNodeForward(log, cfg.Nodes)
-	if err != nil {
-		return nil, err
-	}
-	return NewServiceWith(log, cfg, handler, auth, nodeForward)
-}
-
-func NewServiceWith(log *zap.Logger, cfg *Config, h WalletHandler, a Auth, n NodeForward) (*Service, error) {
+func NewService(log *zap.Logger, cfg *Config, h WalletHandler, a Auth, n NodeForward) (*Service, error) {
 	s := &Service{
 		Router:      httprouter.New(),
 		log:         log,
-		cfg:         cfg,
 		handler:     h,
 		auth:        a,
 		nodeForward: n,
+	}
+
+	s.server = &http.Server{
+		Addr:    fmt.Sprintf("%s:%v", cfg.Host, cfg.Port),
+		Handler: cors.AllowAll().Handler(s),
 	}
 
 	s.POST("/api/v1/auth/token", s.Login)
@@ -441,16 +432,11 @@ func NewServiceWith(log *zap.Logger, cfg *Config, h WalletHandler, a Auth, n Nod
 }
 
 func (s *Service) Start() error {
-	s.s = &http.Server{
-		Addr:    fmt.Sprintf("%s:%v", s.cfg.Host, s.cfg.Port),
-		Handler: cors.AllowAll().Handler(s),
-	}
-
-	return s.s.ListenAndServe()
+	return s.server.ListenAndServe()
 }
 
 func (s *Service) Stop() error {
-	return s.s.Shutdown(context.Background())
+	return s.server.Shutdown(context.Background())
 }
 
 func (s *Service) CreateWallet(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
