@@ -120,23 +120,49 @@ func printHuman(p *printer.HumanPrinter, mnemonic string, keyPair wallet.KeyPair
 	p.Text("For more information, use ").Bold("--help").Text(" flag.").Jump()
 }
 
+type keyGenerateJson struct {
+	Wallet keyGenerateWalletJson
+	Key    keyGenerateKeyJson
+}
+
+type keyGenerateWalletJson struct {
+	FilePath string
+	Mnemonic string `json:",omitempty"`
+}
+
+type keyGenerateKeyJson struct {
+	KeyPair   keyGenerateKeyPairJson
+	Algorithm keyGenerateAlgorithmJson
+	Meta      []wallet.Meta
+}
+
+type keyGenerateKeyPairJson struct {
+	PrivateKey string
+	PublicKey  string
+}
+
+type keyGenerateAlgorithmJson struct {
+	Name    string
+	Version uint32
+}
+
 func printKeyGenerateJSON(mnemonic string, keyPair wallet.KeyPair, walletPath string) error {
-	result := struct {
-		WalletPath       string
-		WalletMnemonic   string `json:",omitempty"`
-		PrivateKey       string
-		PublicKey        string
-		AlgorithmName    string
-		AlgorithmVersion uint32
-		Meta             []wallet.Meta
-	}{
-		WalletPath:       walletPath,
-		WalletMnemonic:   mnemonic,
-		PrivateKey:       keyPair.PrivateKey(),
-		PublicKey:        keyPair.PublicKey(),
-		AlgorithmName:    keyPair.AlgorithmName(),
-		AlgorithmVersion: keyPair.AlgorithmVersion(),
-		Meta:             keyPair.Meta(),
+	result := keyGenerateJson{
+		Wallet: keyGenerateWalletJson{
+			FilePath: walletPath,
+			Mnemonic: mnemonic,
+		},
+		Key: keyGenerateKeyJson{
+			KeyPair: keyGenerateKeyPairJson{
+				PrivateKey: keyPair.PrivateKey(),
+				PublicKey:  keyPair.PublicKey(),
+			},
+			Algorithm: keyGenerateAlgorithmJson{
+				Name:    keyPair.AlgorithmName(),
+				Version: keyPair.AlgorithmVersion(),
+			},
+			Meta: keyPair.Meta(),
+		},
 	}
 	return vgjson.Print(result)
 }

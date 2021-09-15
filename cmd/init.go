@@ -72,16 +72,24 @@ func printInitHuman(svcStore *v1.Store) {
 	p.Text("For more information, use ").Bold("--help").Text(" flag.").Jump()
 }
 
+type initJson struct {
+	RSAKeys               initRsaKeysJson
+	ServiceConfigFilePath string
+}
+
+type initRsaKeysJson struct {
+	PublicFilePath  string
+	PrivateFilePath string
+}
+
 func printInitJson(svcStore *v1.Store) error {
 	rsaKeysPath := svcStore.GetRSAKeysPath()
-	result := struct {
-		PublicRSAKeyFile  string
-		PrivateRSAKeyFile string
-		ServiceConfigFile string
-	}{
-		PublicRSAKeyFile:  rsaKeysPath["public"],
-		PrivateRSAKeyFile: rsaKeysPath["private"],
-		ServiceConfigFile: svcStore.GetConfigPath(),
+	result := initJson {
+		RSAKeys: initRsaKeysJson {
+			PublicFilePath:  rsaKeysPath["public"],
+			PrivateFilePath: rsaKeysPath["private"],
+		},
+		ServiceConfigFilePath: svcStore.GetConfigPath(),
 	}
 	return vgjson.Print(result)
 }

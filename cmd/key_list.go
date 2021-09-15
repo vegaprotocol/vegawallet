@@ -73,29 +73,22 @@ func runKeyList(_ *cobra.Command, _ []string) error {
 }
 
 func printJsonKeyPairs(keys []wallet.KeyPair) error {
-	var result []struct {
-		PrivateKey       string
-		PublicKey        string
-		AlgorithmName    string
-		AlgorithmVersion uint32
-		Meta             []wallet.Meta
-	}
+	var result []keyGenerateKeyJson
 
 	for _, keyPair := range keys {
 		result = append(result,
-			struct {
-				PrivateKey       string
-				PublicKey        string
-				AlgorithmName    string
-				AlgorithmVersion uint32
-				Meta             []wallet.Meta
-			}{
-				PrivateKey:       keyPair.PrivateKey(),
-				PublicKey:        keyPair.PublicKey(),
-				AlgorithmName:    keyPair.AlgorithmName(),
-				AlgorithmVersion: keyPair.AlgorithmVersion(),
-				Meta:             keyPair.Meta(),
-			})
+			keyGenerateKeyJson{
+				KeyPair: keyGenerateKeyPairJson{
+					PrivateKey: keyPair.PrivateKey(),
+					PublicKey:  keyPair.PublicKey(),
+				},
+				Algorithm: keyGenerateAlgorithmJson{
+					Name:    keyPair.AlgorithmName(),
+					Version: keyPair.AlgorithmVersion(),
+				},
+				Meta: keyPair.Meta(),
+			},
+		)
 	}
 
 	return vgjson.Print(keys)
