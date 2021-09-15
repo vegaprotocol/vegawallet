@@ -8,6 +8,7 @@ ADD console console
 ADD commands commands
 ADD crypto crypto
 ADD logger logger
+ADD node node
 ADD service service
 ADD version version
 ADD wallet wallet
