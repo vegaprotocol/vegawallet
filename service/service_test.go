@@ -46,7 +46,7 @@ func getTestService(t *testing.T) *testService {
 	auth := mocks.NewMockAuth(ctrl)
 	nodeForward := mocks.NewMockNodeForward(ctrl)
 	// no needs of the conf or path as we do not run an actual service
-	s, _ := service.NewService(zap.NewNop(), nil, handler, auth, nodeForward)
+	s, _ := service.NewService(zap.NewNop(), &service.Config{}, handler, auth, nodeForward)
 	return &testService{
 		Service:     s,
 		ctrl:        ctrl,

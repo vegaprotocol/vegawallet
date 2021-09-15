@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"code.vegaprotocol.io/go-wallet/node"
 	"code.vegaprotocol.io/go-wallet/service/encoding"
 	"go.uber.org/zap"
 )
@@ -27,18 +28,13 @@ type Config struct {
 	TokenExpiry encoding.Duration
 	Port        int
 	Host        string
-	Nodes       NodesConfig
+	Nodes       node.NodesConfig
 	Console     ConsoleConfig
 }
 
 type ConsoleConfig struct {
 	URL       string
 	LocalPort int
-}
-
-type NodesConfig struct {
-	Hosts   []string
-	Retries uint64
 }
 
 func GenerateConfig(store Store, overwrite bool) error {
@@ -100,7 +96,7 @@ func NewDefaultConfig() Config {
 	return Config{
 		Level:       encoding.LogLevel{Level: zap.InfoLevel},
 		TokenExpiry: encoding.Duration{Duration: tokenExpiry},
-		Nodes: NodesConfig{
+		Nodes: node.NodesConfig{
 			Hosts: []string{
 				"n01.testnet.vega.xyz:3002",
 				"n02.testnet.vega.xyz:3002",

@@ -81,7 +81,7 @@ func checkVersion() error {
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
 		if rootArgs.output == "human" && !isatty.IsTerminal(os.Stdout.Fd()) && !isatty.IsCygwinTerminal(os.Stdout.Fd()) {
-			fmt.Println(err)
+			_, _ = fmt.Fprintln(os.Stderr, err)
 		} else {
 			if rootArgs.output == "human" {
 				p := printer.NewHumanPrinter()
@@ -93,11 +93,11 @@ func Execute() {
 					Error: err.Error(),
 				})
 				if jsonErr != nil {
-					fmt.Printf("couldn't format JSON: %v\n", jsonErr)
-					fmt.Printf("original error: %v\n", err)
+					_, _ = fmt.Fprintf(os.Stderr, "couldn't format JSON: %v\n", jsonErr)
+					_, _ = fmt.Fprintf(os.Stderr, "original error: %v\n", err)
 				}
 			} else {
-				fmt.Println(err)
+				_, _ = fmt.Fprintln(os.Stderr, err)
 			}
 		}
 		os.Exit(1)

@@ -9,7 +9,6 @@ import (
 	wcommands "code.vegaprotocol.io/go-wallet/commands"
 	"code.vegaprotocol.io/go-wallet/logger"
 	"code.vegaprotocol.io/go-wallet/node"
-	"code.vegaprotocol.io/go-wallet/service"
 	"code.vegaprotocol.io/go-wallet/wallets"
 	"code.vegaprotocol.io/protos/vega/api"
 	walletpb "code.vegaprotocol.io/protos/vega/wallet/v1"
@@ -95,7 +94,7 @@ func runCommand(_ *cobra.Command, pos []string) error {
 	}
 	defer log.Sync()
 
-	forwarder, err := node.NewForwarder(log.Named("forwarder"), service.NodesConfig{
+	forwarder, err := node.NewForwarder(log.Named("forwarder"), node.NodesConfig{
 		Hosts:   []string{commandArgs.nodeAddress},
 		Retries: commandArgs.retries,
 	})
