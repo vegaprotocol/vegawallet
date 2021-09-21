@@ -19,17 +19,17 @@ func GenerateRSAKeys() (*RSAKeys, error) {
 
 	key, err := rsa.GenerateKey(rand.Reader, bitSize)
 	if err != nil {
-		return nil, fmt.Errorf("unable to generate rsa keys: %w", err)
+		return nil, fmt.Errorf("couldn't generate RSA keys: %w", err)
 	}
 
 	privateKey, err := toPrivatePKCS1Key(key)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("couldn't extract private RSA key: %w", err)
 	}
 
 	publicKey, err := toPublicPKCS1Key(key)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("couldn't extract public RSA key: %w", err)
 	}
 
 	return &RSAKeys{
@@ -46,7 +46,7 @@ func toPrivatePKCS1Key(key *rsa.PrivateKey) ([]byte, error) {
 	privateKeyBuffer := bytes.NewBuffer([]byte{})
 	err := pem.Encode(privateKeyBuffer, privateKey)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("couldn't encode private RSA key: %w", err)
 	}
 	return privateKeyBuffer.Bytes(), nil
 }
@@ -54,7 +54,7 @@ func toPrivatePKCS1Key(key *rsa.PrivateKey) ([]byte, error) {
 func toPublicPKCS1Key(key *rsa.PrivateKey) ([]byte, error) {
 	pubBytes, err := x509.MarshalPKIXPublicKey(&key.PublicKey)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("couldn't marshal public RSA key: %w", err)
 	}
 	publicKey := &pem.Block{
 		Type:  "PUBLIC KEY",
@@ -63,7 +63,7 @@ func toPublicPKCS1Key(key *rsa.PrivateKey) ([]byte, error) {
 	publicKeyBuffer := bytes.NewBuffer([]byte{})
 	err = pem.Encode(publicKeyBuffer, publicKey)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("couldn't encode public RSA key: %w", err)
 	}
 	return publicKeyBuffer.Bytes(), nil
 }

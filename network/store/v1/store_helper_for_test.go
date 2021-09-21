@@ -31,29 +31,15 @@ func (h *vegaHome) Remove() {
 	}
 }
 
-func (h *vegaHome) RSAKeysHome() string {
-	rsaKeyHome, err := h.customPaths.DataPathFor(paths.WalletServiceRSAKeysDataHome)
+func (h *vegaHome) NetworksHome() string {
+	networksHome, err := h.customPaths.ConfigDirFor(paths.WalletServiceNetworksConfigHome)
 	if err != nil {
 		panic(err)
 	}
 
-	return rsaKeyHome
+	return networksHome
 }
 
-func (h *vegaHome) PublicRSAKeyFilePath() string {
-	pubRsaKeyFilePath, err := h.customPaths.DataPathFor(paths.WalletServicePublicRSAKeyDataFile)
-	if err != nil {
-		panic(err)
-	}
-
-	return pubRsaKeyFilePath
-}
-
-func (h *vegaHome) PrivateRSAKeyFilePath() string {
-	privRsaKeyFilePath, err := h.customPaths.DataPathFor(paths.WalletServicePrivateRSAKeyDataFile)
-	if err != nil {
-		panic(err)
-	}
-
-	return privRsaKeyFilePath
+func (h *vegaHome) NetworkPath(name string) string {
+	return filepath.Join(h.NetworksHome(), name + ".toml")
 }

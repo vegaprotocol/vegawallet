@@ -27,7 +27,7 @@ var (
 
 func init() {
 	keyCmd.AddCommand(keyIsolateCmd)
-	keyIsolateCmd.Flags().StringVarP(&keyIsolateArgs.name, "name", "n", "", "Name of the wallet to use")
+	keyIsolateCmd.Flags().StringVarP(&keyIsolateArgs.name, "wallet", "w", "", "Name of the wallet to use")
 	keyIsolateCmd.Flags().StringVarP(&keyIsolateArgs.passphraseFile, "passphrase-file", "p", "", "Path of the file containing the passphrase to access the wallet")
 	keyIsolateCmd.Flags().StringVarP(&keyIsolateArgs.pubkey, "pubkey", "k", "", "Public key to be used (hex)")
 }
@@ -39,7 +39,7 @@ func runKeyIsolate(_ *cobra.Command, _ []string) error {
 	}
 
 	if len(keyIsolateArgs.name) == 0 {
-		return errors.New("wallet name is required")
+		return errors.New("wallet is required")
 	}
 	if len(keyIsolateArgs.pubkey) == 0 {
 		return errors.New("pubkey is required")

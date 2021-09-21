@@ -75,7 +75,7 @@ func runVerify(_ *cobra.Command, _ []string) error {
 
 		p.BlueArrow().InfoText("Sign a message").Jump()
 		p.Text("To sign a base-64 encoded message, use the following commands:").NJump(2)
-		p.Code(fmt.Sprintf("%s sign --name \"YOUR_NAME\" --pubkey %s --message \"YOUR_MESSAGE\"", os.Args[0], verifyArgs.pubkey)).NJump(2)
+		p.Code(fmt.Sprintf("%s sign --wallet \"YOUR_NAME\" --pubkey %s --message \"YOUR_MESSAGE\"", os.Args[0], verifyArgs.pubkey)).NJump(2)
 		p.Text("For more information, use ").Bold("--help").Text(" flag.").Jump()
 	} else if rootArgs.output == "json" {
 		return printVerifyJson(isValid)

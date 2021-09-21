@@ -10,6 +10,7 @@ import (
 	"net/http"
 
 	wcommands "code.vegaprotocol.io/go-wallet/commands"
+	"code.vegaprotocol.io/go-wallet/network"
 	"code.vegaprotocol.io/go-wallet/version"
 	"code.vegaprotocol.io/go-wallet/wallet"
 	"code.vegaprotocol.io/protos/commands"
@@ -28,8 +29,8 @@ import (
 
 type Service struct {
 	*httprouter.Router
-	
-	cfg         *Config
+
+	network     *network.Network
 	log         *zap.Logger
 	server      *http.Server
 	handler     WalletHandler
@@ -363,9 +364,9 @@ type VersionResponse struct {
 	VersionHash string `json:"versionHash"`
 }
 
-// ConfigResponse describes the response to a request that returns app hosts info.
-type ConfigResponse struct {
-	Config Config `json:"config"`
+// NetworkResponse describes the response to a request that returns app hosts info.
+type NetworkResponse struct {
+	Network network.Network `json:"network"`
 }
 
 // WalletHandler ...
@@ -402,25 +403,25 @@ type NodeForward interface {
 	LastBlockHeight(context.Context) (uint64, error)
 }
 
-func NewService(log *zap.Logger, cfg *Config, h WalletHandler, a Auth, n NodeForward) (*Service, error) {
+func NewService(log *zap.Logger, net *network.Network, h WalletHandler, a Auth, n NodeForward) (*Service, error) {
 	s := &Service{
 		Router:      httprouter.New(),
 		log:         log,
 		handler:     h,
 		auth:        a,
 		nodeForward: n,
-		cfg:         cfg,
+		network:     net,
 	}
 
 	s.server = &http.Server{
-		Addr:    fmt.Sprintf("%s:%v", cfg.Host, cfg.Port),
+		Addr:    fmt.Sprintf("%s:%v", net.Host, net.Port),
 		Handler: cors.AllowAll().Handler(s),
 	}
 
 	s.POST("/api/v1/auth/token", s.Login)
 	s.DELETE("/api/v1/auth/token", ExtractToken(s.Revoke))
 	s.GET("/api/v1/status", s.health)
-	s.GET("/api/v1/config", s.config)
+	s.GET("/api/v1/network", s.GetNetwork)
 	s.POST("/api/v1/wallets", s.CreateWallet)
 	s.POST("/api/v1/wallets/import", s.ImportWallet)
 	s.GET("/api/v1/keys", ExtractToken(s.ListPublicKeys))
@@ -769,9 +770,9 @@ func (s *Service) Version(w http.ResponseWriter, _ *http.Request, _ httprouter.P
 	writeSuccess(w, res, http.StatusOK)
 }
 
-func (s *Service) config(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	res := ConfigResponse{
-		Config: *s.cfg,
+func (s *Service) GetNetwork(w http.ResponseWriter, _ *http.Request, _ httprouter.Params) {
+	res := NetworkResponse{
+		Network: *s.network,
 	}
 	writeSuccess(w, res, http.StatusOK)
 }

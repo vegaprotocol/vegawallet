@@ -15,7 +15,7 @@ import (
 
 var (
 	keyGenerateArgs struct {
-		name           string
+		wallet         string
 		passphraseFile string
 		metas          string
 	}
@@ -23,14 +23,14 @@ var (
 	keyGenerateCmd = &cobra.Command{
 		Use:   "generate",
 		Short: "Generate a new key pair for a wallet",
-		Long:  "Generate a new key pair for a wallet, this will implicitly generate a new wallet if none exist for the given name",
+		Long:  "Generate a new key pair for a wallet, this will implicitly generate a new wallet if none exist for the given wallet",
 		RunE:  runKeyGenerate,
 	}
 )
 
 func init() {
 	keyCmd.AddCommand(keyGenerateCmd)
-	keyGenerateCmd.Flags().StringVarP(&keyGenerateArgs.name, "name", "n", "", "Name of the wallet to use")
+	keyGenerateCmd.Flags().StringVarP(&keyGenerateArgs.wallet, "wallet", "w", "", "Name of the wallet to use")
 	keyGenerateCmd.Flags().StringVarP(&keyGenerateArgs.passphraseFile, "passphrase-file", "p", "", "Path of the file containing the passphrase to access the wallet")
 	keyGenerateCmd.Flags().StringVarP(&keyGenerateArgs.metas, "meta", "m", "", `A list of metadata e.g: "primary:true;asset:BTC"`)
 }
@@ -45,11 +45,11 @@ func runKeyGenerate(_ *cobra.Command, _ []string) error {
 
 	handler := wallets.NewHandler(store)
 
-	if len(keyGenerateArgs.name) == 0 {
-		return errors.New("wallet name is required")
+	if len(keyGenerateArgs.wallet) == 0 {
+		return errors.New("wallet is required")
 	}
 
-	walletExists := handler.WalletExists(keyGenerateArgs.name)
+	walletExists := handler.WalletExists(keyGenerateArgs.wallet)
 
 	passphrase, err := getPassphrase(keyGenerateArgs.passphraseFile, !walletExists)
 	if err != nil {
@@ -64,28 +64,28 @@ func runKeyGenerate(_ *cobra.Command, _ []string) error {
 	var mnemonic string
 	if !walletExists {
 		if rootArgs.output == "human" {
-			p.BangMark().Text("Wallet ").Bold(keyGenerateArgs.name).Text(" does not exist yet").Jump()
+			p.BangMark().Text("Wallet ").Bold(keyGenerateArgs.wallet).Text(" does not exist yet").Jump()
 		}
 
-		mnemonic, err = handler.CreateWallet(keyGenerateArgs.name, passphrase)
+		mnemonic, err = handler.CreateWallet(keyGenerateArgs.wallet, passphrase)
 		if err != nil {
 			return fmt.Errorf("couldn't create wallet: %w", err)
 		}
 
 		if rootArgs.output == "human" {
-			p.CheckMark().Text("Wallet ").Bold(keyGenerateArgs.name).Text(" has been created at: ").SuccessText(store.GetWalletPath(keyGenerateArgs.name)).Jump()
+			p.CheckMark().Text("Wallet ").Bold(keyGenerateArgs.wallet).Text(" has been created at: ").SuccessText(store.GetWalletPath(keyGenerateArgs.wallet)).Jump()
 		}
 	}
 
-	keyPair, err := handler.GenerateKeyPair(keyGenerateArgs.name, passphrase, metas)
+	keyPair, err := handler.GenerateKeyPair(keyGenerateArgs.wallet, passphrase, metas)
 	if err != nil {
 		return fmt.Errorf("could not generate a key pair: %w", err)
 	}
 
 	if rootArgs.output == "human" {
-		printHuman(p, mnemonic, keyPair, store.GetWalletPath(keyGenerateArgs.name))
+		printHuman(p, mnemonic, keyPair, store.GetWalletPath(keyGenerateArgs.wallet))
 	} else if rootArgs.output == "json" {
-		return printKeyGenerateJSON(mnemonic, keyPair, store.GetWalletPath(keyGenerateArgs.name))
+		return printKeyGenerateJSON(mnemonic, keyPair, store.GetWalletPath(keyGenerateArgs.wallet))
 	} else {
 		return fmt.Errorf("output \"%s\" is not supported for this command", rootArgs.output)
 	}
@@ -93,7 +93,7 @@ func runKeyGenerate(_ *cobra.Command, _ []string) error {
 }
 
 func printHuman(p *printer.HumanPrinter, mnemonic string, keyPair wallet.KeyPair, walletPath string) {
-	p.CheckMark().Text("Key pair has been generated for wallet ").Bold(keyGenerateArgs.name).Text(" at: ").SuccessText(walletPath).Jump()
+	p.CheckMark().Text("Key pair has been generated for wallet ").Bold(keyGenerateArgs.wallet).Text(" at: ").SuccessText(walletPath).Jump()
 	p.CheckMark().SuccessText("Generating a key pair succeeded").NJump(2)
 	if len(mnemonic) != 0 {
 		p.Text("Wallet mnemonic:").Jump().WarningText(mnemonic).Jump()
@@ -122,7 +122,7 @@ func printHuman(p *printer.HumanPrinter, mnemonic string, keyPair wallet.KeyPair
 
 type keyGenerateJson struct {
 	Wallet keyGenerateWalletJson `json:"wallet"`
-	Key    keyGenerateKeyJson `json:"key"`
+	Key    keyGenerateKeyJson    `json:"key"`
 }
 
 type keyGenerateWalletJson struct {
@@ -131,9 +131,9 @@ type keyGenerateWalletJson struct {
 }
 
 type keyGenerateKeyJson struct {
-	KeyPair   keyGenerateKeyPairJson `json:"keyPair"`
+	KeyPair   keyGenerateKeyPairJson   `json:"keyPair"`
 	Algorithm keyGenerateAlgorithmJson `json:"algorithm"`
-	Meta      []wallet.Meta `json:"meta"`
+	Meta      []wallet.Meta            `json:"meta"`
 }
 
 type keyGenerateKeyPairJson struct {
@@ -142,7 +142,7 @@ type keyGenerateKeyPairJson struct {
 }
 
 type keyGenerateAlgorithmJson struct {
-	Name    string `json:"name"`
+	Name    string `json:"wallet"`
 	Version uint32 `json:"version"`
 }
 

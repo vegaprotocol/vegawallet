@@ -14,7 +14,7 @@ import (
 
 var (
 	signArgs struct {
-		name           string
+		wallet         string
 		passphraseFile string
 		message        string
 		pubkey         string
@@ -31,7 +31,7 @@ var (
 
 func init() {
 	rootCmd.AddCommand(signCmd)
-	signCmd.Flags().StringVarP(&signArgs.name, "name", "n", "", "Name of the wallet to use")
+	signCmd.Flags().StringVarP(&signArgs.wallet, "wallet", "w", "", "Name of the wallet to use")
 	signCmd.Flags().StringVarP(&signArgs.passphraseFile, "passphrase-file", "p", "", "Path of the file containing the passphrase to access the wallet")
 	signCmd.Flags().StringVarP(&signArgs.message, "message", "m", "", "Message to be signed (base64)")
 	signCmd.Flags().StringVarP(&signArgs.pubkey, "pubkey", "k", "", "Public key to be used (hex)")
@@ -45,8 +45,8 @@ func runSign(_ *cobra.Command, _ []string) error {
 
 	handler := wallets.NewHandler(store)
 
-	if len(signArgs.name) == 0 {
-		return errors.New("wallet name is required")
+	if len(signArgs.wallet) == 0 {
+		return errors.New("wallet is required")
 	}
 	if len(signArgs.pubkey) == 0 {
 		return errors.New("pubkey is required")
@@ -64,12 +64,12 @@ func runSign(_ *cobra.Command, _ []string) error {
 		return err
 	}
 
-	err = handler.LoginWallet(signArgs.name, passphrase)
+	err = handler.LoginWallet(signArgs.wallet, passphrase)
 	if err != nil {
 		return fmt.Errorf("could not login to the wallet: %w", err)
 	}
 
-	sig, err := handler.SignAny(signArgs.name, decodedMessage, signArgs.pubkey)
+	sig, err := handler.SignAny(signArgs.wallet, decodedMessage, signArgs.pubkey)
 	if err != nil {
 		return err
 	}

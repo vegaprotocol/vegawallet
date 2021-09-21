@@ -11,6 +11,7 @@ import (
 	"code.vegaprotocol.io/go-wallet/cmd/printer"
 	"code.vegaprotocol.io/go-wallet/console"
 	"code.vegaprotocol.io/go-wallet/logger"
+	netstore "code.vegaprotocol.io/go-wallet/network/store/v1"
 	"code.vegaprotocol.io/go-wallet/node"
 	"code.vegaprotocol.io/go-wallet/service"
 	svcstore "code.vegaprotocol.io/go-wallet/service/store/v1"
@@ -25,6 +26,7 @@ var (
 	serviceRunArgs struct {
 		startConsole bool
 		noBrowser    bool
+		network      string
 	}
 
 	serviceRunCmd = &cobra.Command{
@@ -37,8 +39,9 @@ var (
 
 func init() {
 	serviceCmd.AddCommand(serviceRunCmd)
-	serviceRunCmd.Flags().BoolVarP(&serviceRunArgs.startConsole, "console-proxy", "p", false, "Start the vega console proxy and open the console in the default browser")
-	serviceRunCmd.Flags().BoolVarP(&serviceRunArgs.noBrowser, "no-browser", "n", false, "Do not open the default browser if the console proxy is stated")
+	serviceRunCmd.Flags().StringVarP(&serviceRunArgs.network, "network", "n", "", "Name of the network to use")
+	serviceRunCmd.Flags().BoolVar(&serviceRunArgs.startConsole, "console-proxy", false, "Start the vega console proxy and open the console in the default browser")
+	serviceRunCmd.Flags().BoolVar(&serviceRunArgs.noBrowser, "no-browser", false, "Do not open the default browser if the console proxy is stated")
 }
 
 func runServiceRun(_ *cobra.Command, _ []string) error {
@@ -51,14 +54,14 @@ func runServiceRun(_ *cobra.Command, _ []string) error {
 
 	handler := wallets.NewHandler(store)
 
-	svcStore, err := svcstore.InitialiseStore(paths.NewPaths(rootArgs.home))
+	netStore, err := netstore.InitialiseStore(paths.New(rootArgs.home))
 	if err != nil {
-		return err
+		return fmt.Errorf("couldn't initialise network store: %w", err)
 	}
 
-	cfg, err := svcStore.GetConfig()
+	cfg, err := netStore.GetNetwork(serviceRunArgs.network)
 	if err != nil {
-		return err
+		return fmt.Errorf("couldn't initialise network store: %w", err)
 	}
 
 	encoding := "json"
@@ -74,6 +77,11 @@ func runServiceRun(_ *cobra.Command, _ []string) error {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+
+	svcStore, err := svcstore.InitialiseStore(paths.New(rootArgs.home))
+	if err != nil {
+		return fmt.Errorf("couldn't initialise service store: %w", err)
+	}
 
 	auth, err := service.NewAuth(log.Named("auth"), svcStore, cfg.TokenExpiry.Get())
 	if err != nil {
@@ -169,7 +177,7 @@ func waitSig(ctx context.Context, cfunc func(), log *zap.Logger) {
 
 	select {
 	case sig := <-gracefulStop:
-		log.Info("caught signal", zap.String("name", fmt.Sprintf("%+v", sig)))
+		log.Info("caught signal", zap.String("wallet", fmt.Sprintf("%+v", sig)))
 		cfunc()
 	case <-ctx.Done():
 		// nothing to do

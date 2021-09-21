@@ -20,6 +20,7 @@ require (
 	github.com/stretchr/testify v1.7.0
 	github.com/tyler-smith/go-bip39 v1.1.0
 	github.com/vegaprotocol/go-slip10 v0.1.0
+	github.com/zannen/toml v0.3.2
 	go.uber.org/zap v1.13.0
 	golang.org/x/crypto v0.0.0-20210817164053-32db794688a5
 	golang.org/x/lint v0.0.0-20210508222113-6edffad5e616 // indirect
@@ -29,3 +30,5 @@ require (
 	google.golang.org/grpc v1.38.0
 	google.golang.org/protobuf v1.26.0-rc.1 // indirect
 )
+
+replace code.vegaprotocol.io/shared => /Users/val/Projects/vega/shared

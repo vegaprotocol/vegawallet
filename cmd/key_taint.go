@@ -12,7 +12,7 @@ import (
 
 var (
 	keyTaintArgs struct {
-		name           string
+		wallet         string
 		passphraseFile string
 		pubkey         string
 	}
@@ -27,7 +27,7 @@ var (
 
 func init() {
 	keyCmd.AddCommand(keyTaintCmd)
-	keyTaintCmd.Flags().StringVarP(&keyTaintArgs.name, "name", "n", "", "Name of the wallet to use")
+	keyTaintCmd.Flags().StringVarP(&keyTaintArgs.wallet, "wallet", "w", "", "Name of the wallet to use")
 	keyTaintCmd.Flags().StringVarP(&keyTaintArgs.passphraseFile, "passphrase-file", "p", "", "Path of the file containing the passphrase to access the wallet")
 	keyTaintCmd.Flags().StringVarP(&keyTaintArgs.pubkey, "pubkey", "k", "", "Public key to be used (hex)")
 }
@@ -40,8 +40,8 @@ func runKeyTaint(_ *cobra.Command, _ []string) error {
 
 	handler := wallets.NewHandler(store)
 
-	if len(keyTaintArgs.name) == 0 {
-		return errors.New("wallet name is required")
+	if len(keyTaintArgs.wallet) == 0 {
+		return errors.New("wallet is required")
 	}
 
 	passphrase, err := getPassphrase(keyTaintArgs.passphraseFile, false)
@@ -49,7 +49,7 @@ func runKeyTaint(_ *cobra.Command, _ []string) error {
 		return err
 	}
 
-	err = handler.TaintKey(keyTaintArgs.name, keyTaintArgs.pubkey, passphrase)
+	err = handler.TaintKey(keyTaintArgs.wallet, keyTaintArgs.pubkey, passphrase)
 	if err != nil {
 		return fmt.Errorf("could not taint the key: %w", err)
 	}
@@ -63,7 +63,7 @@ func runKeyTaint(_ *cobra.Command, _ []string) error {
 
 		p.BlueArrow().InfoText("Untaint a key").Jump()
 		p.Text("You may have tainted a key by mistake. If you want to untaint it, use the following command:").NJump(2)
-		p.Code(fmt.Sprintf("%s key untaint --name \"%s\" --pubkey \"%s\"", os.Args[0], keyTaintArgs.name, keyTaintArgs.pubkey)).NJump(2)
+		p.Code(fmt.Sprintf("%s key untaint --wallet \"%s\" --pubkey \"%s\"", os.Args[0], keyTaintArgs.wallet, keyTaintArgs.pubkey)).NJump(2)
 		p.Text("For more information, use ").Bold("--help").Text(" flag.").Jump()
 	}
 
