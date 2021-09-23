@@ -23,6 +23,9 @@ type KeyPair interface {
 	Meta() []Meta
 	AlgorithmVersion() uint32
 	AlgorithmName() string
+	SignAny(data []byte) ([]byte, error)
+	VerifyAny(data, sig []byte) (bool, error)
+	Sign(data []byte) (*Signature, error)
 }
 
 type PublicKey interface {

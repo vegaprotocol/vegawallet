@@ -95,6 +95,10 @@ func (k *HDKeyPair) Untaint() error {
 }
 
 func (k *HDKeyPair) SignAny(data []byte) ([]byte, error) {
+	if k.tainted {
+		return nil, ErrPubKeyIsTainted
+	}
+
 	return k.algo.Sign(k.privateKey.bytes, data)
 }
 
@@ -103,6 +107,10 @@ func (k *HDKeyPair) VerifyAny(data, sig []byte) (bool, error) {
 }
 
 func (k *HDKeyPair) Sign(data []byte) (*Signature, error) {
+	if k.tainted {
+		return nil, ErrPubKeyIsTainted
+	}
+
 	sig, err := k.algo.Sign(k.privateKey.bytes, data)
 	if err != nil {
 		return nil, err

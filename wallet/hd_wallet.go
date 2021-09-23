@@ -184,10 +184,6 @@ func (w *HDWallet) SignAny(pubKey string, data []byte) ([]byte, error) {
 		return nil, ErrPubKeyDoesNotExist
 	}
 
-	if keyPair.IsTainted() {
-		return nil, ErrPubKeyIsTainted
-	}
-
 	return keyPair.SignAny(data)
 }
 
@@ -204,10 +200,6 @@ func (w *HDWallet) SignTx(pubKey string, data []byte) (*Signature, error) {
 	keyPair, ok := w.keyRing.FindPair(pubKey)
 	if !ok {
 		return nil, ErrPubKeyDoesNotExist
-	}
-
-	if keyPair.IsTainted() {
-		return nil, ErrPubKeyIsTainted
 	}
 
 	return keyPair.Sign(data)
