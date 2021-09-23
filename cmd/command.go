@@ -120,7 +120,7 @@ func runCommand(_ *cobra.Command, pos []string) error {
 
 	log.Info("transaction successfully signed", zap.String("signature", tx.Signature.Value))
 
-	if err = forwarder.SendTx(ctx, tx, api.SubmitTransactionV2Request_TYPE_ASYNC); err != nil {
+	if err = forwarder.SendTx(ctx, tx, api.SubmitTransactionRequest_TYPE_ASYNC); err != nil {
 		return fmt.Errorf("couldn't send transaction: %w", err)
 	}
 
