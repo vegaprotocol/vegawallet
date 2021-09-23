@@ -103,15 +103,15 @@ func (n *Forwarder) LastBlockHeight(ctx context.Context) (uint64, error) {
 	return height, err
 }
 
-func (n *Forwarder) SendTx(ctx context.Context, tx *commandspb.Transaction, ty api.SubmitTransactionV2Request_Type) error {
-	req := api.SubmitTransactionV2Request{
+func (n *Forwarder) SendTx(ctx context.Context, tx *commandspb.Transaction, ty api.SubmitTransactionRequest_Type) error {
+	req := api.SubmitTransactionRequest{
 		Tx:   tx,
 		Type: ty,
 	}
 	return backoff.Retry(
 		func() error {
 			clt := n.nextClt()
-			resp, err := clt.SubmitTransactionV2(ctx, &req)
+			resp, err := clt.SubmitTransaction(ctx, &req)
 			if err != nil {
 				n.log.Error("failed to send transaction", zap.Error(err))
 				return err

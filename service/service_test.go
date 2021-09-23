@@ -665,7 +665,7 @@ func testSigningTransactionSucceeds(t *testing.T) {
 		Times(1).
 		Return(&commandspb.Transaction{}, nil)
 	s.nodeForward.EXPECT().
-		SendTx(gomock.Any(), &commandspb.Transaction{}, api.SubmitTransactionV2Request_TYPE_ASYNC).
+		SendTx(gomock.Any(), &commandspb.Transaction{}, api.SubmitTransactionRequest_TYPE_ASYNC).
 		Times(0)
 	s.nodeForward.EXPECT().LastBlockHeight(gomock.Any()).
 		Times(1).Return(uint64(42), nil)
@@ -699,7 +699,7 @@ func testSigningTransactionWithPropagationSucceeds(t *testing.T) {
 		Times(1).
 		Return(&commandspb.Transaction{}, nil)
 	s.nodeForward.EXPECT().
-		SendTx(gomock.Any(), &commandspb.Transaction{}, api.SubmitTransactionV2Request_TYPE_SYNC).
+		SendTx(gomock.Any(), &commandspb.Transaction{}, api.SubmitTransactionRequest_TYPE_SYNC).
 		Times(1).
 		Return(nil)
 	s.nodeForward.EXPECT().LastBlockHeight(gomock.Any()).
@@ -734,7 +734,7 @@ func testSigningTransactionWithFailedPropagationFails(t *testing.T) {
 		Times(1).
 		Return(&commandspb.Transaction{}, nil)
 	s.nodeForward.EXPECT().
-		SendTx(gomock.Any(), &commandspb.Transaction{}, api.SubmitTransactionV2Request_TYPE_SYNC).
+		SendTx(gomock.Any(), &commandspb.Transaction{}, api.SubmitTransactionRequest_TYPE_SYNC).
 		Times(1).
 		Return(errors.New("failure"))
 	s.nodeForward.EXPECT().LastBlockHeight(gomock.Any()).

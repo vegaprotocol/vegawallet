@@ -391,7 +391,7 @@ type Auth interface {
 // NodeForward ...
 //go:generate go run github.com/golang/mock/mockgen -destination mocks/node_forward_mock.go -package mocks code.vegaprotocol.io/go-wallet/service NodeForward
 type NodeForward interface {
-	SendTx(context.Context, *commandspb.Transaction, api.SubmitTransactionV2Request_Type) error
+	SendTx(context.Context, *commandspb.Transaction, api.SubmitTransactionRequest_Type) error
 	HealthCheck(context.Context) error
 	LastBlockHeight(context.Context) (uint64, error)
 }
@@ -695,18 +695,18 @@ func (s *Service) VerifyAny(_ string, w http.ResponseWriter, r *http.Request, _ 
 }
 
 func (s *Service) SignTxSync(token string, w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	s.signTx(token, w, r, p, api.SubmitTransactionV2Request_TYPE_SYNC)
+	s.signTx(token, w, r, p, api.SubmitTransactionRequest_TYPE_SYNC)
 }
 
 func (s *Service) SignTxCommit(token string, w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	s.signTx(token, w, r, p, api.SubmitTransactionV2Request_TYPE_COMMIT)
+	s.signTx(token, w, r, p, api.SubmitTransactionRequest_TYPE_COMMIT)
 }
 
 func (s *Service) SignTx(token string, w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	s.signTx(token, w, r, p, api.SubmitTransactionV2Request_TYPE_ASYNC)
+	s.signTx(token, w, r, p, api.SubmitTransactionRequest_TYPE_ASYNC)
 }
 
-func (s *Service) signTx(token string, w http.ResponseWriter, r *http.Request, _ httprouter.Params, ty api.SubmitTransactionV2Request_Type) {
+func (s *Service) signTx(token string, w http.ResponseWriter, r *http.Request, _ httprouter.Params, ty api.SubmitTransactionRequest_Type) {
 	defer r.Body.Close()
 
 	req, errs := ParseSubmitTransactionRequest(r)
