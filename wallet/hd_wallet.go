@@ -1,6 +1,7 @@
 package wallet
 
 import (
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 
@@ -10,7 +11,7 @@ import (
 
 const (
 	MagicIndex = 1789
-	// OriginIndex is a constant index used to derived a node from the master
+	// OriginIndex is a constant index used to derive a node from the master
 	// node. The resulting node will be used to generate the cryptographic keys.
 	OriginIndex = slip10.FirstHardenedIndex + MagicIndex
 )
@@ -25,6 +26,7 @@ type HDWallet struct {
 	// derivation index is constant (see OriginIndex). This node is referred as
 	// "wallet node".
 	node *slip10.Node
+	id   string
 }
 
 // NewHDWallet creates a wallet with auto-generated mnemonic. This is useful to
@@ -62,6 +64,7 @@ func ImportHDWallet(name, mnemonic string) (*HDWallet, error) {
 		name:    name,
 		keyRing: NewHDKeyRing(),
 		node:    walletNode,
+		id:      walletID(walletNode),
 	}, nil
 }
 
@@ -71,6 +74,17 @@ func (w *HDWallet) Version() uint32 {
 
 func (w *HDWallet) Name() string {
 	return w.name
+}
+
+func (w *HDWallet) ID() string {
+	return w.id
+}
+
+func (w *HDWallet) Type() string {
+	if w.IsIsolated() {
+		return "HD wallet (isolated)"
+	}
+	return "HD wallet"
 }
 
 func (w *HDWallet) SetName(newName string) {
@@ -114,6 +128,9 @@ func (w *HDWallet) ListKeyPairs() []KeyPair {
 // GenerateKeyPair generates a new key pair from a node, that is derived from
 // the wallet node.
 func (w *HDWallet) GenerateKeyPair(meta []Meta) (KeyPair, error) {
+	if w.IsIsolated() {
+		return nil, ErrIsolatedWalletCantGenerateKeyPairs
+	}
 	nextIndex := w.keyRing.NextIndex()
 	childNode, err := w.node.Derive(OriginIndex + nextIndex)
 	if err != nil {
@@ -205,10 +222,33 @@ func (w *HDWallet) SignTx(pubKey string, data []byte) (*Signature, error) {
 	return keyPair.Sign(data)
 }
 
+func (w *HDWallet) IsolateWithKey(pubKey string) (Wallet, error) {
+	keyPair, ok := w.keyRing.FindPair(pubKey)
+	if !ok {
+		return nil, ErrPubKeyDoesNotExist
+	}
+
+	if keyPair.IsTainted() {
+		return nil, ErrPubKeyIsTainted
+	}
+
+	return &HDWallet{
+		version: 1,
+		name:    fmt.Sprintf("%s.%s.isolated", w.name, keyPair.PublicKey()[0:8]),
+		keyRing: LoadHDKeyRing([]HDKeyPair{keyPair}),
+		id:      w.id,
+	}, nil
+}
+
+func (w *HDWallet) IsIsolated() bool {
+	return w.node == nil
+}
+
 type jsonHDWallet struct {
 	Version uint32       `json:"version"`
 	Name    string       `json:"name"`
-	Node    *slip10.Node `json:"node"`
+	Node    *slip10.Node `json:"node,omitempty"`
+	ID      string       `json:"id,omitempty"`
 	Keys    []HDKeyPair  `json:"keys"`
 }
 
@@ -218,6 +258,7 @@ func (w *HDWallet) MarshalJSON() ([]byte, error) {
 		Name:    w.Name(),
 		Keys:    w.keyRing.ListKeyPairs(),
 		Node:    w.node,
+		ID:      w.id,
 	}
 	return json.Marshal(jsonW)
 }
@@ -233,6 +274,11 @@ func (w *HDWallet) UnmarshalJSON(data []byte) error {
 		name:    jsonW.Name,
 		keyRing: LoadHDKeyRing(jsonW.Keys),
 		node:    jsonW.Node,
+		id:      jsonW.ID,
+	}
+
+	if len(w.id) == 0 {
+		w.id = walletID(jsonW.Node)
 	}
 
 	return nil
@@ -262,4 +308,9 @@ func deriveWalletNodeFromMnemonic(mnemonic string) (*slip10.Node, error) {
 		return nil, fmt.Errorf("couldn't derive wallet node: %w", err)
 	}
 	return walletNode, nil
+}
+
+func walletID(walletNode *slip10.Node) string {
+	pubKey, _ := walletNode.Keypair()
+	return hex.EncodeToString(pubKey)
 }

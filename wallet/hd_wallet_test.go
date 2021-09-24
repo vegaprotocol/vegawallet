@@ -19,6 +19,7 @@ func TestHDWallet(t *testing.T) {
 	t.Run("Importing wallet succeeds", testHDWalletImportingWalletSucceeds)
 	t.Run("Importing wallet with invalid mnemonic fails", testHDWalletImportingWalletWithInvalidMnemonicFails)
 	t.Run("Generating key pair succeeds", testHDWalletGeneratingKeyPairSucceeds)
+	t.Run("Generating key pair on isolated wallet fails", testHDWalletGeneratingKeyPairOnIsolatedWalletFails)
 	t.Run("Tainting key pair succeeds", testHDWalletTaintingKeyPairSucceeds)
 	t.Run("Tainting key pair that is already tainted fails", testHDWalletTaintingKeyThatIsAlreadyTaintedFails)
 	t.Run("Tainting unknown key pair fails", testHDWalletTaintingUnknownKeyFails)
@@ -39,8 +40,14 @@ func TestHDWallet(t *testing.T) {
 	t.Run("Signing any message with unknown key fails", testHDWalletSigningAnyMessageWithUnknownKeyFails)
 	t.Run("Verifying any message succeeds", testHDWalletVerifyingAnyMessageSucceeds)
 	t.Run("Verifying any message with unknown key fails", testHDWalletVerifyingAnyMessageWithUnknownKeyFails)
-	t.Run("Marshaling wallet succeeds", testHDWalletMarshalingSucceeds)
+	t.Run("Marshaling wallet succeeds", testHDWalletMarshalingWalletSucceeds)
+	t.Run("Marshaling isolated wallet succeeds", testHDWalletMarshalingIsolatedWalletSucceeds)
 	t.Run("Unmarshaling wallet succeeds", testHDWalletUnmarshalingWalletSucceeds)
+	t.Run("Getting wallet info succeeds", testHDWalletGettingWalletInfoSucceeds)
+	t.Run("Getting isolated wallet info succeeds", testHDWalletGettingIsolatedWalletInfoSucceeds)
+	t.Run("Isolating wallet succeeds", testHDWalletIsolatingWalletSucceeds)
+	t.Run("Isolating wallet with tainted key pair fails", testHDWalletIsolatingWalletWithTaintedKeyPairFails)
+	t.Run("Isolating wallet with non-existing key pair fails", testHDWalletIsolatingWalletWithNonExistingKeyPairFails)
 }
 
 func testHDWalletCreateWalletSucceeds(t *testing.T) {
@@ -100,6 +107,40 @@ func testHDWalletGeneratingKeyPairSucceeds(t *testing.T) {
 	require.NoError(t, err)
 	assert.NotNil(t, kp)
 	assert.Equal(t, kp.Meta(), meta)
+}
+
+func testHDWalletGeneratingKeyPairOnIsolatedWalletFails(t *testing.T) {
+	// given
+	name := "jeremy"
+
+	// when
+	w, mnemonic, err := wallet.NewHDWallet(name)
+
+	// then
+	require.NoError(t, err)
+	assert.NotEmpty(t, mnemonic)
+	assert.NotNil(t, w)
+
+	// when
+	kp, err := w.GenerateKeyPair([]wallet.Meta{})
+
+	// then
+	require.NoError(t, err)
+	assert.NotNil(t, kp)
+
+	// when
+	isolatedWallet, err := w.IsolateWithKey(kp.PublicKey())
+
+	// then
+	require.NoError(t, err)
+	assert.NotNil(t, isolatedWallet)
+
+	// when
+	keyPair, err := isolatedWallet.GenerateKeyPair([]wallet.Meta{})
+
+	// then
+	require.EqualError(t, err, wallet.ErrIsolatedWalletCantGenerateKeyPairs.Error())
+	require.Nil(t, keyPair)
 }
 
 func testHDWalletTaintingKeyPairSucceeds(t *testing.T) {
@@ -684,7 +725,7 @@ func testHDWalletVerifyingAnyMessageWithUnknownKeyFails(t *testing.T) {
 	assert.Empty(t, signature)
 }
 
-func testHDWalletMarshalingSucceeds(t *testing.T) {
+func testHDWalletMarshalingWalletSucceeds(t *testing.T) {
 	// given
 	name := "jeremy"
 
@@ -707,7 +748,41 @@ func testHDWalletMarshalingSucceeds(t *testing.T) {
 
 	// then
 	assert.NoError(t, err)
-	expected := `{"version":1,"name":"jeremy","node":"PjI6zxEu4dtcTu92dYlB/2Da+rvSpg7KzvmLMQ9wv6i6n75/ftik1rPYiZ/nTfBzqVttvNnoswyldTjPCjV5kw==","keys":[{"index":1,"public_key":"30ebce58d94ad37c4ff6a9014c955c20e12468da956163228cc7ec9b98d3a371","private_key":"1bbd4efb460d0bf457251e866697d5d2e9b58c5dcb96a964cd9cfff1a712a2b930ebce58d94ad37c4ff6a9014c955c20e12468da956163228cc7ec9b98d3a371","meta":[],"tainted":false,"algorithm":{"name":"vega/ed25519","version":1}}]}`
+	expected := `{"version":1,"name":"jeremy","node":"PjI6zxEu4dtcTu92dYlB/2Da+rvSpg7KzvmLMQ9wv6i6n75/ftik1rPYiZ/nTfBzqVttvNnoswyldTjPCjV5kw==","id":"9df682a3c87d90567f260566a9c223ccbbb7529c38340cf163b8fe199dbf0f2e","keys":[{"index":1,"public_key":"30ebce58d94ad37c4ff6a9014c955c20e12468da956163228cc7ec9b98d3a371","private_key":"1bbd4efb460d0bf457251e866697d5d2e9b58c5dcb96a964cd9cfff1a712a2b930ebce58d94ad37c4ff6a9014c955c20e12468da956163228cc7ec9b98d3a371","meta":[],"tainted":false,"algorithm":{"name":"vega/ed25519","version":1}}]}`
+	assert.Equal(t, expected, string(m))
+}
+
+func testHDWalletMarshalingIsolatedWalletSucceeds(t *testing.T) {
+	// given
+	name := "jeremy"
+
+	// when
+	w, err := wallet.ImportHDWallet(name, TestMnemonic1)
+
+	// then
+	require.NoError(t, err)
+	assert.NotNil(t, w)
+
+	// when
+	kp, err := w.GenerateKeyPair([]wallet.Meta{})
+
+	// then
+	require.NoError(t, err)
+	assert.NotNil(t, kp)
+
+	// when
+	isolatedWallet, err := w.IsolateWithKey(kp.PublicKey())
+
+	// then
+	require.NoError(t, err)
+	assert.NotNil(t, isolatedWallet)
+
+	// when
+	m, err := json.Marshal(&isolatedWallet)
+
+	// then
+	assert.NoError(t, err)
+	expected := `{"version":1,"name":"jeremy.30ebce58.isolated","id":"9df682a3c87d90567f260566a9c223ccbbb7529c38340cf163b8fe199dbf0f2e","keys":[{"index":1,"public_key":"30ebce58d94ad37c4ff6a9014c955c20e12468da956163228cc7ec9b98d3a371","private_key":"1bbd4efb460d0bf457251e866697d5d2e9b58c5dcb96a964cd9cfff1a712a2b930ebce58d94ad37c4ff6a9014c955c20e12468da956163228cc7ec9b98d3a371","meta":[],"tainted":false,"algorithm":{"name":"vega/ed25519","version":1}}]}`
 	assert.Equal(t, expected, string(m))
 }
 
@@ -731,4 +806,127 @@ func testHDWalletUnmarshalingWalletSucceeds(t *testing.T) {
 	assert.Equal(t, "vega/ed25519", keyPairs[0].AlgorithmName())
 	assert.False(t, keyPairs[0].IsTainted())
 	assert.Nil(t, keyPairs[0].Meta())
+	assert.NotEmpty(t, w.ID())
+}
+
+func testHDWalletGettingWalletInfoSucceeds(t *testing.T) {
+	// given
+	name := "jeremy"
+
+	// when
+	w, err := wallet.ImportHDWallet(name, TestMnemonic1)
+
+	// then
+	require.NoError(t, err)
+	assert.NotNil(t, w)
+	assert.Equal(t, "9df682a3c87d90567f260566a9c223ccbbb7529c38340cf163b8fe199dbf0f2e", w.ID())
+	assert.Equal(t, "HD wallet", w.Type())
+	assert.Equal(t, uint32(1), w.Version())
+}
+
+func testHDWalletGettingIsolatedWalletInfoSucceeds(t *testing.T) {
+	// given
+	name := "jeremy"
+
+	// when
+	w, err := wallet.ImportHDWallet(name, TestMnemonic1)
+
+	// then
+	require.NoError(t, err)
+	assert.NotNil(t, w)
+
+	// when
+	kp1, err := w.GenerateKeyPair([]wallet.Meta{})
+
+	// then
+	require.NoError(t, err)
+	assert.NotNil(t, kp1)
+
+	// when
+	isolatedWallet, err := w.IsolateWithKey(kp1.PublicKey())
+
+	// then
+	require.NoError(t, err)
+	require.NotNil(t, isolatedWallet)
+	assert.Equal(t, "9df682a3c87d90567f260566a9c223ccbbb7529c38340cf163b8fe199dbf0f2e", w.ID())
+	assert.Equal(t, "HD wallet", w.Type())
+	assert.Equal(t, uint32(1), w.Version())
+}
+
+func testHDWalletIsolatingWalletSucceeds(t *testing.T) {
+	// given
+	name := "jeremy"
+
+	// when
+	w, err := wallet.ImportHDWallet(name, TestMnemonic1)
+
+	// then
+	require.NoError(t, err)
+	assert.NotNil(t, w)
+
+	// when
+	kp1, err := w.GenerateKeyPair([]wallet.Meta{})
+
+	// then
+	require.NoError(t, err)
+	assert.NotNil(t, kp1)
+
+	// when
+	isolatedWallet, err := w.IsolateWithKey(kp1.PublicKey())
+
+	// then
+	require.NoError(t, err)
+	require.NotNil(t, isolatedWallet)
+	assert.Equal(t, "jeremy.30ebce58.isolated", isolatedWallet.Name())
+}
+
+func testHDWalletIsolatingWalletWithTaintedKeyPairFails(t *testing.T) {
+	// given
+	name := "jeremy"
+
+	// when
+	w, err := wallet.ImportHDWallet(name, TestMnemonic1)
+
+	// then
+	require.NoError(t, err)
+	assert.NotNil(t, w)
+
+	// when
+	kp1, err := w.GenerateKeyPair([]wallet.Meta{})
+
+	// then
+	require.NoError(t, err)
+	assert.NotNil(t, kp1)
+
+	// when
+	err = w.TaintKey(kp1.PublicKey())
+
+	// then
+	require.NoError(t, err)
+
+	// when
+	isolatedWallet, err := w.IsolateWithKey(kp1.PublicKey())
+
+	// then
+	require.EqualError(t, err, wallet.ErrPubKeyIsTainted.Error())
+	require.Nil(t, isolatedWallet)
+}
+
+func testHDWalletIsolatingWalletWithNonExistingKeyPairFails(t *testing.T) {
+	// given
+	name := "jeremy"
+
+	// when
+	w, err := wallet.ImportHDWallet(name, TestMnemonic1)
+
+	// then
+	require.NoError(t, err)
+	assert.NotNil(t, w)
+
+	// when
+	isolatedWallet, err := w.IsolateWithKey("0xdeadbeef")
+
+	// then
+	require.EqualError(t, err, wallet.ErrPubKeyDoesNotExist.Error())
+	require.Nil(t, isolatedWallet)
 }
