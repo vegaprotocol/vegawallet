@@ -28,7 +28,8 @@ import (
 
 type Service struct {
 	*httprouter.Router
-
+	
+	cfg         *Config
 	log         *zap.Logger
 	server      *http.Server
 	handler     WalletHandler
@@ -37,7 +38,6 @@ type Service struct {
 
 	version     string
 	versionHash string
-	cfg Config
 }
 
 // CreateWalletRequest describes the request for CreateWallet.
@@ -409,7 +409,7 @@ func NewService(log *zap.Logger, cfg *Config, h WalletHandler, a Auth, n NodeFor
 		handler:     h,
 		auth:        a,
 		nodeForward: n,
-		cfg: *cfg,
+		cfg: cfg,
 	}
 
 	s.server = &http.Server{
@@ -771,7 +771,7 @@ func (s *Service) Version(w http.ResponseWriter, _ *http.Request, _ httprouter.P
 
 func (s *Service) config(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	res := ConfigResponse{
-		Config: s.cfg,
+		Config: *s.cfg,
 	}
 	writeSuccess(w, res, http.StatusOK)
 }
