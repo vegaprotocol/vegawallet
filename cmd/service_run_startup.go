@@ -6,6 +6,7 @@ import (
 )
 
 const startupT = ` - get service status:      GET    {{.WalletServiceLocalAddress}}/api/v1/status
+ - config:                  GET    {{.WalletServiceLocalAddress}}/api/v1/config
  - login:                   POST   {{.WalletServiceLocalAddress}}/api/v1/auth/token
  - logout:                  DELETE {{.WalletServiceLocalAddress}}/api/v1/auth/token
  - create a wallet:         POST   {{.WalletServiceLocalAddress}}/api/v1/wallets
