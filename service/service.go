@@ -409,7 +409,7 @@ func NewService(log *zap.Logger, cfg *Config, h WalletHandler, a Auth, n NodeFor
 		handler:     h,
 		auth:        a,
 		nodeForward: n,
-		cfg: cfg,
+		cfg:         cfg,
 	}
 
 	s.server = &http.Server{
