@@ -14,7 +14,7 @@ import (
 	"code.vegaprotocol.io/go-wallet/wallet"
 	"code.vegaprotocol.io/protos/commands"
 	typespb "code.vegaprotocol.io/protos/vega"
-	"code.vegaprotocol.io/protos/vega/api"
+	api "code.vegaprotocol.io/protos/vega/api/v1"
 	commandspb "code.vegaprotocol.io/protos/vega/commands/v1"
 	walletpb "code.vegaprotocol.io/protos/vega/wallet/v1"
 

@@ -10,7 +10,7 @@ import (
 	"code.vegaprotocol.io/go-wallet/logger"
 	"code.vegaprotocol.io/go-wallet/node"
 	"code.vegaprotocol.io/go-wallet/wallets"
-	"code.vegaprotocol.io/protos/vega/api"
+	api "code.vegaprotocol.io/protos/vega/api/v1"
 	walletpb "code.vegaprotocol.io/protos/vega/wallet/v1"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"

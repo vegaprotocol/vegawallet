@@ -15,7 +15,7 @@ import (
 	"code.vegaprotocol.io/go-wallet/service"
 	"code.vegaprotocol.io/go-wallet/service/mocks"
 	"code.vegaprotocol.io/go-wallet/wallet"
-	"code.vegaprotocol.io/protos/vega/api"
+	api "code.vegaprotocol.io/protos/vega/api/v1"
 	commandspb "code.vegaprotocol.io/protos/vega/commands/v1"
 	"github.com/stretchr/testify/require"
 
