@@ -6,7 +6,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"code.vegaprotocol.io/protos/vega/api"
+	api "code.vegaprotocol.io/protos/vega/api/v1"
 	commandspb "code.vegaprotocol.io/protos/vega/commands/v1"
 
 	"github.com/cenkalti/backoff/v4"
@@ -17,7 +17,7 @@ import (
 type Forwarder struct {
 	log      *zap.Logger
 	nodeCfgs NodesConfig
-	clts     []api.TradingServiceClient
+	clts     []api.CoreServiceClient
 	conns    []*grpc.ClientConn
 	next     uint64
 }
@@ -28,7 +28,7 @@ func NewForwarder(log *zap.Logger, nodeConfigs NodesConfig) (*Forwarder, error) 
 	}
 
 	var (
-		clts  []api.TradingServiceClient
+		clts  []api.CoreServiceClient
 		conns []*grpc.ClientConn
 	)
 	for _, v := range nodeConfigs.Hosts {
@@ -37,7 +37,7 @@ func NewForwarder(log *zap.Logger, nodeConfigs NodesConfig) (*Forwarder, error) 
 			return nil, err
 		}
 		conns = append(conns, conn)
-		clts = append(clts, api.NewTradingServiceClient(conn))
+		clts = append(clts, api.NewCoreServiceClient(conn))
 	}
 
 	return &Forwarder{
@@ -123,7 +123,7 @@ func (n *Forwarder) SendTx(ctx context.Context, tx *commandspb.Transaction, ty a
 	)
 }
 
-func (n *Forwarder) nextClt() api.TradingServiceClient {
+func (n *Forwarder) nextClt() api.CoreServiceClient {
 	i := atomic.AddUint64(&n.next, 1)
 	n.log.Info("sending transaction to Vega node",
 		zap.String("host", n.nodeCfgs.Hosts[(int(i)-1)%len(n.clts)]))
