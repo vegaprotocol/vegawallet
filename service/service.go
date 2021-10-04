@@ -28,7 +28,8 @@ import (
 
 type Service struct {
 	*httprouter.Router
-
+	
+	cfg         *Config
 	log         *zap.Logger
 	server      *http.Server
 	handler     WalletHandler
@@ -362,6 +363,11 @@ type VersionResponse struct {
 	VersionHash string `json:"versionHash"`
 }
 
+// ConfigResponse describes the response to a request that returns app hosts info.
+type ConfigResponse struct {
+	Config Config `json:"config"`
+}
+
 // WalletHandler ...
 //go:generate go run github.com/golang/mock/mockgen -destination mocks/wallet_handler_mock.go -package mocks code.vegaprotocol.io/go-wallet/service WalletHandler
 type WalletHandler interface {
@@ -403,6 +409,7 @@ func NewService(log *zap.Logger, cfg *Config, h WalletHandler, a Auth, n NodeFor
 		handler:     h,
 		auth:        a,
 		nodeForward: n,
+		cfg:         cfg,
 	}
 
 	s.server = &http.Server{
@@ -413,6 +420,7 @@ func NewService(log *zap.Logger, cfg *Config, h WalletHandler, a Auth, n NodeFor
 	s.POST("/api/v1/auth/token", s.Login)
 	s.DELETE("/api/v1/auth/token", ExtractToken(s.Revoke))
 	s.GET("/api/v1/status", s.health)
+	s.GET("/api/v1/config", s.config)
 	s.POST("/api/v1/wallets", s.CreateWallet)
 	s.POST("/api/v1/wallets/import", s.ImportWallet)
 	s.GET("/api/v1/keys", ExtractToken(s.ListPublicKeys))
@@ -758,6 +766,13 @@ func (s *Service) Version(w http.ResponseWriter, _ *http.Request, _ httprouter.P
 		VersionHash: version.VersionHash,
 	}
 
+	writeSuccess(w, res, http.StatusOK)
+}
+
+func (s *Service) config(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	res := ConfigResponse{
+		Config: *s.cfg,
+	}
 	writeSuccess(w, res, http.StatusOK)
 }
 
