@@ -3,7 +3,7 @@ module code.vegaprotocol.io/go-wallet
 go 1.16
 
 require (
-	code.vegaprotocol.io/protos v0.42.1-0.20210930142155-94a975f47dc4
+	code.vegaprotocol.io/protos v0.43.1-0.20211004102311-d2ad34ada37b
 	code.vegaprotocol.io/shared v0.0.0-20210907092733-405b656c2f5b
 	github.com/blang/semver/v4 v4.0.0
 	github.com/cenkalti/backoff/v4 v4.0.2
