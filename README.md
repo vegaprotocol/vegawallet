@@ -5,7 +5,7 @@ implemented in Go. It is used to sign transactions for use
 on [Vega](#about-vega). Vega Wallet creates and manages HD wallets with ed25519
 key pairs.
 
-### ⚠️ [Learn how to install and run Vega Wallet (v 0.8.0) by clicking here to visit docs.vega.xyz.](https://docs.fairground.vega.xyz/docs/wallet/getting-started/) 
+### ⚠️ [Learn how to install and run Vega Wallet by clicking here to visit the docs site.](https://docs.fairground.vega.xyz/docs/wallet/getting-started/) 
  
 ## Building
 
