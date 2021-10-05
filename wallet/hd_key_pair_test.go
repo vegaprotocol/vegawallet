@@ -19,7 +19,9 @@ func TestHDKeypair(t *testing.T) {
 	t.Run("Untainting a not-tainted key pair fails", testHDKeyPairUntaintingNotTaintedKeyPairFails)
 	t.Run("Secure copy of key pair removes sensitive information", testHDKeyPairToPublicKeyRemovesSensitiveInformation)
 	t.Run("Signing a transaction succeeds", testHDKeyPairSigningTransactionSucceeds)
+	t.Run("Signing a transaction with tainted key fails", testHDKeyPairSigningTransactionWithTaintedKeyFails)
 	t.Run("Signing any message succeeds", testHDKeyPairSigningAnyMessageSucceeds)
+	t.Run("Signing any message with tainted key fails", testHDKeyPairSigningAnyMessageWithTaintedKeyFails)
 	t.Run("Verifying any message succeeds", testHDKeyPairVerifyingAnyMessageSucceeds)
 	t.Run("Verifying any message with invalid signature fails", testHDKeyPairVerifyingAnyMessageWithInvalidSignatureFails)
 	t.Run("Marshaling key pair succeeds", testHDKeyPairMarshalingKeyPairSucceeds)
@@ -159,6 +161,23 @@ func testHDKeyPairSigningTransactionSucceeds(t *testing.T) {
 	assert.Equal(t, kp.AlgorithmVersion(), sig.Version)
 }
 
+func testHDKeyPairSigningTransactionWithTaintedKeyFails(t *testing.T) {
+	// given
+	kp := generateHDKeyPair()
+	data := []byte("Paul Atreides")
+
+	// setup
+	err := kp.Taint()
+	require.NoError(t, err)
+
+	// when
+	sig, err := kp.Sign(data)
+
+	// then
+	require.Error(t, err)
+	assert.Nil(t, sig)
+}
+
 func testHDKeyPairSigningAnyMessageSucceeds(t *testing.T) {
 	// given
 	kp := generateHDKeyPair()
@@ -170,6 +189,23 @@ func testHDKeyPairSigningAnyMessageSucceeds(t *testing.T) {
 	// then
 	require.NoError(t, err)
 	assert.Equal(t, []byte{0x2f, 0xfd, 0x9c, 0x1a, 0x5c, 0x28, 0x0, 0x7e, 0xb5, 0xfe, 0x2f, 0xbf, 0x7b, 0xe4, 0x46, 0xcf, 0x0, 0xd6, 0xed, 0xee, 0x21, 0x31, 0xa6, 0x58, 0xf4, 0xa0, 0x42, 0x4b, 0x7f, 0xc4, 0xcd, 0x8e, 0xf6, 0xa3, 0x23, 0x7a, 0xa, 0x9d, 0x3, 0x55, 0xe8, 0xe, 0xab, 0xb2, 0xdd, 0x27, 0x16, 0x63, 0x8a, 0x5c, 0x54, 0x5a, 0x3b, 0x9a, 0x2c, 0xa4, 0xa6, 0xc5, 0xd2, 0x68, 0x98, 0x7, 0x5, 0x1}, sig)
+}
+
+func testHDKeyPairSigningAnyMessageWithTaintedKeyFails(t *testing.T) {
+	// given
+	kp := generateHDKeyPair()
+	data := []byte("Paul Atreides")
+
+	// setup
+	err := kp.Taint()
+	require.NoError(t, err)
+
+	// when
+	sig, err := kp.SignAny(data)
+
+	// then
+	require.Error(t, err)
+	assert.Nil(t, sig)
 }
 
 func testHDKeyPairVerifyingAnyMessageSucceeds(t *testing.T) {

@@ -38,6 +38,9 @@ func runList(_ *cobra.Command, _ []string) error {
 
 	if rootArgs.output == "human" {
 		p := printer.NewHumanPrinter()
+		if len(ws) == 0 {
+			p.Text("No wallet registered.").Jump()
+		}
 		for _, w := range ws {
 			p.Text(fmt.Sprintf("- %s", w)).Jump()
 		}

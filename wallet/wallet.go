@@ -4,6 +4,8 @@ type Wallet interface {
 	Version() uint32
 	Name() string
 	SetName(newName string)
+	ID() string
+	Type() string
 	DescribePublicKey(pubKey string) (PublicKey, error)
 	ListPublicKeys() []PublicKey
 	ListKeyPairs() []KeyPair
@@ -14,6 +16,7 @@ type Wallet interface {
 	SignAny(pubKey string, data []byte) ([]byte, error)
 	VerifyAny(pubKey string, data, sig []byte) (bool, error)
 	SignTx(pubKey string, data []byte) (*Signature, error)
+	IsolateWithKey(pubKey string) (Wallet, error)
 }
 
 type KeyPair interface {
@@ -23,6 +26,9 @@ type KeyPair interface {
 	Meta() []Meta
 	AlgorithmVersion() uint32
 	AlgorithmName() string
+	SignAny(data []byte) ([]byte, error)
+	VerifyAny(data, sig []byte) (bool, error)
+	Sign(data []byte) (*Signature, error)
 }
 
 type PublicKey interface {

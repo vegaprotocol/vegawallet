@@ -209,3 +209,23 @@ use `ctrl+c`.
 If you're running an ad/tracker blocker, and you're getting errors, it may be
 blocking the node from connecting. Try allowlisting `lb.testnet.vega.xyz` and
 refreshing.
+
+## Send a command
+
+Instead of sending a command through the API, you can send it through the
+command line, use the following command:
+
+```sh
+vegawallet command --pubkey "YOUR_HEX_PUBIC_KEY" --name "YOUR_NAME" '{"THE_COMMAND": {...}, "propagate": true}'
+```
+
+## Isolate a key pair
+
+On HD wallets, the wallet node is used to generate (and retrieve) key pairs. For
+security purpose, you may not want to store the wallet node on the machine
+running the node, because it can be compromised. So, you might want to isolate a
+single key pair, without the wallet node, in an "isolated wallet".
+
+```sh
+vegawallet key isolate --pubkey "YOUR_HEX_PUBIC_KEY" --name "YOUR_NAME"
+```
