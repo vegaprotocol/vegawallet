@@ -42,6 +42,7 @@ func init() {
 	serviceRunCmd.Flags().StringVarP(&serviceRunArgs.network, "network", "n", "", "Name of the network to use")
 	serviceRunCmd.Flags().BoolVar(&serviceRunArgs.startConsole, "console-proxy", false, "Start the vega console proxy and open the console in the default browser")
 	serviceRunCmd.Flags().BoolVar(&serviceRunArgs.noBrowser, "no-browser", false, "Do not open the default browser if the console proxy is stated")
+	_ = serviceRunCmd.MarkFlagRequired("network")
 }
 
 func runServiceRun(_ *cobra.Command, _ []string) error {

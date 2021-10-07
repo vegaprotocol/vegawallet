@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
 
 	"code.vegaprotocol.io/go-wallet/cmd/printer"
@@ -29,6 +28,7 @@ func init() {
 	keyCmd.AddCommand(keyListCmd)
 	keyListCmd.Flags().StringVarP(&keyListArgs.wallet, "wallet", "w", "", "Name of the wallet to use")
 	keyListCmd.Flags().StringVarP(&keyListArgs.passphraseFile, "passphrase-file", "p", "", "Path of the file containing the passphrase to access the wallet")
+	_ = keyListCmd.MarkFlagRequired("wallet")
 }
 
 func runKeyList(_ *cobra.Command, _ []string) error {
@@ -38,10 +38,6 @@ func runKeyList(_ *cobra.Command, _ []string) error {
 	}
 
 	handler := wallets.NewHandler(store)
-
-	if len(keyListArgs.wallet) == 0 {
-		return errors.New("wallet is required")
-	}
 
 	passphrase, err := getPassphrase(keyListArgs.passphraseFile, false)
 	if err != nil {

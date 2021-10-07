@@ -34,6 +34,8 @@ func init() {
 	keyAnnotateCmd.Flags().StringVarP(&keyAnnotateArgs.pubkey, "pubkey", "k", "", "Public key to be used (hex)")
 	keyAnnotateCmd.Flags().StringVarP(&keyAnnotateArgs.metadata, "meta", "m", "", `A list of metadata e.g: "primary:true;asset:BTC"`)
 	keyAnnotateCmd.Flags().BoolVar(&keyAnnotateArgs.clear, "clear", false, "Clear the metadata")
+	_ = keyAnnotateCmd.MarkFlagRequired("wallet")
+	_ = keyAnnotateCmd.MarkFlagRequired("pubkey")
 }
 
 func runKeyAnnotate(_ *cobra.Command, _ []string) error {
@@ -44,14 +46,8 @@ func runKeyAnnotate(_ *cobra.Command, _ []string) error {
 
 	handler := wallets.NewHandler(store)
 
-	if len(keyAnnotateArgs.wallet) == 0 {
-		return errors.New("wallet is required")
-	}
-	if len(keyAnnotateArgs.pubkey) == 0 {
-		return errors.New("pubkey is required")
-	}
 	if len(keyAnnotateArgs.metadata) == 0 && !keyAnnotateArgs.clear {
-		return errors.New("meta is required")
+		return errors.New("`--meta` is required or use `--clear` flag")
 	}
 	if len(keyAnnotateArgs.metadata) != 0 && keyAnnotateArgs.clear {
 		return errors.New("can't have `--meta` and `--clear` flags at the same time")

@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
 
 	"code.vegaprotocol.io/go-wallet/cmd/printer"
@@ -30,19 +29,14 @@ func init() {
 	keyIsolateCmd.Flags().StringVarP(&keyIsolateArgs.name, "wallet", "w", "", "Name of the wallet to use")
 	keyIsolateCmd.Flags().StringVarP(&keyIsolateArgs.passphraseFile, "passphrase-file", "p", "", "Path of the file containing the passphrase to access the wallet")
 	keyIsolateCmd.Flags().StringVarP(&keyIsolateArgs.pubkey, "pubkey", "k", "", "Public key to be used (hex)")
+	_ = keyIsolateCmd.MarkFlagRequired("wallet")
+	_ = keyIsolateCmd.MarkFlagRequired("pubkey")
 }
 
 func runKeyIsolate(_ *cobra.Command, _ []string) error {
 	store, err := wallets.InitialiseStore(rootArgs.home)
 	if err != nil {
 		return fmt.Errorf("couldn't initialise wallets store: %w", err)
-	}
-
-	if len(keyIsolateArgs.name) == 0 {
-		return errors.New("wallet is required")
-	}
-	if len(keyIsolateArgs.pubkey) == 0 {
-		return errors.New("pubkey is required")
 	}
 
 	passphrase, err := getPassphrase(keyIsolateArgs.passphraseFile, false)

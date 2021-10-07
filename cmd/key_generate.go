@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -33,6 +32,7 @@ func init() {
 	keyGenerateCmd.Flags().StringVarP(&keyGenerateArgs.wallet, "wallet", "w", "", "Name of the wallet to use")
 	keyGenerateCmd.Flags().StringVarP(&keyGenerateArgs.passphraseFile, "passphrase-file", "p", "", "Path of the file containing the passphrase to access the wallet")
 	keyGenerateCmd.Flags().StringVarP(&keyGenerateArgs.metas, "meta", "m", "", `A list of metadata e.g: "primary:true;asset:BTC"`)
+	_ = keyGenerateCmd.MarkFlagRequired("wallet")
 }
 
 func runKeyGenerate(_ *cobra.Command, _ []string) error {
@@ -44,10 +44,6 @@ func runKeyGenerate(_ *cobra.Command, _ []string) error {
 	}
 
 	handler := wallets.NewHandler(store)
-
-	if len(keyGenerateArgs.wallet) == 0 {
-		return errors.New("wallet is required")
-	}
 
 	walletExists := handler.WalletExists(keyGenerateArgs.wallet)
 

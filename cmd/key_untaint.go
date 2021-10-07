@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
 
 	"code.vegaprotocol.io/go-wallet/cmd/printer"
@@ -29,6 +28,8 @@ func init() {
 	keyUntaintCmd.Flags().StringVarP(&keyUntaintArgs.wallet, "wallet", "w", "", "Name of the wallet to use")
 	keyUntaintCmd.Flags().StringVarP(&keyUntaintArgs.passphraseFile, "passphrase-file", "p", "", "Path of the file containing the passphrase to access the wallet")
 	keyUntaintCmd.Flags().StringVarP(&keyUntaintArgs.pubKey, "pubkey", "k", "", "Public key to be used (hex)")
+	_ = keyUntaintCmd.MarkFlagRequired("wallet")
+	_ = keyUntaintCmd.MarkFlagRequired("pubkey")
 }
 
 func runKeyUntaint(_ *cobra.Command, _ []string) error {
@@ -38,10 +39,6 @@ func runKeyUntaint(_ *cobra.Command, _ []string) error {
 	}
 
 	handler := wallets.NewHandler(store)
-
-	if len(keyUntaintArgs.wallet) == 0 {
-		return errors.New("wallet is required")
-	}
 
 	passphrase, err := getPassphrase(keyUntaintArgs.passphraseFile, false)
 	if err != nil {
