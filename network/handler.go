@@ -70,3 +70,19 @@ func InitialiseNetworks(store Store, overwrite bool) error {
 
 	return nil
 }
+
+func ImportNetwork(store Store, net *Network, overwrite bool) error {
+	exists, err := store.NetworkExists(net.Name)
+	if err != nil {
+		return fmt.Errorf("couldn't verify network existance: %w", err)
+	}
+	if exists && !overwrite {
+		return fmt.Errorf("network \"%s\" already exists", net.Name)
+	}
+
+	if err := store.SaveNetwork(net); err != nil {
+		return fmt.Errorf("couldn't save the imported network: %w", err)
+	}
+
+	return nil
+}
