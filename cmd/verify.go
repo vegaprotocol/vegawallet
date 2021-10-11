@@ -32,6 +32,9 @@ func init() {
 	verifyCmd.Flags().StringVarP(&verifyArgs.message, "message", "m", "", "Message to be verified (base64)")
 	verifyCmd.Flags().StringVarP(&verifyArgs.sig, "signature", "s", "", "Signature to be verified (base64)")
 	verifyCmd.Flags().StringVarP(&verifyArgs.pubkey, "pubkey", "k", "", "Public key to be used (hex)")
+	_ = verifyCmd.MarkFlagRequired("pubkey")
+	_ = verifyCmd.MarkFlagRequired("message")
+	_ = verifyCmd.MarkFlagRequired("signature")
 }
 
 func runVerify(_ *cobra.Command, _ []string) error {
@@ -42,19 +45,11 @@ func runVerify(_ *cobra.Command, _ []string) error {
 
 	handler := wallets.NewHandler(store)
 
-	if len(verifyArgs.pubkey) == 0 {
-		return errors.New("pubkey is required")
-	}
-	if len(verifyArgs.message) == 0 {
-		return errors.New("message is required")
-	}
 	decodedMessage, err := base64.StdEncoding.DecodeString(verifyArgs.message)
 	if err != nil {
 		return errors.New("message should be encoded into base64")
 	}
-	if len(verifyArgs.sig) == 0 {
-		return errors.New("signature is required")
-	}
+
 	decodedSig, err := base64.StdEncoding.DecodeString(verifyArgs.sig)
 	if err != nil {
 		return errors.New("signature should be encoded into base64")

@@ -29,13 +29,17 @@ func getTestConfig(t *testing.T) *testConfig {
 }
 
 func TestGenerateConfig(t *testing.T) {
-	t.Run("Initialising config succeeds", testInitialisingConfigSucceeds)
-	t.Run("Initialising config with error fails", testInitialisingConfigWithErrorFails)
-	t.Run("Initialising config with existing config fails", testInitialisingConfigWithExistingConfigFails)
-	t.Run("Overwriting config succeeds", testOverwritingConfigSucceeds)
+	t.Run("Initialising network succeeds", testInitialisingNetworkSucceeds)
+	t.Run("Initialising network with error fails", testInitialisingNetworkWithErrorFails)
+	t.Run("Initialising network with existing network fails", testInitialisingNetworkWithExistingNetworkFails)
+	t.Run("Initialising by overwriting network succeeds", testInitialisingByOverwritingNetworkSucceeds)
+	t.Run("Importing network succeeds", testImportingNetworkSucceeds)
+	t.Run("Importing existing network fails", testImportingExistingNetworkFails)
+	t.Run("Importing by overwriting existing network succeeds", testImportingByOverwritingNetworkSucceeds)
+	t.Run("Importing network with errors when saving fails", testImportingNetworkWithErrorsWhenSavingFails)
 }
 
-func testInitialisingConfigSucceeds(t *testing.T) {
+func testInitialisingNetworkSucceeds(t *testing.T) {
 	ts := getTestConfig(t)
 
 	// setup
@@ -55,7 +59,7 @@ func testInitialisingConfigSucceeds(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func testInitialisingConfigWithErrorFails(t *testing.T) {
+func testInitialisingNetworkWithErrorFails(t *testing.T) {
 	ts := getTestConfig(t)
 
 	// setup
@@ -75,7 +79,7 @@ func testInitialisingConfigWithErrorFails(t *testing.T) {
 	require.EqualError(t, err, "couldn't save network configuration: some error")
 }
 
-func testInitialisingConfigWithExistingConfigFails(t *testing.T) {
+func testInitialisingNetworkWithExistingNetworkFails(t *testing.T) {
 	ts := getTestConfig(t)
 
 	// setup
@@ -95,7 +99,7 @@ func testInitialisingConfigWithExistingConfigFails(t *testing.T) {
 	require.Error(t, err)
 }
 
-func testOverwritingConfigSucceeds(t *testing.T) {
+func testInitialisingByOverwritingNetworkSucceeds(t *testing.T) {
 	ts := getTestConfig(t)
 
 	// setup
@@ -112,4 +116,103 @@ func testOverwritingConfigSucceeds(t *testing.T) {
 
 	// then
 	require.NoError(t, err)
+}
+
+func testImportingNetworkSucceeds(t *testing.T) {
+	ts := getTestConfig(t)
+
+	// given
+	net := &network.Network{
+		Name: "test",
+	}
+
+	// setup
+	ts.store.EXPECT().
+		NetworkExists("test").
+		Times(1).
+		Return(false, nil)
+	ts.store.EXPECT().
+		SaveNetwork(net).
+		Times(1).
+		Return(nil)
+
+	// when
+	err := network.ImportNetwork(ts.store, net, false)
+
+	// then
+	require.NoError(t, err)
+}
+
+func testImportingExistingNetworkFails(t *testing.T) {
+	ts := getTestConfig(t)
+
+	// given
+	net := &network.Network{
+		Name: "test",
+	}
+
+	// setup
+	ts.store.EXPECT().
+		NetworkExists("test").
+		Times(1).
+		Return(true, nil)
+	ts.store.EXPECT().
+		SaveNetwork(net).
+		Times(0)
+
+	// when
+	err := network.ImportNetwork(ts.store, net, false)
+
+	// then
+	require.EqualError(t, err, "network \"test\" already exists")
+}
+
+func testImportingByOverwritingNetworkSucceeds(t *testing.T) {
+	ts := getTestConfig(t)
+
+	// given
+	net := &network.Network{
+		Name: "test",
+	}
+
+	// setup
+	ts.store.EXPECT().
+		NetworkExists("test").
+		Times(1).
+		Return(true, nil)
+	ts.store.EXPECT().
+		SaveNetwork(net).
+		Times(1).
+		Return(nil)
+
+	// when
+	err := network.ImportNetwork(ts.store, net, true)
+
+	// then
+	require.NoError(t, err)
+}
+
+func testImportingNetworkWithErrorsWhenSavingFails(t *testing.T) {
+	ts := getTestConfig(t)
+
+	// given
+	net := &network.Network{
+		Name: "test",
+	}
+
+	// setup
+	ts.store.EXPECT().
+		NetworkExists("test").
+		Times(1).
+		Return(true, nil)
+	ts.store.EXPECT().
+		SaveNetwork(net).
+		Times(1).
+		Return(errors.New("something went wrong"))
+
+	// when
+	err := network.ImportNetwork(ts.store, net, true)
+
+	// then
+	require.EqualError(t, err, "couldn't save the imported network: something went wrong")
 }

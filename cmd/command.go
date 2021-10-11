@@ -35,6 +35,7 @@ var (
 		Use:   "command",
 		Short: "Send a command to the vega network",
 		Long:  "Import a wallet using the mnemonic.",
+		Args:  cobra.ExactArgs(1),
 		RunE:  runCommand,
 	}
 )
@@ -47,15 +48,11 @@ func init() {
 	commandCmd.Flags().StringVarP(&commandArgs.passphraseFile, "passphrase-file", "p", "", "Path of the file containing the passphrase to access the wallet")
 	commandCmd.Flags().StringVar(&commandArgs.nodeAddress, "node-address", "0.0.0.0:3002", "Address of the Vega node to use")
 	commandCmd.Flags().Uint64Var(&commandArgs.retries, "retries", 5, "Number of retries when contacting the Vega node")
-	commandCmd.MarkFlagRequired("wallet")
-	commandCmd.MarkFlagRequired("pubkey")
+	_ = commandCmd.MarkFlagRequired("wallet")
+	_ = commandCmd.MarkFlagRequired("pubkey")
 }
 
 func runCommand(_ *cobra.Command, pos []string) error {
-	if len(pos) != 1 {
-		return errors.New("invalid number of arguments, require at most 1 command to be signed and sent by the wallet")
-	}
-
 	wReq := &walletpb.SubmitTransactionRequest{}
 	err := jsonpb.UnmarshalString(pos[0], wReq)
 	if err != nil {

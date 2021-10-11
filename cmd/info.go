@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
 
 	"code.vegaprotocol.io/go-wallet/cmd/printer"
@@ -29,13 +28,11 @@ func init() {
 	rootCmd.AddCommand(infoCmd)
 	infoCmd.Flags().StringVarP(&infoArgs.wallet, "wallet", "w", "", "Name of the wallet to use")
 	infoCmd.Flags().StringVarP(&infoArgs.passphraseFile, "passphrase-file", "p", "", "Path of the file containing the passphrase to access the wallet")
+	_ = infoCmd.MarkFlagRequired("wallet")
+	_ = infoCmd.MarkFlagFilename("passphrase-file")
 }
 
 func runInfo(_ *cobra.Command, _ []string) error {
-	if len(infoArgs.wallet) == 0 {
-		return errors.New("wallet is required")
-	}
-
 	passphrase, err := getPassphrase(infoArgs.passphraseFile, false)
 	if err != nil {
 		return err

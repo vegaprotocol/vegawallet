@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -32,6 +31,8 @@ func init() {
 	importCmd.Flags().StringVarP(&importArgs.wallet, "wallet", "w", "", "Name of the wallet to use")
 	importCmd.Flags().StringVarP(&importArgs.passphraseFile, "passphrase-file", "p", "", "Path of the file containing the passphrase to access the wallet")
 	importCmd.Flags().StringVarP(&importArgs.mnemonicFile, "mnemonic-file", "m", "", `Path of the file containing the mnemonic of the wallet "swing ceiling chaos..."`)
+	_ = importCmd.MarkFlagRequired("wallet")
+	_ = importCmd.MarkFlagRequired("mnemonic-file")
 }
 
 func runImport(_ *cobra.Command, _ []string) error {
@@ -41,14 +42,6 @@ func runImport(_ *cobra.Command, _ []string) error {
 	}
 
 	handler := wallets.NewHandler(store)
-
-	if len(importArgs.wallet) == 0 {
-		return errors.New("wallet is required")
-	}
-
-	if len(importArgs.mnemonicFile) == 0 {
-		return errors.New("path to wallet mnemonic is required")
-	}
 
 	passphrase, err := getPassphrase(importArgs.passphraseFile, true)
 	if err != nil {
