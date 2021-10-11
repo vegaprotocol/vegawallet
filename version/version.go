@@ -42,10 +42,12 @@ func Check(currentVersion string) (*semver.Version, error) {
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
+	if resp != nil {
+		defer resp.Body.Close()
+	}
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
