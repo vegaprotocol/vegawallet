@@ -1,0 +1,34 @@
+Name = "fairground"
+Level = "info"
+TokenExpiry = "168h0m0s"
+Port = 1789
+Host = "127.0.0.1"
+
+[Nodes]
+Retries = 5
+Hosts = [
+    "n01.testnet.vega.xyz:3002",
+    "n02.testnet.vega.xyz:3002",
+    "n03.testnet.vega.xyz:3002",
+    "n04.testnet.vega.xyz:3002",
+    "n05.testnet.vega.xyz:3002",
+    "n06.testnet.vega.xyz:3002",
+    "n07.testnet.vega.xyz:3002",
+    "n08.testnet.vega.xyz:3002",
+    "n09.testnet.vega.xyz:3002",
+    "n10.testnet.vega.xyz:3002",
+    "n11.testnet.vega.xyz:3002",
+    "n12.testnet.vega.xyz:3002",
+    "n13.testnet.vega.xyz:3002",
+    "n14.testnet.vega.xyz:3002",
+    "n15.testnet.vega.xyz:3002",
+    "n16.testnet.vega.xyz:3002",
+    "n17.testnet.vega.xyz:3002",
+    "n18.testnet.vega.xyz:3002",
+    "n19.testnet.vega.xyz:3002",
+    "n20.testnet.vega.xyz:3002"
+]
+
+[Console]
+URL = "console.fairground.wtf"
+LocalPort = 1847

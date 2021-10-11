@@ -13,7 +13,7 @@ import (
 var (
 	keyAnnotateArgs struct {
 		metadata       string
-		name           string
+		wallet         string
 		passphraseFile string
 		pubkey         string
 		clear          bool
@@ -29,11 +29,13 @@ var (
 
 func init() {
 	keyCmd.AddCommand(keyAnnotateCmd)
-	keyAnnotateCmd.Flags().StringVarP(&keyAnnotateArgs.name, "name", "n", "", "Name of the wallet to use")
+	keyAnnotateCmd.Flags().StringVarP(&keyAnnotateArgs.wallet, "wallet", "w", "", "Name of the wallet to use")
 	keyAnnotateCmd.Flags().StringVarP(&keyAnnotateArgs.passphraseFile, "passphrase-file", "p", "", "Path of the file containing the passphrase to access the wallet")
 	keyAnnotateCmd.Flags().StringVarP(&keyAnnotateArgs.pubkey, "pubkey", "k", "", "Public key to be used (hex)")
 	keyAnnotateCmd.Flags().StringVarP(&keyAnnotateArgs.metadata, "meta", "m", "", `A list of metadata e.g: "primary:true;asset:BTC"`)
 	keyAnnotateCmd.Flags().BoolVar(&keyAnnotateArgs.clear, "clear", false, "Clear the metadata")
+	_ = keyAnnotateCmd.MarkFlagRequired("wallet")
+	_ = keyAnnotateCmd.MarkFlagRequired("pubkey")
 }
 
 func runKeyAnnotate(_ *cobra.Command, _ []string) error {
@@ -44,14 +46,8 @@ func runKeyAnnotate(_ *cobra.Command, _ []string) error {
 
 	handler := wallets.NewHandler(store)
 
-	if len(keyAnnotateArgs.name) == 0 {
-		return errors.New("wallet name is required")
-	}
-	if len(keyAnnotateArgs.pubkey) == 0 {
-		return errors.New("pubkey is required")
-	}
 	if len(keyAnnotateArgs.metadata) == 0 && !keyAnnotateArgs.clear {
-		return errors.New("meta is required")
+		return errors.New("`--meta` is required or use `--clear` flag")
 	}
 	if len(keyAnnotateArgs.metadata) != 0 && keyAnnotateArgs.clear {
 		return errors.New("can't have `--meta` and `--clear` flags at the same time")
@@ -70,12 +66,12 @@ func runKeyAnnotate(_ *cobra.Command, _ []string) error {
 		}
 	}
 
-	err = handler.LoginWallet(keyAnnotateArgs.name, passphrase)
+	err = handler.LoginWallet(keyAnnotateArgs.wallet, passphrase)
 	if err != nil {
 		return fmt.Errorf("could not login to the wallet: %w", err)
 	}
 
-	err = handler.UpdateMeta(keyAnnotateArgs.name, keyAnnotateArgs.pubkey, passphrase, metadata)
+	err = handler.UpdateMeta(keyAnnotateArgs.wallet, keyAnnotateArgs.pubkey, passphrase, metadata)
 	if err != nil {
 		return fmt.Errorf("could not update the metadata: %w", err)
 	}

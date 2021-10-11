@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
 
 	"code.vegaprotocol.io/go-wallet/cmd/printer"
@@ -12,7 +11,7 @@ import (
 
 var (
 	infoArgs struct {
-		name           string
+		wallet         string
 		passphraseFile string
 	}
 
@@ -27,15 +26,13 @@ var (
 
 func init() {
 	rootCmd.AddCommand(infoCmd)
-	infoCmd.Flags().StringVarP(&infoArgs.name, "name", "n", "", "Name of the wallet to use")
+	infoCmd.Flags().StringVarP(&infoArgs.wallet, "wallet", "w", "", "Name of the wallet to use")
 	infoCmd.Flags().StringVarP(&infoArgs.passphraseFile, "passphrase-file", "p", "", "Path of the file containing the passphrase to access the wallet")
+	_ = infoCmd.MarkFlagRequired("wallet")
+	_ = infoCmd.MarkFlagFilename("passphrase-file")
 }
 
 func runInfo(_ *cobra.Command, _ []string) error {
-	if len(infoArgs.name) == 0 {
-		return errors.New("wallet name is required")
-	}
-
 	passphrase, err := getPassphrase(infoArgs.passphraseFile, false)
 	if err != nil {
 		return err
@@ -46,9 +43,9 @@ func runInfo(_ *cobra.Command, _ []string) error {
 		return fmt.Errorf("couldn't initialise wallets store: %w", err)
 	}
 
-	w, err := store.GetWallet(infoArgs.name, passphrase)
+	w, err := store.GetWallet(infoArgs.wallet, passphrase)
 	if err != nil {
-		return fmt.Errorf("couldn't get the wallet %s: %w", infoArgs.name, err)
+		return fmt.Errorf("couldn't get the wallet %s: %w", infoArgs.wallet, err)
 	}
 
 	if rootArgs.output == "human" {

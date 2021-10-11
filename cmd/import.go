@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -14,7 +13,7 @@ import (
 
 var (
 	importArgs struct {
-		name           string
+		wallet         string
 		passphraseFile string
 		mnemonicFile   string
 	}
@@ -29,9 +28,11 @@ var (
 
 func init() {
 	rootCmd.AddCommand(importCmd)
-	importCmd.Flags().StringVarP(&importArgs.name, "name", "n", "", "Name of the wallet to use")
+	importCmd.Flags().StringVarP(&importArgs.wallet, "wallet", "w", "", "Name of the wallet to use")
 	importCmd.Flags().StringVarP(&importArgs.passphraseFile, "passphrase-file", "p", "", "Path of the file containing the passphrase to access the wallet")
 	importCmd.Flags().StringVarP(&importArgs.mnemonicFile, "mnemonic-file", "m", "", `Path of the file containing the mnemonic of the wallet "swing ceiling chaos..."`)
+	_ = importCmd.MarkFlagRequired("wallet")
+	_ = importCmd.MarkFlagRequired("mnemonic-file")
 }
 
 func runImport(_ *cobra.Command, _ []string) error {
@@ -41,14 +42,6 @@ func runImport(_ *cobra.Command, _ []string) error {
 	}
 
 	handler := wallets.NewHandler(store)
-
-	if len(importArgs.name) == 0 {
-		return errors.New("wallet name is required")
-	}
-
-	if len(importArgs.mnemonicFile) == 0 {
-		return errors.New("path to wallet mnemonic is required")
-	}
 
 	passphrase, err := getPassphrase(importArgs.passphraseFile, true)
 	if err != nil {
@@ -61,7 +54,7 @@ func runImport(_ *cobra.Command, _ []string) error {
 	}
 	mnemonic := strings.Trim(string(rawMnemonic), "\n")
 
-	err = handler.ImportWallet(importArgs.name, passphrase, mnemonic)
+	err = handler.ImportWallet(importArgs.wallet, passphrase, mnemonic)
 	if err != nil {
 		return fmt.Errorf("couldn't import wallet: %w", err)
 	}
@@ -72,7 +65,7 @@ func runImport(_ *cobra.Command, _ []string) error {
 
 		p.BlueArrow().InfoText("Generate a key pair").Jump()
 		p.Text("To generate a key pair on a given wallet, use the following command:").NJump(2)
-		p.Code(fmt.Sprintf("%s key generate --name \"%s\"", os.Args[0], importArgs.name)).NJump(2)
+		p.Code(fmt.Sprintf("%s key generate --wallet \"%s\"", os.Args[0], importArgs.wallet)).NJump(2)
 		p.Text("For more information, use ").Bold("--help").Text(" flag.").Jump()
 	}
 

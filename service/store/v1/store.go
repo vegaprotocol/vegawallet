@@ -15,11 +15,6 @@ type Store struct {
 }
 
 func InitialiseStore(p paths.Paths) (*Store, error) {
-	serviceConfigFilePath, err := p.ConfigPathFor(paths.WalletServiceDefaultConfigFile)
-	if err != nil {
-		return nil, fmt.Errorf("couldn't get data path for %s: %w", paths.WalletServiceDefaultConfigFile, err)
-	}
-
 	pubRsaKeyFilePath, err := p.DataPathFor(paths.WalletServicePublicRSAKeyDataFile)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't get data path for %s: %w", paths.WalletServicePublicRSAKeyDataFile, err)
@@ -33,31 +28,7 @@ func InitialiseStore(p paths.Paths) (*Store, error) {
 	return &Store{
 		pubRsaKeyFilePath:  pubRsaKeyFilePath,
 		privRsaKeyFilePath: privRsaKeyFilePath,
-		configFilePath:     serviceConfigFilePath,
 	}, nil
-}
-
-func (s *Store) ConfigExists() (bool, error) {
-	return vgfs.FileExists(s.configFilePath)
-}
-
-func (s *Store) GetConfigPath() string {
-	return s.configFilePath
-}
-
-func (s *Store) GetConfig() (*service.Config, error) {
-	cfg := service.NewDefaultConfig()
-
-	err := paths.ReadStructuredFile(s.configFilePath, &cfg)
-	if err != nil {
-		return nil, err
-	}
-
-	return &cfg, nil
-}
-
-func (s *Store) SaveConfig(cfg *service.Config) error {
-	return paths.WriteStructuredFile(s.configFilePath, cfg)
 }
 
 func (s *Store) RSAKeysExists() (bool, error) {

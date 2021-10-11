@@ -8,10 +8,12 @@ import (
 
 	wcommands "code.vegaprotocol.io/go-wallet/commands"
 	"code.vegaprotocol.io/go-wallet/logger"
+	netstore "code.vegaprotocol.io/go-wallet/network/store/v1"
 	"code.vegaprotocol.io/go-wallet/node"
 	"code.vegaprotocol.io/go-wallet/wallets"
 	api "code.vegaprotocol.io/protos/vega/api/v1"
 	walletpb "code.vegaprotocol.io/protos/vega/wallet/v1"
+	"code.vegaprotocol.io/shared/paths"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
@@ -21,7 +23,8 @@ import (
 
 var (
 	commandArgs struct {
-		name           string
+		network        string
+		wallet         string
 		passphraseFile string
 		nodeAddress    string
 		retries        uint64
@@ -32,26 +35,24 @@ var (
 		Use:   "command",
 		Short: "Send a command to the vega network",
 		Long:  "Import a wallet using the mnemonic.",
+		Args:  cobra.ExactArgs(1),
 		RunE:  runCommand,
 	}
 )
 
 func init() {
 	rootCmd.AddCommand(commandCmd)
-	commandCmd.Flags().StringVarP(&commandArgs.name, "name", "n", "", "Name of the wallet to use")
+	commandCmd.Flags().StringVarP(&serviceRunArgs.network, "network", "n", "", "Name of the network to use")
+	commandCmd.Flags().StringVarP(&commandArgs.wallet, "wallet", "w", "", "Name of the wallet to use")
 	commandCmd.Flags().StringVarP(&commandArgs.pubKey, "pubkey", "", "", "The public key to use from the wallet")
 	commandCmd.Flags().StringVarP(&commandArgs.passphraseFile, "passphrase-file", "p", "", "Path of the file containing the passphrase to access the wallet")
 	commandCmd.Flags().StringVar(&commandArgs.nodeAddress, "node-address", "0.0.0.0:3002", "Address of the Vega node to use")
 	commandCmd.Flags().Uint64Var(&commandArgs.retries, "retries", 5, "Number of retries when contacting the Vega node")
-	commandCmd.MarkFlagRequired("name")
-	commandCmd.MarkFlagRequired("pubkey")
+	_ = commandCmd.MarkFlagRequired("wallet")
+	_ = commandCmd.MarkFlagRequired("pubkey")
 }
 
 func runCommand(_ *cobra.Command, pos []string) error {
-	if len(pos) != 1 {
-		return errors.New("invalid number of arguments, require at most 1 command to be signed and sent by the wallet")
-	}
-
 	wReq := &walletpb.SubmitTransactionRequest{}
 	err := jsonpb.UnmarshalString(pos[0], wReq)
 	if err != nil {
@@ -77,11 +78,11 @@ func runCommand(_ *cobra.Command, pos []string) error {
 
 	handler := wallets.NewHandler(store)
 
-	err = handler.LoginWallet(commandArgs.name, passphrase)
+	err = handler.LoginWallet(commandArgs.wallet, passphrase)
 	if err != nil {
-		return fmt.Errorf("couldn't login to the wallet %s: %w", commandArgs.name, err)
+		return fmt.Errorf("couldn't login to the wallet %s: %w", commandArgs.wallet, err)
 	}
-	defer handler.LogoutWallet(commandArgs.name)
+	defer handler.LogoutWallet(commandArgs.wallet)
 
 	encoding := "json"
 	if rootArgs.output == "human" {
@@ -94,8 +95,36 @@ func runCommand(_ *cobra.Command, pos []string) error {
 	}
 	defer log.Sync()
 
+	if len(commandArgs.nodeAddress) != 0 && len(commandArgs.network) != 0 {
+		return errors.New("can't have both node address and network flag set")
+	}
+
+	var hosts []string
+	if len(commandArgs.nodeAddress) != 0 {
+		hosts = []string{commandArgs.nodeAddress}
+	} else if len(commandArgs.network) != 0 {
+		netStore, err := netstore.InitialiseStore(paths.New(rootArgs.home))
+		if err != nil {
+			return fmt.Errorf("couldn't initialise network store: %w", err)
+		}
+		exists, err := netStore.NetworkExists(commandArgs.network)
+		if err != nil {
+			return fmt.Errorf("couldn't verify network existance: %w", err)
+		}
+		if !exists {
+			return fmt.Errorf("network %s does not exist", commandArgs.network)
+		}
+		net, err := netStore.GetNetwork(commandArgs.network)
+		if err != nil {
+			return fmt.Errorf("couldn't get network %s: %w", commandArgs.network, err)
+		}
+		hosts = net.Nodes.Hosts
+	} else {
+		return errors.New("should set node address or network flag")
+	}
+
 	forwarder, err := node.NewForwarder(log.Named("forwarder"), node.NodesConfig{
-		Hosts:   []string{commandArgs.nodeAddress},
+		Hosts:   hosts,
 		Retries: commandArgs.retries,
 	})
 	if err != nil {
@@ -113,7 +142,7 @@ func runCommand(_ *cobra.Command, pos []string) error {
 
 	log.Info(fmt.Sprintf("last block height found: %d", blockHeight))
 
-	tx, err := handler.SignTx(commandArgs.name, wReq, blockHeight)
+	tx, err := handler.SignTx(commandArgs.wallet, wReq, blockHeight)
 	if err != nil {
 		return fmt.Errorf("couldn't sign transaction: %w", err)
 	}

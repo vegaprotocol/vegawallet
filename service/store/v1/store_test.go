@@ -12,13 +12,7 @@ import (
 
 func TestFileStoreV1(t *testing.T) {
 	t.Run("New store succeeds", testNewStoreSucceeds)
-	t.Run("Saving already existing config succeeds", testFileStoreV1SavingAlreadyExistingConfigSucceeds)
-	t.Run("Saving new config succeeds", testFileStoreV1SavingNewConfigSucceeds)
-	t.Run("Verifying non-existing config succeeds", testFileStoreV1VerifyingNonExistingConfigSucceeds)
-	t.Run("Verifying config succeeds", testFileStoreV1VerifyingExistingConfigSucceeds)
-	t.Run("Getting non-existing config fails", testFileStoreV1GetNonExistingConfigFails)
-	t.Run("Getting config succeeds", testFileStoreV1GetConfigSucceeds)
-	t.Run("Saving RSA keys already existing RSA keys succeeds", testFileStoreV1SaveAlreadyExistingRSAKeysSucceeds)
+	t.Run("Saving already existing RSA keys succeeds", testFileStoreV1SaveAlreadyExistingRSAKeysSucceeds)
 	t.Run("Saving RSA keys succeeds", testFileStoreV1SaveRSAKeysSucceeds)
 	t.Run("Verifying non-existing RSA keys fails", testFileStoreV1VerifyingNonExistingRSAKeysFails)
 	t.Run("Verifying existing RSA keys succeeds", testFileStoreV1VerifyingExistingRSAKeysSucceeds)
@@ -28,132 +22,13 @@ func TestFileStoreV1(t *testing.T) {
 
 func testNewStoreSucceeds(t *testing.T) {
 	configDir := newVegaHome()
+	defer configDir.Remove()
 
 	s, err := v1.InitialiseStore(configDir.Paths())
 
 	require.NoError(t, err)
 	assert.NotNil(t, s)
-
-	vgtest.AssertDirAccess(t, configDir.ConfigHome())
 	vgtest.AssertDirAccess(t, configDir.RSAKeysHome())
-}
-
-func testFileStoreV1SavingAlreadyExistingConfigSucceeds(t *testing.T) {
-	configDir := newVegaHome()
-	defer configDir.Remove()
-
-	// given
-	s := InitialiseFromPath(configDir)
-	cfg := service.NewDefaultConfig()
-
-	// when
-	err := s.SaveConfig(&cfg)
-
-	// then
-	require.NoError(t, err)
-
-	// when
-	err = s.SaveConfig(&cfg)
-
-	// then
-	require.NoError(t, err)
-}
-
-func testFileStoreV1SavingNewConfigSucceeds(t *testing.T) {
-	configDir := newVegaHome()
-	defer configDir.Remove()
-
-	// given
-	s := InitialiseFromPath(configDir)
-	cfg := service.NewDefaultConfig()
-
-	// when
-	err := s.SaveConfig(&cfg)
-
-	// then
-	require.NoError(t, err)
-	vgtest.AssertFileAccess(t, configDir.ConfigFilePath())
-
-	// when
-	returnedCfg, err := s.GetConfig()
-
-	// then
-	require.NoError(t, err)
-	assert.Equal(t, &cfg, returnedCfg)
-}
-
-func testFileStoreV1VerifyingNonExistingConfigSucceeds(t *testing.T) {
-	configDir := newVegaHome()
-	defer configDir.Remove()
-
-	// given
-	s := InitialiseFromPath(configDir)
-
-	// when
-	exists, err := s.ConfigExists()
-
-	// then
-	assert.NoError(t, err)
-	assert.False(t, exists)
-}
-
-func testFileStoreV1VerifyingExistingConfigSucceeds(t *testing.T) {
-	configDir := newVegaHome()
-	defer configDir.Remove()
-
-	// given
-	s := InitialiseFromPath(configDir)
-	cfg := service.NewDefaultConfig()
-
-	// when
-	err := s.SaveConfig(&cfg)
-
-	// then
-	require.NoError(t, err)
-
-	// when
-	exists, err := s.ConfigExists()
-
-	// then
-	assert.NoError(t, err)
-	assert.True(t, exists)
-}
-
-func testFileStoreV1GetNonExistingConfigFails(t *testing.T) {
-	configDir := newVegaHome()
-	defer configDir.Remove()
-
-	// given
-	s := InitialiseFromPath(configDir)
-
-	// when
-	cfg, err := s.GetConfig()
-
-	// then
-	assert.Error(t, err)
-	assert.Nil(t, cfg)
-}
-
-func testFileStoreV1GetConfigSucceeds(t *testing.T) {
-	configDir := newVegaHome()
-	defer configDir.Remove()
-
-	// given
-	s := InitialiseFromPath(configDir)
-	cfg := service.NewDefaultConfig()
-
-	// when
-	err := s.SaveConfig(&cfg)
-
-	// then
-	require.NoError(t, err)
-
-	// when
-	returnedCfg, err := s.GetConfig()
-
-	// then
-	require.NoError(t, err)
-	assert.Equal(t, &cfg, returnedCfg)
 }
 
 func testFileStoreV1SaveAlreadyExistingRSAKeysSucceeds(t *testing.T) {

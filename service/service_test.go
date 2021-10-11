@@ -12,6 +12,7 @@ import (
 	"testing"
 
 	"code.vegaprotocol.io/go-wallet/crypto"
+	"code.vegaprotocol.io/go-wallet/network"
 	"code.vegaprotocol.io/go-wallet/service"
 	"code.vegaprotocol.io/go-wallet/service/mocks"
 	"code.vegaprotocol.io/go-wallet/wallet"
@@ -46,7 +47,7 @@ func getTestService(t *testing.T) *testService {
 	auth := mocks.NewMockAuth(ctrl)
 	nodeForward := mocks.NewMockNodeForward(ctrl)
 	// no needs of the conf or path as we do not run an actual service
-	s, _ := service.NewService(zap.NewNop(), &service.Config{}, handler, auth, nodeForward)
+	s, _ := service.NewService(zap.NewNop(), &network.Network{}, handler, auth, nodeForward)
 	return &testService{
 		Service:     s,
 		ctrl:        ctrl,

@@ -33,10 +33,10 @@ To create a new wallet, generate your first key pair using the following
 command:
 
 ```sh
-vegawallet key generate --name "YOUR_USERNAME"
+vegawallet key generate --wallet "YOUR_USERNAME"
 ```
 
-The `--name` flag sets the name of your wallet.
+The `--wallet` flag sets the name of your wallet.
 
 It will then prompt you to input a passphrase, and then confirm that passphrase.
 You'll use this username and passphrase to login to Vega Console. You can also
@@ -64,7 +64,7 @@ able to retrieve it with specific commands.
 If you want to restore your wallet, use the following command:
 
 ```sh
-vegawallet import --name "YOUR_USERNAME" --mnemonic-file "PATH_TO_YOUR_MNEMONIC"
+vegawallet import --wallet "YOUR_USERNAME" --mnemonic-file "PATH_TO_YOUR_MNEMONIC"
 ```
 
 The flag `--mnemonic-file` is used to locate the file that contains the
@@ -90,7 +90,7 @@ vegawallet list
 To generate a key pair on the given wallet, use the following command:
 
 ```sh
-vegawallet key generate --name "YOUR_USERNAME"
+vegawallet key generate --wallet "YOUR_USERNAME"
 ```
 
 It will then prompt you to input a passphrase. You can also specify the
@@ -108,7 +108,7 @@ For better key management, you may want to add metadata to your key pairs. This
 is done with the following command:
 
 ```sh
-vegawallet key annotate --name "YOUR_USERNAME" --meta "key1:value1;key2:value2" --pubkey "YOUR_HEX_PUBLIC_KEY"
+vegawallet key annotate --wallet "YOUR_USERNAME" --meta "key1:value1;key2:value2" --pubkey "YOUR_HEX_PUBLIC_KEY"
 ```
 
 An item of metadata is represented as a key-value property.
@@ -119,7 +119,7 @@ You can give to each key pair a nickname/alias with a metadata `name`. For
 example:
 
 ```sh
-vegawallet key annotate --name "YOUR_USERNAME" --meta "name:my-alias" --pubkey "YOUR_HEX_PUBLIC_KEY"
+vegawallet key annotate --wallet "YOUR_USERNAME" --meta "name:my-alias" --pubkey "YOUR_HEX_PUBLIC_KEY"
 ```
 
 ### Important
@@ -134,7 +134,7 @@ You may want to prevent the use of a key by "tainting" it with the following
 command:
 
 ```sh
-vegawallet key taint --name "YOUR_NAME" --pubkey "YOUR_HEX_PUBIC_KEY"
+vegawallet key taint --wallet "YOUR_NAME" --pubkey "YOUR_HEX_PUBIC_KEY"
 ```
 
 It will then prompt you to input a passphrase. You can also specify the
@@ -146,7 +146,7 @@ You may have tainted a key by mistake. If you want to untaint it, use the
 following command:
 
 ```sh
-vegawallet key untaint --name "YOUR_NAME" --pubkey "YOUR_HEX_PUBIC_KEY"
+vegawallet key untaint --wallet "YOUR_NAME" --pubkey "YOUR_HEX_PUBIC_KEY"
 ```
 
 It will then prompt you to input a passphrase. You can also specify the
@@ -161,7 +161,7 @@ If you tainted a key for security reasons, you should not untaint it.
 To list your key pairs, use the following command:
 
 ```sh
-vegawallet key list --name "YOUR_NAME"
+vegawallet key list --wallet "YOUR_NAME"
 ```
 
 It will then prompt you to input a passphrase. You can also specify the
@@ -178,7 +178,7 @@ To sign and verify any kind of base-64 encoded messages, use the following
 commands:
 
 ```sh
-vegawallet sign --name "YOUR_NAME" --pubkey "YOUR_HEX_PUBIC_KEY" --message "c3BpY2Ugb2YgZHVuZQo="
+vegawallet sign --wallet "YOUR_NAME" --pubkey "YOUR_HEX_PUBIC_KEY" --message "c3BpY2Ugb2YgZHVuZQo="
 vegawallet verify --pubkey "YOUR_HEX_PUBIC_KEY" --message "c3BpY2Ugb2YgZHVuZQo=" --signature "76f978asd6fa8s76f"
 ```
 

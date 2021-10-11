@@ -14,10 +14,10 @@ import (
 
 var (
 	signArgs struct {
-		name           string
+		wallet         string
 		passphraseFile string
-		message        string
-		pubkey         string
+		message string
+		pubKey  string
 	}
 
 	// signCmd represents the sign command
@@ -31,10 +31,13 @@ var (
 
 func init() {
 	rootCmd.AddCommand(signCmd)
-	signCmd.Flags().StringVarP(&signArgs.name, "name", "n", "", "Name of the wallet to use")
+	signCmd.Flags().StringVarP(&signArgs.wallet, "wallet", "w", "", "Name of the wallet to use")
 	signCmd.Flags().StringVarP(&signArgs.passphraseFile, "passphrase-file", "p", "", "Path of the file containing the passphrase to access the wallet")
 	signCmd.Flags().StringVarP(&signArgs.message, "message", "m", "", "Message to be signed (base64)")
-	signCmd.Flags().StringVarP(&signArgs.pubkey, "pubkey", "k", "", "Public key to be used (hex)")
+	signCmd.Flags().StringVarP(&signArgs.pubKey, "pubkey", "k", "", "Public key to be used (hex)")
+	_ = signCmd.MarkFlagRequired("network")
+	_ = signCmd.MarkFlagRequired("pubkey")
+	_ = signCmd.MarkFlagRequired("message")
 }
 
 func runSign(_ *cobra.Command, _ []string) error {
@@ -45,15 +48,6 @@ func runSign(_ *cobra.Command, _ []string) error {
 
 	handler := wallets.NewHandler(store)
 
-	if len(signArgs.name) == 0 {
-		return errors.New("wallet name is required")
-	}
-	if len(signArgs.pubkey) == 0 {
-		return errors.New("pubkey is required")
-	}
-	if len(signArgs.message) == 0 {
-		return errors.New("message is required")
-	}
 	decodedMessage, err := base64.StdEncoding.DecodeString(signArgs.message)
 	if err != nil {
 		return errors.New("message should be encoded into base64")
@@ -64,12 +58,12 @@ func runSign(_ *cobra.Command, _ []string) error {
 		return err
 	}
 
-	err = handler.LoginWallet(signArgs.name, passphrase)
+	err = handler.LoginWallet(signArgs.wallet, passphrase)
 	if err != nil {
 		return fmt.Errorf("could not login to the wallet: %w", err)
 	}
 
-	sig, err := handler.SignAny(signArgs.name, decodedMessage, signArgs.pubkey)
+	sig, err := handler.SignAny(signArgs.wallet, decodedMessage, signArgs.pubKey)
 	if err != nil {
 		return err
 	}
@@ -83,7 +77,7 @@ func runSign(_ *cobra.Command, _ []string) error {
 
 		p.BlueArrow().InfoText("Verify a signature").Jump()
 		p.Text("To verify a base-64 encoded message, use the following commands:").NJump(2)
-		p.Code(fmt.Sprintf("%s verify --pubkey %s --message \"%s\" --signature %s", os.Args[0], signArgs.pubkey, signArgs.message, encodedSig)).NJump(2)
+		p.Code(fmt.Sprintf("%s verify --pubkey %s --message \"%s\" --signature %s", os.Args[0], signArgs.pubKey, signArgs.message, encodedSig)).NJump(2)
 		p.Text("For more information, use ").Bold("--help").Text(" flag.").Jump()
 	} else if rootArgs.output == "json" {
 		return printSignJson(encodedSig)

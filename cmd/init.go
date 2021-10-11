@@ -5,11 +5,14 @@ import (
 	"os"
 
 	"code.vegaprotocol.io/go-wallet/cmd/printer"
+	"code.vegaprotocol.io/go-wallet/network"
+	netstore "code.vegaprotocol.io/go-wallet/network/store/v1"
 	"code.vegaprotocol.io/go-wallet/service"
-	"code.vegaprotocol.io/go-wallet/service/store/v1"
+	svcstore "code.vegaprotocol.io/go-wallet/service/store/v1"
 	"code.vegaprotocol.io/go-wallet/wallets"
 	vgjson "code.vegaprotocol.io/shared/libs/json"
 	"code.vegaprotocol.io/shared/paths"
+
 	"github.com/spf13/cobra"
 )
 
@@ -37,19 +40,28 @@ func runInit(_ *cobra.Command, _ []string) error {
 		return fmt.Errorf("couldn't initialise wallets store: %w", err)
 	}
 
-	svcStore, err := v1.InitialiseStore(paths.NewPaths(rootArgs.home))
+	svcStore, err := svcstore.InitialiseStore(paths.New(rootArgs.home))
 	if err != nil {
-		return err
+		return fmt.Errorf("couldn't initialise service store: %w", err)
 	}
 
-	if err = service.GenerateConfig(svcStore, initArgs.force); err != nil {
-		return err
+	if err = service.InitialiseService(svcStore, initArgs.force); err != nil {
+		return fmt.Errorf("couldn't initialise the service: %w", err)
+	}
+
+	netStore, err := netstore.InitialiseStore(paths.New(rootArgs.home))
+	if err != nil {
+		return fmt.Errorf("couldn't initialise service store: %w", err)
+	}
+
+	if err = network.InitialiseNetworks(netStore, initArgs.force); err != nil {
+		return fmt.Errorf("couldn't initialise the networks: %w", err)
 	}
 
 	if rootArgs.output == "human" {
-		printInitHuman(svcStore)
+		printInitHuman(svcStore, netStore)
 	} else if rootArgs.output == "json" {
-		return printInitJson(svcStore)
+		return printInitJson(svcStore, netStore)
 	} else {
 		return fmt.Errorf("output \"%s\" is not supported for this command", rootArgs.output)
 	}
@@ -57,9 +69,9 @@ func runInit(_ *cobra.Command, _ []string) error {
 	return nil
 }
 
-func printInitHuman(svcStore *v1.Store) {
+func printInitHuman(svcStore *svcstore.Store, netStore *netstore.Store) {
 	p := printer.NewHumanPrinter()
-	p.CheckMark().Text("Service configuration created at: ").SuccessText(svcStore.GetConfigPath()).Jump()
+	p.CheckMark().Text("Networks configurations created at: ").SuccessText(netStore.GetNetworksPath()).Jump()
 	pubRSAKeysPath, privRSAKeysPath := svcStore.GetRSAKeysPath()
 	p.CheckMark().Text("Service public RSA keys created at: ").SuccessText(pubRSAKeysPath).Jump()
 	p.CheckMark().Text("Service private RSA keys created at: ").SuccessText(privRSAKeysPath).Jump()
@@ -67,14 +79,14 @@ func printInitHuman(svcStore *v1.Store) {
 
 	p.BlueArrow().InfoText("Create a wallet").Jump()
 	p.Text("To create a wallet, generate your first key pair using the following command:").NJump(2)
-	p.Code(fmt.Sprintf("%s key generate --name \"YOUR_USERNAME\"", os.Args[0])).NJump(2)
-	p.Text("The ").Bold("--name").Text(" flag sets the name of your wallet and will be used to login to Vega Console.").NJump(2)
+	p.Code(fmt.Sprintf("%s key generate --wallet \"YOUR_USERNAME\"", os.Args[0])).NJump(2)
+	p.Text("The ").Bold("--wallet").Text(" flag sets the wallet of your wallet and will be used to login to Vega Console.").NJump(2)
 	p.Text("For more information, use ").Bold("--help").Text(" flag.").Jump()
 }
 
 type initJson struct {
-	RSAKeys               initRsaKeysJson `json:"rsaKeys"`
-	ServiceConfigFilePath string          `json:"serviceConfigFilePath"`
+	RSAKeys      initRsaKeysJson `json:"rsaKeys"`
+	NetworksHome string          `json:"networksHome"`
 }
 
 type initRsaKeysJson struct {
@@ -82,14 +94,14 @@ type initRsaKeysJson struct {
 	PrivateKeyFilePath string `json:"privateKeyFilePath"`
 }
 
-func printInitJson(svcStore *v1.Store) error {
+func printInitJson(svcStore *svcstore.Store, netStore *netstore.Store) error {
 	pubRSAKeysPath, privRSAKeysPath := svcStore.GetRSAKeysPath()
 	result := initJson{
 		RSAKeys: initRsaKeysJson{
 			PublicKeyFilePath:  pubRSAKeysPath,
 			PrivateKeyFilePath: privRSAKeysPath,
 		},
-		ServiceConfigFilePath: svcStore.GetConfigPath(),
+		NetworksHome: netStore.GetNetworksPath(),
 	}
 	return vgjson.Print(result)
 }
