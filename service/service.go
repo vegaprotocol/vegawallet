@@ -454,17 +454,17 @@ func (s *Service) CreateWallet(w http.ResponseWriter, r *http.Request, _ httprou
 
 	mnemonic, err := s.handler.CreateWallet(req.Wallet, req.Passphrase)
 	if err != nil {
-		writeForbiddenError(w, err)
+		s.writeForbiddenError(w, err)
 		return
 	}
 
 	token, err := s.auth.NewSession(req.Wallet)
 	if err != nil {
-		writeForbiddenError(w, err)
+		s.writeForbiddenError(w, err)
 		return
 	}
 
-	writeSuccess(w, CreateWalletResponse{Mnemonic: mnemonic, Token: token}, http.StatusOK)
+	s.writeSuccess(w, CreateWalletResponse{Mnemonic: mnemonic, Token: token}, http.StatusOK)
 }
 
 func (s *Service) ImportWallet(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
@@ -476,17 +476,17 @@ func (s *Service) ImportWallet(w http.ResponseWriter, r *http.Request, _ httprou
 
 	err := s.handler.ImportWallet(req.Wallet, req.Passphrase, req.Mnemonic)
 	if err != nil {
-		writeForbiddenError(w, err)
+		s.writeForbiddenError(w, err)
 		return
 	}
 
 	token, err := s.auth.NewSession(req.Wallet)
 	if err != nil {
-		writeForbiddenError(w, err)
+		s.writeForbiddenError(w, err)
 		return
 	}
 
-	writeSuccess(w, TokenResponse{Token: token}, http.StatusOK)
+	s.writeSuccess(w, TokenResponse{Token: token}, http.StatusOK)
 }
 
 func (s *Service) Login(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
@@ -498,23 +498,23 @@ func (s *Service) Login(w http.ResponseWriter, r *http.Request, _ httprouter.Par
 
 	err := s.handler.LoginWallet(req.Wallet, req.Passphrase)
 	if err != nil {
-		writeForbiddenError(w, err)
+		s.writeForbiddenError(w, err)
 		return
 	}
 
 	token, err := s.auth.NewSession(req.Wallet)
 	if err != nil {
-		writeForbiddenError(w, err)
+		s.writeForbiddenError(w, err)
 		return
 	}
 
-	writeSuccess(w, TokenResponse{Token: token}, http.StatusOK)
+	s.writeSuccess(w, TokenResponse{Token: token}, http.StatusOK)
 }
 
 func (s *Service) DownloadWallet(token string, w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	name, err := s.auth.VerifyToken(token)
 	if err != nil {
-		writeForbiddenError(w, err)
+		s.writeForbiddenError(w, err)
 		return
 	}
 
@@ -530,19 +530,19 @@ func (s *Service) DownloadWallet(token string, w http.ResponseWriter, r *http.Re
 func (s *Service) Revoke(t string, w http.ResponseWriter, _ *http.Request, _ httprouter.Params) {
 	name, err := s.auth.VerifyToken(t)
 	if err != nil {
-		writeForbiddenError(w, err)
+		s.writeForbiddenError(w, err)
 		return
 	}
 
 	err = s.auth.Revoke(t)
 	if err != nil {
-		writeForbiddenError(w, err)
+		s.writeForbiddenError(w, err)
 		return
 	}
 
 	s.handler.LogoutWallet(name)
 
-	writeSuccess(w, SuccessResponse{Success: true}, http.StatusOK)
+	s.writeSuccess(w, SuccessResponse{Success: true}, http.StatusOK)
 }
 
 func (s *Service) GenerateKeyPair(t string, w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
@@ -554,13 +554,13 @@ func (s *Service) GenerateKeyPair(t string, w http.ResponseWriter, r *http.Reque
 
 	name, err := s.auth.VerifyToken(t)
 	if err != nil {
-		writeForbiddenError(w, err)
+		s.writeForbiddenError(w, err)
 		return
 	}
 
 	pubKey, err := s.handler.SecureGenerateKeyPair(name, req.Passphrase, req.Meta)
 	if err != nil {
-		writeForbiddenError(w, err)
+		s.writeForbiddenError(w, err)
 		return
 	}
 
@@ -570,13 +570,13 @@ func (s *Service) GenerateKeyPair(t string, w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	writeSuccess(w, KeyResponse{Key: key}, http.StatusOK)
+	s.writeSuccess(w, KeyResponse{Key: key}, http.StatusOK)
 }
 
 func (s *Service) GetPublicKey(t string, w http.ResponseWriter, _ *http.Request, ps httprouter.Params) {
 	name, err := s.auth.VerifyToken(t)
 	if err != nil {
-		writeForbiddenError(w, err)
+		s.writeForbiddenError(w, err)
 		return
 	}
 
@@ -588,27 +588,27 @@ func (s *Service) GetPublicKey(t string, w http.ResponseWriter, _ *http.Request,
 		} else {
 			statusCode = http.StatusForbidden
 		}
-		writeError(w, newErrorResponse(err.Error()), statusCode)
+		s.writeError(w, newErrorResponse(err.Error()), statusCode)
 		return
 	}
 
-	writeSuccess(w, KeyResponse{Key: key}, http.StatusOK)
+	s.writeSuccess(w, KeyResponse{Key: key}, http.StatusOK)
 }
 
 func (s *Service) ListPublicKeys(t string, w http.ResponseWriter, _ *http.Request, _ httprouter.Params) {
 	name, err := s.auth.VerifyToken(t)
 	if err != nil {
-		writeForbiddenError(w, err)
+		s.writeForbiddenError(w, err)
 		return
 	}
 
 	keys, err := s.handler.ListPublicKeys(name)
 	if err != nil {
-		writeForbiddenError(w, err)
+		s.writeForbiddenError(w, err)
 		return
 	}
 
-	writeSuccess(w, KeysResponse{Keys: keys}, http.StatusOK)
+	s.writeSuccess(w, KeysResponse{Keys: keys}, http.StatusOK)
 }
 
 func (s *Service) TaintKey(t string, w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -621,17 +621,17 @@ func (s *Service) TaintKey(t string, w http.ResponseWriter, r *http.Request, ps 
 
 	name, err := s.auth.VerifyToken(t)
 	if err != nil {
-		writeForbiddenError(w, err)
+		s.writeForbiddenError(w, err)
 		return
 	}
 
 	err = s.handler.TaintKey(name, keyID, req.Passphrase)
 	if err != nil {
-		writeForbiddenError(w, err)
+		s.writeForbiddenError(w, err)
 		return
 	}
 
-	writeSuccess(w, SuccessResponse{Success: true}, http.StatusOK)
+	s.writeSuccess(w, SuccessResponse{Success: true}, http.StatusOK)
 }
 
 func (s *Service) UpdateMeta(t string, w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -644,17 +644,17 @@ func (s *Service) UpdateMeta(t string, w http.ResponseWriter, r *http.Request, p
 
 	name, err := s.auth.VerifyToken(t)
 	if err != nil {
-		writeForbiddenError(w, err)
+		s.writeForbiddenError(w, err)
 		return
 	}
 
 	err = s.handler.UpdateMeta(name, keyID, req.Passphrase, req.Meta)
 	if err != nil {
-		writeForbiddenError(w, err)
+		s.writeForbiddenError(w, err)
 		return
 	}
 
-	writeSuccess(w, SuccessResponse{Success: true}, http.StatusOK)
+	s.writeSuccess(w, SuccessResponse{Success: true}, http.StatusOK)
 }
 
 func (s *Service) SignAny(t string, w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
@@ -666,13 +666,13 @@ func (s *Service) SignAny(t string, w http.ResponseWriter, r *http.Request, _ ht
 
 	name, err := s.auth.VerifyToken(t)
 	if err != nil {
-		writeForbiddenError(w, err)
+		s.writeForbiddenError(w, err)
 		return
 	}
 
 	signature, err := s.handler.SignAny(name, req.decodedInputData, req.PubKey)
 	if err != nil {
-		writeForbiddenError(w, err)
+		s.writeForbiddenError(w, err)
 		return
 	}
 
@@ -681,7 +681,7 @@ func (s *Service) SignAny(t string, w http.ResponseWriter, r *http.Request, _ ht
 		Base64Signature: base64.StdEncoding.EncodeToString(signature),
 	}
 
-	writeSuccess(w, res, http.StatusOK)
+	s.writeSuccess(w, res, http.StatusOK)
 }
 
 func (s *Service) VerifyAny(_ string, w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
@@ -693,11 +693,11 @@ func (s *Service) VerifyAny(_ string, w http.ResponseWriter, r *http.Request, _ 
 
 	verified, err := s.handler.VerifyAny(req.decodedInputData, req.decodedSignature, req.PubKey)
 	if err != nil {
-		writeForbiddenError(w, err)
+		s.writeForbiddenError(w, err)
 		return
 	}
 
-	writeSuccess(w, SuccessResponse{Success: verified}, http.StatusOK)
+	s.writeSuccess(w, SuccessResponse{Success: verified}, http.StatusOK)
 }
 
 func (s *Service) SignTxSync(token string, w http.ResponseWriter, r *http.Request, p httprouter.Params) {
@@ -723,39 +723,39 @@ func (s *Service) signTx(token string, w http.ResponseWriter, r *http.Request, _
 
 	height, err := s.nodeForward.LastBlockHeight(r.Context())
 	if err != nil {
-		writeInternalError(w, ErrCouldNotGetBlockHeight)
+		s.writeInternalError(w, ErrCouldNotGetBlockHeight)
 		return
 	}
 
 	name, err := s.auth.VerifyToken(token)
 	if err != nil {
-		writeForbiddenError(w, err)
+		s.writeForbiddenError(w, err)
 		return
 	}
 
 	tx, err := s.handler.SignTx(name, req, height)
 	if err != nil {
-		writeForbiddenError(w, err)
+		s.writeForbiddenError(w, err)
 		return
 	}
 
 	if req.Propagate {
 		if err := s.nodeForward.SendTx(r.Context(), tx, ty); err != nil {
-			if s, ok := status.FromError(err); ok {
+			if status, ok := status.FromError(err); ok {
 				var details []string
-				for _, v := range s.Details() {
+				for _, v := range status.Details() {
 					v := v.(*typespb.ErrorDetail)
 					details = append(details, v.Message)
 				}
-				writeError(w, newErrorWithDetails(err.Error(), details), http.StatusInternalServerError)
+				s.writeError(w, newErrorWithDetails(err.Error(), details), http.StatusInternalServerError)
 			} else {
-				writeInternalError(w, err)
+				s.writeInternalError(w, err)
 			}
 			return
 		}
 	}
 
-	writeSuccessProto(w, tx, http.StatusOK)
+	s.writeSuccessProto(w, tx, http.StatusOK)
 }
 
 func (s *Service) Version(w http.ResponseWriter, _ *http.Request, _ httprouter.Params) {
@@ -764,22 +764,22 @@ func (s *Service) Version(w http.ResponseWriter, _ *http.Request, _ httprouter.P
 		VersionHash: version.VersionHash,
 	}
 
-	writeSuccess(w, res, http.StatusOK)
+	s.writeSuccess(w, res, http.StatusOK)
 }
 
 func (s *Service) GetNetwork(w http.ResponseWriter, _ *http.Request, _ httprouter.Params) {
 	res := NetworkResponse{
 		Network: *s.network,
 	}
-	writeSuccess(w, res, http.StatusOK)
+	s.writeSuccess(w, res, http.StatusOK)
 }
 
 func (s *Service) health(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	if err := s.nodeForward.HealthCheck(r.Context()); err != nil {
-		writeSuccess(w, SuccessResponse{Success: false}, http.StatusFailedDependency)
+		s.writeSuccess(w, SuccessResponse{Success: false}, http.StatusFailedDependency)
 		return
 	}
-	writeSuccess(w, SuccessResponse{Success: true}, http.StatusOK)
+	s.writeSuccess(w, SuccessResponse{Success: true}, http.StatusOK)
 }
 
 func (s *Service) writeBadRequest(w http.ResponseWriter, errs commands.Errors) {
@@ -791,9 +791,7 @@ func (s *Service) writeErrors(w http.ResponseWriter, statusCode int, errs comman
 	w.WriteHeader(statusCode)
 	buf, _ := json.Marshal(ErrorsResponse{Errors: errs})
 	if _, err := w.Write(buf); err != nil {
-		s.log.Error(fmt.Sprintf("couldn't marshal errors as JSON because of: %s", err.Error()),
-			zap.Error(errs),
-		)
+		s.log.Error("couldn't marshal error", zap.Error(errs))
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 }
@@ -807,31 +805,56 @@ func unmarshalBody(r *http.Request, into interface{}) error {
 	return json.Unmarshal(body, into)
 }
 
-func writeForbiddenError(w http.ResponseWriter, e error) {
-	writeError(w, newErrorResponse(e.Error()), http.StatusForbidden)
+func (s *Service) writeForbiddenError(w http.ResponseWriter, e error) {
+	s.writeError(w, newErrorResponse(e.Error()), http.StatusForbidden)
 }
 
-func writeInternalError(w http.ResponseWriter, e error) {
-	writeError(w, newErrorResponse(e.Error()), http.StatusInternalServerError)
+func (s *Service) writeInternalError(w http.ResponseWriter, e error) {
+	s.writeError(w, newErrorResponse(e.Error()), http.StatusInternalServerError)
 }
 
-func writeError(w http.ResponseWriter, e error, status int) {
+func (s *Service) writeError(w http.ResponseWriter, e error, status int) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	buf, _ := json.Marshal(e)
-	w.Write(buf)
+
+	buf, err := json.Marshal(e)
+	if err != nil {
+		s.log.Error("couldn't marshal error", zap.Error(err))
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	_, err = w.Write(buf)
+	if err != nil {
+		s.log.Error("couldn't write error to HTTP response", zap.Error(err))
+		w.WriteHeader(http.StatusInternalServerError)
+	}
 }
 
-func writeSuccess(w http.ResponseWriter, data interface{}, status int) {
+func (s *Service) writeSuccess(w http.ResponseWriter, data interface{}, status int) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	buf, _ := json.Marshal(data)
-	w.Write(buf)
+
+	buf, err := json.Marshal(data)
+	if err != nil {
+		s.log.Error("couldn't marshal error", zap.Error(err))
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	_, err = w.Write(buf)
+	if err != nil {
+		s.log.Error("couldn't write error to HTTP response", zap.Error(err))
+		w.WriteHeader(http.StatusInternalServerError)
+	}
 }
 
-func writeSuccessProto(w http.ResponseWriter, data proto.Message, status int) {
+func (s *Service) writeSuccessProto(w http.ResponseWriter, data proto.Message, status int) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	marshaler := jsonpb.Marshaler{}
-	marshaler.Marshal(w, data)
+
+	marshaller := jsonpb.Marshaler{}
+	if err := marshaller.Marshal(w, data); err != nil {
+		s.log.Error("couldn't marshal proto message", zap.Error(err))
+		w.WriteHeader(http.StatusInternalServerError)
+	}
 }
