@@ -233,7 +233,7 @@ func testHandlerRecreatingWalletWithSameNameFails(t *testing.T) {
 	mnemonic, err = h.CreateWallet(name, passphrase)
 
 	// then
-	assert.EqualError(t, err, wallet.ErrWalletAlreadyExists.Error())
+	require.EqualError(t, err, wallet.ErrWalletAlreadyExists.Error())
 	assert.Empty(t, mnemonic)
 }
 
@@ -257,7 +257,8 @@ func testHandlerRecreatingWalletWithSameNameButDifferentPassphraseFails(t *testi
 	mnemonic, err = h.CreateWallet(name, othPassphrase)
 
 	// then
-	require.Error(t, err)
+	require.EqualError(t, err, wallet.ErrWalletAlreadyExists.Error())
+	assert.Empty(t, mnemonic)
 }
 
 func testHandlerLoginToExistingWalletSucceeds(t *testing.T) {
