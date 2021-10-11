@@ -2,17 +2,7 @@ FROM golang:1.17-alpine AS builder
 RUN apk add --no-cache git
 ENV GOPROXY=direct GOSUMDB=off
 WORKDIR /go/src/project
-ADD *.go go.* ./
-ADD cmd cmd
-ADD console console
-ADD commands commands
-ADD crypto crypto
-ADD logger logger
-ADD node node
-ADD service service
-ADD version version
-ADD wallet wallet
-ADD wallets wallets
+ADD . .
 RUN env CGO_ENABLED=0 go build -a -ldflags '-extldflags "-static"' -o go-wallet .
 
 FROM alpine:3.14

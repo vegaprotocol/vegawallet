@@ -46,8 +46,12 @@ func (s *Store) GetNetworksPath() string {
 	return s.networksHome
 }
 
+func (s *Store) GetNetworkPath(name string) string {
+	return filepath.Join(s.networksHome, fmt.Sprintf("%s.toml", name))
+}
+
 func (s *Store) NetworkExists(name string) (bool, error) {
-	return vgfs.FileExists(filepath.Join(s.networksHome, fmt.Sprintf("%s.toml", name)))
+	return vgfs.FileExists(s.GetNetworkPath(name))
 }
 
 func (s *Store) GetNetwork(name string) (*network.Network, error) {
