@@ -36,9 +36,6 @@ type Service struct {
 	handler     WalletHandler
 	auth        Auth
 	nodeForward NodeForward
-
-	version     string
-	versionHash string
 }
 
 // CreateWalletRequest describes the request for CreateWallet.
