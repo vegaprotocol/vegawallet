@@ -46,7 +46,7 @@ func InitialiseNetworks(store Store, overwrite bool) error {
 	for _, entry := range entries {
 		data, err := defaultNetworks.ReadFile(filepath.Join("defaults", entry.Name()))
 		if err != nil {
-			return err
+			return fmt.Errorf("couldn't read file: %w", err)
 		}
 		net := &Network{}
 		if _, err := toml.Decode(string(data), &net); err != nil {
