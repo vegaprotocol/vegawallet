@@ -28,15 +28,11 @@ func getTestConfig(t *testing.T) *testConfig {
 	}
 }
 
-func TestGenerateConfig(t *testing.T) {
+func TestInitialiseNetwork(t *testing.T) {
 	t.Run("Initialising network succeeds", testInitialisingNetworkSucceeds)
 	t.Run("Initialising network with error fails", testInitialisingNetworkWithErrorFails)
 	t.Run("Initialising network with existing network fails", testInitialisingNetworkWithExistingNetworkFails)
 	t.Run("Initialising by overwriting network succeeds", testInitialisingByOverwritingNetworkSucceeds)
-	t.Run("Importing network succeeds", testImportingNetworkSucceeds)
-	t.Run("Importing existing network fails", testImportingExistingNetworkFails)
-	t.Run("Importing by overwriting existing network succeeds", testImportingByOverwritingNetworkSucceeds)
-	t.Run("Importing network with errors when saving fails", testImportingNetworkWithErrorsWhenSavingFails)
 }
 
 func testInitialisingNetworkSucceeds(t *testing.T) {
@@ -118,6 +114,12 @@ func testInitialisingByOverwritingNetworkSucceeds(t *testing.T) {
 	require.NoError(t, err)
 }
 
+func TestImportNetwork(t *testing.T) {
+	t.Run("Importing network succeeds", testImportingNetworkSucceeds)
+	t.Run("Importing existing network fails", testImportingExistingNetworkFails)
+	t.Run("Importing by overwriting existing network succeeds", testImportingByOverwritingNetworkSucceeds)
+	t.Run("Importing network with errors when saving fails", testImportingNetworkWithErrorsWhenSavingFails)
+}
 func testImportingNetworkSucceeds(t *testing.T) {
 	ts := getTestConfig(t)
 
