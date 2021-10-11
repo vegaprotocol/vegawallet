@@ -3,7 +3,6 @@ package network
 import (
 	"embed"
 	"fmt"
-	"path/filepath"
 
 	"code.vegaprotocol.io/go-wallet/node"
 	"code.vegaprotocol.io/go-wallet/service/encoding"
@@ -38,24 +37,13 @@ type ConsoleConfig struct {
 }
 
 func InitialiseNetworks(store Store, overwrite bool) error {
-	entries, err := defaultNetworks.ReadDir(".")
+	entries, err := defaultNetworks.ReadDir("defaults")
 	if err != nil {
 		return fmt.Errorf("couldn't read defaults directory: %w", err)
 	}
 
 	for _, entry := range entries {
-		fmt.Printf("%v\n", entry.Name())
-		es, err := defaultNetworks.ReadDir(entry.Name())
-		if err != nil {
-			return fmt.Errorf("couldn't read file: %w", err)
-		}
-		for _, e := range es {
-			fmt.Printf("-> %v\n", e.Name())
-		}
-	}
-
-	for _, entry := range entries {
-		data, err := defaultNetworks.ReadFile(filepath.Join("defaults", entry.Name()))
+		data, err := defaultNetworks.ReadFile(fmt.Sprintf("defaults/%s", entry.Name()))
 		if err != nil {
 			return fmt.Errorf("couldn't read file: %w", err)
 		}
