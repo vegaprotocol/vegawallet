@@ -13,7 +13,7 @@ import (
 	vgjson "code.vegaprotocol.io/shared/libs/json"
 	"github.com/mattn/go-isatty"
 	"github.com/spf13/cobra"
-	"golang.org/x/crypto/ssh/terminal"
+	"golang.org/x/term"
 )
 
 var (
@@ -158,7 +158,7 @@ func promptForPassphrase(msg ...string) (string, error) {
 	} else {
 		fmt.Print(msg[0])
 	}
-	password, err := terminal.ReadPassword(int(os.Stdin.Fd()))
+	password, err := term.ReadPassword(int(os.Stdin.Fd()))
 	if err != nil {
 		return "", err
 	}
