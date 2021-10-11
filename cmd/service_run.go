@@ -10,6 +10,7 @@ import (
 
 	"code.vegaprotocol.io/go-wallet/cmd/printer"
 	"code.vegaprotocol.io/go-wallet/console"
+	vglog "code.vegaprotocol.io/go-wallet/libs/zap"
 	"code.vegaprotocol.io/go-wallet/logger"
 	netstore "code.vegaprotocol.io/go-wallet/network/store/v1"
 	"code.vegaprotocol.io/go-wallet/node"
@@ -72,9 +73,9 @@ func runServiceRun(_ *cobra.Command, _ []string) error {
 
 	log, err := logger.New(cfg.Level.Level, encoding)
 	if err != nil {
-		return err
+		return fmt.Errorf("couldn't create logger: %w", err)
 	}
-	defer log.Sync()
+	defer vglog.Sync(log)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

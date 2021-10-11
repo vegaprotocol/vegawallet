@@ -7,6 +7,7 @@ import (
 	"time"
 
 	wcommands "code.vegaprotocol.io/go-wallet/commands"
+	vglog "code.vegaprotocol.io/go-wallet/libs/zap"
 	"code.vegaprotocol.io/go-wallet/logger"
 	netstore "code.vegaprotocol.io/go-wallet/network/store/v1"
 	"code.vegaprotocol.io/go-wallet/node"
@@ -91,9 +92,9 @@ func runCommand(_ *cobra.Command, pos []string) error {
 
 	log, err := logger.New(zapcore.InfoLevel, encoding)
 	if err != nil {
-		return err
+		return fmt.Errorf("couldn't create logger: %w", err)
 	}
-	defer log.Sync()
+	defer vglog.Sync(log)
 
 	if len(commandArgs.nodeAddress) != 0 && len(commandArgs.network) != 0 {
 		return errors.New("can't have both node address and network flag set")
@@ -130,7 +131,11 @@ func runCommand(_ *cobra.Command, pos []string) error {
 	if err != nil {
 		return fmt.Errorf("couldn't initialise the node forwarder: %w", err)
 	}
-	defer forwarder.Stop()
+	defer func() {
+		// We can ignore this non-blocking error without logging as it's already
+		// logged down stream.
+		_ = forwarder.Stop()
+	}()
 
 	ctx, cfunc := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cfunc()
