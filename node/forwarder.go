@@ -50,8 +50,9 @@ func NewForwarder(log *zap.Logger, nodeConfigs NodesConfig) (*Forwarder, error) 
 
 func (n *Forwarder) Stop() error {
 	for i, v := range n.nodeCfgs.Hosts {
-		n.log.Info("closing grpc client", zap.String("address", v))
+		n.log.Info("closing gRPC client", zap.String("address", v))
 		if err := n.conns[i].Close(); err != nil {
+			n.log.Warn("couldn't close gRPC client", zap.Error(err))
 			return err
 		}
 	}
