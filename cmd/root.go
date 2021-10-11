@@ -1,12 +1,14 @@
 package cmd
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"code.vegaprotocol.io/go-wallet/cmd/printer"
 	"code.vegaprotocol.io/go-wallet/version"
@@ -17,6 +19,9 @@ import (
 )
 
 var (
+	// versionWaitTimeout the timeout of acquiring the latest version from github
+	versionWaitTimeout = 30 * time.Second
+
 	rootArgs struct {
 		output         string
 		home           string
@@ -65,7 +70,9 @@ func checkVersion() error {
 		if version.IsUnreleased(version.Version) {
 			p.CrossMark().DangerText("You are running an unreleased version of the Vega wallet. Use it at your own risk!").NJump(2)
 		} else {
-			v, err := version.Check(version.Version)
+			ctx, cancel := context.WithTimeout(context.Background(), versionWaitTimeout)
+			defer cancel()
+			v, err := version.Check(ctx, version.Version)
 			if err != nil {
 				return fmt.Errorf("could not check Vega wallet version updates: %w", err)
 			}

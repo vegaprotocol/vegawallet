@@ -1,6 +1,7 @@
 package version
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -33,8 +34,8 @@ func IsUnreleased(currentVersion string) bool {
 
 // Check returns a newer version, or an error or nil for both
 // if no error happened, and no updates are needed
-func Check(currentVersion string) (*semver.Version, error) {
-	req, err := http.NewRequest("GET", ReleaseAPI, nil)
+func Check(ctx context.Context, currentVersion string) (*semver.Version, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, ReleaseAPI, nil)
 	if err != nil {
 		return nil, err
 	}
