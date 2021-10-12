@@ -187,7 +187,7 @@ passphrase with the `--passphrase-file` flag.
 
 ## List the networks
 
-During wallet initialisation, default networks are installed, you can list them
+During wallet initialisation, default networks are installed. You can list them
 with the following command:
 
 ```sh
