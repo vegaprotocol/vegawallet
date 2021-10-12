@@ -87,5 +87,5 @@ func printJsonKeyPairs(keys []wallet.KeyPair) error {
 		)
 	}
 
-	return vgjson.Print(keys)
+	return vgjson.Print(result)
 }

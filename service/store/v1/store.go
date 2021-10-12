@@ -11,7 +11,6 @@ import (
 type Store struct {
 	pubRsaKeyFilePath  string
 	privRsaKeyFilePath string
-	configFilePath     string
 }
 
 func InitialiseStore(p paths.Paths) (*Store, error) {

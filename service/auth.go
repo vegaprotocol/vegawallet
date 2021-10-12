@@ -3,6 +3,7 @@ package service
 import (
 	"crypto/rsa"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -164,4 +165,19 @@ func ExtractToken(f func(string, http.ResponseWriter, *http.Request, httprouter.
 
 func genSession() string {
 	return hex.EncodeToString(vgcrypto.Hash(vgrand.RandomBytes(10)))
+}
+
+func writeError(w http.ResponseWriter, e error, status int) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+
+	buf, err := json.Marshal(e)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	_, err = w.Write(buf)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+	}
 }

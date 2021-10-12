@@ -13,7 +13,6 @@ import (
 
 type testAuth struct {
 	service.Auth
-	rootPath string
 	ctrl     *gomock.Controller
 }
 

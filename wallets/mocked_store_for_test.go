@@ -26,11 +26,11 @@ func (m *mockedStore) WalletExists(name string) bool {
 }
 
 func (m *mockedStore) ListWallets() ([]string, error) {
-	wallets := make([]string, 0, len(m.wallets))
+	ws := make([]string, 0, len(m.wallets))
 	for k := range m.wallets {
-		wallets = append(wallets, k)
+		ws = append(ws, k)
 	}
-	return wallets, nil
+	return ws, nil
 }
 
 func (m *mockedStore) SaveWallet(w wallet.Wallet, passphrase string) error {
@@ -65,5 +65,4 @@ func (m *mockedStore) GetKey(name, pubKey string) wallet.PublicKey {
 		}
 	}
 	panic(fmt.Errorf("key \"%v\" not found", pubKey))
-	return nil
 }

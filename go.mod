@@ -22,10 +22,9 @@ require (
 	github.com/vegaprotocol/go-slip10 v0.1.0
 	github.com/zannen/toml v0.3.2
 	go.uber.org/zap v1.13.0
-	golang.org/x/crypto v0.0.0-20210817164053-32db794688a5
 	golang.org/x/lint v0.0.0-20210508222113-6edffad5e616 // indirect
 	golang.org/x/net v0.0.0-20210610132358-84b48f89b13b // indirect
-	golang.org/x/term v0.0.0-20210615171337-6886f2dfbf5b // indirect
+	golang.org/x/term v0.0.0-20210615171337-6886f2dfbf5b
 	golang.org/x/tools v0.1.2 // indirect
 	google.golang.org/grpc v1.38.0
 	google.golang.org/protobuf v1.26.0-rc.1 // indirect
