@@ -196,7 +196,7 @@ vegawallet network list
 
 ## Import a network
 
-If you want to import a network configuration from a local file, you can use the
+If you want to import a network configuration from a local file, use the
 following command:
 
 ```sh
