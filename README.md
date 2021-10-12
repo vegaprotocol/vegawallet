@@ -9,7 +9,7 @@ key pairs.
  
 ## Building
 
-If you want to use the vega wallet, you can install directly the last version of it:
+If you want to use the Vega wallet, install the last version:
 ```sh
 go install code.vegaprotocol.io/go-wallet@v0.9.0
 ```
