@@ -18,11 +18,15 @@ pipeline {
     }
 
     stages {
+        stage('Config') {
+            cleanWs()
+            sh 'printenv'
+            echo "${params}"
+        }
+
         stage('Git clone') {
             options { retry(3) }
             steps {
-                sh 'printenv'
-                echo "${params}"
                 script {
                     scmVars = checkout(scm)
                     versionHash = sh (returnStdout: true, script: "echo \"${scmVars.GIT_COMMIT}\"|cut -b1-8").trim()
