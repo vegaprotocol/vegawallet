@@ -9,8 +9,13 @@ key pairs.
  
 ## Building
 
+If you want to use the Vega wallet, install the last version:
 ```sh
-cd go-wallet && make
+go install code.vegaprotocol.io/go-wallet@v0.9.0
+```
+Or if you wish to contribute:
+```sh
+cd go-wallet && go build
 ```
 
 Note: Building and compiling locally will install the wallet under the name
