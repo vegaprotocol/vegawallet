@@ -117,7 +117,15 @@ pipeline {
                 }
                 stage('linters') {
                     steps {
-                        sh 'golangci-lint run --allow-parallel-runners --config .golangci.toml --enable-all -v --out-format junit-xml > linters-report.xml'
+                        sh '''#!/bin/bash -e
+                            golangci-lint run -v \
+                                --allow-parallel-runners \
+                                --config .golangci.toml \
+                                --enable-all \
+                                --out-format junit-xml \
+                                --issues-exit-code 0 \
+                                > linters-report.xml
+                        '''
                         junit checksName: 'Linters', testResults: 'linters-report.xml'
                     }
                 }
