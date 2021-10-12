@@ -24,8 +24,8 @@ Before using the wallet, you need to initialise it with the following command:
 vegawallet init
 ```
 
-This creates the folders, the configuration file and RSA keys needed by the
-wallet and its service to operate.
+This creates the folders, the configuration file, the default networks and the
+RSA keys needed by the wallet to operate.
 
 ## Create a wallet
 
@@ -33,7 +33,7 @@ To create a new wallet, generate your first key pair using the following
 command:
 
 ```sh
-vegawallet key generate --wallet "YOUR_USERNAME"
+vegawallet key generate --wallet "YOUR_WALLET"
 ```
 
 The `--wallet` flag sets the name of your wallet.
@@ -64,7 +64,7 @@ able to retrieve it with specific commands.
 If you want to restore your wallet, use the following command:
 
 ```sh
-vegawallet import --wallet "YOUR_USERNAME" --mnemonic-file "PATH_TO_YOUR_MNEMONIC"
+vegawallet import --wallet "YOUR_WALLET" --mnemonic-file "PATH_TO_YOUR_MNEMONIC"
 ```
 
 The flag `--mnemonic-file` is used to locate the file that contains the
@@ -90,7 +90,7 @@ vegawallet list
 To generate a key pair on the given wallet, use the following command:
 
 ```sh
-vegawallet key generate --wallet "YOUR_USERNAME"
+vegawallet key generate --wallet "YOUR_WALLET"
 ```
 
 It will then prompt you to input a passphrase. You can also specify the
@@ -108,7 +108,7 @@ For better key management, you may want to add metadata to your key pairs. This
 is done with the following command:
 
 ```sh
-vegawallet key annotate --wallet "YOUR_USERNAME" --meta "key1:value1;key2:value2" --pubkey "YOUR_HEX_PUBLIC_KEY"
+vegawallet key annotate --wallet "YOUR_WALLET" --meta "key1:value1;key2:value2" --pubkey "YOUR_HEX_PUBLIC_KEY"
 ```
 
 An item of metadata is represented as a key-value property.
@@ -119,7 +119,7 @@ You can give to each key pair a nickname/alias with a metadata `name`. For
 example:
 
 ```sh
-vegawallet key annotate --wallet "YOUR_USERNAME" --meta "name:my-alias" --pubkey "YOUR_HEX_PUBLIC_KEY"
+vegawallet key annotate --wallet "YOUR_WALLET" --meta "name:my-alias" --pubkey "YOUR_HEX_PUBLIC_KEY"
 ```
 
 ### Important
@@ -134,7 +134,7 @@ You may want to prevent the use of a key by "tainting" it with the following
 command:
 
 ```sh
-vegawallet key taint --wallet "YOUR_NAME" --pubkey "YOUR_HEX_PUBIC_KEY"
+vegawallet key taint --wallet "YOUR_WALLET" --pubkey "YOUR_HEX_PUBIC_KEY"
 ```
 
 It will then prompt you to input a passphrase. You can also specify the
@@ -146,7 +146,7 @@ You may have tainted a key by mistake. If you want to untaint it, use the
 following command:
 
 ```sh
-vegawallet key untaint --wallet "YOUR_NAME" --pubkey "YOUR_HEX_PUBIC_KEY"
+vegawallet key untaint --wallet "YOUR_WALLET" --pubkey "YOUR_HEX_PUBIC_KEY"
 ```
 
 It will then prompt you to input a passphrase. You can also specify the
@@ -161,7 +161,7 @@ If you tainted a key for security reasons, you should not untaint it.
 To list your key pairs, use the following command:
 
 ```sh
-vegawallet key list --wallet "YOUR_NAME"
+vegawallet key list --wallet "YOUR_WALLET"
 ```
 
 It will then prompt you to input a passphrase. You can also specify the
@@ -178,27 +178,53 @@ To sign and verify any kind of base-64 encoded messages, use the following
 commands:
 
 ```sh
-vegawallet sign --wallet "YOUR_NAME" --pubkey "YOUR_HEX_PUBIC_KEY" --message "c3BpY2Ugb2YgZHVuZQo="
+vegawallet sign --wallet "YOUR_WALLET" --pubkey "YOUR_HEX_PUBIC_KEY" --message "c3BpY2Ugb2YgZHVuZQo="
 vegawallet verify --pubkey "YOUR_HEX_PUBIC_KEY" --message "c3BpY2Ugb2YgZHVuZQo=" --signature "76f978asd6fa8s76f"
 ```
 
 It will then prompt you to input a passphrase. You can also specify the
 passphrase with the `--passphrase-file` flag.
 
-## Run the service
+## List the networks
 
-Once the service has been initialised, you can run the wallet with the following
-command:
+During wallet initialisation, default networks are installed. You can list them
+with the following command:
 
 ```sh
-vegawallet service run
+vegawallet network list
+```
+
+## Import a network
+
+If you want to import a network configuration from a local file, use the
+following command:
+
+```sh
+vegawallet network import --from-file "PATH_TO_FILE"
+```
+
+Or, from a URL:
+
+```sh
+vegawallet network import --from-url "URL_TO_FILE"
+```
+
+You can override the imported network name using the `--with-name` flag.
+
+## Run the service
+
+Once a wallet and a network have been set up, you can run the wallet with the
+following command:
+
+```sh
+vegawallet service run --network "YOUR_NETWORK"
 ```
 
 To run the wallet and open up a local version of Vega Console, the trading UI,
 use the following command:
 
 ```sh
-vegawallet service run --console-proxy
+vegawallet service run --network "YOUR_NETWORK" --console-proxy
 ```
 
 To terminate the process, such as if you want to run other commands in Wallet,
@@ -216,7 +242,7 @@ Instead of sending a command through the API, you can send it through the
 command line, use the following command:
 
 ```sh
-vegawallet command --pubkey "YOUR_HEX_PUBIC_KEY" --name "YOUR_NAME" '{"THE_COMMAND": {...}, "propagate": true}'
+vegawallet command --pubkey "YOUR_HEX_PUBIC_KEY" --wallet "YOUR_WALLET" --network "YOUR_NETWORK" '{"THE_COMMAND": {...}, "propagate": true}'
 ```
 
 ## Isolate a key pair
@@ -227,5 +253,5 @@ running the node, because it can be compromised. So, you might want to isolate a
 single key pair, without the wallet node, in an "isolated wallet".
 
 ```sh
-vegawallet key isolate --pubkey "YOUR_HEX_PUBIC_KEY" --name "YOUR_NAME"
+vegawallet key isolate --pubkey "YOUR_HEX_PUBIC_KEY" --wallet "YOUR_WALLET"
 ```
