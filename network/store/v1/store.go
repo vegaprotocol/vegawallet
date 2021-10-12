@@ -69,7 +69,7 @@ func (s *Store) GetNetwork(name string) (*network.Network, error) {
 }
 
 func (s *Store) nameToFilePath(network string) string {
-	return filepath.Join(s.networksHome, fmt.Sprintf("%s.%s", network, fileExt))
+	return filepath.Join(s.networksHome, network+fileExt)
 }
 
 func (s *Store) fileNameToName(fileName string) string {
