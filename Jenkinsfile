@@ -121,12 +121,8 @@ pipeline {
                             golangci-lint run -v \
                                 --allow-parallel-runners \
                                 --config .golangci.toml \
-                                --enable-all \
-                                --out-format junit-xml \
-                                --issues-exit-code 0 \
-                                > linters-report.xml
+                                --enable-all
                         '''
-                        junit checksName: 'Linters', testResults: 'linters-report.xml'
                     }
                 }
             }
