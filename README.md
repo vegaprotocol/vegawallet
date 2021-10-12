@@ -31,7 +31,7 @@ The documentation living in this repository contains information about unrelease
 
 ## A word about versions
 
-**A release does not necessarily means it is stable.** If a version is suffixed with `-pre` (ex: `v0.9.0-pre1`), this is not stable.
+**A release does not necessarily mean it is stable.** If a version is suffixed with `-pre` (ex: `v0.9.0-pre1`), this is not stable.
 
 If you are not sure which version you are currently running, use the following command to find out:
 
@@ -64,7 +64,7 @@ You can install a released version using Golang toolchain:
 go install code.vegaprotocol.io/go-wallet@VERSION
 ```
 
-Replace `VERSION` by the release version of your choice.
+Replace `VERSION` with the release version of your choice.
 
 For version `v0.9.0`, it would be:
 
