@@ -83,7 +83,7 @@ cd go-wallet && go build
 ### Usage
 
 **Note:** Whether you are building Vega Wallet from source code or installing it from the repository, this will install the program under the name
-`go-wallet`, and not `vegawallet`. Thus, when reading the documentation,
+`go-wallet`, and not `vegawallet`. Thus, when reading the documentation in the repository,
 replace `vegawallet` with `go-wallet`.
 
 #### Using the command-line
