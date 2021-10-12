@@ -125,7 +125,8 @@ pipeline {
                             golangci-lint run -v \
                                 --allow-parallel-runners \
                                 --config .golangci.toml \
-                                --enable-all
+                                --enable-all \
+                                --color always
                         '''
                     }
                 }
