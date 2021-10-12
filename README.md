@@ -58,7 +58,7 @@ From the [Releases](https://github.com/vegaprotocol/go-wallet/releases) page, do
 
 ### Installing from repository
 
-You can install a realeased version using Golang toolchain:
+You can install a released version using Golang toolchain:
 
 ```sh
 go install code.vegaprotocol.io/go-wallet@VERSION
