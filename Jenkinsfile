@@ -19,11 +19,11 @@ pipeline {
 
     stages {
         stage('Config') {
-            script {
+            steps {
                 cleanWs()
+                sh 'printenv'
+                echo "${params}"
             }
-            sh 'printenv'
-            echo "${params}"
         }
 
         stage('Git clone') {
