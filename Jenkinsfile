@@ -19,7 +19,9 @@ pipeline {
 
     stages {
         stage('Config') {
-            cleanWs()
+            script {
+                cleanWs()
+            }
             sh 'printenv'
             echo "${params}"
         }
