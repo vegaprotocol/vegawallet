@@ -18,11 +18,17 @@ pipeline {
     }
 
     stages {
+        stage('Config') {
+            steps {
+                cleanWs()
+                sh 'printenv'
+                echo "${params}"
+            }
+        }
+
         stage('Git clone') {
             options { retry(3) }
             steps {
-                sh 'printenv'
-                echo "${params}"
                 script {
                     scmVars = checkout(scm)
                     versionHash = sh (returnStdout: true, script: "echo \"${scmVars.GIT_COMMIT}\"|cut -b1-8").trim()
@@ -113,6 +119,54 @@ pipeline {
                     steps {
                         sh 'go test -v -race ./... 2>&1 | tee unit-test-race-results.txt && cat unit-test-race-results.txt | go-junit-report > unit-test-race-report.xml'
                         junit checksName: 'Unit Tests with Race', testResults: 'unit-test-race-report.xml'
+                    }
+                }
+                stage('70+ linters [TODO improve]') {
+                    steps {
+                        sh '''#!/bin/bash -e
+                            golangci-lint run -v \
+                                --allow-parallel-runners \
+                                --config .golangci.toml \
+                                --enable-all \
+                                --color always \
+                                --disable paralleltest \
+                                --disable wrapcheck \
+                                --disable thelper \
+                                --disable tagliatelle \
+                                --disable noctx \
+                                --disable nlreturn \
+                                --disable ifshort \
+                                --disable gomnd \
+                                --disable goerr113 \
+                                --disable gochecknoglobals \
+                                --disable forcetypeassert \
+                                --disable exhaustivestruct \
+                                --disable errorlint \
+                                --disable cyclop \
+                                --disable bodyclose \
+                                --disable wsl \
+                                --disable prealloc \
+                                --disable nestif \
+                                --disable misspell \
+                                --disable maligned \
+                                --disable lll \
+                                --disable golint \
+                                --disable goimports \
+                                --disable gofumpt \
+                                --disable whitespace \
+                                --disable revive \
+                                --disable gofmt \
+                                --disable godot \
+                                --disable gocritic \
+                                --disable goconst \
+                                --disable gochecknoinits \
+                                --disable gci \
+                                --disable funlen \
+                                --disable stylecheck \
+                                --disable gocognit \
+                                --disable forbidigo \
+                                --disable dupl
+                        '''
                     }
                 }
             }
