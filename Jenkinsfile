@@ -115,6 +115,12 @@ pipeline {
                         junit checksName: 'Unit Tests with Race', testResults: 'unit-test-race-report.xml'
                     }
                 }
+                stage('linters') {
+                    steps {
+                        sh 'golangci-lint run --allow-parallel-runners --config .golangci.toml --enable-all -v --out-format junit-xml > linters-report.xml'
+                        junit checksName: 'Linters', testResults: 'linters-report.xml'
+                    }
+                }
             }
         }
     }
