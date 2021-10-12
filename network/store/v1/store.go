@@ -6,11 +6,14 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
-	"strings"
 
 	"code.vegaprotocol.io/go-wallet/network"
 	vgfs "code.vegaprotocol.io/shared/libs/fs"
 	"code.vegaprotocol.io/shared/paths"
+)
+
+var (
+	fileExt = ".toml"
 )
 
 type Store struct {
@@ -36,7 +39,7 @@ func (s *Store) ListNetworks() ([]string, error) {
 	}
 	networks := make([]string, len(entries))
 	for i, entry := range entries {
-		networks[i] = strings.Trim(entry.Name(), ".toml")
+		networks[i] = s.fileNameToName(entry.Name())
 	}
 	sort.Strings(networks)
 	return networks, nil
@@ -47,7 +50,7 @@ func (s *Store) GetNetworksPath() string {
 }
 
 func (s *Store) GetNetworkPath(name string) string {
-	return filepath.Join(s.networksHome, fmt.Sprintf("%s.toml", name))
+	return s.nameToFilePath(name)
 }
 
 func (s *Store) NetworkExists(name string) (bool, error) {
@@ -56,8 +59,7 @@ func (s *Store) NetworkExists(name string) (bool, error) {
 
 func (s *Store) GetNetwork(name string) (*network.Network, error) {
 	cfg := &network.Network{}
-	filePath := filepath.Join(s.networksHome, fmt.Sprintf("%s.toml", name))
-	if err := paths.ReadStructuredFile(filePath, &cfg); err != nil {
+	if err := paths.ReadStructuredFile(s.nameToFilePath(name), &cfg); err != nil {
 		return nil, fmt.Errorf("couldn't read network configuration file: %w", err)
 	}
 	if name != cfg.Name {
@@ -66,9 +68,16 @@ func (s *Store) GetNetwork(name string) (*network.Network, error) {
 	return cfg, nil
 }
 
+func (s *Store) nameToFilePath(network string) string {
+	return filepath.Join(s.networksHome, fmt.Sprintf("%s.%s", network, fileExt))
+}
+
+func (s *Store) fileNameToName(fileName string) string {
+	return fileName[:len(fileName)-len(fileExt)]
+}
+
 func (s *Store) SaveNetwork(cfg *network.Network) error {
-	filePath := filepath.Join(s.networksHome, fmt.Sprintf("%s.toml", cfg.Name))
-	if err := paths.WriteStructuredFile(filePath, cfg); err != nil {
+	if err := paths.WriteStructuredFile(s.nameToFilePath(cfg.Name), cfg); err != nil {
 		return fmt.Errorf("couldn't write network configuration file: %w", err)
 	}
 	return nil
