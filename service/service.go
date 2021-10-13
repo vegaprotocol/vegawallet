@@ -239,17 +239,17 @@ func ParseSignAnyRequest(r *http.Request) (*SignAnyRequest, commands.Errors) {
 	}
 
 	if len(req.InputData) == 0 {
-		errs.AddForProperty("input_data", commands.ErrIsRequired)
+		errs.AddForProperty("inputData", commands.ErrIsRequired)
 	}
 	decodedInputData, err := base64.StdEncoding.DecodeString(req.InputData)
 	if err != nil {
-		errs.AddForProperty("input_data", ErrShouldBeBase64Encoded)
+		errs.AddForProperty("inputData", ErrShouldBeBase64Encoded)
 	} else {
 		req.decodedInputData = decodedInputData
 	}
 
 	if len(req.PubKey) == 0 {
-		errs.AddForProperty("pub_key", commands.ErrIsRequired)
+		errs.AddForProperty("pubKey", commands.ErrIsRequired)
 	}
 
 	if !errs.Empty() {
@@ -282,11 +282,11 @@ func ParseVerifyAnyRequest(r *http.Request) (*VerifyAnyRequest, commands.Errors)
 	}
 
 	if len(req.InputData) == 0 {
-		errs.AddForProperty("input_data", commands.ErrIsRequired)
+		errs.AddForProperty("inputData", commands.ErrIsRequired)
 	} else {
 		decodedInputData, err := base64.StdEncoding.DecodeString(req.InputData)
 		if err != nil {
-			errs.AddForProperty("input_data", ErrShouldBeBase64Encoded)
+			errs.AddForProperty("inputData", ErrShouldBeBase64Encoded)
 		} else {
 			req.decodedInputData = decodedInputData
 		}
@@ -304,7 +304,7 @@ func ParseVerifyAnyRequest(r *http.Request) (*VerifyAnyRequest, commands.Errors)
 	}
 
 	if len(req.PubKey) == 0 {
-		errs.AddForProperty("pub_key", commands.ErrIsRequired)
+		errs.AddForProperty("pubKey", commands.ErrIsRequired)
 	}
 
 	if !errs.Empty() {
@@ -417,22 +417,27 @@ func NewService(log *zap.Logger, net *network.Network, h WalletHandler, a Auth, 
 
 	s.POST("/api/v1/auth/token", s.Login)
 	s.DELETE("/api/v1/auth/token", ExtractToken(s.Revoke))
-	s.GET("/api/v1/status", s.health)
+
 	s.GET("/api/v1/network", s.GetNetwork)
+
 	s.POST("/api/v1/wallets", s.CreateWallet)
 	s.POST("/api/v1/wallets/import", s.ImportWallet)
+	s.GET("/api/v1/wallets", ExtractToken(s.DownloadWallet))
+
 	s.GET("/api/v1/keys", ExtractToken(s.ListPublicKeys))
 	s.POST("/api/v1/keys", ExtractToken(s.GenerateKeyPair))
 	s.GET("/api/v1/keys/:keyid", ExtractToken(s.GetPublicKey))
 	s.PUT("/api/v1/keys/:keyid/taint", ExtractToken(s.TaintKey))
 	s.PUT("/api/v1/keys/:keyid/metadata", ExtractToken(s.UpdateMeta))
-	s.POST("/api/v1/sign", ExtractToken(s.SignAny))
-	s.POST("/api/v1/verify", ExtractToken(s.VerifyAny))
+
 	s.POST("/api/v1/command", ExtractToken(s.SignTx))
 	s.POST("/api/v1/command/sync", ExtractToken(s.SignTxSync))
 	s.POST("/api/v1/command/commit", ExtractToken(s.SignTxCommit))
-	s.GET("/api/v1/wallets", ExtractToken(s.DownloadWallet))
+	s.POST("/api/v1/sign", ExtractToken(s.SignAny))
+	s.POST("/api/v1/verify", ExtractToken(s.VerifyAny))
+
 	s.GET("/api/v1/version", s.Version)
+	s.GET("/api/v1/status", s.Health)
 
 	return s, nil
 }
@@ -774,7 +779,7 @@ func (s *Service) GetNetwork(w http.ResponseWriter, _ *http.Request, _ httproute
 	s.writeSuccess(w, res, http.StatusOK)
 }
 
-func (s *Service) health(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (s *Service) Health(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	if err := s.nodeForward.HealthCheck(r.Context()); err != nil {
 		s.writeSuccess(w, SuccessResponse{Success: false}, http.StatusFailedDependency)
 		return

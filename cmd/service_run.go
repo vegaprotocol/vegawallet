@@ -63,7 +63,7 @@ func runServiceRun(_ *cobra.Command, _ []string) error {
 
 	exists, err := netStore.NetworkExists(serviceRunArgs.network)
 	if err != nil {
-		return fmt.Errorf("couldn't verify the network existance: %w", err)
+		return fmt.Errorf("couldn't verify the network existence: %w", err)
 	}
 	if !exists {
 		return fmt.Errorf("network \"%s\" doesn't exist", serviceRunArgs.network)

@@ -96,7 +96,7 @@ Using the API is documented [here](service/README.md).
 
 ## Support
 
-#### [Nolt][notl]
+#### [Nolt][nolt]
 Raise issues and see what others have raised.
 
 #### [Discord][discord]
@@ -116,6 +116,6 @@ Read more at [https://vega.xyz][vega-website].
 [vega-website]: https://vega.xyz
 [vega-documentation-website]: https://docs.fairground.vega.xyz
 [vega-documentation-website-getting-started]: https://docs.fairground.vega.xyz/docs/wallet/getting-started/
-[notl]: https://vega-testnet.nolt.io/
+[nolt]: https://vega-testnet.nolt.io/
 [discord]: https://vega.xyz/discord
 [github-release]: https://github.com/vegaprotocol/go-wallet/releases
