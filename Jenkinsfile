@@ -1,3 +1,5 @@
+@Library('vega-shared-library') _
+
 /* properties of scmVars (example):
     - GIT_BRANCH:PR-40
     - GIT_COMMIT:05a1c6fbe7d1ff87cfc40a011a63db574edad7e6
