@@ -61,6 +61,14 @@ func runServiceRun(_ *cobra.Command, _ []string) error {
 		return fmt.Errorf("couldn't initialise network store: %w", err)
 	}
 
+	exists, err := netStore.NetworkExists(serviceRunArgs.network)
+	if err != nil {
+		return fmt.Errorf("couldn't verify the network existance: %w", err)
+	}
+	if !exists {
+		return fmt.Errorf("network \"%s\" doesn't exist", serviceRunArgs.network)
+	}
+
 	cfg, err := netStore.GetNetwork(serviceRunArgs.network)
 	if err != nil {
 		return fmt.Errorf("couldn't initialise network store: %w", err)
