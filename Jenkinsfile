@@ -1,3 +1,5 @@
+@Library('vega-shared-library') _
+
 /* properties of scmVars (example):
     - GIT_BRANCH:PR-40
     - GIT_COMMIT:05a1c6fbe7d1ff87cfc40a011a63db574edad7e6
@@ -10,7 +12,30 @@ def version = 'UNKNOWN'
 def versionHash = 'UNKNOWN'
 
 pipeline {
-    agent { label 'general' }
+    agent any
+    options {
+        timestamps()
+        timeout(time: 30, unit: 'MINUTES')
+    }
+    parameters {
+        string( name: 'VEGA_CORE_BRANCH', defaultValue: '',
+                description: '''Git branch, tag or hash of the vegaprotocol/vega repository.
+                    e.g. "develop", "v0.44.0" or commit hash. Default empty: use latests published version.''')
+        string( name: 'DATA_NODE_BRANCH', defaultValue: '',
+                description: '''Git branch, tag or hash of the vegaprotocol/data-node repository.
+                    e.g. "develop", "v0.44.0" or commit hash. Default empty: use latests published version.''')
+        string( name: 'ETHEREUM_EVENT_FORWARDER_BRANCH', defaultValue: '',
+                description: '''Git branch, tag or hash of the vegaprotocol/ethereum-event-forwarder repository.
+                    e.g. "main", "v0.44.0" or commit hash. Default empty: use latest published version.''')
+        string( name: 'DEVOPS_INFRA_BRANCH', defaultValue: 'master',
+                description: 'Git branch, tag or hash of the vegaprotocol/devops-infra repository')
+        string( name: 'VEGATOOLS_BRANCH', defaultValue: 'develop',
+                description: 'Git branch, tag or hash of the vegaprotocol/vegatools repository')
+        string( name: 'SYSTEM_TESTS_BRANCH', defaultValue: 'develop',
+                description: 'Git branch, tag or hash of the vegaprotocol/system-tests repository')
+        string( name: 'PROTOS_BRANCH', defaultValue: 'develop',
+                description: 'Git branch, tag or hash of the vegaprotocol/protos repository')
+    }
     environment {
         CGO_ENABLED = 0
         GO111MODULE = 'on'
@@ -103,6 +128,9 @@ pipeline {
         }
 
         stage('Tests') {
+            environment {
+                GO_WALLET_COMMIT_HASH = "${sh(script:'git rev-parse HEAD', returnStdout: true).trim()}"
+            }
             parallel {
                 stage('unit tests') {
                     options { retry(3) }
@@ -167,6 +195,36 @@ pipeline {
                                 --disable forbidigo \
                                 --disable dupl
                         '''
+                    }
+                }
+                stage('System Tests') {
+                    steps {
+                        script {
+                            systemTests ignoreFailure: false,
+                                vegaCore: params.VEGA_CORE_BRANCH,
+                                dataNode: params.DATA_NODE_BRANCH,
+                                goWallet: env.GO_WALLET_COMMIT_HASH,
+                                ethereumEventForwarder: params.ETHEREUM_EVENT_FORWARDER_BRANCH,
+                                devopsInfra: params.DEVOPS_INFRA_BRANCH,
+                                vegatools: params.VEGATOOLS_BRANCH,
+                                systemTests: params.SYSTEM_TESTS_BRANCH,
+                                protos: params.PROTOS_BRANCH
+                        }
+                    }
+                }
+                stage('LNL System Tests') {
+                    steps {
+                        script {
+                            systemTestsLNL ignoreFailure: true,
+                                vegaCore: params.VEGA_CORE_BRANCH,
+                                dataNode: params.DATA_NODE_BRANCH,
+                                goWallet: env.GO_WALLET_COMMIT_HASH,
+                                ethereumEventForwarder: params.ETHEREUM_EVENT_FORWARDER_BRANCH,
+                                devopsInfra: params.DEVOPS_INFRA_BRANCH,
+                                vegatools: params.VEGATOOLS_BRANCH,
+                                systemTests: params.SYSTEM_TESTS_BRANCH,
+                                protos: params.PROTOS_BRANCH
+                        }
                     }
                 }
             }
