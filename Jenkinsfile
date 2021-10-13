@@ -200,7 +200,7 @@ pipeline {
                 stage('System Tests') {
                     steps {
                         script {
-                            systemTests ignoreFailure: false,
+                            systemTests ignoreFailure: true,
                                 vegaCore: params.VEGA_CORE_BRANCH,
                                 dataNode: params.DATA_NODE_BRANCH,
                                 goWallet: env.GO_WALLET_COMMIT_HASH,
