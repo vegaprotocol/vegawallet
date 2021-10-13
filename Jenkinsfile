@@ -61,6 +61,8 @@ pipeline {
                     version = sh (returnStdout: true, script: "git describe --tags 2>/dev/null || echo ${versionHash}").trim()
                     commitHash = getCommitHash()
                 }
+                echo "scmVars=${scmVars}"
+                echo "commitHash=${commitHash}"
             }
         }
 
