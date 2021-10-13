@@ -7,25 +7,25 @@ key pairs.
 
 ## Documentation
 
-#### [Getting started with Vega Wallet](https://docs.fairground.vega.xyz/docs/wallet/getting-started/)
+#### [Getting started with Vega Wallet][vega-documentation-website-getting-started]
 Learn how to install and run the stable version of Vega Wallet.
 
-#### [Vega documentation](https://docs.fairground.vega.xyz)
+#### [Vega documentation][vega-documentation-website]
 Learn more about how Vega works, and explore sample scripts for API trading
 
 ## Before continuing...
 
 ### I am not familiar with Vega Wallet...
 
-If you want to know more about Vega Wallet, how it works and how to use it, refer to the section ["Getting started with Vega Wallet"](#getting-started-with-vega-wallet).
+If you want to know more about Vega Wallet, how it works and how to use it, refer to the section ["Getting started with Vega Wallet"][vega-documentation-website-getting-started].
 
 ### I want to use the latest stable version...
 
-If you want to use a stable version, refer to ["Getting started with Vega Wallet"](#getting-started-with-vega-wallet).
+If you want to use a stable version, refer to ["Getting started with Vega Wallet"][vega-documentation-website-getting-started].
 
 ### Should I use the documentation in this repository?
 
-If you are looking for the documentation for the stable version of Vega Wallet, refer to the [documentation website](https://docs.fairground.vega.xyz). **Do not refer to the documentation in this repository.**
+If you are looking for the documentation for the stable version of Vega Wallet, refer to the [documentation website][vega-documentation-website]. **Do not refer to the documentation in this repository.**
 
 The documentation living in this repository contains information about unreleased and unstable features, and it is meant for people running a version of Vega Wallet that is built from source code.
 
@@ -39,7 +39,7 @@ If you are not sure which version you are currently running, use the following c
 vegawallet version
 ```
 
-All releases can be seen on the [Releases](https://github.com/vegaprotocol/go-wallet/releases) page.
+All releases can be seen on the [Releases][github-releases] page.
 
 ## Installation
 
@@ -47,7 +47,7 @@ To install Vega Wallet, you can download a released binary, or install it using 
 
 ### Download binaries
 
-From the [Releases](https://github.com/vegaprotocol/go-wallet/releases) page, download the ZIP file matching your platform and open it.
+From the [Releases][github-releases] page, download the ZIP file matching your platform and open it.
 
 |  Platform | Associated ZIP file            |
 |-----------|--------------------------------|
@@ -96,10 +96,10 @@ Using the API is documented [here](service/README.md).
 
 ## Support
 
-#### [Nolt](https://vega-testnet.nolt.io/)
+#### [Nolt][nolt]
 Raise issues and see what others have raised.
 
-#### [Discord](https://vega.xyz/discord)
+#### [Discord][discord]
 Ask us for help, find out about scheduled open sessions, and keep up with Vega
 generally.
 
@@ -114,3 +114,8 @@ protocol.
 Read more at [https://vega.xyz][vega-website].
 
 [vega-website]: https://vega.xyz
+[vega-documentation-website]: https://docs.fairground.vega.xyz
+[vega-documentation-website-getting-started]: https://docs.fairground.vega.xyz/docs/wallet/getting-started/
+[nolt]: https://vega-testnet.nolt.io/
+[discord]: https://vega.xyz/discord
+[github-release]: https://github.com/vegaprotocol/go-wallet/releases
