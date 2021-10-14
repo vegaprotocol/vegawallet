@@ -49,6 +49,7 @@ pipeline {
                 cleanWs()
                 sh 'printenv'
                 echo "${params}"
+                echo "isPRBuild=${isPRBuild()}"
             }
         }
 
@@ -201,7 +202,7 @@ pipeline {
                 stage('System Tests') {
                     steps {
                         script {
-                            systemTests ignoreFailure: false,
+                            systemTests ignoreFailure: !isPRBuild(),
                                 vegaCore: params.VEGA_CORE_BRANCH,
                                 dataNode: params.DATA_NODE_BRANCH,
                                 goWallet: commitHash,
