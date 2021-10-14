@@ -10,10 +10,12 @@
 def scmVars = null
 def version = 'UNKNOWN'
 def versionHash = 'UNKNOWN'
+def commitHash = 'UNKNOWN'
 
 pipeline {
     agent any
     options {
+        skipDefaultCheckout true
         timestamps()
         timeout(time: 30, unit: 'MINUTES')
     }
@@ -39,7 +41,6 @@ pipeline {
     environment {
         CGO_ENABLED = 0
         GO111MODULE = 'on'
-        SLACK_MESSAGE = "Go Wallet CI » <${RUN_DISPLAY_URL}|Jenkins ${BRANCH_NAME} Job>${ env.CHANGE_URL ? " » <${CHANGE_URL}|GitHub PR #${CHANGE_ID}>" : '' }"
     }
 
     stages {
@@ -48,6 +49,7 @@ pipeline {
                 cleanWs()
                 sh 'printenv'
                 echo "${params}"
+                echo "isPRBuild=${isPRBuild()}"
             }
         }
 
@@ -58,7 +60,10 @@ pipeline {
                     scmVars = checkout(scm)
                     versionHash = sh (returnStdout: true, script: "echo \"${scmVars.GIT_COMMIT}\"|cut -b1-8").trim()
                     version = sh (returnStdout: true, script: "git describe --tags 2>/dev/null || echo ${versionHash}").trim()
+                    commitHash = getCommitHash()
                 }
+                echo "scmVars=${scmVars}"
+                echo "commitHash=${commitHash}"
             }
         }
 
@@ -128,9 +133,6 @@ pipeline {
         }
 
         stage('Tests') {
-            environment {
-                GO_WALLET_COMMIT_HASH = "${sh(script:'git rev-parse HEAD', returnStdout: true).trim()}"
-            }
             parallel {
                 stage('unit tests') {
                     options { retry(3) }
@@ -200,10 +202,10 @@ pipeline {
                 stage('System Tests') {
                     steps {
                         script {
-                            systemTests ignoreFailure: true,
+                            systemTests ignoreFailure: !isPRBuild(),
                                 vegaCore: params.VEGA_CORE_BRANCH,
                                 dataNode: params.DATA_NODE_BRANCH,
-                                goWallet: env.GO_WALLET_COMMIT_HASH,
+                                goWallet: commitHash,
                                 ethereumEventForwarder: params.ETHEREUM_EVENT_FORWARDER_BRANCH,
                                 devopsInfra: params.DEVOPS_INFRA_BRANCH,
                                 vegatools: params.VEGATOOLS_BRANCH,
@@ -218,7 +220,7 @@ pipeline {
                             systemTestsLNL ignoreFailure: true,
                                 vegaCore: params.VEGA_CORE_BRANCH,
                                 dataNode: params.DATA_NODE_BRANCH,
-                                goWallet: env.GO_WALLET_COMMIT_HASH,
+                                goWallet: commitHash,
                                 ethereumEventForwarder: params.ETHEREUM_EVENT_FORWARDER_BRANCH,
                                 devopsInfra: params.DEVOPS_INFRA_BRANCH,
                                 vegatools: params.VEGATOOLS_BRANCH,
@@ -233,12 +235,16 @@ pipeline {
     post {
         success {
             retry(3) {
-                slackSend(channel: "#tradingcore-notify", color: "good", message: ":white_check_mark: ${SLACK_MESSAGE} (${currentBuild.durationString.minus(' and counting')})")
+                script {
+                    slack.slackSendCISuccess name: 'Go Wallet CI', channel: '#tradingcore-notify'
+                }
             }
         }
         unsuccessful {
             retry(3) {
-                slackSend(channel: "#tradingcore-notify", color: "danger", message: ":red_circle: *${currentBuild.result}* ${SLACK_MESSAGE} (${currentBuild.durationString.minus(' and counting')})")
+                script {
+                    slack.slackSendCIFailure name: 'Go Wallet CI', channel: '#tradingcore-notify'
+                }
             }
         }
     }
