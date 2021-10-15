@@ -110,9 +110,9 @@ func printHuman(p *printer.HumanPrinter, mnemonic string, keyPair wallet.KeyPair
 
 	p.BlueArrow().InfoText("Run the service").Jump()
 	p.Text("Once you have a key pair generated, you can run the service with the following command:").NJump(2)
-	p.Code(fmt.Sprintf("%s service run", os.Args[0])).NJump(2)
+	p.Code(fmt.Sprintf("%s service run --network <NETWORK_TO_CONNECT_TO>", os.Args[0])).NJump(2)
 	p.Text("If you want to open up a local version of Vega Console alongside the service, use the following command:").NJump(2)
-	p.Code(fmt.Sprintf("%s service run --console-proxy", os.Args[0])).NJump(2)
+	p.Code(fmt.Sprintf("%s service run --network <NETWORK_TO_CONNECT_TO> --console-proxy", os.Args[0])).NJump(2)
 	p.Text("To terminate the process, hit ").Bold("ctrl+c").NJump(2)
 	p.Text("For more information, use ").Bold("--help").Text(" flag.").Jump()
 }
@@ -139,7 +139,7 @@ type keyGenerateKeyPairJson struct {
 }
 
 type keyGenerateAlgorithmJson struct {
-	Name    string `json:"wallet"`
+	Name    string `json:"name"`
 	Version uint32 `json:"version"`
 }
 
