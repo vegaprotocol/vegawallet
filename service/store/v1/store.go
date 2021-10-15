@@ -14,12 +14,12 @@ type Store struct {
 }
 
 func InitialiseStore(p paths.Paths) (*Store, error) {
-	pubRsaKeyFilePath, err := p.DataPathFor(paths.WalletServicePublicRSAKeyDataFile)
+	pubRsaKeyFilePath, err := p.CreateDataPathFor(paths.WalletServicePublicRSAKeyDataFile)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't get data path for %s: %w", paths.WalletServicePublicRSAKeyDataFile, err)
 	}
 
-	privRsaKeyFilePath, err := p.DataPathFor(paths.WalletServicePrivateRSAKeyDataFile)
+	privRsaKeyFilePath, err := p.CreateDataPathFor(paths.WalletServicePrivateRSAKeyDataFile)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't get data path for %s: %w", paths.WalletServicePrivateRSAKeyDataFile, err)
 	}

@@ -16,8 +16,8 @@ var (
 	signArgs struct {
 		wallet         string
 		passphraseFile string
-		message string
-		pubKey  string
+		message        string
+		pubKey         string
 	}
 
 	// signCmd represents the sign command

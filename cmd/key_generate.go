@@ -5,11 +5,12 @@ import (
 	"os"
 	"strings"
 
+	vgjson "code.vegaprotocol.io/shared/libs/json"
+	"github.com/spf13/cobra"
+
 	"code.vegaprotocol.io/go-wallet/cmd/printer"
 	"code.vegaprotocol.io/go-wallet/wallet"
 	"code.vegaprotocol.io/go-wallet/wallets"
-	vgjson "code.vegaprotocol.io/shared/libs/json"
-	"github.com/spf13/cobra"
 )
 
 var (

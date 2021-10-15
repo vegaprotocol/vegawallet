@@ -13,7 +13,7 @@ import (
 
 type testAuth struct {
 	service.Auth
-	ctrl     *gomock.Controller
+	ctrl *gomock.Controller
 }
 
 func getTestAuth(t *testing.T) *testAuth {

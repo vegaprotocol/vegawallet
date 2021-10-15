@@ -61,7 +61,6 @@ func CheckSubmitTransactionRequest(req *walletpb.SubmitTransactionRequest) comma
 	return errs
 }
 
-
 func ToMarshaledInputData(req *walletpb.SubmitTransactionRequest, height uint64) ([]byte, error) {
 	data := commands.NewInputData(height)
 	wrapRequestCommandIntoInputData(data, req)

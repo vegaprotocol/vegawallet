@@ -7,9 +7,9 @@ import (
 
 func New(level zapcore.Level, encoding string) (*zap.Logger, error) {
 	config := zap.Config{
-		Level:             zap.NewAtomicLevelAt(level),
-		Encoding:          encoding,
-		EncoderConfig:     zapcore.EncoderConfig{
+		Level:    zap.NewAtomicLevelAt(level),
+		Encoding: encoding,
+		EncoderConfig: zapcore.EncoderConfig{
 			MessageKey:     "message",
 			LevelKey:       "level",
 			TimeKey:        "@timestamp",
