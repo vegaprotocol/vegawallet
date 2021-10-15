@@ -139,7 +139,7 @@ type keyGenerateKeyPairJson struct {
 }
 
 type keyGenerateAlgorithmJson struct {
-	Name    string `json:"wallet"`
+	Name    string `json:"name"`
 	Version uint32 `json:"version"`
 }
 
