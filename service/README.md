@@ -439,7 +439,7 @@ signed transaction. The key pair must belong to the logged wallet.
 `POST api/v1/verify`
 
 Verify any base64-encoded data using the specified public key, and returns the
-confirmation. 
+confirmation.
 
 #### Example
 

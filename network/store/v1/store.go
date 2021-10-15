@@ -7,9 +7,10 @@ import (
 	"path/filepath"
 	"sort"
 
-	"code.vegaprotocol.io/go-wallet/network"
 	vgfs "code.vegaprotocol.io/shared/libs/fs"
 	"code.vegaprotocol.io/shared/paths"
+
+	"code.vegaprotocol.io/go-wallet/network"
 )
 
 var (
@@ -21,7 +22,7 @@ type Store struct {
 }
 
 func InitialiseStore(vegaPaths paths.Paths) (*Store, error) {
-	networksHome, err := vegaPaths.ConfigDirFor(paths.WalletServiceNetworksConfigHome)
+	networksHome, err := vegaPaths.CreateConfigDirFor(paths.WalletServiceNetworksConfigHome)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't get config path for %s: %w", paths.WalletServiceNetworksConfigHome, err)
 	}

@@ -32,7 +32,7 @@ func (h *vegaHome) Remove() {
 }
 
 func (h *vegaHome) NetworksHome() string {
-	networksHome, err := h.customPaths.ConfigDirFor(paths.WalletServiceNetworksConfigHome)
+	networksHome, err := h.customPaths.CreateConfigDirFor(paths.WalletServiceNetworksConfigHome)
 	if err != nil {
 		panic(err)
 	}
@@ -41,5 +41,5 @@ func (h *vegaHome) NetworksHome() string {
 }
 
 func (h *vegaHome) NetworkPath(name string) string {
-	return filepath.Join(h.NetworksHome(), name + ".toml")
+	return filepath.Join(h.NetworksHome(), name+".toml")
 }

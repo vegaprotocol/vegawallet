@@ -10,7 +10,7 @@ import (
 )
 
 type Console struct {
-	server      *http.Server
+	server *http.Server
 }
 
 func NewConsole(port int, consoleURL, nodeURL string) *Console {

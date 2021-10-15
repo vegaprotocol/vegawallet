@@ -32,7 +32,7 @@ func (h *vegaHome) Remove() {
 }
 
 func (h *vegaHome) RSAKeysHome() string {
-	rsaKeyHome, err := h.customPaths.DataPathFor(paths.WalletServiceRSAKeysDataHome)
+	rsaKeyHome, err := h.customPaths.CreateDataPathFor(paths.WalletServiceRSAKeysDataHome)
 	if err != nil {
 		panic(err)
 	}
@@ -41,7 +41,7 @@ func (h *vegaHome) RSAKeysHome() string {
 }
 
 func (h *vegaHome) PublicRSAKeyFilePath() string {
-	pubRsaKeyFilePath, err := h.customPaths.DataPathFor(paths.WalletServicePublicRSAKeyDataFile)
+	pubRsaKeyFilePath, err := h.customPaths.CreateDataPathFor(paths.WalletServicePublicRSAKeyDataFile)
 	if err != nil {
 		panic(err)
 	}
@@ -50,7 +50,7 @@ func (h *vegaHome) PublicRSAKeyFilePath() string {
 }
 
 func (h *vegaHome) PrivateRSAKeyFilePath() string {
-	privRsaKeyFilePath, err := h.customPaths.DataPathFor(paths.WalletServicePrivateRSAKeyDataFile)
+	privRsaKeyFilePath, err := h.customPaths.CreateDataPathFor(paths.WalletServicePrivateRSAKeyDataFile)
 	if err != nil {
 		panic(err)
 	}
