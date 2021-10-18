@@ -9,6 +9,7 @@ import (
 	wcommands "code.vegaprotocol.io/go-wallet/commands"
 	vglog "code.vegaprotocol.io/go-wallet/libs/zap"
 	"code.vegaprotocol.io/go-wallet/logger"
+	"code.vegaprotocol.io/go-wallet/network"
 	netstore "code.vegaprotocol.io/go-wallet/network/store/v1"
 	"code.vegaprotocol.io/go-wallet/node"
 	"code.vegaprotocol.io/go-wallet/wallets"
@@ -119,12 +120,12 @@ func runCommand(_ *cobra.Command, pos []string) error {
 		if err != nil {
 			return fmt.Errorf("couldn't get network %s: %w", commandArgs.network, err)
 		}
-		hosts = net.Nodes.Hosts
+		hosts = net.API.GRPC.Hosts
 	} else {
 		return errors.New("should set node address or network flag")
 	}
 
-	forwarder, err := node.NewForwarder(log.Named("forwarder"), node.NodesConfig{
+	forwarder, err := node.NewForwarder(log.Named("forwarder"), network.GRPCConfig{
 		Hosts:   hosts,
 		Retries: commandArgs.retries,
 	})

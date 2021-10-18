@@ -6,6 +6,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"code.vegaprotocol.io/go-wallet/network"
 	api "code.vegaprotocol.io/protos/vega/api/v1"
 	commandspb "code.vegaprotocol.io/protos/vega/commands/v1"
 
@@ -16,13 +17,13 @@ import (
 
 type Forwarder struct {
 	log      *zap.Logger
-	nodeCfgs NodesConfig
+	nodeCfgs network.GRPCConfig
 	clts     []api.CoreServiceClient
 	conns    []*grpc.ClientConn
 	next     uint64
 }
 
-func NewForwarder(log *zap.Logger, nodeConfigs NodesConfig) (*Forwarder, error) {
+func NewForwarder(log *zap.Logger, nodeConfigs network.GRPCConfig) (*Forwarder, error) {
 	if len(nodeConfigs.Hosts) <= 0 {
 		return nil, errors.New("no node specified for node forwarding")
 	}

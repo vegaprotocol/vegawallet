@@ -4,8 +4,6 @@ import (
 	"embed"
 	"fmt"
 
-	"code.vegaprotocol.io/go-wallet/node"
-	"code.vegaprotocol.io/go-wallet/service/encoding"
 	"github.com/zannen/toml"
 )
 
@@ -19,21 +17,6 @@ type Store interface {
 	NetworkExists(string) (bool, error)
 	GetNetwork(string) (*Network, error)
 	SaveNetwork(*Network) error
-}
-
-type Network struct {
-	Name        string
-	Level       encoding.LogLevel
-	TokenExpiry encoding.Duration
-	Port        int
-	Host        string
-	Nodes       node.NodesConfig
-	Console     ConsoleConfig
-}
-
-type ConsoleConfig struct {
-	URL       string
-	LocalPort int
 }
 
 func InitialiseNetworks(store Store, overwrite bool) error {

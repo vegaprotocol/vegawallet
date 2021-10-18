@@ -98,7 +98,7 @@ func runServiceRun(_ *cobra.Command, _ []string) error {
 		return fmt.Errorf("couldn't initialise authentication: %w", err)
 	}
 
-	forwarder, err := node.NewForwarder(log.Named("forwarder"), cfg.Nodes)
+	forwarder, err := node.NewForwarder(log.Named("forwarder"), cfg.API.GRPC)
 	if err != nil {
 		return fmt.Errorf("couldn't initialise the node forwarder: %w", err)
 	}
@@ -124,7 +124,7 @@ func runServiceRun(_ *cobra.Command, _ []string) error {
 
 	var cs *console.Console
 	if serviceRunArgs.startConsole {
-		cs = console.NewConsole(cfg.Console.LocalPort, cfg.Console.URL, cfg.Nodes.Hosts[0])
+		cs = console.NewConsole(cfg.Console.LocalPort, cfg.Console.URL, cfg.API.GRPC.Hosts[0])
 		go func() {
 			defer cancel()
 			err := cs.Start()
