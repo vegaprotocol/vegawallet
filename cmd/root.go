@@ -70,18 +70,19 @@ func checkVersion() error {
 		p := printer.NewHumanPrinter()
 		if version.IsUnreleased() {
 			p.CrossMark().DangerText("You are running an unreleased version of the Vega wallet. Use it at your own risk!").NJump(2)
-		} else {
-			ctx, cancel := context.WithTimeout(context.Background(), requestTimeout)
-			defer cancel()
-			v, err := version.Check(version.BuildReleasesRequestFromGithub(ctx), version.Version)
-			if err != nil {
-				return fmt.Errorf("could not check Vega wallet version updates: %w", err)
-			}
-			if v != nil {
-				p.Text("Version ").SuccessText(v.String()).Text(" is available. Your current version is ").DangerText(version.Version).Text(".").Jump()
-				p.Text("Download the latest version at: ").Underline(version.GetReleaseURL(v)).NJump(2)
-			}
 		}
+
+		ctx, cancel := context.WithTimeout(context.Background(), requestTimeout)
+		defer cancel()
+		v, err := version.Check(version.BuildReleasesRequestFromGithub(ctx), version.Version)
+		if err != nil {
+			return fmt.Errorf("could not check Vega wallet version updates: %w", err)
+		}
+		if v != nil {
+			p.Text("Version ").SuccessText(v.String()).Text(" is available. Your current version is ").DangerText(version.Version).Text(".").Jump()
+			p.Text("Download the latest version at: ").Underline(version.GetReleaseURL(v)).NJump(2)
+		}
+
 	}
 	return nil
 }
