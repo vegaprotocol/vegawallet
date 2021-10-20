@@ -11,7 +11,6 @@ var (
 	ErrCouldNotReadRequest       = errors.New("could not read request")
 	ErrCouldNotGetBlockHeight    = errors.New("could not get last block height")
 	ErrShouldBeBase64Encoded     = errors.New("should be base64 encoded")
-	ErrCouldNotMarshalTxResponse = errors.New("could not marshal transaction response")
 )
 
 type ErrorsResponse struct {

@@ -1,12 +1,14 @@
 package cmd
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"code.vegaprotocol.io/go-wallet/cmd/printer"
 	"code.vegaprotocol.io/go-wallet/version"
@@ -17,6 +19,10 @@ import (
 )
 
 var (
+	// requestTimeout is the maximum time the program will wait for a response
+	// after issuing a request.
+	requestTimeout = 30 * time.Second
+
 	rootArgs struct {
 		output         string
 		home           string
@@ -62,18 +68,21 @@ func parseOutputFlag() error {
 func checkVersion() error {
 	if !rootArgs.noVersionCheck {
 		p := printer.NewHumanPrinter()
-		if version.IsUnreleased(version.Version) {
+		if version.IsUnreleased() {
 			p.CrossMark().DangerText("You are running an unreleased version of the Vega wallet. Use it at your own risk!").NJump(2)
-		} else {
-			v, err := version.Check(version.Version)
-			if err != nil {
-				return fmt.Errorf("could not check Vega wallet version updates: %w", err)
-			}
-			if v != nil {
-				p.Text("Version ").SuccessText(v.String()).Text(" is available. Your current version is ").DangerText(version.Version).Text(".").Jump()
-				p.Text("Download the latest version at: ").Underline(version.GetReleaseURL(v)).NJump(2)
-			}
 		}
+
+		ctx, cancel := context.WithTimeout(context.Background(), requestTimeout)
+		defer cancel()
+		v, err := version.Check(version.BuildReleasesRequestFromGithub(ctx), version.Version)
+		if err != nil {
+			return fmt.Errorf("could not check Vega wallet version updates: %w", err)
+		}
+		if v != nil {
+			p.Text("Version ").SuccessText(v.String()).Text(" is available. Your current version is ").DangerText(version.Version).Text(".").Jump()
+			p.Text("Download the latest version at: ").Underline(version.GetReleaseURL(v)).NJump(2)
+		}
+
 	}
 	return nil
 }

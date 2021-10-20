@@ -154,48 +154,7 @@ pipeline {
                 stage('70+ linters [TODO improve]') {
                     steps {
                         sh '''#!/bin/bash -e
-                            golangci-lint run -v \
-                                --allow-parallel-runners \
-                                --config .golangci.toml \
-                                --enable-all \
-                                --color always \
-                                --disable paralleltest \
-                                --disable wrapcheck \
-                                --disable thelper \
-                                --disable tagliatelle \
-                                --disable noctx \
-                                --disable nlreturn \
-                                --disable ifshort \
-                                --disable gomnd \
-                                --disable goerr113 \
-                                --disable gochecknoglobals \
-                                --disable forcetypeassert \
-                                --disable exhaustivestruct \
-                                --disable errorlint \
-                                --disable cyclop \
-                                --disable bodyclose \
-                                --disable wsl \
-                                --disable prealloc \
-                                --disable nestif \
-                                --disable misspell \
-                                --disable maligned \
-                                --disable lll \
-                                --disable golint \
-                                --disable goimports \
-                                --disable gofumpt \
-                                --disable whitespace \
-                                --disable revive \
-                                --disable gofmt \
-                                --disable godot \
-                                --disable gocritic \
-                                --disable goconst \
-                                --disable gochecknoinits \
-                                --disable gci \
-                                --disable funlen \
-                                --disable stylecheck \
-                                --disable gocognit \
-                                --disable forbidigo \
-                                --disable dupl
+                            golangci-lint run -v --config .golangci.toml
                         '''
                     }
                 }
