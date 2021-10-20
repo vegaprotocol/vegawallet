@@ -746,9 +746,9 @@ func (s *Service) signTx(token string, w http.ResponseWriter, r *http.Request, _
 
 	if req.Propagate {
 		if err := s.nodeForward.SendTx(r.Context(), tx, ty); err != nil {
-			if status, ok := status.FromError(err); ok {
+			if st, ok := status.FromError(err); ok {
 				var details []string
-				for _, v := range status.Details() {
+				for _, v := range st.Details() {
 					v := v.(*typespb.ErrorDetail)
 					details = append(details, v.Message)
 				}

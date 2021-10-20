@@ -216,14 +216,14 @@ func testServiceDownloadWalletOK(t *testing.T) {
 	}
 	assert.Equal(t, resp.StatusCode, http.StatusOK)
 	raw, _ := ioutil.ReadAll(resp.Body)
-	resp.Body.Close()
+	_ = resp.Body.Close()
 	_ = json.Unmarshal(raw, &token)
 
 	tmpFile, _ := ioutil.TempFile(".", "test-wallet")
 	defer func() {
 		name := tmpFile.Name()
-		tmpFile.Close()
-		os.Remove(name)
+		_ = tmpFile.Close()
+		_ = os.Remove(name)
 	}()
 
 	s.auth.EXPECT().VerifyToken("this is a token").Times(1).Return("jeremy", nil)

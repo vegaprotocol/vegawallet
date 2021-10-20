@@ -1,4 +1,65 @@
+[run]
+allow-parallel-runners = true
+print-linter-name = true
+
+[linters]
+enable-all = true
+disable = [
+    # To be fixed
+    "bodyclose",
+    "cyclop",
+    "dupl",
+    "errorlint",
+    "exhaustivestruct",
+    "forbidigo",
+    "forcetypeassert",
+    "funlen",
+    "gci",
+    "gochecknoglobals",
+    "gochecknoinits",
+    "gocognit",
+    "goconst",
+    "gocritic",
+    "godot",
+    "goerr113",
+    "gofmt",
+    "gofumpt",
+    "goimports",
+    "gomnd",
+    "ifshort",
+    "lll",
+    "misspell",
+    "nestif",
+    "nlreturn",
+    "noctx",
+    "paralleltest",
+    "prealloc",
+    "revive",
+    "stylecheck",
+    "tagliatelle",
+    "thelper",
+    "whitespace",
+    "wrapcheck",
+    "wsl",
+
+    # Deprecated linters
+    "golint",
+    "interfacer",
+    "maligned",
+    "scopelint"
+]
+
 [issues]
 [[issues.exclude-rules]]
 linters = ["staticcheck"]
 text = "SA1019:"
+
+[[issues.exclude-rules]]
+# errname is complaining about the name of ErrorResponse not sticking to the
+# standards. However, it is fine as this structure is not an error structure
+# but a HTTP response.
+#   (errname) the type name `ErrorResponse` should conform to the `XxxError`
+#   format.
+path = "service/error.go"
+linters = [ "errname"]
+
