@@ -6,3 +6,4 @@
 * The service configuration `wallet-service/config.toml` no longer exists.
 * The network configurations are located in the `wallet-service/networks` config folder.
 * A new `--network` (shorthand `-n`) has been introduced on `command` and `service run` subcommands.
+* In the network configuration the `Nodes` configuration in now named `API.GRPC`.

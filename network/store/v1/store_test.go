@@ -14,10 +14,12 @@ func TestFileStoreV1(t *testing.T) {
 	t.Run("New store succeeds", testNewStoreSucceeds)
 	t.Run("Saving already existing network succeeds", testFileStoreV1SaveAlreadyExistingNetworkSucceeds)
 	t.Run("Saving network succeeds", testFileStoreV1SaveNetworkSucceeds)
+	t.Run("Saving legacy network succeeds", testFileStoreV1SaveLegacyNetworkSucceeds)
 	t.Run("Verifying non-existing network fails", testFileStoreV1VerifyingNonExistingNetworkFails)
 	t.Run("Verifying existing network succeeds", testFileStoreV1VerifyingExistingNetworkSucceeds)
 	t.Run("Getting non-existing network fails", testFileStoreV1GetNonExistingNetworkFails)
 	t.Run("Getting existing network succeeds", testFileStoreV1GetExistingNetworkSucceeds)
+	t.Run("Getting legacy network succeeds", testFileStoreV1GetLegacyNetworkSucceeds)
 	t.Run("Getting network path succeeds", testFileStoreV1GetNetworkPathSucceeds)
 	t.Run("Getting networks path succeeds", testFileStoreV1GetNetworksPathSucceeds)
 	t.Run("Listing networks succeeds", testFileStoreV1ListingNetworksSucceeds)
@@ -80,6 +82,48 @@ func testFileStoreV1SaveNetworkSucceeds(t *testing.T) {
 	// then
 	require.NoError(t, err)
 	assert.Equal(t, net, returnedNet)
+}
+
+func testFileStoreV1SaveLegacyNetworkSucceeds(t *testing.T) {
+	vegaHome := newVegaHome()
+	defer vegaHome.Remove()
+
+	// given
+	s := InitialiseFromPath(vegaHome)
+	net := &network.Network{
+		Name: "test",
+		Nodes: network.GRPCConfig{
+			Hosts:   []string{"node-1", "node-2"},
+			Retries: 5,
+		},
+		API: network.APIConfig{
+			GRPC: network.GRPCConfig{},
+		},
+	}
+
+	// when
+	err := s.SaveNetwork(net)
+
+	// then
+	require.NoError(t, err)
+	vgtest.AssertFileAccess(t, vegaHome.NetworkPath(net.Name))
+
+	// when
+	returnedNet, err := s.GetNetwork("test")
+
+	// then
+	require.NoError(t, err)
+	expectedNet := network.Network{
+		Name:  "test",
+		Nodes: network.GRPCConfig{},
+		API: network.APIConfig{
+			GRPC: network.GRPCConfig{
+				Hosts:   []string{"node-1", "node-2"},
+				Retries: 5,
+			},
+		},
+	}
+	assert.Equal(t, expectedNet, *returnedNet)
 }
 
 func testFileStoreV1VerifyingNonExistingNetworkFails(t *testing.T) {
@@ -160,6 +204,48 @@ func testFileStoreV1GetExistingNetworkSucceeds(t *testing.T) {
 	// then
 	require.NoError(t, err)
 	assert.Equal(t, net, returnedNet)
+}
+
+func testFileStoreV1GetLegacyNetworkSucceeds(t *testing.T) {
+	vegaHome := newVegaHome()
+	defer vegaHome.Remove()
+
+	// given
+	s := InitialiseFromPath(vegaHome)
+	legacyNet := &network.Network{
+		Name: "test",
+		Nodes: network.GRPCConfig{
+			Hosts:   []string{"node-1", "node-2"},
+			Retries: 5,
+		},
+		API: network.APIConfig{
+			GRPC: network.GRPCConfig{},
+		},
+	}
+
+	// when
+	err := s.SaveNetwork(legacyNet)
+
+	// then
+	require.NoError(t, err)
+	vgtest.AssertFileAccess(t, vegaHome.NetworkPath(legacyNet.Name))
+
+	// when
+	returnedNet, err := s.GetNetwork("test")
+
+	// then
+	require.NoError(t, err)
+	expectedNet := network.Network{
+		Name:  "test",
+		Nodes: network.GRPCConfig{},
+		API: network.APIConfig{
+			GRPC: network.GRPCConfig{
+				Hosts:   []string{"node-1", "node-2"},
+				Retries: 5,
+			},
+		},
+	}
+	assert.Equal(t, expectedNet, *returnedNet)
 }
 
 func testFileStoreV1GetNetworkPathSucceeds(t *testing.T) {
