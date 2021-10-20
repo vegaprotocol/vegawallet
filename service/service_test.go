@@ -8,7 +8,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"testing"
 
 	"code.vegaprotocol.io/go-wallet/crypto"
@@ -63,7 +62,6 @@ func TestService(t *testing.T) {
 	t.Run("Importing a wallet succeeds", testServiceImportWalletOK)
 	t.Run("Importing a wallet with and invalid request fails", testServiceImportWalletFailInvalidRequest)
 	t.Run("login wallet ok", testServiceLoginWalletOK)
-	t.Run("download wallet ok", testServiceDownloadWalletOK)
 	t.Run("login wallet fail invalid request", testServiceLoginWalletFailInvalidRequest)
 	t.Run("revoke token ok", testServiceRevokeTokenOK)
 	t.Run("revoke token fail invalid request", testServiceRevokeTokenFailInvalidRequest)
@@ -195,48 +193,6 @@ func testServiceLoginWalletOK(t *testing.T) {
 
 	resp := w.Result()
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
-}
-
-func testServiceDownloadWalletOK(t *testing.T) {
-	s := getTestService(t)
-	defer s.ctrl.Finish()
-
-	payload := `{"wallet": "jeremy", "passphrase": "oh yea?"}`
-	r := httptest.NewRequest("POST", "scheme://host/path", bytes.NewBufferString(payload))
-	w := httptest.NewRecorder()
-
-	s.handler.EXPECT().LoginWallet("jeremy", "oh yea?").Times(1).Return(nil)
-	s.auth.EXPECT().NewSession("jeremy").Times(1).Return("this is a token", nil)
-
-	s.Login(w, r, nil)
-
-	resp := w.Result()
-	var token struct {
-		Token string
-	}
-	assert.Equal(t, resp.StatusCode, http.StatusOK)
-	raw, _ := ioutil.ReadAll(resp.Body)
-	_ = resp.Body.Close()
-	_ = json.Unmarshal(raw, &token)
-
-	tmpFile, _ := ioutil.TempFile(".", "test-wallet")
-	defer func() {
-		name := tmpFile.Name()
-		_ = tmpFile.Close()
-		_ = os.Remove(name)
-	}()
-
-	s.auth.EXPECT().VerifyToken("this is a token").Times(1).Return("jeremy", nil)
-	s.handler.EXPECT().GetWalletPath("jeremy").Times(1).Return(tmpFile.Name(), nil)
-
-	// now get the file:
-	r = httptest.NewRequest(http.MethodGet, "scheme://host/path", bytes.NewBufferString(""))
-	w = httptest.NewRecorder()
-
-	s.DownloadWallet(token.Token, w, r, nil)
-	resp = w.Result()
-
-	assert.Equal(t, resp.StatusCode, http.StatusOK)
 }
 
 func testServiceLoginWalletFailInvalidRequest(t *testing.T) {
