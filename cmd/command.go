@@ -35,8 +35,8 @@ var (
 
 	commandCmd = &cobra.Command{
 		Use:   "command",
-		Short: "Send a command to the vega network",
-		Long:  "Import a wallet using the mnemonic.",
+		Short: "Send a command to the Vega network",
+		Long:  "Send a command to the Vega network.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  runCommand,
 	}
