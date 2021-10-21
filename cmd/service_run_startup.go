@@ -15,7 +15,6 @@ const startupT = ` # Authentication
  # Wallet management
  - create a wallet:         POST   {{.WalletServiceLocalAddress}}/api/v1/wallets
  - import a wallet:         POST   {{.WalletServiceLocalAddress}}/api/v1/wallets/import
- - download a wallet:       GET    {{.WalletServiceLocalAddress}}/api/v1/wallets
 
  # Key pair management
  - generate a key pair:     POST   {{.WalletServiceLocalAddress}}/api/v1/keys

@@ -381,7 +381,6 @@ type WalletHandler interface {
 	VerifyAny(inputData, sig []byte, pubKey string) (bool, error)
 	TaintKey(name, pubKey, passphrase string) error
 	UpdateMeta(name, pubKey, passphrase string, meta []wallet.Meta) error
-	GetWalletPath(name string) (string, error)
 }
 
 // Auth ...
@@ -422,7 +421,6 @@ func NewService(log *zap.Logger, net *network.Network, h WalletHandler, a Auth, 
 
 	s.POST("/api/v1/wallets", s.CreateWallet)
 	s.POST("/api/v1/wallets/import", s.ImportWallet)
-	s.GET("/api/v1/wallets", ExtractToken(s.DownloadWallet))
 
 	s.GET("/api/v1/keys", ExtractToken(s.ListPublicKeys))
 	s.POST("/api/v1/keys", ExtractToken(s.GenerateKeyPair))
@@ -514,22 +512,6 @@ func (s *Service) Login(w http.ResponseWriter, r *http.Request, _ httprouter.Par
 	}
 
 	s.writeSuccess(w, TokenResponse{Token: token}, http.StatusOK)
-}
-
-func (s *Service) DownloadWallet(token string, w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	name, err := s.auth.VerifyToken(token)
-	if err != nil {
-		s.writeForbiddenError(w, err)
-		return
-	}
-
-	path, err := s.handler.GetWalletPath(name)
-	if err != nil {
-		s.writeBadRequest(w, commands.NewErrors().FinalAdd(err))
-		return
-	}
-
-	http.ServeFile(w, r, path)
 }
 
 func (s *Service) Revoke(t string, w http.ResponseWriter, _ *http.Request, _ httprouter.Params) {
