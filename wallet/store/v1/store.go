@@ -88,7 +88,7 @@ func (s *Store) GetWallet(name, passphrase string) (wallet.Wallet, error) {
 
 	var w wallet.Wallet
 	switch versionedWallet.Version {
-	case 1:
+	case 1, 2:
 		w = &wallet.HDWallet{}
 	default:
 		return nil, fmt.Errorf("wallet with version %d isn't supported", versionedWallet.Version)

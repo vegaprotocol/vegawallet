@@ -52,7 +52,7 @@ func TestHDWallet(t *testing.T) {
 
 func testHDWalletCreateWalletSucceeds(t *testing.T) {
 	// given
-	name := "jeremy"
+	name := "duncan"
 
 	// when
 	w, mnemonic, err := wallet.NewHDWallet(name)
@@ -61,872 +61,1440 @@ func testHDWalletCreateWalletSucceeds(t *testing.T) {
 	require.NoError(t, err)
 	assert.NotEmpty(t, mnemonic)
 	assert.NotNil(t, w)
+	assert.Equal(t, uint32(2), w.Version())
 }
 
 func testHDWalletImportingWalletSucceeds(t *testing.T) {
-	// given
-	name := "jeremy"
+	tcs := []struct {
+		name    string
+		version uint32
+	}{
+		{
+			name:    "version 1",
+			version: 1,
+		}, {
+			name:    "version 2",
+			version: 2,
+		},
+	}
 
-	// when
-	w, err := wallet.ImportHDWallet(name, TestMnemonic1)
+	for _, tc := range tcs {
+		t.Run(tc.name, func(tt *testing.T) {
+			// given
+			name := "duncan"
 
-	// then
-	require.NoError(t, err)
-	assert.NotNil(t, w)
+			// when
+			w, err := wallet.ImportHDWallet(name, TestMnemonic1, tc.version)
+
+			// then
+			require.NoError(tt, err)
+			assert.NotNil(tt, w)
+			assert.Equal(tt, tc.version, w.Version())
+		})
+	}
 }
 
 func testHDWalletImportingWalletWithInvalidMnemonicFails(t *testing.T) {
-	// given
-	name := "jeremy"
+	tcs := []struct {
+		name    string
+		version uint32
+	}{
+		{
+			name:    "version 1",
+			version: 1,
+		}, {
+			name:    "version 2",
+			version: 2,
+		},
+	}
 
-	// when
-	w, err := wallet.ImportHDWallet(name, "vladimir harkonnen doesn't like trees")
+	for _, tc := range tcs {
+		t.Run(tc.name, func(tt *testing.T) {
+			// given
+			name := "duncan"
 
-	// then
-	require.EqualError(t, err, wallet.ErrInvalidMnemonic.Error())
-	assert.Nil(t, w)
+			// when
+			w, err := wallet.ImportHDWallet(name, "vladimir harkonnen doesn't like trees", tc.version)
+
+			// then
+			require.EqualError(tt, err, wallet.ErrInvalidMnemonic.Error())
+			assert.Nil(tt, w)
+		})
+	}
 }
 
 func testHDWalletGeneratingKeyPairSucceeds(t *testing.T) {
-	// given
-	name := "jeremy"
-	meta := []wallet.Meta{{Key: "env", Value: "test"}}
+	tcs := []struct {
+		name       string
+		version    uint32
+		publicKey  string
+		privateKey string
+	}{
+		{
+			name:       "version 1",
+			version:    1,
+			publicKey:  "30ebce58d94ad37c4ff6a9014c955c20e12468da956163228cc7ec9b98d3a371",
+			privateKey: "1bbd4efb460d0bf457251e866697d5d2e9b58c5dcb96a964cd9cfff1a712a2b930ebce58d94ad37c4ff6a9014c955c20e12468da956163228cc7ec9b98d3a371",
+		}, {
+			name:       "version 2",
+			version:    2,
+			publicKey:  "b5fd9d3c4ad553cb3196303b6e6df7f484cf7f5331a572a45031239fd71ad8a0",
+			privateKey: "0bfdfb4a04e22d7252a4f24eb9d0f35a82efdc244cb0876d919361e61f6f56a2b5fd9d3c4ad553cb3196303b6e6df7f484cf7f5331a572a45031239fd71ad8a0",
+		},
+	}
 
-	// when
-	w, mnemonic, err := wallet.NewHDWallet(name)
+	for _, tc := range tcs {
+		t.Run(tc.name, func(tt *testing.T) {
+			// given
+			name := "duncan"
+			meta := []wallet.Meta{{Key: "env", Value: "test"}}
 
-	// then
-	require.NoError(t, err)
-	assert.NotEmpty(t, mnemonic)
-	assert.NotNil(t, w)
+			// when
+			w, err := wallet.ImportHDWallet(name, TestMnemonic1, tc.version)
 
-	// when
-	kp, err := w.GenerateKeyPair(meta)
+			// then
+			require.NoError(tt, err)
+			assert.NotNil(tt, w)
 
-	// then
-	require.NoError(t, err)
-	assert.NotNil(t, kp)
-	assert.Equal(t, kp.Meta(), meta)
+			// when
+			kp, err := w.GenerateKeyPair(meta)
+
+			// then
+			require.NoError(tt, err)
+			assert.NotNil(tt, kp)
+			assert.Equal(tt, kp.Meta(), meta)
+			assert.Equal(tt, tc.publicKey, kp.PublicKey())
+			assert.Equal(tt, tc.privateKey, kp.PrivateKey())
+		})
+	}
 }
 
 func testHDWalletGeneratingKeyPairOnIsolatedWalletFails(t *testing.T) {
-	// given
-	name := "jeremy"
+	tcs := []struct {
+		name    string
+		version uint32
+	}{
+		{
+			name:    "version 1",
+			version: 1,
+		}, {
+			name:    "version 2",
+			version: 2,
+		},
+	}
 
-	// when
-	w, mnemonic, err := wallet.NewHDWallet(name)
+	for _, tc := range tcs {
+		t.Run(tc.name, func(tt *testing.T) {
+			// given
+			name := "duncan"
 
-	// then
-	require.NoError(t, err)
-	assert.NotEmpty(t, mnemonic)
-	assert.NotNil(t, w)
+			// when
+			w, err := wallet.ImportHDWallet(name, TestMnemonic1, tc.version)
 
-	// when
-	kp, err := w.GenerateKeyPair([]wallet.Meta{})
+			// then
+			require.NoError(tt, err)
+			assert.NotNil(tt, w)
 
-	// then
-	require.NoError(t, err)
-	assert.NotNil(t, kp)
+			// when
+			kp, err := w.GenerateKeyPair([]wallet.Meta{})
 
-	// when
-	isolatedWallet, err := w.IsolateWithKey(kp.PublicKey())
+			// then
+			require.NoError(tt, err)
+			assert.NotNil(tt, kp)
 
-	// then
-	require.NoError(t, err)
-	assert.NotNil(t, isolatedWallet)
+			// when
+			isolatedWallet, err := w.IsolateWithKey(kp.PublicKey())
 
-	// when
-	keyPair, err := isolatedWallet.GenerateKeyPair([]wallet.Meta{})
+			// then
+			require.NoError(tt, err)
+			assert.NotNil(tt, isolatedWallet)
 
-	// then
-	require.EqualError(t, err, wallet.ErrIsolatedWalletCantGenerateKeyPairs.Error())
-	require.Nil(t, keyPair)
+			// when
+			keyPair, err := isolatedWallet.GenerateKeyPair([]wallet.Meta{})
+
+			// then
+			require.EqualError(tt, err, wallet.ErrIsolatedWalletCantGenerateKeyPairs.Error())
+			require.Nil(tt, keyPair)
+		})
+	}
 }
 
 func testHDWalletTaintingKeyPairSucceeds(t *testing.T) {
-	// given
-	name := "jeremy"
+	tcs := []struct {
+		name    string
+		version uint32
+	}{
+		{
+			name:    "version 1",
+			version: 1,
+		}, {
+			name:    "version 2",
+			version: 2,
+		},
+	}
 
-	// when
-	w, mnemonic, err := wallet.NewHDWallet(name)
+	for _, tc := range tcs {
+		t.Run(tc.name, func(tt *testing.T) {
+			// given
+			name := "duncan"
 
-	// then
-	require.NoError(t, err)
-	assert.NotEmpty(t, mnemonic)
-	assert.NotNil(t, w)
+			// when
+			w, err := wallet.ImportHDWallet(name, TestMnemonic1, tc.version)
 
-	// when
-	kp, err := w.GenerateKeyPair([]wallet.Meta{})
+			// then
+			require.NoError(tt, err)
+			assert.NotNil(tt, w)
 
-	// then
-	require.NoError(t, err)
-	assert.NotNil(t, kp)
+			// when
+			kp, err := w.GenerateKeyPair([]wallet.Meta{})
 
-	// when
-	err = w.TaintKey(kp.PublicKey())
+			// then
+			require.NoError(tt, err)
+			assert.NotNil(tt, kp)
 
-	// then
-	require.NoError(t, err)
+			// when
+			err = w.TaintKey(kp.PublicKey())
 
-	// when
-	pubKey, err := w.DescribePublicKey(kp.PublicKey())
+			// then
+			require.NoError(tt, err)
 
-	// then
-	require.NoError(t, err)
-	assert.NotNil(t, pubKey)
-	assert.True(t, pubKey.IsTainted())
+			// when
+			pubKey, err := w.DescribePublicKey(kp.PublicKey())
+
+			// then
+			require.NoError(tt, err)
+			assert.NotNil(tt, pubKey)
+			assert.True(tt, pubKey.IsTainted())
+		})
+	}
 }
 
 func testHDWalletTaintingKeyThatIsAlreadyTaintedFails(t *testing.T) {
-	// given
-	name := "jeremy"
+	tcs := []struct {
+		name    string
+		version uint32
+	}{
+		{
+			name:    "version 1",
+			version: 1,
+		}, {
+			name:    "version 2",
+			version: 2,
+		},
+	}
 
-	// when
-	w, mnemonic, err := wallet.NewHDWallet(name)
+	for _, tc := range tcs {
+		t.Run(tc.name, func(tt *testing.T) {
+			// given
+			name := "duncan"
 
-	// then
-	require.NoError(t, err)
-	assert.NotEmpty(t, mnemonic)
-	assert.NotNil(t, w)
+			// when
+			w, err := wallet.ImportHDWallet(name, TestMnemonic1, tc.version)
 
-	// when
-	kp, err := w.GenerateKeyPair([]wallet.Meta{})
+			// then
+			require.NoError(tt, err)
+			assert.NotNil(tt, w)
 
-	// then
-	require.NoError(t, err)
-	assert.NotNil(t, kp)
+			// when
+			kp, err := w.GenerateKeyPair([]wallet.Meta{})
 
-	// when
-	err = w.TaintKey(kp.PublicKey())
+			// then
+			require.NoError(tt, err)
+			assert.NotNil(tt, kp)
 
-	// then
-	require.NoError(t, err)
+			// when
+			err = w.TaintKey(kp.PublicKey())
 
-	// when
-	err = w.TaintKey(kp.PublicKey())
+			// then
+			require.NoError(tt, err)
 
-	// then
-	assert.EqualError(t, err, wallet.ErrPubKeyAlreadyTainted.Error())
+			// when
+			err = w.TaintKey(kp.PublicKey())
 
-	// when
-	pubKey, err := w.DescribePublicKey(kp.PublicKey())
+			// then
+			assert.EqualError(tt, err, wallet.ErrPubKeyAlreadyTainted.Error())
 
-	// then
-	require.NoError(t, err)
-	assert.NotNil(t, pubKey)
-	assert.True(t, pubKey.IsTainted())
+			// when
+			pubKey, err := w.DescribePublicKey(kp.PublicKey())
+
+			// then
+			require.NoError(tt, err)
+			assert.NotNil(tt, pubKey)
+			assert.True(tt, pubKey.IsTainted())
+		})
+	}
 }
 
 func testHDWalletTaintingUnknownKeyFails(t *testing.T) {
-	// given
-	name := "jeremy"
+	tcs := []struct {
+		name    string
+		version uint32
+	}{
+		{
+			name:    "version 1",
+			version: 1,
+		}, {
+			name:    "version 2",
+			version: 2,
+		},
+	}
 
-	// when
-	w, mnemonic, err := wallet.NewHDWallet(name)
+	for _, tc := range tcs {
+		t.Run(tc.name, func(tt *testing.T) {
+			// given
+			name := "duncan"
 
-	// then
-	require.NoError(t, err)
-	assert.NotEmpty(t, mnemonic)
-	assert.NotNil(t, w)
+			// when
+			w, err := wallet.ImportHDWallet(name, TestMnemonic1, tc.version)
 
-	// when
-	err = w.TaintKey("vladimirharkonnen")
+			// then
+			require.NoError(tt, err)
+			assert.NotNil(tt, w)
 
-	// then
-	assert.EqualError(t, err, wallet.ErrPubKeyDoesNotExist.Error())
+			// when
+			err = w.TaintKey("vladimirharkonnen")
+
+			// then
+			assert.EqualError(tt, err, wallet.ErrPubKeyDoesNotExist.Error())
+		})
+	}
 }
 
 func testHDWalletUntaintingKeyPairSucceeds(t *testing.T) {
-	// given
-	name := "jeremy"
+	tcs := []struct {
+		name    string
+		version uint32
+	}{
+		{
+			name:    "version 1",
+			version: 1,
+		}, {
+			name:    "version 2",
+			version: 2,
+		},
+	}
 
-	// when
-	w, mnemonic, err := wallet.NewHDWallet(name)
+	for _, tc := range tcs {
+		t.Run(tc.name, func(tt *testing.T) {
+			// given
+			name := "duncan"
 
-	// then
-	require.NoError(t, err)
-	assert.NotEmpty(t, mnemonic)
-	assert.NotNil(t, w)
+			// when
+			w, err := wallet.ImportHDWallet(name, TestMnemonic1, tc.version)
 
-	// when
-	kp, err := w.GenerateKeyPair([]wallet.Meta{})
+			// then
+			require.NoError(tt, err)
+			assert.NotNil(tt, w)
 
-	// then
-	require.NoError(t, err)
-	assert.NotNil(t, kp)
+			// when
+			kp, err := w.GenerateKeyPair([]wallet.Meta{})
 
-	// when
-	err = w.TaintKey(kp.PublicKey())
+			// then
+			require.NoError(tt, err)
+			assert.NotNil(tt, kp)
 
-	// then
-	require.NoError(t, err)
+			// when
+			err = w.TaintKey(kp.PublicKey())
 
-	// when
-	pubKey, err := w.DescribePublicKey(kp.PublicKey())
+			// then
+			require.NoError(tt, err)
 
-	// then
-	require.NoError(t, err)
-	assert.NotNil(t, pubKey)
-	assert.True(t, pubKey.IsTainted())
+			// when
+			pubKey, err := w.DescribePublicKey(kp.PublicKey())
 
-	// when
-	err = w.UntaintKey(kp.PublicKey())
+			// then
+			require.NoError(tt, err)
+			assert.NotNil(tt, pubKey)
+			assert.True(tt, pubKey.IsTainted())
 
-	// then
-	require.NoError(t, err)
+			// when
+			err = w.UntaintKey(kp.PublicKey())
 
-	// when
-	pubKey, err = w.DescribePublicKey(kp.PublicKey())
+			// then
+			require.NoError(tt, err)
 
-	// then
-	require.NoError(t, err)
-	assert.NotNil(t, pubKey)
-	assert.False(t, pubKey.IsTainted())
+			// when
+			pubKey, err = w.DescribePublicKey(kp.PublicKey())
+
+			// then
+			require.NoError(tt, err)
+			assert.NotNil(tt, pubKey)
+			assert.False(tt, pubKey.IsTainted())
+		})
+	}
 }
 
 func testHDWalletUntaintingKeyThatIsNotTaintedFails(t *testing.T) {
-	// given
-	name := "jeremy"
+	tcs := []struct {
+		name    string
+		version uint32
+	}{
+		{
+			name:    "version 1",
+			version: 1,
+		}, {
+			name:    "version 2",
+			version: 2,
+		},
+	}
 
-	// when
-	w, mnemonic, err := wallet.NewHDWallet(name)
+	for _, tc := range tcs {
+		t.Run(tc.name, func(tt *testing.T) {
+			// given
+			name := "duncan"
 
-	// then
-	require.NoError(t, err)
-	assert.NotEmpty(t, mnemonic)
-	assert.NotNil(t, w)
+			// when
+			w, err := wallet.ImportHDWallet(name, TestMnemonic1, tc.version)
 
-	// when
-	kp, err := w.GenerateKeyPair([]wallet.Meta{})
+			// then
+			require.NoError(tt, err)
+			assert.NotNil(tt, w)
 
-	// then
-	require.NoError(t, err)
-	assert.NotNil(t, kp)
+			// when
+			kp, err := w.GenerateKeyPair([]wallet.Meta{})
 
-	// when
-	err = w.UntaintKey(kp.PublicKey())
+			// then
+			require.NoError(tt, err)
+			assert.NotNil(tt, kp)
 
-	// then
-	assert.EqualError(t, err, wallet.ErrPubKeyNotTainted.Error())
+			// when
+			err = w.UntaintKey(kp.PublicKey())
 
-	// when
-	pubKey, err := w.DescribePublicKey(kp.PublicKey())
+			// then
+			assert.EqualError(tt, err, wallet.ErrPubKeyNotTainted.Error())
 
-	// then
-	require.NoError(t, err)
-	assert.NotNil(t, pubKey)
-	assert.False(t, pubKey.IsTainted())
+			// when
+			pubKey, err := w.DescribePublicKey(kp.PublicKey())
+
+			// then
+			require.NoError(tt, err)
+			assert.NotNil(tt, pubKey)
+			assert.False(tt, pubKey.IsTainted())
+		})
+	}
 }
 
 func testHDWalletUntaintingUnknownKeyFails(t *testing.T) {
-	// given
-	name := "jeremy"
+	tcs := []struct {
+		name    string
+		version uint32
+	}{
+		{
+			name:    "version 1",
+			version: 1,
+		}, {
+			name:    "version 2",
+			version: 2,
+		},
+	}
 
-	// when
-	w, mnemonic, err := wallet.NewHDWallet(name)
+	for _, tc := range tcs {
+		t.Run(tc.name, func(tt *testing.T) {
+			// given
+			name := "duncan"
 
-	// then
-	require.NoError(t, err)
-	assert.NotEmpty(t, mnemonic)
-	assert.NotNil(t, w)
+			// when
+			w, err := wallet.ImportHDWallet(name, TestMnemonic1, tc.version)
 
-	// when
-	err = w.UntaintKey("vladimirharkonnen")
+			// then
+			require.NoError(tt, err)
+			assert.NotNil(tt, w)
 
-	// then
-	assert.EqualError(t, err, wallet.ErrPubKeyDoesNotExist.Error())
+			// when
+			err = w.UntaintKey("vladimirharkonnen")
+
+			// then
+			assert.EqualError(tt, err, wallet.ErrPubKeyDoesNotExist.Error())
+		})
+	}
 }
 
 func testHDWalletUpdatingKeyPairMetaSucceeds(t *testing.T) {
-	// given
-	name := "jeremy"
-	meta := []wallet.Meta{{Key: "primary", Value: "yes"}}
+	tcs := []struct {
+		name    string
+		version uint32
+	}{
+		{
+			name:    "version 1",
+			version: 1,
+		}, {
+			name:    "version 2",
+			version: 2,
+		},
+	}
 
-	// when
-	w, mnemonic, err := wallet.NewHDWallet(name)
+	for _, tc := range tcs {
+		t.Run(tc.name, func(tt *testing.T) {
+			// given
+			name := "duncan"
+			meta := []wallet.Meta{{Key: "primary", Value: "yes"}}
 
-	// then
-	require.NoError(t, err)
-	assert.NotEmpty(t, mnemonic)
-	assert.NotNil(t, w)
+			// when
+			w, err := wallet.ImportHDWallet(name, TestMnemonic1, tc.version)
 
-	// when
-	kp, err := w.GenerateKeyPair([]wallet.Meta{})
+			// then
+			require.NoError(tt, err)
+			assert.NotNil(tt, w)
 
-	// then
-	require.NoError(t, err)
-	assert.NotNil(t, kp)
+			// when
+			kp, err := w.GenerateKeyPair([]wallet.Meta{})
 
-	// when
-	err = w.UpdateMeta(kp.PublicKey(), meta)
+			// then
+			require.NoError(tt, err)
+			assert.NotNil(tt, kp)
 
-	// then
-	require.NoError(t, err)
+			// when
+			err = w.UpdateMeta(kp.PublicKey(), meta)
 
-	// when
-	pubKey, err := w.DescribePublicKey(kp.PublicKey())
+			// then
+			require.NoError(tt, err)
 
-	// then
-	require.NoError(t, err)
-	assert.NotNil(t, pubKey)
-	assert.Equal(t, meta, pubKey.Meta())
+			// when
+			pubKey, err := w.DescribePublicKey(kp.PublicKey())
+
+			// then
+			require.NoError(tt, err)
+			assert.NotNil(tt, pubKey)
+			assert.Equal(tt, meta, pubKey.Meta())
+		})
+	}
 }
 
 func testHDWalletUpdatingKeyPairMetaWithUnknownPublicKeyFails(t *testing.T) {
-	// given
-	name := "jeremy"
-	meta := []wallet.Meta{{Key: "primary", Value: "yes"}}
+	tcs := []struct {
+		name    string
+		version uint32
+	}{
+		{
+			name:    "version 1",
+			version: 1,
+		}, {
+			name:    "version 2",
+			version: 2,
+		},
+	}
 
-	// when
-	w, mnemonic, err := wallet.NewHDWallet(name)
+	for _, tc := range tcs {
+		t.Run(tc.name, func(tt *testing.T) {
+			// given
+			name := "duncan"
+			meta := []wallet.Meta{{Key: "primary", Value: "yes"}}
 
-	// then
-	require.NoError(t, err)
-	assert.NotEmpty(t, mnemonic)
-	assert.NotNil(t, w)
+			// when
+			w, err := wallet.ImportHDWallet(name, TestMnemonic1, tc.version)
 
-	// when
-	err = w.UpdateMeta("somekey", meta)
+			// then
+			require.NoError(tt, err)
+			assert.NotNil(tt, w)
 
-	// then
-	require.Error(t, err, wallets.ErrWalletDoesNotExists)
+			// when
+			err = w.UpdateMeta("somekey", meta)
+
+			// then
+			require.Error(tt, err, wallets.ErrWalletDoesNotExists)
+		})
+	}
 }
 
 func testHDWalletDescribingPublicKeysSucceeds(t *testing.T) {
-	// given
-	name := "jeremy"
+	tcs := []struct {
+		name    string
+		version uint32
+	}{
+		{
+			name:    "version 1",
+			version: 1,
+		}, {
+			name:    "version 2",
+			version: 2,
+		},
+	}
 
-	// when
-	w, err := wallet.ImportHDWallet(name, TestMnemonic1)
+	for _, tc := range tcs {
+		t.Run(tc.name, func(tt *testing.T) {
+			// given
+			name := "duncan"
 
-	// then
-	require.NoError(t, err)
-	assert.NotNil(t, w)
+			// when
+			w, err := wallet.ImportHDWallet(name, TestMnemonic1, tc.version)
 
-	// when
-	kp1, err := w.GenerateKeyPair([]wallet.Meta{})
+			// then
+			require.NoError(tt, err)
+			assert.NotNil(tt, w)
 
-	// then
-	require.NoError(t, err)
-	assert.NotNil(t, kp1)
+			// when
+			kp1, err := w.GenerateKeyPair([]wallet.Meta{})
 
-	// when
-	pubKey, err := w.DescribePublicKey(kp1.PublicKey())
+			// then
+			require.NoError(tt, err)
+			assert.NotNil(tt, kp1)
 
-	// then
-	require.NoError(t, err)
-	assert.Equal(t, kp1.PublicKey(), pubKey.Key())
-	assert.Equal(t, kp1.Meta(), pubKey.Meta())
-	assert.Equal(t, kp1.IsTainted(), pubKey.IsTainted())
-	assert.Equal(t, kp1.AlgorithmName(), pubKey.AlgorithmName())
-	assert.Equal(t, kp1.AlgorithmVersion(), pubKey.AlgorithmVersion())
+			// when
+			pubKey, err := w.DescribePublicKey(kp1.PublicKey())
+
+			// then
+			require.NoError(tt, err)
+			assert.Equal(tt, kp1.PublicKey(), pubKey.Key())
+			assert.Equal(tt, kp1.Meta(), pubKey.Meta())
+			assert.Equal(tt, kp1.IsTainted(), pubKey.IsTainted())
+			assert.Equal(tt, kp1.AlgorithmName(), pubKey.AlgorithmName())
+			assert.Equal(tt, kp1.AlgorithmVersion(), pubKey.AlgorithmVersion())
+		})
+	}
 }
 
 func testHDWalletDescribingUnknownPublicKeysFails(t *testing.T) {
-	// given
-	name := "jeremy"
+	tcs := []struct {
+		name    string
+		version uint32
+	}{
+		{
+			name:    "version 1",
+			version: 1,
+		}, {
+			name:    "version 2",
+			version: 2,
+		},
+	}
 
-	// when
-	w, err := wallet.ImportHDWallet(name, TestMnemonic1)
+	for _, tc := range tcs {
+		t.Run(tc.name, func(tt *testing.T) {
+			// given
+			name := "duncan"
 
-	// then
-	require.NoError(t, err)
-	assert.NotNil(t, w)
+			// when
+			w, err := wallet.ImportHDWallet(name, TestMnemonic1, tc.version)
 
-	// when
-	pubKey, err := w.DescribePublicKey("vladimirharkonnen")
+			// then
+			require.NoError(tt, err)
+			assert.NotNil(tt, w)
 
-	// then
-	require.EqualError(t, err, wallet.ErrPubKeyDoesNotExist.Error())
-	assert.Empty(t, pubKey)
+			// when
+			pubKey, err := w.DescribePublicKey("vladimirharkonnen")
+
+			// then
+			require.EqualError(tt, err, wallet.ErrPubKeyDoesNotExist.Error())
+			assert.Empty(tt, pubKey)
+		})
+	}
 }
 
 func testHDWalletListingPublicKeysSucceeds(t *testing.T) {
-	// given
-	name := "jeremy"
+	tcs := []struct {
+		name    string
+		version uint32
+	}{
+		{
+			name:    "version 1",
+			version: 1,
+		}, {
+			name:    "version 2",
+			version: 2,
+		},
+	}
 
-	// when
-	w, err := wallet.ImportHDWallet(name, TestMnemonic1)
+	for _, tc := range tcs {
+		t.Run(tc.name, func(tt *testing.T) {
+			// given
+			name := "duncan"
 
-	// then
-	require.NoError(t, err)
-	assert.NotNil(t, w)
+			// when
+			w, err := wallet.ImportHDWallet(name, TestMnemonic1, tc.version)
 
-	// when
-	kp1, err := w.GenerateKeyPair([]wallet.Meta{})
+			// then
+			require.NoError(tt, err)
+			assert.NotNil(tt, w)
 
-	// then
-	require.NoError(t, err)
-	assert.NotNil(t, kp1)
+			// when
+			kp1, err := w.GenerateKeyPair([]wallet.Meta{})
 
-	// when
-	kp2, err := w.GenerateKeyPair([]wallet.Meta{})
+			// then
+			require.NoError(tt, err)
+			assert.NotNil(tt, kp1)
 
-	// then
-	require.NoError(t, err)
-	assert.NotNil(t, kp2)
+			// when
+			kp2, err := w.GenerateKeyPair([]wallet.Meta{})
 
-	// when
-	keys := w.ListPublicKeys()
+			// then
+			require.NoError(tt, err)
+			assert.NotNil(tt, kp2)
 
-	// then
-	assert.Len(t, keys, 2)
-	assert.Equal(t, keys[0].Key(), kp1.PublicKey())
-	assert.Equal(t, keys[1].Key(), kp2.PublicKey())
+			// when
+			keys := w.ListPublicKeys()
+
+			// then
+			assert.Len(tt, keys, 2)
+			assert.Equal(tt, keys[0].Key(), kp1.PublicKey())
+			assert.Equal(tt, keys[1].Key(), kp2.PublicKey())
+		})
+	}
 }
 
 func testHDWalletListingKeyPairsSucceeds(t *testing.T) {
-	// given
-	name := "jeremy"
+	tcs := []struct {
+		name    string
+		version uint32
+	}{
+		{
+			name:    "version 1",
+			version: 1,
+		}, {
+			name:    "version 2",
+			version: 2,
+		},
+	}
 
-	// when
-	w, err := wallet.ImportHDWallet(name, TestMnemonic1)
+	for _, tc := range tcs {
+		t.Run(tc.name, func(tt *testing.T) {
+			// given
+			name := "duncan"
 
-	// then
-	require.NoError(t, err)
-	assert.NotNil(t, w)
+			// when
+			w, err := wallet.ImportHDWallet(name, TestMnemonic1, tc.version)
 
-	// when
-	kp1, err := w.GenerateKeyPair([]wallet.Meta{})
+			// then
+			require.NoError(tt, err)
+			assert.NotNil(tt, w)
 
-	// then
-	require.NoError(t, err)
-	assert.NotNil(t, kp1)
+			// when
+			kp1, err := w.GenerateKeyPair([]wallet.Meta{})
 
-	// when
-	kp2, err := w.GenerateKeyPair([]wallet.Meta{})
+			// then
+			require.NoError(tt, err)
+			assert.NotNil(tt, kp1)
 
-	// then
-	require.NoError(t, err)
-	assert.NotNil(t, kp2)
+			// when
+			kp2, err := w.GenerateKeyPair([]wallet.Meta{})
 
-	// when
-	keys := w.ListKeyPairs()
+			// then
+			require.NoError(tt, err)
+			assert.NotNil(tt, kp2)
 
-	// then
-	assert.Equal(t, keys, []wallet.KeyPair{kp1, kp2})
+			// when
+			keys := w.ListKeyPairs()
+
+			// then
+			assert.Equal(tt, keys, []wallet.KeyPair{kp1, kp2})
+		})
+	}
 }
 
 func testHDWalletSigningTxSucceeds(t *testing.T) {
-	// given
-	name := "jeremy"
-	data := []byte("Je ne connaîtrai pas la peur car la peur tue l'esprit.")
+	tcs := []struct {
+		name      string
+		version   uint32
+		signature string
+	}{
+		{
+			name:      "version 1",
+			version:   1,
+			signature: "3849965c2f327f0b148e3b122cdc89a17fa07611e2a4178b1605dea5442ab7cfadb35d0b0ef527522f6477a5633b8f22d3b2d1e619d306111b7851a9d6100d02",
+		}, {
+			name:      "version 2",
+			version:   2,
+			signature: "4ad1fcd911f18d0df24de692376e5beac2700322e2ab5083bcf59fd17e0a21ffd64c88e4ba79162a7d46abd9ed0a81817c1648c8d7e93ed1b1d13499b12adb08",
+		},
+	}
 
-	// when
-	w, err := wallet.ImportHDWallet(name, TestMnemonic1)
+	for _, tc := range tcs {
+		t.Run(tc.name, func(tt *testing.T) {
+			// given
+			name := "duncan"
+			data := []byte("Je ne connaîtrai pas la peur car la peur tue l'esprit.")
 
-	// then
-	require.NoError(t, err)
-	assert.NotNil(t, w)
+			// when
+			w, err := wallet.ImportHDWallet(name, TestMnemonic1, tc.version)
 
-	// when
-	kp, err := w.GenerateKeyPair([]wallet.Meta{})
+			// then
+			require.NoError(tt, err)
+			assert.NotNil(tt, w)
 
-	// then
-	require.NoError(t, err)
-	assert.NotNil(t, kp)
+			// when
+			kp, err := w.GenerateKeyPair([]wallet.Meta{})
 
-	// when
-	signature, err := w.SignTx(kp.PublicKey(), data)
+			// then
+			require.NoError(tt, err)
+			assert.NotNil(tt, kp)
 
-	// then
-	require.NoError(t, err)
-	assert.Equal(t, kp.AlgorithmVersion(), signature.Version)
-	assert.Equal(t, kp.AlgorithmName(), signature.Algo)
-	assert.Equal(t, "3849965c2f327f0b148e3b122cdc89a17fa07611e2a4178b1605dea5442ab7cfadb35d0b0ef527522f6477a5633b8f22d3b2d1e619d306111b7851a9d6100d02", signature.Value)
+			// when
+			signature, err := w.SignTx(kp.PublicKey(), data)
+
+			// then
+			require.NoError(tt, err)
+			assert.Equal(tt, kp.AlgorithmVersion(), signature.Version)
+			assert.Equal(tt, kp.AlgorithmName(), signature.Algo)
+			assert.Equal(tt, tc.signature, signature.Value)
+		})
+	}
 }
 
 func testHDWalletSigningTxWithTaintedKeyFails(t *testing.T) {
-	// given
-	name := "jeremy"
-	data := []byte("Je ne connaîtrai pas la peur car la peur tue l'esprit.")
+	tcs := []struct {
+		name    string
+		version uint32
+	}{
+		{
+			name:    "version 1",
+			version: 1,
+		}, {
+			name:    "version 2",
+			version: 2,
+		},
+	}
 
-	// when
-	w, err := wallet.ImportHDWallet(name, TestMnemonic1)
+	for _, tc := range tcs {
+		t.Run(tc.name, func(tt *testing.T) {
+			// given
+			name := "duncan"
+			data := []byte("Je ne connaîtrai pas la peur car la peur tue l'esprit.")
 
-	// then
-	require.NoError(t, err)
-	assert.NotNil(t, w)
+			// when
+			w, err := wallet.ImportHDWallet(name, TestMnemonic1, tc.version)
 
-	// when
-	kp, err := w.GenerateKeyPair([]wallet.Meta{})
+			// then
+			require.NoError(tt, err)
+			assert.NotNil(tt, w)
 
-	// then
-	require.NoError(t, err)
-	assert.NotNil(t, kp)
+			// when
+			kp, err := w.GenerateKeyPair([]wallet.Meta{})
 
-	// when
-	err = w.TaintKey(kp.PublicKey())
+			// then
+			require.NoError(tt, err)
+			assert.NotNil(tt, kp)
 
-	// then
-	require.NoError(t, err)
+			// when
+			err = w.TaintKey(kp.PublicKey())
 
-	// when
-	signature, err := w.SignTx(kp.PublicKey(), data)
+			// then
+			require.NoError(tt, err)
 
-	// then
-	require.EqualError(t, err, wallet.ErrPubKeyIsTainted.Error())
-	assert.Nil(t, signature)
+			// when
+			signature, err := w.SignTx(kp.PublicKey(), data)
+
+			// then
+			require.EqualError(tt, err, wallet.ErrPubKeyIsTainted.Error())
+			assert.Nil(tt, signature)
+		})
+	}
 }
 
 func testHDWalletSigningTxWithUnknownKeyFails(t *testing.T) {
-	// given
-	name := "jeremy"
-	data := []byte("Je ne connaîtrai pas la peur car la peur tue l'esprit.")
+	tcs := []struct {
+		name    string
+		version uint32
+	}{
+		{
+			name:    "version 1",
+			version: 1,
+		}, {
+			name:    "version 2",
+			version: 2,
+		},
+	}
 
-	// when
-	w, err := wallet.ImportHDWallet(name, TestMnemonic1)
+	for _, tc := range tcs {
+		t.Run(tc.name, func(tt *testing.T) {
+			// given
+			name := "duncan"
+			data := []byte("Je ne connaîtrai pas la peur car la peur tue l'esprit.")
 
-	// then
-	require.NoError(t, err)
-	assert.NotNil(t, w)
+			// when
+			w, err := wallet.ImportHDWallet(name, TestMnemonic1, tc.version)
 
-	// when
-	kp, err := w.GenerateKeyPair([]wallet.Meta{})
+			// then
+			require.NoError(tt, err)
+			assert.NotNil(tt, w)
 
-	// then
-	require.NoError(t, err)
-	assert.NotNil(t, kp)
+			// when
+			kp, err := w.GenerateKeyPair([]wallet.Meta{})
 
-	// when
-	signature, err := w.SignTx("vladimirharkonnen", data)
+			// then
+			require.NoError(tt, err)
+			assert.NotNil(tt, kp)
 
-	// then
-	require.EqualError(t, err, wallet.ErrPubKeyDoesNotExist.Error())
-	assert.Empty(t, signature)
+			// when
+			signature, err := w.SignTx("vladimirharkonnen", data)
+
+			// then
+			require.EqualError(tt, err, wallet.ErrPubKeyDoesNotExist.Error())
+			assert.Empty(tt, signature)
+		})
+	}
 }
 
 func testHDWalletSigningAnyMessageSucceeds(t *testing.T) {
-	// given
-	name := "jeremy"
-	data := []byte("Je ne connaîtrai pas la peur car la peur tue l'esprit.")
+	tcs := []struct {
+		name      string
+		version   uint32
+		signature []byte
+	}{
+		{
+			name:      "version 1",
+			version:   1,
+			signature: []byte{0x38, 0x49, 0x96, 0x5c, 0x2f, 0x32, 0x7f, 0xb, 0x14, 0x8e, 0x3b, 0x12, 0x2c, 0xdc, 0x89, 0xa1, 0x7f, 0xa0, 0x76, 0x11, 0xe2, 0xa4, 0x17, 0x8b, 0x16, 0x5, 0xde, 0xa5, 0x44, 0x2a, 0xb7, 0xcf, 0xad, 0xb3, 0x5d, 0xb, 0xe, 0xf5, 0x27, 0x52, 0x2f, 0x64, 0x77, 0xa5, 0x63, 0x3b, 0x8f, 0x22, 0xd3, 0xb2, 0xd1, 0xe6, 0x19, 0xd3, 0x6, 0x11, 0x1b, 0x78, 0x51, 0xa9, 0xd6, 0x10, 0xd, 0x2},
+		}, {
+			name:      "version 2",
+			version:   2,
+			signature: []byte{0x4a, 0xd1, 0xfc, 0xd9, 0x11, 0xf1, 0x8d, 0xd, 0xf2, 0x4d, 0xe6, 0x92, 0x37, 0x6e, 0x5b, 0xea, 0xc2, 0x70, 0x3, 0x22, 0xe2, 0xab, 0x50, 0x83, 0xbc, 0xf5, 0x9f, 0xd1, 0x7e, 0xa, 0x21, 0xff, 0xd6, 0x4c, 0x88, 0xe4, 0xba, 0x79, 0x16, 0x2a, 0x7d, 0x46, 0xab, 0xd9, 0xed, 0xa, 0x81, 0x81, 0x7c, 0x16, 0x48, 0xc8, 0xd7, 0xe9, 0x3e, 0xd1, 0xb1, 0xd1, 0x34, 0x99, 0xb1, 0x2a, 0xdb, 0x8},
+		},
+	}
 
-	// when
-	w, err := wallet.ImportHDWallet(name, TestMnemonic1)
+	for _, tc := range tcs {
+		t.Run(tc.name, func(tt *testing.T) {
+			// given
+			name := "duncan"
+			data := []byte("Je ne connaîtrai pas la peur car la peur tue l'esprit.")
 
-	// then
-	require.NoError(t, err)
-	assert.NotNil(t, w)
+			// when
+			w, err := wallet.ImportHDWallet(name, TestMnemonic1, tc.version)
 
-	// when
-	kp, err := w.GenerateKeyPair([]wallet.Meta{})
+			// then
+			require.NoError(tt, err)
+			assert.NotNil(tt, w)
 
-	// then
-	require.NoError(t, err)
-	assert.NotNil(t, kp)
+			// when
+			kp, err := w.GenerateKeyPair([]wallet.Meta{})
 
-	// when
-	signature, err := w.SignAny(kp.PublicKey(), data)
+			// then
+			require.NoError(tt, err)
+			assert.NotNil(tt, kp)
 
-	// then
-	require.NoError(t, err)
-	assert.Equal(t, []byte{0x38, 0x49, 0x96, 0x5c, 0x2f, 0x32, 0x7f, 0xb, 0x14, 0x8e, 0x3b, 0x12, 0x2c, 0xdc, 0x89, 0xa1, 0x7f, 0xa0, 0x76, 0x11, 0xe2, 0xa4, 0x17, 0x8b, 0x16, 0x5, 0xde, 0xa5, 0x44, 0x2a, 0xb7, 0xcf, 0xad, 0xb3, 0x5d, 0xb, 0xe, 0xf5, 0x27, 0x52, 0x2f, 0x64, 0x77, 0xa5, 0x63, 0x3b, 0x8f, 0x22, 0xd3, 0xb2, 0xd1, 0xe6, 0x19, 0xd3, 0x6, 0x11, 0x1b, 0x78, 0x51, 0xa9, 0xd6, 0x10, 0xd, 0x2}, signature)
+			// when
+			signature, err := w.SignAny(kp.PublicKey(), data)
+
+			// then
+			require.NoError(tt, err)
+			assert.Equal(tt, tc.signature, signature)
+		})
+	}
 }
 
 func testHDWalletSigningAnyMessageWithTaintedKeyFails(t *testing.T) {
-	// given
-	name := "jeremy"
-	data := []byte("Je ne connaîtrai pas la peur car la peur tue l'esprit.")
+	tcs := []struct {
+		name    string
+		version uint32
+	}{
+		{
+			name:    "version 1",
+			version: 1,
+		}, {
+			name:    "version 2",
+			version: 2,
+		},
+	}
 
-	// when
-	w, err := wallet.ImportHDWallet(name, TestMnemonic1)
+	for _, tc := range tcs {
+		t.Run(tc.name, func(tt *testing.T) {
+			// given
+			name := "duncan"
+			data := []byte("Je ne connaîtrai pas la peur car la peur tue l'esprit.")
 
-	// then
-	require.NoError(t, err)
-	assert.NotNil(t, w)
+			// when
+			w, err := wallet.ImportHDWallet(name, TestMnemonic1, tc.version)
 
-	// when
-	kp, err := w.GenerateKeyPair([]wallet.Meta{})
+			// then
+			require.NoError(tt, err)
+			assert.NotNil(tt, w)
 
-	// then
-	require.NoError(t, err)
-	assert.NotNil(t, kp)
+			// when
+			kp, err := w.GenerateKeyPair([]wallet.Meta{})
 
-	// when
-	err = w.TaintKey(kp.PublicKey())
+			// then
+			require.NoError(tt, err)
+			assert.NotNil(tt, kp)
 
-	// then
-	require.NoError(t, err)
+			// when
+			err = w.TaintKey(kp.PublicKey())
 
-	// when
-	signature, err := w.SignAny(kp.PublicKey(), data)
+			// then
+			require.NoError(tt, err)
 
-	// then
-	require.EqualError(t, err, wallet.ErrPubKeyIsTainted.Error())
-	assert.Empty(t, signature)
+			// when
+			signature, err := w.SignAny(kp.PublicKey(), data)
+
+			// then
+			require.EqualError(tt, err, wallet.ErrPubKeyIsTainted.Error())
+			assert.Empty(tt, signature)
+		})
+	}
 }
 
 func testHDWalletSigningAnyMessageWithUnknownKeyFails(t *testing.T) {
-	// given
-	name := "jeremy"
-	data := []byte("Je ne connaîtrai pas la peur car la peur tue l'esprit.")
+	tcs := []struct {
+		name    string
+		version uint32
+	}{
+		{
+			name:    "version 1",
+			version: 1,
+		}, {
+			name:    "version 2",
+			version: 2,
+		},
+	}
 
-	// when
-	w, err := wallet.ImportHDWallet(name, TestMnemonic1)
+	for _, tc := range tcs {
+		t.Run(tc.name, func(tt *testing.T) {
+			// given
+			name := "duncan"
+			data := []byte("Je ne connaîtrai pas la peur car la peur tue l'esprit.")
 
-	// then
-	require.NoError(t, err)
-	assert.NotNil(t, w)
+			// when
+			w, err := wallet.ImportHDWallet(name, TestMnemonic1, tc.version)
 
-	// when
-	signature, err := w.SignAny("vladimirharkonnen", data)
+			// then
+			require.NoError(tt, err)
+			assert.NotNil(tt, w)
 
-	// then
-	require.EqualError(t, err, wallet.ErrPubKeyDoesNotExist.Error())
-	assert.Empty(t, signature)
+			// when
+			signature, err := w.SignAny("vladimirharkonnen", data)
+
+			// then
+			require.EqualError(tt, err, wallet.ErrPubKeyDoesNotExist.Error())
+			assert.Empty(tt, signature)
+		})
+	}
 }
 
 func testHDWalletVerifyingAnyMessageSucceeds(t *testing.T) {
-	// given
-	name := "jeremy"
-	data := []byte("Je ne connaîtrai pas la peur car la peur tue l'esprit.")
-	sig := []byte{0x38, 0x49, 0x96, 0x5c, 0x2f, 0x32, 0x7f, 0xb, 0x14, 0x8e, 0x3b, 0x12, 0x2c, 0xdc, 0x89, 0xa1, 0x7f, 0xa0, 0x76, 0x11, 0xe2, 0xa4, 0x17, 0x8b, 0x16, 0x5, 0xde, 0xa5, 0x44, 0x2a, 0xb7, 0xcf, 0xad, 0xb3, 0x5d, 0xb, 0xe, 0xf5, 0x27, 0x52, 0x2f, 0x64, 0x77, 0xa5, 0x63, 0x3b, 0x8f, 0x22, 0xd3, 0xb2, 0xd1, 0xe6, 0x19, 0xd3, 0x6, 0x11, 0x1b, 0x78, 0x51, 0xa9, 0xd6, 0x10, 0xd, 0x2}
+	tcs := []struct {
+		name      string
+		version   uint32
+		signature []byte
+	}{
+		{
+			name:      "version 1",
+			version:   1,
+			signature: []byte{0x38, 0x49, 0x96, 0x5c, 0x2f, 0x32, 0x7f, 0xb, 0x14, 0x8e, 0x3b, 0x12, 0x2c, 0xdc, 0x89, 0xa1, 0x7f, 0xa0, 0x76, 0x11, 0xe2, 0xa4, 0x17, 0x8b, 0x16, 0x5, 0xde, 0xa5, 0x44, 0x2a, 0xb7, 0xcf, 0xad, 0xb3, 0x5d, 0xb, 0xe, 0xf5, 0x27, 0x52, 0x2f, 0x64, 0x77, 0xa5, 0x63, 0x3b, 0x8f, 0x22, 0xd3, 0xb2, 0xd1, 0xe6, 0x19, 0xd3, 0x6, 0x11, 0x1b, 0x78, 0x51, 0xa9, 0xd6, 0x10, 0xd, 0x2},
+		}, {
+			name:      "version 2",
+			version:   2,
+			signature: []byte{0x4a, 0xd1, 0xfc, 0xd9, 0x11, 0xf1, 0x8d, 0xd, 0xf2, 0x4d, 0xe6, 0x92, 0x37, 0x6e, 0x5b, 0xea, 0xc2, 0x70, 0x3, 0x22, 0xe2, 0xab, 0x50, 0x83, 0xbc, 0xf5, 0x9f, 0xd1, 0x7e, 0xa, 0x21, 0xff, 0xd6, 0x4c, 0x88, 0xe4, 0xba, 0x79, 0x16, 0x2a, 0x7d, 0x46, 0xab, 0xd9, 0xed, 0xa, 0x81, 0x81, 0x7c, 0x16, 0x48, 0xc8, 0xd7, 0xe9, 0x3e, 0xd1, 0xb1, 0xd1, 0x34, 0x99, 0xb1, 0x2a, 0xdb, 0x8},
+		},
+	}
 
-	// when
-	w, err := wallet.ImportHDWallet(name, TestMnemonic1)
+	for _, tc := range tcs {
+		t.Run(tc.name, func(tt *testing.T) {
+			// given
+			name := "duncan"
+			data := []byte("Je ne connaîtrai pas la peur car la peur tue l'esprit.")
 
-	// then
-	require.NoError(t, err)
-	assert.NotNil(t, w)
+			// when
+			w, err := wallet.ImportHDWallet(name, TestMnemonic1, tc.version)
 
-	// when
-	kp, err := w.GenerateKeyPair([]wallet.Meta{})
+			// then
+			require.NoError(tt, err)
+			assert.NotNil(tt, w)
 
-	// then
-	require.NoError(t, err)
-	assert.NotNil(t, kp)
+			// when
+			kp, err := w.GenerateKeyPair([]wallet.Meta{})
 
-	// when
-	verified, err := w.VerifyAny(kp.PublicKey(), data, sig)
+			// then
+			require.NoError(tt, err)
+			assert.NotNil(tt, kp)
 
-	// then
-	require.NoError(t, err)
-	assert.True(t, verified)
+			// when
+			verified, err := w.VerifyAny(kp.PublicKey(), data, tc.signature)
+
+			// then
+			require.NoError(tt, err)
+			assert.True(tt, verified)
+		})
+	}
 }
 
 func testHDWalletVerifyingAnyMessageWithUnknownKeyFails(t *testing.T) {
-	// given
-	name := "jeremy"
-	data := []byte("Je ne connaîtrai pas la peur car la peur tue l'esprit.")
-	sig := []byte{0xd5, 0xc4, 0x9e, 0xfd, 0x13, 0x73, 0x9b, 0xdd, 0x36, 0x81, 0x75, 0xcc, 0x59, 0xc8, 0xbe, 0xe1, 0x20, 0x25, 0xe4, 0xb9, 0x14, 0x7a, 0x22, 0xbb, 0xa4, 0x84, 0xef, 0x7e, 0xe7, 0x2f, 0x55, 0x13, 0x5f, 0x52, 0x55, 0xad, 0x90, 0x35, 0x67, 0x6c, 0x91, 0x9d, 0xbb, 0x91, 0x21, 0x1f, 0x98, 0x53, 0xcc, 0x68, 0xe, 0x58, 0x5b, 0x4c, 0x26, 0xd7, 0xea, 0x20, 0x1, 0x50, 0x6c, 0x41, 0xcb, 0x3}
+	tcs := []struct {
+		name    string
+		version uint32
+	}{
+		{
+			name:    "version 1",
+			version: 1,
+		}, {
+			name:    "version 2",
+			version: 2,
+		},
+	}
 
-	// when
-	w, err := wallet.ImportHDWallet(name, TestMnemonic1)
+	for _, tc := range tcs {
+		t.Run(tc.name, func(tt *testing.T) {
+			// given
+			name := "duncan"
+			data := []byte("Je ne connaîtrai pas la peur car la peur tue l'esprit.")
+			sig := []byte{0xd5, 0xc4, 0x9e, 0xfd, 0x13, 0x73, 0x9b, 0xdd, 0x36, 0x81, 0x75, 0xcc, 0x59, 0xc8, 0xbe, 0xe1, 0x20, 0x25, 0xe4, 0xb9, 0x14, 0x7a, 0x22, 0xbb, 0xa4, 0x84, 0xef, 0x7e, 0xe7, 0x2f, 0x55, 0x13, 0x5f, 0x52, 0x55, 0xad, 0x90, 0x35, 0x67, 0x6c, 0x91, 0x9d, 0xbb, 0x91, 0x21, 0x1f, 0x98, 0x53, 0xcc, 0x68, 0xe, 0x58, 0x5b, 0x4c, 0x26, 0xd7, 0xea, 0x20, 0x1, 0x50, 0x6c, 0x41, 0xcb, 0x3}
 
-	// then
-	require.NoError(t, err)
-	assert.NotNil(t, w)
+			// when
+			w, err := wallet.ImportHDWallet(name, TestMnemonic1, tc.version)
 
-	// when
-	signature, err := w.VerifyAny("vladimirharkonnen", data, sig)
+			// then
+			require.NoError(tt, err)
+			assert.NotNil(tt, w)
 
-	// then
-	require.EqualError(t, err, wallet.ErrPubKeyDoesNotExist.Error())
-	assert.Empty(t, signature)
+			// when
+			signature, err := w.VerifyAny("vladimirharkonnen", data, sig)
+
+			// then
+			require.EqualError(tt, err, wallet.ErrPubKeyDoesNotExist.Error())
+			assert.Empty(tt, signature)
+		})
+	}
 }
 
 func testHDWalletMarshalingWalletSucceeds(t *testing.T) {
-	// given
-	name := "jeremy"
+	tcs := []struct {
+		name    string
+		version uint32
+		result  string
+	}{
+		{
+			name:    "version 1",
+			version: 1,
+			result:  `{"version":1,"name":"duncan","node":"PjI6zxEu4dtcTu92dYlB/2Da+rvSpg7KzvmLMQ9wv6i6n75/ftik1rPYiZ/nTfBzqVttvNnoswyldTjPCjV5kw==","id":"9df682a3c87d90567f260566a9c223ccbbb7529c38340cf163b8fe199dbf0f2e","keys":[{"index":1,"public_key":"30ebce58d94ad37c4ff6a9014c955c20e12468da956163228cc7ec9b98d3a371","private_key":"1bbd4efb460d0bf457251e866697d5d2e9b58c5dcb96a964cd9cfff1a712a2b930ebce58d94ad37c4ff6a9014c955c20e12468da956163228cc7ec9b98d3a371","meta":[],"tainted":false,"algorithm":{"name":"vega/ed25519","version":1}}]}`,
+		}, {
+			name:    "version 2",
+			version: 2,
+			result:  `{"version":2,"name":"duncan","node":"PjI6zxEu4dtcTu92dYlB/2Da+rvSpg7KzvmLMQ9wv6i6n75/ftik1rPYiZ/nTfBzqVttvNnoswyldTjPCjV5kw==","id":"9df682a3c87d90567f260566a9c223ccbbb7529c38340cf163b8fe199dbf0f2e","keys":[{"index":1,"public_key":"b5fd9d3c4ad553cb3196303b6e6df7f484cf7f5331a572a45031239fd71ad8a0","private_key":"0bfdfb4a04e22d7252a4f24eb9d0f35a82efdc244cb0876d919361e61f6f56a2b5fd9d3c4ad553cb3196303b6e6df7f484cf7f5331a572a45031239fd71ad8a0","meta":[],"tainted":false,"algorithm":{"name":"vega/ed25519","version":1}}]}`,
+		},
+	}
 
-	// when
-	w, err := wallet.ImportHDWallet(name, TestMnemonic1)
+	for _, tc := range tcs {
+		t.Run(tc.name, func(tt *testing.T) {
+			// given
+			name := "duncan"
 
-	// then
-	require.NoError(t, err)
-	assert.NotNil(t, w)
+			// when
+			w, err := wallet.ImportHDWallet(name, TestMnemonic1, tc.version)
 
-	// when
-	kp, err := w.GenerateKeyPair([]wallet.Meta{})
+			// then
+			require.NoError(tt, err)
+			assert.NotNil(tt, w)
 
-	// then
-	require.NoError(t, err)
-	assert.NotNil(t, kp)
+			// when
+			kp, err := w.GenerateKeyPair([]wallet.Meta{})
 
-	// when
-	m, err := json.Marshal(&w)
+			// then
+			require.NoError(tt, err)
+			assert.NotNil(tt, kp)
 
-	// then
-	assert.NoError(t, err)
-	expected := `{"version":1,"name":"jeremy","node":"PjI6zxEu4dtcTu92dYlB/2Da+rvSpg7KzvmLMQ9wv6i6n75/ftik1rPYiZ/nTfBzqVttvNnoswyldTjPCjV5kw==","id":"9df682a3c87d90567f260566a9c223ccbbb7529c38340cf163b8fe199dbf0f2e","keys":[{"index":1,"public_key":"30ebce58d94ad37c4ff6a9014c955c20e12468da956163228cc7ec9b98d3a371","private_key":"1bbd4efb460d0bf457251e866697d5d2e9b58c5dcb96a964cd9cfff1a712a2b930ebce58d94ad37c4ff6a9014c955c20e12468da956163228cc7ec9b98d3a371","meta":[],"tainted":false,"algorithm":{"name":"vega/ed25519","version":1}}]}`
-	assert.Equal(t, expected, string(m))
+			// when
+			m, err := json.Marshal(&w)
+
+			// then
+			assert.NoError(tt, err)
+			assert.Equal(tt, tc.result, string(m))
+		})
+	}
 }
 
 func testHDWalletMarshalingIsolatedWalletSucceeds(t *testing.T) {
-	// given
-	name := "jeremy"
+	tcs := []struct {
+		name      string
+		version   uint32
+		marshaled string
+	}{
+		{
+			name:      "version 1",
+			version:   1,
+			marshaled: `{"version":1,"name":"duncan.30ebce58.isolated","id":"9df682a3c87d90567f260566a9c223ccbbb7529c38340cf163b8fe199dbf0f2e","keys":[{"index":1,"public_key":"30ebce58d94ad37c4ff6a9014c955c20e12468da956163228cc7ec9b98d3a371","private_key":"1bbd4efb460d0bf457251e866697d5d2e9b58c5dcb96a964cd9cfff1a712a2b930ebce58d94ad37c4ff6a9014c955c20e12468da956163228cc7ec9b98d3a371","meta":[],"tainted":false,"algorithm":{"name":"vega/ed25519","version":1}}]}`,
+		}, {
+			name:      "version 2",
+			version:   2,
+			marshaled: `{"version":2,"name":"duncan.b5fd9d3c.isolated","id":"9df682a3c87d90567f260566a9c223ccbbb7529c38340cf163b8fe199dbf0f2e","keys":[{"index":1,"public_key":"b5fd9d3c4ad553cb3196303b6e6df7f484cf7f5331a572a45031239fd71ad8a0","private_key":"0bfdfb4a04e22d7252a4f24eb9d0f35a82efdc244cb0876d919361e61f6f56a2b5fd9d3c4ad553cb3196303b6e6df7f484cf7f5331a572a45031239fd71ad8a0","meta":[],"tainted":false,"algorithm":{"name":"vega/ed25519","version":1}}]}`,
+		},
+	}
 
-	// when
-	w, err := wallet.ImportHDWallet(name, TestMnemonic1)
+	for _, tc := range tcs {
+		t.Run(tc.name, func(tt *testing.T) {
+			// given
+			name := "duncan"
 
-	// then
-	require.NoError(t, err)
-	assert.NotNil(t, w)
+			// when
+			w, err := wallet.ImportHDWallet(name, TestMnemonic1, tc.version)
 
-	// when
-	kp, err := w.GenerateKeyPair([]wallet.Meta{})
+			// then
+			require.NoError(tt, err)
+			assert.NotNil(tt, w)
 
-	// then
-	require.NoError(t, err)
-	assert.NotNil(t, kp)
+			// when
+			kp, err := w.GenerateKeyPair([]wallet.Meta{})
 
-	// when
-	isolatedWallet, err := w.IsolateWithKey(kp.PublicKey())
+			// then
+			require.NoError(tt, err)
+			assert.NotNil(tt, kp)
 
-	// then
-	require.NoError(t, err)
-	assert.NotNil(t, isolatedWallet)
+			// when
+			isolatedWallet, err := w.IsolateWithKey(kp.PublicKey())
 
-	// when
-	m, err := json.Marshal(&isolatedWallet)
+			// then
+			require.NoError(tt, err)
+			assert.NotNil(tt, isolatedWallet)
 
-	// then
-	assert.NoError(t, err)
-	expected := `{"version":1,"name":"jeremy.30ebce58.isolated","id":"9df682a3c87d90567f260566a9c223ccbbb7529c38340cf163b8fe199dbf0f2e","keys":[{"index":1,"public_key":"30ebce58d94ad37c4ff6a9014c955c20e12468da956163228cc7ec9b98d3a371","private_key":"1bbd4efb460d0bf457251e866697d5d2e9b58c5dcb96a964cd9cfff1a712a2b930ebce58d94ad37c4ff6a9014c955c20e12468da956163228cc7ec9b98d3a371","meta":[],"tainted":false,"algorithm":{"name":"vega/ed25519","version":1}}]}`
-	assert.Equal(t, expected, string(m))
+			// when
+			m, err := json.Marshal(&isolatedWallet)
+
+			// then
+			assert.NoError(tt, err)
+			assert.Equal(tt, tc.marshaled, string(m))
+		})
+	}
 }
 
 func testHDWalletUnmarshalingWalletSucceeds(t *testing.T) {
-	// given
-	w := wallet.HDWallet{}
-	marshalled := `{"version":1,"name":"jeremy","node":"CZ13XhuFZ8K7TxNTAdKmMXh+OIVX6TFxTToXgnAqGlcO5eTY/5AVqZkWRIU3zfr8hvE7i2yIYAB6HT28ibi1fg==","keys":[{"index":1,"public_key":"e4997f2886f3f0fae5c4353f45c50560e93971e00b3b9350ede8abd491b5fbde","private_key":"07757d2c86c98e36c041d2a8a0fdd7c70bb3e88794328d27a9a29c159a38b23fe4997f2886f3f0fae5c4353f45c50560e93971e00b3b9350ede8abd491b5fbde","meta":null,"tainted":false,"algorithm":{"name":"vega/ed25519","version":1}}]}`
+	tcs := []struct {
+		name       string
+		version    uint32
+		marshaled  string
+		publicKey  string
+		privateKey string
+	}{
+		{
+			name:       "version 1",
+			version:    1,
+			marshaled:  `{"version":1,"name":"duncan","node":"CZ13XhuFZ8K7TxNTAdKmMXh+OIVX6TFxTToXgnAqGlcO5eTY/5AVqZkWRIU3zfr8hvE7i2yIYAB6HT28ibi1fg==","keys":[{"index":1,"public_key":"30ebce58d94ad37c4ff6a9014c955c20e12468da956163228cc7ec9b98d3a371","private_key":"1bbd4efb460d0bf457251e866697d5d2e9b58c5dcb96a964cd9cfff1a712a2b930ebce58d94ad37c4ff6a9014c955c20e12468da956163228cc7ec9b98d3a371","meta":null,"tainted":false,"algorithm":{"name":"vega/ed25519","version":1}}]}`,
+			publicKey:  "30ebce58d94ad37c4ff6a9014c955c20e12468da956163228cc7ec9b98d3a371",
+			privateKey: "1bbd4efb460d0bf457251e866697d5d2e9b58c5dcb96a964cd9cfff1a712a2b930ebce58d94ad37c4ff6a9014c955c20e12468da956163228cc7ec9b98d3a371",
+		},
+		{
+			name:       "version 2",
+			version:    2,
+			marshaled:  `{"version":2,"name":"duncan","node":"CZ13XhuFZ8K7TxNTAdKmMXh+OIVX6TFxTToXgnAqGlcO5eTY/5AVqZkWRIU3zfr8hvE7i2yIYAB6HT28ibi1fg==","keys":[{"index":1,"public_key":"b5fd9d3c4ad553cb3196303b6e6df7f484cf7f5331a572a45031239fd71ad8a0","private_key":"0bfdfb4a04e22d7252a4f24eb9d0f35a82efdc244cb0876d919361e61f6f56a2b5fd9d3c4ad553cb3196303b6e6df7f484cf7f5331a572a45031239fd71ad8a0","meta":null,"tainted":false,"algorithm":{"name":"vega/ed25519","version":1}}]}`,
+			publicKey:  "b5fd9d3c4ad553cb3196303b6e6df7f484cf7f5331a572a45031239fd71ad8a0",
+			privateKey: "0bfdfb4a04e22d7252a4f24eb9d0f35a82efdc244cb0876d919361e61f6f56a2b5fd9d3c4ad553cb3196303b6e6df7f484cf7f5331a572a45031239fd71ad8a0",
+		},
+	}
 
-	// when
-	err := json.Unmarshal([]byte(marshalled), &w)
+	for _, tc := range tcs {
+		t.Run(tc.name, func(tt *testing.T) {
+			// given
+			w := wallet.HDWallet{}
 
-	// then
-	assert.NoError(t, err)
-	assert.Equal(t, w.Version(), uint32(1))
-	assert.Equal(t, w.Name(), "jeremy")
-	keyPairs := w.ListKeyPairs()
-	assert.Len(t, keyPairs, 1)
-	assert.Equal(t, "e4997f2886f3f0fae5c4353f45c50560e93971e00b3b9350ede8abd491b5fbde", keyPairs[0].PublicKey())
-	assert.Equal(t, "07757d2c86c98e36c041d2a8a0fdd7c70bb3e88794328d27a9a29c159a38b23fe4997f2886f3f0fae5c4353f45c50560e93971e00b3b9350ede8abd491b5fbde", keyPairs[0].PrivateKey())
-	assert.Equal(t, uint32(1), keyPairs[0].AlgorithmVersion())
-	assert.Equal(t, "vega/ed25519", keyPairs[0].AlgorithmName())
-	assert.False(t, keyPairs[0].IsTainted())
-	assert.Nil(t, keyPairs[0].Meta())
-	assert.NotEmpty(t, w.ID())
+			// when
+			err := json.Unmarshal([]byte(tc.marshaled), &w)
+
+			// then
+			assert.NoError(tt, err)
+			assert.Equal(tt, tc.version, w.Version())
+			assert.Equal(tt, "duncan", w.Name())
+			keyPairs := w.ListKeyPairs()
+			assert.Len(tt, keyPairs, 1)
+			assert.Equal(tt, tc.publicKey, keyPairs[0].PublicKey())
+			assert.Equal(tt, tc.privateKey, keyPairs[0].PrivateKey())
+			assert.Equal(tt, uint32(1), keyPairs[0].AlgorithmVersion())
+			assert.Equal(tt, "vega/ed25519", keyPairs[0].AlgorithmName())
+			assert.False(tt, keyPairs[0].IsTainted())
+			assert.Nil(tt, keyPairs[0].Meta())
+			assert.NotEmpty(tt, w.ID())
+		})
+	}
 }
 
 func testHDWalletGettingWalletInfoSucceeds(t *testing.T) {
-	// given
-	name := "jeremy"
+	tcs := []struct {
+		name    string
+		version uint32
+	}{
+		{
+			name:    "version 1",
+			version: 1,
+		}, {
+			name:    "version 2",
+			version: 2,
+		},
+	}
 
-	// when
-	w, err := wallet.ImportHDWallet(name, TestMnemonic1)
+	for _, tc := range tcs {
+		t.Run(tc.name, func(tt *testing.T) {
+			// given
+			name := "duncan"
 
-	// then
-	require.NoError(t, err)
-	assert.NotNil(t, w)
-	assert.Equal(t, "9df682a3c87d90567f260566a9c223ccbbb7529c38340cf163b8fe199dbf0f2e", w.ID())
-	assert.Equal(t, "HD wallet", w.Type())
-	assert.Equal(t, uint32(1), w.Version())
+			// when
+			w, err := wallet.ImportHDWallet(name, TestMnemonic1, tc.version)
+
+			// then
+			require.NoError(tt, err)
+			require.NotNil(tt, w)
+			assert.Equal(tt, "9df682a3c87d90567f260566a9c223ccbbb7529c38340cf163b8fe199dbf0f2e", w.ID())
+			assert.Equal(tt, "HD wallet", w.Type())
+			assert.Equal(tt, tc.version, w.Version())
+		})
+	}
 }
 
 func testHDWalletGettingIsolatedWalletInfoSucceeds(t *testing.T) {
-	// given
-	name := "jeremy"
+	tcs := []struct {
+		name    string
+		version uint32
+	}{
+		{
+			name:    "version 1",
+			version: 1,
+		}, {
+			name:    "version 2",
+			version: 2,
+		},
+	}
 
-	// when
-	w, err := wallet.ImportHDWallet(name, TestMnemonic1)
+	for _, tc := range tcs {
+		t.Run(tc.name, func(tt *testing.T) {
+			// given
+			name := "duncan"
 
-	// then
-	require.NoError(t, err)
-	assert.NotNil(t, w)
+			// when
+			w, err := wallet.ImportHDWallet(name, TestMnemonic1, tc.version)
 
-	// when
-	kp1, err := w.GenerateKeyPair([]wallet.Meta{})
+			// then
+			require.NoError(tt, err)
+			assert.NotNil(tt, w)
 
-	// then
-	require.NoError(t, err)
-	assert.NotNil(t, kp1)
+			// when
+			kp1, err := w.GenerateKeyPair([]wallet.Meta{})
 
-	// when
-	isolatedWallet, err := w.IsolateWithKey(kp1.PublicKey())
+			// then
+			require.NoError(tt, err)
+			assert.NotNil(tt, kp1)
 
-	// then
-	require.NoError(t, err)
-	require.NotNil(t, isolatedWallet)
-	assert.Equal(t, "9df682a3c87d90567f260566a9c223ccbbb7529c38340cf163b8fe199dbf0f2e", w.ID())
-	assert.Equal(t, "HD wallet", w.Type())
-	assert.Equal(t, uint32(1), w.Version())
+			// when
+			isolatedWallet, err := w.IsolateWithKey(kp1.PublicKey())
+
+			// then
+			require.NoError(tt, err)
+			require.NotNil(tt, isolatedWallet)
+			assert.Equal(tt, "9df682a3c87d90567f260566a9c223ccbbb7529c38340cf163b8fe199dbf0f2e", w.ID())
+			assert.Equal(tt, "HD wallet", w.Type())
+			assert.Equal(tt, tc.version, w.Version())
+		})
+	}
 }
 
 func testHDWalletIsolatingWalletSucceeds(t *testing.T) {
-	// given
-	name := "jeremy"
+	tcs := []struct {
+		name    string
+		version uint32
+		wallet  string
+	}{
+		{
+			name:    "version 1",
+			version: 1,
+			wallet:  "duncan.30ebce58.isolated",
+		}, {
+			name:    "version 2",
+			version: 2,
+			wallet:  "duncan.b5fd9d3c.isolated",
+		},
+	}
 
-	// when
-	w, err := wallet.ImportHDWallet(name, TestMnemonic1)
+	for _, tc := range tcs {
+		t.Run(tc.name, func(tt *testing.T) {
+			// given
+			name := "duncan"
 
-	// then
-	require.NoError(t, err)
-	assert.NotNil(t, w)
+			// when
+			w, err := wallet.ImportHDWallet(name, TestMnemonic1, tc.version)
 
-	// when
-	kp1, err := w.GenerateKeyPair([]wallet.Meta{})
+			// then
+			require.NoError(tt, err)
+			assert.NotNil(tt, w)
 
-	// then
-	require.NoError(t, err)
-	assert.NotNil(t, kp1)
+			// when
+			kp1, err := w.GenerateKeyPair([]wallet.Meta{})
 
-	// when
-	isolatedWallet, err := w.IsolateWithKey(kp1.PublicKey())
+			// then
+			require.NoError(tt, err)
+			assert.NotNil(tt, kp1)
 
-	// then
-	require.NoError(t, err)
-	require.NotNil(t, isolatedWallet)
-	assert.Equal(t, "jeremy.30ebce58.isolated", isolatedWallet.Name())
+			// when
+			isolatedWallet, err := w.IsolateWithKey(kp1.PublicKey())
+
+			// then
+			require.NoError(tt, err)
+			require.NotNil(tt, isolatedWallet)
+			assert.Equal(tt, tc.wallet, isolatedWallet.Name())
+		})
+	}
 }
 
 func testHDWalletIsolatingWalletWithTaintedKeyPairFails(t *testing.T) {
-	// given
-	name := "jeremy"
+	tcs := []struct {
+		name    string
+		version uint32
+	}{
+		{
+			name:    "version 1",
+			version: 1,
+		}, {
+			name:    "version 2",
+			version: 2,
+		},
+	}
 
-	// when
-	w, err := wallet.ImportHDWallet(name, TestMnemonic1)
+	for _, tc := range tcs {
+		t.Run(tc.name, func(tt *testing.T) {
+			// given
+			name := "duncan"
 
-	// then
-	require.NoError(t, err)
-	assert.NotNil(t, w)
+			// when
+			w, err := wallet.ImportHDWallet(name, TestMnemonic1, tc.version)
 
-	// when
-	kp1, err := w.GenerateKeyPair([]wallet.Meta{})
+			// then
+			require.NoError(tt, err)
+			assert.NotNil(tt, w)
 
-	// then
-	require.NoError(t, err)
-	assert.NotNil(t, kp1)
+			// when
+			kp1, err := w.GenerateKeyPair([]wallet.Meta{})
 
-	// when
-	err = w.TaintKey(kp1.PublicKey())
+			// then
+			require.NoError(tt, err)
+			assert.NotNil(tt, kp1)
 
-	// then
-	require.NoError(t, err)
+			// when
+			err = w.TaintKey(kp1.PublicKey())
 
-	// when
-	isolatedWallet, err := w.IsolateWithKey(kp1.PublicKey())
+			// then
+			require.NoError(tt, err)
 
-	// then
-	require.EqualError(t, err, wallet.ErrPubKeyIsTainted.Error())
-	require.Nil(t, isolatedWallet)
+			// when
+			isolatedWallet, err := w.IsolateWithKey(kp1.PublicKey())
+
+			// then
+			require.EqualError(tt, err, wallet.ErrPubKeyIsTainted.Error())
+			require.Nil(tt, isolatedWallet)
+		})
+	}
 }
 
 func testHDWalletIsolatingWalletWithNonExistingKeyPairFails(t *testing.T) {
-	// given
-	name := "jeremy"
+	tcs := []struct {
+		name    string
+		version uint32
+	}{
+		{
+			name:    "version 1",
+			version: 1,
+		}, {
+			name:    "version 2",
+			version: 2,
+		},
+	}
 
-	// when
-	w, err := wallet.ImportHDWallet(name, TestMnemonic1)
+	for _, tc := range tcs {
+		t.Run(tc.name, func(tt *testing.T) {
+			// given
+			name := "duncan"
 
-	// then
-	require.NoError(t, err)
-	assert.NotNil(t, w)
+			// when
+			w, err := wallet.ImportHDWallet(name, TestMnemonic1, tc.version)
 
-	// when
-	isolatedWallet, err := w.IsolateWithKey("0xdeadbeef")
+			// then
+			require.NoError(tt, err)
+			assert.NotNil(tt, w)
 
-	// then
-	require.EqualError(t, err, wallet.ErrPubKeyDoesNotExist.Error())
-	require.Nil(t, isolatedWallet)
+			// when
+			isolatedWallet, err := w.IsolateWithKey("0xdeadbeef")
+
+			// then
+			require.EqualError(tt, err, wallet.ErrPubKeyDoesNotExist.Error())
+			require.Nil(tt, isolatedWallet)
+		})
+	}
 }

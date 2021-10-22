@@ -86,7 +86,7 @@ func (h *Handler) ImportWallet(name, passphrase, mnemonic string) error {
 		return wallet.ErrWalletAlreadyExists
 	}
 
-	w, err := wallet.ImportHDWallet(name, mnemonic)
+	w, err := wallet.ImportHDWallet(name, mnemonic, 0)
 	if err != nil {
 		return err
 	}

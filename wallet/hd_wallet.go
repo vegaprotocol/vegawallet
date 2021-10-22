@@ -14,6 +14,8 @@ const (
 	// OriginIndex is a constant index used to derive a node from the master
 	// node. The resulting node will be used to generate the cryptographic keys.
 	OriginIndex = slip10.FirstHardenedIndex + MagicIndex
+
+	LatestVersion = uint32(2)
 )
 
 type HDWallet struct {
@@ -39,7 +41,7 @@ func NewHDWallet(name string) (*HDWallet, string, error) {
 		return nil, "", err
 	}
 
-	w, err := ImportHDWallet(name, mnemonic)
+	w, err := ImportHDWallet(name, mnemonic, LatestVersion)
 	if err != nil {
 		return nil, "", err
 	}
@@ -49,7 +51,7 @@ func NewHDWallet(name string) (*HDWallet, string, error) {
 
 // ImportHDWallet creates a wallet based on the mnemonic in input. This is
 // useful import or retrieve a wallet.
-func ImportHDWallet(name, mnemonic string) (*HDWallet, error) {
+func ImportHDWallet(name, mnemonic string, version uint32) (*HDWallet, error) {
 	if !bip39.IsMnemonicValid(mnemonic) {
 		return nil, ErrInvalidMnemonic
 	}
@@ -60,7 +62,7 @@ func ImportHDWallet(name, mnemonic string) (*HDWallet, error) {
 	}
 
 	return &HDWallet{
-		version: 1,
+		version: version,
 		name:    name,
 		keyRing: NewHDKeyRing(),
 		node:    walletNode,
@@ -132,12 +134,13 @@ func (w *HDWallet) GenerateKeyPair(meta []Meta) (KeyPair, error) {
 		return nil, ErrIsolatedWalletCantGenerateKeyPairs
 	}
 	nextIndex := w.keyRing.NextIndex()
-	childNode, err := w.node.Derive(OriginIndex + nextIndex)
+
+	keyNode, err := w.deriveKeyNode(nextIndex)
 	if err != nil {
 		return nil, err
 	}
 
-	publicKey, privateKey := childNode.Keypair()
+	publicKey, privateKey := keyNode.Keypair()
 	keyPair, err := NewHDKeyPair(nextIndex, publicKey, privateKey)
 	if err != nil {
 		return nil, err
@@ -233,7 +236,7 @@ func (w *HDWallet) IsolateWithKey(pubKey string) (Wallet, error) {
 	}
 
 	return &HDWallet{
-		version: 1,
+		version: w.version,
 		name:    fmt.Sprintf("%s.%s.isolated", w.name, keyPair.PublicKey()[0:8]),
 		keyRing: LoadHDKeyRing([]HDKeyPair{keyPair}),
 		id:      w.id,
@@ -282,6 +285,40 @@ func (w *HDWallet) UnmarshalJSON(data []byte) error {
 	}
 
 	return nil
+}
+
+func (w *HDWallet) deriveKeyNode(nextIndex uint32) (*slip10.Node, error) {
+	var derivationFn func(uint32) (*slip10.Node, error)
+	switch w.version {
+	case 1:
+		derivationFn = w.deriveKeyNodeV1
+	case 2:
+		derivationFn = w.deriveKeyNodeV2
+	default:
+		return nil, fmt.Errorf("wallet with version %d isn't supported", w.version)
+	}
+
+	return derivationFn(nextIndex)
+}
+
+func (w *HDWallet) deriveKeyNodeV1(nextIndex uint32) (*slip10.Node, error) {
+	keyNode, err := w.node.Derive(OriginIndex + nextIndex)
+	if err != nil {
+		return nil, fmt.Errorf("couldn't derive key node for index %d: %w", OriginIndex+nextIndex, err)
+	}
+	return keyNode, nil
+}
+
+func (w *HDWallet) deriveKeyNodeV2(nextIndex uint32) (*slip10.Node, error) {
+	defaultSubNode, err := w.node.Derive(slip10.FirstHardenedIndex)
+	if err != nil {
+		return nil, fmt.Errorf("couldn't derive default sub-node: %w", err)
+	}
+	keyNode, err := defaultSubNode.Derive(slip10.FirstHardenedIndex + nextIndex)
+	if err != nil {
+		return nil, fmt.Errorf("couldn't derive key node for index %d: %w", OriginIndex+nextIndex, err)
+	}
+	return keyNode, nil
 }
 
 // NewMnemonic generates a mnemonic with an entropy of 256 bits.
