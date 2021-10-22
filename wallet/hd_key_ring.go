@@ -58,20 +58,8 @@ func (r *HDKeyRing) ListKeyPairs() []HDKeyPair {
 		keysList[i] = key
 		i += 1
 	}
-	sort.Sort(byIndex(keysList))
+	sort.SliceStable(keysList, func(i, j int) bool {
+		return keysList[i].Index() < keysList[j].Index()
+	})
 	return keysList
-}
-
-type byIndex []HDKeyPair
-
-func (a byIndex) Len() int {
-	return len(a)
-}
-
-func (a byIndex) Swap(i, j int) {
-	a[i], a[j] = a[j], a[i]
-}
-
-func (a byIndex) Less(i, j int) bool {
-	return a[i].Index() < a[j].Index()
 }
