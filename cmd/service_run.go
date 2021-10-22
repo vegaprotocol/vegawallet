@@ -23,6 +23,7 @@ import (
 	"github.com/skratchdot/open-golang/open"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 var (
@@ -30,6 +31,7 @@ var (
 		startConsole bool
 		noBrowser    bool
 		network      string
+		level        string
 	}
 
 	serviceRunCmd = &cobra.Command{
@@ -45,6 +47,7 @@ func init() {
 	serviceRunCmd.Flags().StringVarP(&serviceRunArgs.network, "network", "n", "", "Name of the network to use")
 	serviceRunCmd.Flags().BoolVar(&serviceRunArgs.startConsole, "console-proxy", false, "Start the vega console proxy and open the console in the default browser")
 	serviceRunCmd.Flags().BoolVar(&serviceRunArgs.noBrowser, "no-browser", false, "Do not open the default browser if the console proxy is stated")
+	serviceRunCmd.Flags().StringVar(&serviceRunArgs.level, "level", zapcore.InfoLevel.String(), fmt.Sprintf("Change log level: %v", logger.SupportedLogLevels))
 	_ = serviceRunCmd.MarkFlagRequired("network")
 }
 
@@ -76,14 +79,9 @@ func runServiceRun(_ *cobra.Command, _ []string) error {
 		return fmt.Errorf("couldn't initialise network store: %w", err)
 	}
 
-	encoding := "json"
-	if rootArgs.output == "human" {
-		encoding = "console"
-	}
-
-	log, err := logger.New(cfg.Level.Level, encoding)
+	log, err := logger.Build(rootArgs.output, cfg.Level.String())
 	if err != nil {
-		return fmt.Errorf("couldn't create logger: %w", err)
+		return err
 	}
 	defer vglog.Sync(log)
 
@@ -177,6 +175,10 @@ func runServiceRun(_ *cobra.Command, _ []string) error {
 		}
 	}
 
+	if rootArgs.output == "human" {
+		p.CheckMark().SuccessText("Service stopped").NextLine()
+	}
+
 	return nil
 }
 
@@ -189,7 +191,7 @@ func waitSig(ctx context.Context, cfunc func(), log *zap.Logger) {
 
 	select {
 	case sig := <-gracefulStop:
-		log.Info("caught signal", zap.String("wallet", fmt.Sprintf("%+v", sig)))
+		log.Info("caught signal", zap.String("signal", fmt.Sprintf("%+v", sig)))
 		cfunc()
 	case <-ctx.Done():
 		// nothing to do

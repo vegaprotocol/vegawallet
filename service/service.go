@@ -416,28 +416,28 @@ func NewService(log *zap.Logger, net *network.Network, h WalletHandler, a Auth, 
 		Handler: cors.AllowAll().Handler(s),
 	}
 
-	s.POST("/api/v1/auth/token", s.Login)
-	s.DELETE("/api/v1/auth/token", ExtractToken(s.Revoke))
+	s.handle(http.MethodPost, "/api/v1/auth/token", s.Login)
+	s.handle(http.MethodDelete, "/api/v1/auth/token", ExtractToken(s.Revoke))
 
-	s.GET("/api/v1/network", s.GetNetwork)
+	s.handle(http.MethodGet, "/api/v1/network", s.GetNetwork)
 
-	s.POST("/api/v1/wallets", s.CreateWallet)
-	s.POST("/api/v1/wallets/import", s.ImportWallet)
+	s.handle(http.MethodPost, "/api/v1/wallets", s.CreateWallet)
+	s.handle(http.MethodPost, "/api/v1/wallets/import", s.ImportWallet)
 
-	s.GET("/api/v1/keys", ExtractToken(s.ListPublicKeys))
-	s.POST("/api/v1/keys", ExtractToken(s.GenerateKeyPair))
-	s.GET("/api/v1/keys/:keyid", ExtractToken(s.GetPublicKey))
-	s.PUT("/api/v1/keys/:keyid/taint", ExtractToken(s.TaintKey))
-	s.PUT("/api/v1/keys/:keyid/metadata", ExtractToken(s.UpdateMeta))
+	s.handle(http.MethodGet, "/api/v1/keys", ExtractToken(s.ListPublicKeys))
+	s.handle(http.MethodPost, "/api/v1/keys", ExtractToken(s.GenerateKeyPair))
+	s.handle(http.MethodGet, "/api/v1/keys/:keyid", ExtractToken(s.GetPublicKey))
+	s.handle(http.MethodPut, "/api/v1/keys/:keyid/taint", ExtractToken(s.TaintKey))
+	s.handle(http.MethodPut, "/api/v1/keys/:keyid/metadata", ExtractToken(s.UpdateMeta))
 
-	s.POST("/api/v1/command", ExtractToken(s.SignTx))
-	s.POST("/api/v1/command/sync", ExtractToken(s.SignTxSync))
-	s.POST("/api/v1/command/commit", ExtractToken(s.SignTxCommit))
-	s.POST("/api/v1/sign", ExtractToken(s.SignAny))
-	s.POST("/api/v1/verify", ExtractToken(s.VerifyAny))
+	s.handle(http.MethodPost, "/api/v1/command", ExtractToken(s.SignTx))
+	s.handle(http.MethodPost, "/api/v1/command/sync", ExtractToken(s.SignTxSync))
+	s.handle(http.MethodPost, "/api/v1/command/commit", ExtractToken(s.SignTxCommit))
+	s.handle(http.MethodPost, "/api/v1/sign", ExtractToken(s.SignAny))
+	s.handle(http.MethodPost, "/api/v1/verify", ExtractToken(s.VerifyAny))
 
-	s.GET("/api/v1/version", s.Version)
-	s.GET("/api/v1/status", s.Health)
+	s.handle(http.MethodGet, "/api/v1/version", s.Version)
+	s.handle(http.MethodGet, "/api/v1/status", s.Health)
 
 	return s, nil
 }
@@ -849,4 +849,13 @@ func (s *Service) writeSuccessProto(w http.ResponseWriter, data proto.Message, s
 		s.log.Error("couldn't marshal proto message", zap.Error(err))
 		w.WriteHeader(http.StatusInternalServerError)
 	}
+}
+
+func (s *Service) handle(method string, path string, handle httprouter.Handle) {
+	loggedEndpoint := func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+		s.log.Debug(fmt.Sprintf("entering %s %s", method, path))
+		handle(w, r, p)
+		s.log.Debug(fmt.Sprintf("leaving %s %s", method, path))
+	}
+	s.Handle(method, path, loggedEndpoint)
 }
