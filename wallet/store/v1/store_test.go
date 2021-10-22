@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"code.vegaprotocol.io/go-wallet/wallet"
-	storev1 "code.vegaprotocol.io/go-wallet/wallet/store/v1"
+	"code.vegaprotocol.io/vegawallet/wallet"
+	storev1 "code.vegaprotocol.io/vegawallet/wallet/store/v1"
 	vgtest "code.vegaprotocol.io/shared/libs/test"
 
 	"github.com/stretchr/testify/assert"

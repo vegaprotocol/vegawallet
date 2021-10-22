@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"sort"
 
-	"code.vegaprotocol.io/go-wallet/wallet"
+	"code.vegaprotocol.io/vegawallet/wallet"
 	vgcrypto "code.vegaprotocol.io/shared/libs/crypto"
 	vgfs "code.vegaprotocol.io/shared/libs/fs"
 )

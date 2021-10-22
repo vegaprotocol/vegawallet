@@ -9,10 +9,10 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	wcommands "code.vegaprotocol.io/go-wallet/commands"
-	"code.vegaprotocol.io/go-wallet/network"
-	"code.vegaprotocol.io/go-wallet/version"
-	"code.vegaprotocol.io/go-wallet/wallet"
+	wcommands "code.vegaprotocol.io/vegawallet/commands"
+	"code.vegaprotocol.io/vegawallet/network"
+	"code.vegaprotocol.io/vegawallet/version"
+	"code.vegaprotocol.io/vegawallet/wallet"
 	"code.vegaprotocol.io/protos/commands"
 	typespb "code.vegaprotocol.io/protos/vega"
 	api "code.vegaprotocol.io/protos/vega/api/v1"
@@ -367,7 +367,7 @@ type NetworkResponse struct {
 }
 
 // WalletHandler ...
-//go:generate go run github.com/golang/mock/mockgen -destination mocks/wallet_handler_mock.go -package mocks code.vegaprotocol.io/go-wallet/service WalletHandler
+//go:generate go run github.com/golang/mock/mockgen -destination mocks/wallet_handler_mock.go -package mocks code.vegaprotocol.io/vegawallet/service WalletHandler
 type WalletHandler interface {
 	CreateWallet(name, passphrase string) (string, error)
 	ImportWallet(name, passphrase, mnemonic string) error
@@ -384,7 +384,7 @@ type WalletHandler interface {
 }
 
 // Auth ...
-//go:generate go run github.com/golang/mock/mockgen -destination mocks/auth_mock.go -package mocks code.vegaprotocol.io/go-wallet/service Auth
+//go:generate go run github.com/golang/mock/mockgen -destination mocks/auth_mock.go -package mocks code.vegaprotocol.io/vegawallet/service Auth
 type Auth interface {
 	NewSession(name string) (string, error)
 	VerifyToken(token string) (string, error)
@@ -392,7 +392,7 @@ type Auth interface {
 }
 
 // NodeForward ...
-//go:generate go run github.com/golang/mock/mockgen -destination mocks/node_forward_mock.go -package mocks code.vegaprotocol.io/go-wallet/service NodeForward
+//go:generate go run github.com/golang/mock/mockgen -destination mocks/node_forward_mock.go -package mocks code.vegaprotocol.io/vegawallet/service NodeForward
 type NodeForward interface {
 	SendTx(context.Context, *commandspb.Transaction, api.SubmitTransactionRequest_Type) error
 	HealthCheck(context.Context) error

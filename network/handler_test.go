@@ -4,8 +4,8 @@ import (
 	"errors"
 	"testing"
 
-	"code.vegaprotocol.io/go-wallet/network"
-	"code.vegaprotocol.io/go-wallet/network/mocks"
+	"code.vegaprotocol.io/vegawallet/network"
+	"code.vegaprotocol.io/vegawallet/network/mocks"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"

@@ -1,6 +1,6 @@
 package network
 
-import "code.vegaprotocol.io/go-wallet/service/encoding"
+import "code.vegaprotocol.io/vegawallet/service/encoding"
 
 type Network struct {
 	Name        string

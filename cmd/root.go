@@ -10,8 +10,8 @@ import (
 	"strings"
 	"time"
 
-	"code.vegaprotocol.io/go-wallet/cmd/printer"
-	"code.vegaprotocol.io/go-wallet/version"
+	"code.vegaprotocol.io/vegawallet/cmd/printer"
+	"code.vegaprotocol.io/vegawallet/version"
 	vgjson "code.vegaprotocol.io/shared/libs/json"
 	"github.com/mattn/go-isatty"
 	"github.com/spf13/cobra"

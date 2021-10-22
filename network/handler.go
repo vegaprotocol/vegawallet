@@ -12,7 +12,7 @@ var (
 	defaultNetworks embed.FS
 )
 
-//go:generate go run github.com/golang/mock/mockgen -destination mocks/store_mock.go -package mocks code.vegaprotocol.io/go-wallet/network Store
+//go:generate go run github.com/golang/mock/mockgen -destination mocks/store_mock.go -package mocks code.vegaprotocol.io/vegawallet/network Store
 type Store interface {
 	NetworkExists(string) (bool, error)
 	GetNetwork(string) (*Network, error)

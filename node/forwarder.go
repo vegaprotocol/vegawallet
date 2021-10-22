@@ -6,7 +6,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"code.vegaprotocol.io/go-wallet/network"
+	"code.vegaprotocol.io/vegawallet/network"
 	api "code.vegaprotocol.io/protos/vega/api/v1"
 	commandspb "code.vegaprotocol.io/protos/vega/commands/v1"
 

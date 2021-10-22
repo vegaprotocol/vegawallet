@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-//go:generate go run github.com/golang/mock/mockgen -destination mocks/store_mock.go -package mocks code.vegaprotocol.io/go-wallet/service Store
+//go:generate go run github.com/golang/mock/mockgen -destination mocks/store_mock.go -package mocks code.vegaprotocol.io/vegawallet/service Store
 type Store interface {
 	RSAKeysExists() (bool, error)
 	SaveRSAKeys(*RSAKeys) error

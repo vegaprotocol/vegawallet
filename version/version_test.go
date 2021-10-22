@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"code.vegaprotocol.io/go-wallet/version"
+	"code.vegaprotocol.io/vegawallet/version"
 	"github.com/blang/semver/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

@@ -3,7 +3,7 @@ package wallets
 import (
 	"fmt"
 
-	wstorev1 "code.vegaprotocol.io/go-wallet/wallet/store/v1"
+	wstorev1 "code.vegaprotocol.io/vegawallet/wallet/store/v1"
 	"code.vegaprotocol.io/shared/paths"
 )
 

@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	ReleaseAPI = "https://api.github.com/repos/vegaprotocol/go-wallet/releases"
+	ReleaseAPI = "https://api.github.com/repos/vegaprotocol/vegawallet/releases"
 )
 
 type ReleasesGetter func() ([]string, error)

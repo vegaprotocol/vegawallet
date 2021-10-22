@@ -3,7 +3,7 @@ package v1
 import (
 	"fmt"
 
-	"code.vegaprotocol.io/go-wallet/service"
+	"code.vegaprotocol.io/vegawallet/service"
 	vgfs "code.vegaprotocol.io/shared/libs/fs"
 	"code.vegaprotocol.io/shared/paths"
 )

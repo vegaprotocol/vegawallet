@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"os"
 
-	"code.vegaprotocol.io/go-wallet/cmd/printer"
-	"code.vegaprotocol.io/go-wallet/network"
-	netstore "code.vegaprotocol.io/go-wallet/network/store/v1"
-	"code.vegaprotocol.io/go-wallet/service"
-	svcstore "code.vegaprotocol.io/go-wallet/service/store/v1"
-	"code.vegaprotocol.io/go-wallet/wallets"
+	"code.vegaprotocol.io/vegawallet/cmd/printer"
+	"code.vegaprotocol.io/vegawallet/network"
+	netstore "code.vegaprotocol.io/vegawallet/network/store/v1"
+	"code.vegaprotocol.io/vegawallet/service"
+	svcstore "code.vegaprotocol.io/vegawallet/service/store/v1"
+	"code.vegaprotocol.io/vegawallet/wallets"
 	vgjson "code.vegaprotocol.io/shared/libs/json"
 	"code.vegaprotocol.io/shared/paths"
 

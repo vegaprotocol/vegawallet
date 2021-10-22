@@ -4,9 +4,9 @@ import (
 	"errors"
 	"fmt"
 
-	"code.vegaprotocol.io/go-wallet/cmd/printer"
-	"code.vegaprotocol.io/go-wallet/network"
-	netstore "code.vegaprotocol.io/go-wallet/network/store/v1"
+	"code.vegaprotocol.io/vegawallet/cmd/printer"
+	"code.vegaprotocol.io/vegawallet/network"
+	netstore "code.vegaprotocol.io/vegawallet/network/store/v1"
 	vgjson "code.vegaprotocol.io/shared/libs/json"
 	"code.vegaprotocol.io/shared/paths"
 	"github.com/spf13/cobra"
