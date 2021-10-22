@@ -10,7 +10,7 @@ import (
 	vgfs "code.vegaprotocol.io/shared/libs/fs"
 	"code.vegaprotocol.io/shared/paths"
 
-	"code.vegaprotocol.io/go-wallet/network"
+	"code.vegaprotocol.io/vegawallet/network"
 )
 
 var (

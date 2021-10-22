@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	TaggedReleaseURL   = "https://github.com/vegaprotocol/go-wallet/releases/tag"
+	TaggedReleaseURL   = "https://github.com/vegaprotocol/vegawallet/releases/tag"
 	defaultVersionHash = "unknown"
 	defaultVersion     = "v0.9.0-pre5+dev"
 )

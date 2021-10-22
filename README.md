@@ -61,7 +61,7 @@ From the [Releases][github-releases] page, download the ZIP file matching your p
 You can install a released version using Golang toolchain:
 
 ```sh
-go install code.vegaprotocol.io/go-wallet@VERSION
+go install code.vegaprotocol.io/vegawallet@VERSION
 ```
 
 Replace `VERSION` with the release version of your choice.
@@ -69,7 +69,7 @@ Replace `VERSION` with the release version of your choice.
 For version `v0.9.0`, it would be:
 
 ```sh
-go install code.vegaprotocol.io/go-wallet@v0.9.0
+go install code.vegaprotocol.io/vegawallet@v0.9.0
 ```
 
 ## Building from source
@@ -77,14 +77,14 @@ go install code.vegaprotocol.io/go-wallet@v0.9.0
 To build the Vega Wallet from the source code, use the following 
 
 ```sh
-cd go-wallet && go build
+cd vegawallet && go build
 ```
 
 ### Usage
 
 **Note:** Whether you are building Vega Wallet from source code or installing it from the repository, this will install the program under the name
-`go-wallet`, and not `vegawallet`. Thus, when reading the documentation in the repository,
-replace `vegawallet` with `go-wallet`.
+`vegawallet`, and not `vegawallet`. Thus, when reading the documentation in the repository,
+replace `vegawallet` with `vegawallet`.
 
 #### Using the command-line
 
@@ -118,4 +118,4 @@ Read more at [https://vega.xyz][vega-website].
 [vega-documentation-website-getting-started]: https://docs.fairground.vega.xyz/docs/wallet/getting-started/
 [nolt]: https://vega-testnet.nolt.io/
 [discord]: https://vega.xyz/discord
-[github-release]: https://github.com/vegaprotocol/go-wallet/releases
+[github-release]: https://github.com/vegaprotocol/vegawallet/releases

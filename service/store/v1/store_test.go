@@ -3,8 +3,8 @@ package v1_test
 import (
 	"testing"
 
-	"code.vegaprotocol.io/go-wallet/service"
-	"code.vegaprotocol.io/go-wallet/service/store/v1"
+	"code.vegaprotocol.io/vegawallet/service"
+	"code.vegaprotocol.io/vegawallet/service/store/v1"
 	vgtest "code.vegaprotocol.io/shared/libs/test"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

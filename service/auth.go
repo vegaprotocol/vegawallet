@@ -23,7 +23,7 @@ var (
 	ErrSessionNotFound = errors.New("session not found")
 )
 
-//go:generate go run github.com/golang/mock/mockgen -destination mocks/rsa_store_mock.go -package mocks code.vegaprotocol.io/go-wallet/service RSAStore
+//go:generate go run github.com/golang/mock/mockgen -destination mocks/rsa_store_mock.go -package mocks code.vegaprotocol.io/vegawallet/service RSAStore
 type RSAStore interface {
 	GetRsaKeys() (*RSAKeys, error)
 }

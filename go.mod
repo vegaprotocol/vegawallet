@@ -1,4 +1,4 @@
-module code.vegaprotocol.io/go-wallet
+module code.vegaprotocol.io/vegawallet
 
 go 1.16
 

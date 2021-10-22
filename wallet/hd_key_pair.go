@@ -5,7 +5,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 
-	"code.vegaprotocol.io/go-wallet/crypto"
+	"code.vegaprotocol.io/vegawallet/crypto"
 )
 
 type HDKeyPair struct {

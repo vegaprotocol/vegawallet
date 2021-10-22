@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"net/http/httputil"
 
-	"code.vegaprotocol.io/go-wallet/version"
+	"code.vegaprotocol.io/vegawallet/version"
 )
 
 type Console struct {

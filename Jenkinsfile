@@ -5,7 +5,7 @@
     - GIT_COMMIT:05a1c6fbe7d1ff87cfc40a011a63db574edad7e6
     - GIT_PREVIOUS_COMMIT:5d02b46fdb653f789e799ff6ad304baccc32cbf9
     - GIT_PREVIOUS_SUCCESSFUL_COMMIT:5d02b46fdb653f789e799ff6ad304baccc32cbf9
-    - GIT_URL:https://github.com/vegaprotocol/go-wallet.git
+    - GIT_URL:https://github.com/vegaprotocol/vegawallet.git
 */
 def scmVars = null
 def version = 'UNKNOWN'
@@ -76,7 +76,7 @@ pipeline {
 
         stage('Compile') {
             environment {
-                LDFLAGS = "-X code.vegaprotocol.io/go-wallet/version.Version=\"${version}\" -X code.vegaprotocol.io/go-wallet/version.VersionHash=\"${versionHash}\""
+                LDFLAGS = "-X code.vegaprotocol.io/vegawallet/version.Version=\"${version}\" -X code.vegaprotocol.io/vegawallet/version.VersionHash=\"${versionHash}\""
             }
             failFast true
             parallel {

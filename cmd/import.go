@@ -5,8 +5,8 @@ import (
 	"os"
 	"strings"
 
-	"code.vegaprotocol.io/go-wallet/cmd/printer"
-	"code.vegaprotocol.io/go-wallet/wallets"
+	"code.vegaprotocol.io/vegawallet/cmd/printer"
+	"code.vegaprotocol.io/vegawallet/wallets"
 	vgfs "code.vegaprotocol.io/shared/libs/fs"
 	"github.com/spf13/cobra"
 )

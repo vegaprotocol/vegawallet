@@ -3,8 +3,8 @@ package cmd
 import (
 	"fmt"
 
-	"code.vegaprotocol.io/go-wallet/cmd/printer"
-	"code.vegaprotocol.io/go-wallet/wallet"
+	"code.vegaprotocol.io/vegawallet/cmd/printer"
+	"code.vegaprotocol.io/vegawallet/wallet"
 )
 
 func printKeyPair(p *printer.HumanPrinter, keyPair wallet.KeyPair) {

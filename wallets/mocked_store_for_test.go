@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 
-	"code.vegaprotocol.io/go-wallet/wallet"
-	"code.vegaprotocol.io/go-wallet/wallets"
+	"code.vegaprotocol.io/vegawallet/wallet"
+	"code.vegaprotocol.io/vegawallet/wallets"
 )
 
 type mockedStore struct {
