@@ -1,74 +1,56 @@
 package cmd
 
 import (
-	"encoding/json"
-	"errors"
 	"fmt"
 
-	storev1 "code.vegaprotocol.io/go-wallet/store/v1"
-	"code.vegaprotocol.io/go-wallet/wallet"
-
+	"code.vegaprotocol.io/vegawallet/cmd/printer"
+	"code.vegaprotocol.io/vegawallet/wallets"
+	vgjson "code.vegaprotocol.io/shared/libs/json"
 	"github.com/spf13/cobra"
 )
 
 var (
-	listArgs struct {
-		walletOwner string
-		passphrase  string
-	}
-
 	// listCmd represents the list command
 	listCmd = &cobra.Command{
 		Use:   "list",
-		Short: "List keypairs of a wallet",
-		Long:  "List all the keypairs for a given wallet",
+		Short: "List all registered wallets",
+		Long:  "List all registered wallets",
 		RunE:  runList,
 	}
 )
 
 func init() {
 	rootCmd.AddCommand(listCmd)
-	listCmd.Flags().StringVarP(&listArgs.walletOwner, "name", "n", "", "Name of the wallet to use")
-	listCmd.Flags().StringVarP(&listArgs.passphrase, "passphrase", "p", "", "Passphrase to access the wallet")
 }
 
-func runList(cmd *cobra.Command, args []string) error {
-	store, err := storev1.NewStore(rootArgs.rootPath)
+func runList(_ *cobra.Command, _ []string) error {
+	store, err := wallets.InitialiseStore(rootArgs.home)
+	if err != nil {
+		return fmt.Errorf("couldn't initialise wallets store: %w", err)
+	}
+
+	handler := wallets.NewHandler(store)
+
+	ws, err := handler.ListWallets()
 	if err != nil {
 		return err
 	}
 
-	handler := wallet.NewHandler(store)
-
-	if len(listArgs.walletOwner) == 0 {
-		return errors.New("wallet name is required")
-	}
-	if len(listArgs.passphrase) == 0 {
-		var err error
-		listArgs.passphrase, err = promptForPassphrase()
-		if err != nil {
-			return fmt.Errorf("could not get passphrase: %v", err)
+	if rootArgs.output == "human" {
+		p := printer.NewHumanPrinter()
+		if len(ws) == 0 {
+			p.InfoText("No wallet registered").Jump()
 		}
+		for _, w := range ws {
+			p.Text(fmt.Sprintf("- %s", w)).Jump()
+		}
+	} else if rootArgs.output == "json" {
+		return vgjson.Print(struct {
+			Wallets []string `json:"wallets"`
+		}{
+			Wallets: ws,
+		})
 	}
-
-	err = handler.LoginWallet(listArgs.walletOwner, listArgs.passphrase)
-	if err != nil {
-		return fmt.Errorf("could not login to the wallet: %v", err)
-	}
-
-	keys, err := handler.ListPublicKeys(listArgs.walletOwner)
-	if err != nil {
-		return fmt.Errorf("could not list the public keys: %v", err)
-	}
-
-	buf, err := json.MarshalIndent(keys, " ", " ")
-	if err != nil {
-		return fmt.Errorf("unable to marshal message: %v", err)
-	}
-
-	// print the new keys for user info
-	fmt.Printf("List of all your keypairs:\n")
-	fmt.Printf("%v\n", string(buf))
 
 	return nil
 }

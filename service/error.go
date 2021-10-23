@@ -3,13 +3,14 @@ package service
 import (
 	"errors"
 
-	"code.vegaprotocol.io/go-wallet/commands"
+	"code.vegaprotocol.io/protos/commands"
 )
 
 var (
-	ErrInvalidOrMissingToken  = newErrorResponse("invalid or missing token")
-	ErrCouldNotReadRequest = errors.New("could not read request")
-	ErrCouldNotGetBlockHeight = errors.New("could not get last block height")
+	ErrInvalidOrMissingToken     = newErrorResponse("invalid or missing token")
+	ErrCouldNotReadRequest       = errors.New("could not read request")
+	ErrCouldNotGetBlockHeight    = errors.New("could not get last block height")
+	ErrShouldBeBase64Encoded     = errors.New("should be base64 encoded")
 )
 
 type ErrorsResponse struct {

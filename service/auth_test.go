@@ -4,9 +4,8 @@ import (
 	"testing"
 	"time"
 
-	"code.vegaprotocol.io/go-wallet/service"
-	"code.vegaprotocol.io/go-wallet/service/mocks"
-	"code.vegaprotocol.io/go-wallet/wallet"
+	"code.vegaprotocol.io/vegawallet/service"
+	"code.vegaprotocol.io/vegawallet/service/mocks"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap"
@@ -14,12 +13,11 @@ import (
 
 type testAuth struct {
 	service.Auth
-	rootPath string
-	ctrl     *gomock.Controller
+	ctrl *gomock.Controller
 }
 
 func getTestAuth(t *testing.T) *testAuth {
-	rsaKeys, err := wallet.GenerateRSAKeys()
+	rsaKeys, err := service.GenerateRSAKeys()
 	if err != nil {
 		t.Fatal(err)
 	}

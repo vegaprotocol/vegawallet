@@ -1,6 +1,6 @@
 package main
 
-import "code.vegaprotocol.io/go-wallet/cmd"
+import "code.vegaprotocol.io/vegawallet/cmd"
 
 func main() {
 	cmd.Execute()

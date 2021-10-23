@@ -1,167 +1,121 @@
 # Vega Wallet
 
-`vegawallet` is the command line interface for running a Wallet service, implemented in Go. It is used to sign transactions for use on [Vega](#about-vega). Vega Wallet creates and manages ed25519 keypairs for one or more wallets.
+`vegawallet` is the command line interface for running a Wallet service,
+implemented in Go. It is used to sign transactions for use
+on [Vega](#about-vega). Vega Wallet creates and manages HD wallets with ed25519
+key pairs.
 
-## How to install and run Vega Wallet
-These instructions are written to be used in command line. Below, in the snippets, you'll see commands in blue text. Copy those instructions and paste them into your command line interface.
+## Documentation
 
-### Download
-Download and save the zip file from Releases. We suggest you keep track of where you've saved the file, because that's where the command line interface will look for it. 
-https://github.com/vegaprotocol/go-wallet/releases
+#### [Getting started with Vega Wallet][vega-documentation-website-getting-started]
+Learn how to install and run the stable version of Vega Wallet.
 
-**If you’re using MacOS:**
+#### [Vega documentation][vega-documentation-website]
+Learn more about how Vega works, and explore sample scripts for API trading
 
-Download `vegawallet-darwin-amd64.zip`
+## Before continuing...
 
-When you open the file, you may need to change your system preferences for this specific instance, in order to run Vega Wallet. If you open the file from downloads, you may get a message saying “vegawallet-darwin-amd64” cannot be opened because it is from an unidentified developer.
+### I am not familiar with Vega Wallet...
 
-Click on the (?) help button, which will open a window that links you to the System Preferences, and instructs you how to allow this software to run.
+If you want to know more about Vega Wallet, how it works and how to use it, refer to the section ["Getting started with Vega Wallet"][vega-documentation-website-getting-started].
 
-You’ll need to go to System Preferences > Security & Privacy > General, and choose “Open Anyway”.
+### I want to use the latest stable version...
 
-**If you’re using Windows:**
+If you want to use a stable version, refer to ["Getting started with Vega Wallet"][vega-documentation-website-getting-started].
 
-Download `vegawallet-windows-amd64.zip`
+### Should I use the documentation in this repository?
 
-You may need to change your system preferences for this specific instance, in order to run Vega Wallet. If you open the file from downloads, you may get a message from Windows Defender saying “vegawallet-windows-amd64” cannot be opened because it is from an unidentified developer.
+If you are looking for the documentation for the stable version of Vega Wallet, refer to the [documentation website][vega-documentation-website]. **Do not refer to the documentation in this repository.**
 
-Click on the (More info) text, which will reveal a button to "Run anyway".
+The documentation living in this repository contains information about unreleased and unstable features, and it is meant for people running a version of Vega Wallet that is built from source code.
 
-**If you’re using Linux:**
+## A word about versions
 
-Download `vegawallet-linux-amd64.zip`
+**A release does not necessarily mean it is stable.** If a version is suffixed with `-pre` (ex: `v0.9.0-pre1`), this is not stable.
 
-## Generate key pair and credentials
+If you are not sure which version you are currently running, use the following command to find out:
 
-### Execute the program
-
-> Tip: You'll need to run the commands from the directory you've saved the wallet file in. Use the command `pwd` to find out where your terminal is looking in the file system. Use the command `cd` and the path/to/wallet/directory to tell the command line where to find the file. 
-
-> Tip: You can use the tab key to auto-fill the name of the file, after you type the first few characters.
-
-**MacOS & Linux**
-
-Open a new terminal. Type
-
-```console
-./vegawallet
-```
-to execute the program.
-
-**Windows**
-
-Open a new command prompt. Type
-
-```console
-vegawallet
-```
-to execute the program.
-
-> Tip: You can see a list of available commands by running  `./vegawallet -h` on MacOS and Linux, or `vegawallet -h` on Windows.
-
-### Create name and passphrase
-Next, **create a user name and passphrase** for your Wallet, and **create a public and private key** (genkey). 
-
-Replace "YOUR_CUSTOM_USERNAME" (below) with your chosen username:
-
-**MacOS & Linux**
-
-```console
-./vegawallet genkey -n "YOUR_CUSTOM_USERNAME"
+```sh
+vegawallet version
 ```
 
-**Windows**
+All releases can be seen on the [Releases][github-releases] page.
 
-```console
-vegawallet genkey -n "YOUR_CUSTOM_USERNAME"
+## Installation
+
+To install Vega Wallet, you can download a released binary, or install it using the Golang toolchain.
+
+### Download binaries
+
+From the [Releases][github-releases] page, download the ZIP file matching your platform and open it.
+
+|  Platform | Associated ZIP file            |
+|-----------|--------------------------------|
+| Windows   | `vegawallet-windows-amd64.zip` |
+|  MacOS    | `vegawallet-darwin-amd64.zip`  |
+| Linux     | `vegawallet-linux-amd64.zip`   |
+
+
+### Installing from repository
+
+You can install a released version using Golang toolchain:
+
+```sh
+go install code.vegaprotocol.io/vegawallet@VERSION
 ```
 
-It will then prompt you to **input a passphrase**, and then **confirm that passphrase**. You'll use this username and passphrase to login to Vega Console. (Instructions on connecting to Console are below.)
+Replace `VERSION` with the release version of your choice.
 
-The genkey command in that instruction will generate public and private keys for the wallet, at the same time as creating a user name.
+For version `v0.9.0`, it would be:
 
-You’ll see an output with your public and private key. DO NOT SHARE YOUR PRIVATE KEY. You don’t need to save this information anywhere, as you’ll be able to retrieve it from your Wallet in the future.
-
-> Tip: You can give each new key a nickname/alias. 
-> When creating a key, run 
-> 
-> MacOS & Linux: `./vegawallet genkey -name="YOUR_CUSTOM_USERNAME" --metas="name:CHOOSE_CUSTOM_ALIAS_FOR_KEY"`. 
-> 
-> Windows: `vegawallet genkey -name="YOUR_CUSTOM_USERNAME" --metas="name:CHOOSE_CUSTOM_ALIAS_FOR_KEY"`
-
-> Tip: To give an existing key a nickname/alias, run 
-> 
-> MacOS & Linux: `./vegawallet meta --metas="name:CHOOSE_CUSTOM_ALIAS_FOR_KEY" --name="YOUR_CUSTOM_USERNAME" --pubkey="REPLACE_THIS_WITH_YOUR_PUBLIC_KEY"`. 
-> 
-> Windows: `vegawallet meta --metas="name:CHOOSE_CUSTOM_ALIAS_FOR_KEY" --name="YOUR_CUSTOM_USERNAME" --pubkey="REPLACE_THIS_WITH_YOUR_PUBLIC_KEY"`
-
-> Tip: You can also use the meta command to tag a key with other data you might want, using a property name and a value. This will be useful for developing with Vega Wallet in the future.
-
-## Run the Wallet service
-Now, **connect your Wallet to the Testnet nodes**. The `init` command (below) will initialise the configuration. A configuration file will be stored in your home folder, in a folder called `.vega`.
-
-**MacOS & Linux**
-
-```console
-./vegawallet service init
-```
-**Windows**
-
-```console
-vegawallet service init
+```sh
+go install code.vegaprotocol.io/vegawallet@v0.9.0
 ```
 
-> Tip: If you want to specify a root-path, it will not go into the default path, but a folder you choose to create. If you want to create a new config for a new wallet, or test or isolate it, you should specify the root path.
+## Building from source
 
-Next: To trade, run the wallet and **start the Vega Console** with the command below. (You'll need collateral to trade, and you can deposit it through Vega Console, once you're connected.)
+To build the Vega Wallet from the source code, use the following 
 
-**MacOS & Linux**
-
-```console
-./vegawallet service run -p
-```
-**Windows**
-
-```console
-vegawallet service run -p
+```sh
+cd vegawallet && go build
 ```
 
-> Tip: If you're running an ad/tracker blocker, and you're getting errors, it may be blocking the node from connecting. Try allowlisting lb.testnet.vega.xyz and refreshing.
+### Usage
 
-> Tip: To terminate the process, such as if you want to run other commands in Wallet, use ctrl+c.
+**Note:** Whether you are building Vega Wallet from source code or installing it from the repository, this will install the program under the name
+`vegawallet`, and not `vegawallet`. Thus, when reading the documentation in the repository,
+replace `vegawallet` with `vegawallet`.
 
-### Create and deposit testnet tokens
-Now you'll need to **deposit Ropsten Ethereum-based tokens** to start trading.
+#### Using the command-line
 
-You can create and deposit assets directly through the proxy Console via Wallet.
+See a list of commands available in the wallet [here](cmd/README.md).
 
-If you'd like more information or guidance, there are instructions in the [Vega documentation](https://docs.testnet.vega.xyz/docs/wallet/).
+#### Using the API
 
-If you'd prefer to request tokens from the contracts directly, there are instructions in the [testnet bridge tools repo readme](https://github.com/vegaprotocol/Public_Test_Bridge_Tools/blob/master/docs/mew.md).
-
-### Use the wallet API
 Using the API is documented [here](service/README.md).
 
 ## Support
 
-**[Documentation](https://docs.testnet.vega.xyz)**
-
-Get API reference documentation, learn more about how Vega works, and explore sample scripts for API trading
-
-**[Nolt](https://vega-testnet.nolt.io/)**
-
+#### [Nolt][nolt]
 Raise issues and see what others have raised.
 
-**[Discord](https://vega.xyz/discord)**
+#### [Discord][discord]
+Ask us for help, find out about scheduled open sessions, and keep up with Vega
+generally.
 
-Ask us for help, find out about scheduled open office hours, and keep up with Vega generally.
+## About Vega
 
-## Building
-```console
-cd go-wallet && make
-```
+[Vega][vega-website] is a protocol for creating and trading derivatives on a
+fully decentralised network. The network, secured with proof-of-stake, will
+facilitate fully automated, end-to-end margin trading and execution of complex
+financial products. Anyone will be able to build decentralised markets using the
+protocol.
 
-# About Vega
-[Vega](https://vega.xyz) is a protocol for creating and trading derivatives on a fully decentralised network. The network, secured with proof-of-stake, will facilitate fully automated, end-to-end margin trading and execution of complex financial products. Anyone will be able to build decentralised markets using the protocol.
+Read more at [https://vega.xyz][vega-website].
 
-Read more at [https://vega.xyz](https://vega.xyz).
+[vega-website]: https://vega.xyz
+[vega-documentation-website]: https://docs.fairground.vega.xyz
+[vega-documentation-website-getting-started]: https://docs.fairground.vega.xyz/docs/wallet/getting-started/
+[nolt]: https://vega-testnet.nolt.io/
+[discord]: https://vega.xyz/discord
+[github-release]: https://github.com/vegaprotocol/vegawallet/releases

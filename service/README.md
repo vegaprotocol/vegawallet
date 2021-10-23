@@ -1,139 +1,201 @@
-Wallet
-======
+# Wallet API
 
-This package provides the basic cryptography to sign vega transactions, and a basic key management system: `wallet service`. It can be run alongside the core, but is not required for the operation of a Vega node, and API clients are free to implement their own transaction signing.
+## Authentication
 
-A wallet takes the form of a file saved on the file system and is encrypted using the passphrase chosen by the user.
-A wallet is composed of a list of key pairs (Ed25519) used to sign transactions for the user of a wallet.
+### Logging in to a wallet
 
-## Generate configuration
+`POST api/v1/auth/token`
 
-The package provides a way to generate the configuration of the service before starting it, it can be used through the vega command line like so:
+Logging in to a wallet is done using the wallet name and passphrase. The
+operation fails if the wallet not exist, or if the passphrase used is incorrect.
+On success, the wallet is loaded, a session is created and a JWT is returned to
+the user.
 
-```shell
-vega wallet service init --genrsakey -f
+#### Example
+
+##### Request
+
+```json
+{
+  "wallet": "your_wallet_name",
+  "passphrase": "super-secret"
+}
 ```
 
-Where `--genrsakey` generates an RSA key that will be used to sign your JWT (JSON web token), and `-f` overwrites any existing configuration files (if found).
-In short: this command will generate the RSA key, and the configuration files required by the wallet service.
+##### Command
 
-Start the vega wallet service with:
-
-```shell
-vega wallet service run
+```sh
+curl -s -XPOST -d 'YOUR_REQUEST' http://127.0.0.1:1789/api/v1/auth/token
 ```
 
-## Create a wallet
+##### Response
 
-Creating a wallet is done using a name and passphrase. If a wallet already exists, the action is aborted. New wallets are marshalled, encrypted (using the passphrase) and saved to a file on the file system.
-A session and accompanying JWT is created, and the JWT is returned to the user.
+```json
+{
+  "token": "abcd.efgh.ijkl"
+}
+```
 
-* Request:
+### Logging out from a wallet
 
-  ```json
-  {
-    "wallet": "walletname",
-    "passphrase": "supersecret"
+`DELETE api/v1/auth/token`
+
+Using the JWT returned when logging in, the session is recovered and removed
+from the service. The wallet can no longer be accessed using the token from this
+point on.
+
+#### Example
+
+##### Command
+
+```sh
+curl -s -XDELETE -H 'Authorization: Bearer abcd.efgh.ijkl' http://127.0.0.1:1789/api/v1/auth/token
+```
+
+##### Response
+
+```json
+{
+  "success": true
+}
+```
+
+## Network management
+
+### Get current network configuration
+
+`GET api/v1/network`
+
+### Example
+
+#### Command
+
+```sh
+curl -s -XPOST -d 'YOUR_REQUEST' http://127.0.0.1:1789/api/v1/network
+```
+
+#### Response
+
+```json
+{
+  "network": {
+    "name": "mainnet"
   }
-  ```
-* Command:
+}
+```
 
-  ```shell
-  curl -s -XPOST -d 'requestjson' http://127.0.0.1:1789/api/v1/wallets
-  ```
-* Response:
+## Wallet management
 
-  ```json
-  {
-    "token": "verylongJWT"
-  }
-  ```
+### Create a wallet
 
-## Logging in to a wallet
+`POST api/v1/wallets`
 
-Logging in to a wallet is done using the wallet name and passphrase.
-The operation fails should the wallet not exist, or if the passphrase used is incorrect (i.e. the passphrase cannot be used to decrypt the wallet).
-On success, the wallet is loaded, a session is created and a JWT is returned to the user.
+Creating a wallet is done using a name and passphrase. If a wallet with the same
+name already exists, the action is aborted. The new wallets is encrypted (using
+the passphrase) and saved to a file on the file system. A session and
+accompanying JWT is created, and the JWT is returned to the user.
 
-* Request:
+#### Example
 
-  ```json
-  {
-    "wallet": "walletname",
-    "passphrase": "supersecret"
-  }
-  ```
-* Command:
+##### Request
 
-  ```shell
-  curl -s -XPOST -d 'requestjson' http://127.0.0.1:1789/api/v1/auth/token
-  ```
-* Response:
+```json
+{
+  "wallet": "your_wallet_name",
+  "passphrase": "super-secret"
+}
+```
 
-  ```json
-  {
-    "token": "verylongJWT"
-  }
-  ```
+##### Command
 
-## Logging out from a wallet
+```sh
+curl -s -XPOST -d 'YOUR_REQUEST' http://127.0.0.1:1789/api/v1/wallets
+```
 
-Using the JWT returned when logging in, the session is recovered and removed from the service. The wallet can no longer be accessed using the token from this point on.
+##### Response
 
-* Request: n/a
-* Command:
+```json
+{
+  "token": "abcd.efgh.ijkl"
+}
+```
 
-  ```shell
-  curl -s -XDELETE -H 'Authorization: Bearer verylongJWT' http://127.0.0.1:1789/api/v1/auth/token
-  ```
-* Response:
+### Import a wallet
 
-  ```json
-  {
-    "success": true
-  }
-  ```
+`POST api/v1/wallets/import`
 
-## List keys
+Import a wallet is done using a name, a passphrase, and a mnemonic. If a wallet
+with the same name already exists, the action is aborted. The imported wallet is
+encrypted (using the passphrase) and saved to a file on the file system. A
+session and accompanying JWT is created, and the JWT is returned to the user.
 
-Users can list all their public keys (with taint status, and metadata), if they provide the correct JWT. The service extracts the session from this token, and uses it to fetch the relevant wallet information to send back to the user.
+#### Example
 
-* Request: n/a
-* Command:
+##### Request
 
-  ```shell
-  curl -s -XGET -H "Authorization: Bearer verylongJWT" http://127.0.0.1:1789/api/v1/keys
-  ```
-* Response:
+```json
+{
+  "wallet": "your_wallet_name",
+  "passphrase": "super-secret",
+  "mnemonic": "my twenty four words mnemonic"
+}
+```
 
-  ```json
-  {
-    "keys": [
-      {
-        "pub": "1122aabb...",
-        "algo": "ed25519",
-        "tainted": false,
-        "meta": [
-          {
-            "key": "somekey",
-            "value": "somevalue"
-          }
-        ]
-      }
-    ]
-  }
-  ```
+##### Command
 
-## Generate a new key pair
+```sh
+curl -s -XPOST -d 'YOUR_REQUEST' http://127.0.0.1:1789/api/v1/wallets
+```
 
-The user submits a valid JWT, and a passphrase. We recover the session of the user, and attempt to open the wallet using the passphrase. If the JWT is invalid, the session could not be recovered, or the wallet could not be opened, an error is returned.
-If all went well, a new key pair is generated, saved in the wallet, and the public key is returned.
+##### Response
 
-* Request:
+```json
+{
+  "token": "abcd.efgh.ijkl"
+}
+```
 
-  ```json
-  {
-    "passphrase": "supersecret",
+## Key management
+
+### Generate a key pair
+
+`POST api/v1/keys`
+
+**Authentication required.**
+
+It generates a new key pair into the logged wallet, and returns the generated
+public key.
+
+#### Example
+
+##### Request
+
+```json
+{
+  "passphrase": "super-secret",
+  "meta": [
+    {
+      "key": "somekey",
+      "value": "somevalue"
+    }
+  ]
+}
+```
+
+##### Command
+
+```sh
+curl -s -XPOST -H 'Authorization: Bearer abcd.efgh.ijkl' -d 'YOUR_REQUEST' http://127.0.0.1:1789/api/v1/keys
+```
+
+##### Response
+
+```json
+{
+  "key": {
+    "pub": "1122aabb",
+    "algo": "ed25519",
+    "tainted": false,
     "meta": [
       {
         "key": "somekey",
@@ -141,18 +203,33 @@ If all went well, a new key pair is generated, saved in the wallet, and the publ
       }
     ]
   }
-  ```
-* Command:
+}
+```
 
-  ```shell
-  curl -s -XPOST -H 'Authorization: Bearer verylongJWT' -d 'requestjson' http://127.0.0.1:1789/api/v1/keys
-  ```
-* Response:
+### List keys
 
-  ```json
-  {
-    "key": {
-      "pub": "1122aabb...",
+`GET api/v1/keys`
+
+**Authentication required.**
+
+Users can list all the public keys (with taint status, and metadata) of the
+logged wallet.
+
+#### Example
+
+##### Command
+
+```sh
+curl -s -XGET -H "Authorization: Bearer abcd.efgh.ijkl" http://127.0.0.1:1789/api/v1/keys
+```
+
+##### Response
+
+```json
+{
+  "keys": [
+    {
+      "pub": "1122aabb",
       "algo": "ed25519",
       "tainted": false,
       "meta": [
@@ -162,134 +239,230 @@ If all went well, a new key pair is generated, saved in the wallet, and the publ
         }
       ]
     }
+  ]
+}
+```
+
+### Describe a key pair
+
+`GET api/v1/keys/:keyid`
+
+**Authentication required.**
+
+Return the information associated the public key `:keyid`, from the logged
+wallet. The private key is not returned.
+
+#### Example
+
+##### Command
+
+```sh
+  curl -s -XPUT -H "Authorization: Bearer abcd.efgh.ijkl" -d 'YOUR_REQUEST' http://127.0.0.1:1789api/v1/keys/1122aabb
+```
+
+##### Response
+
+```json
+{
+  "key": {
+    "index": 1,
+    "pub": "1122aabb"
   }
-  ```
+}
+```
 
-## Sign a transaction
+### Taint a key pair
 
-Sign a transaction using the specified keypair.
+`PUT api/v1/keys/:keyid/taint`
 
-* Request:
+**Authentication required.**
 
-  ```json
-  {
-    "tx": "dGVzdGRhdGEK",
-    "pubKey": "1122aabb...",
-    "propagate": false
-  }
-  ```
-* Command:
+Taint the key pair matching the public key `:keyid`, from the logged wallet. The
+key pair must belong to the logged wallet.
 
-  ```shell
-  curl -s -XPOST -H "Authorization: Bearer verylongJWT" -d 'requestjson' http://127.0.0.1:1789/api/v1/messages
+#### Example
 
-  ```
-* Response:
+##### Request
 
-  ```json
-  {
-    "signedTx": {
-      "data": "dGVzdGRhdGEK",
-      "sig": "...",
-      "pubKey": "1122aabb..."
+```json
+{
+  "passphrase": "super-secret"
+}
+```
+
+##### Command
+
+```sh
+  curl -s -XPUT -H "Authorization: Bearer abcd.efgh.ijkl" -d 'YOUR_REQUEST' http://127.0.0.1:1789/api/v1/keys/1122aabb/taint
+```
+
+##### Response
+
+```json
+{
+  "success": true
+}
+```
+
+### Annotate a key pair
+
+`PUT api/v1/keys/:keyid/metadata`
+
+**Authentication required.**
+
+Annotating a key pair replace the metadata matching the public key `:keyid`,
+from the logged wallet. The key pair must belong to the logged wallet.
+
+#### Example
+
+##### Request
+
+```json
+{
+  "passphrase": "super-secret",
+  "meta": [
+    {
+      "key": "newkey",
+      "value": "newvalue"
     }
+  ]
+}
+```
+
+##### Command
+
+```sh
+  curl -s -XPUT -H "Authorization: Bearer abcd.efgh.ijkl" -d 'YOUR_REQUEST' http://127.0.0.1:1789/api/v1/keys/1122aabb/metadata
+```
+
+##### Response
+
+```json
+{
+  "success": true
+}
+```
+
+## Commands
+
+### Sign a command
+
+`POST api/v1/command`
+
+**Authentication required.**
+
+Sign a Vega command using the specified key pair, and returns the signed
+transaction. The key pair must belong to the logged wallet.
+
+#### Example
+
+##### Request
+
+```json
+{
+  "pubKey": "1122aabb",
+  "propagate": true,
+  "orderCancellation": {
+    "marketId": "YESYESYES"
   }
-  ```
+}
+```
 
-### Propagate
+##### Command
 
-As you can see the request payload has a field `propagate` (optional) if set to true, then the wallet service, if
-configured with a correct vega node address will try to send the transaction on your behalf to the node after signing it
-successfully. The node address can be configured via the wallet service configuration file, by default it will point to
-a local instance of a vega node.
+```sh
+  curl -s -XPOST -H "Authorization: Bearer abcd.efgh.ijkl" -d 'YOUR_REQUEST' http://127.0.0.1:1789/api/v1/command
+```
 
-## Taint a key
+##### Response
 
-* Request:
-
-  ```json
-  {
-    "passphrase": "supersecret"
-  }
-  ```
-* Command:
-
-  ```shell
-  curl -s -XPUT -H "Authorization: Bearer verylongJWT" -d 'requestjson' http://127.0.0.1:1789/api/v1/keys/1122aabb/taint
-
-  ```
-* Response:
-
-  ```json
-  {
-    "success": true
-  }
-  ```
-
-## Update key metadata
-
-Overwrite all existing metadata with the new metadata.
-
-* Request:
-
-  ```json
-  {
-    "passphrase": "supersecret",
-    "meta": [
-      {
-        "key": "newkey",
-        "value": "newvalue"
-      }
-    ]
-  }
-  ```
-* Command:
-
-  ```shell
-  curl -s -XPUT -H "Authorization: Bearer verylongJWT" -d 'requestjson' http://127.0.0.1:1789/api/v1/keys/1122aabb/metadata
-
-  ```
-* Response:
-
-  ```json
-  {
-    "success": true
-  }
-  ```
-
-## Issue a transaction
-
-* Request:
-
-  ```json
-  {
-    "pubKey": "8d06a20eb717938b746e0332686257ae39fa3d90847eb8ee0da3463732e968ba",
-    "propagate": true,
-    "orderCancellation": {
-      "marketId": "YESYESYES"
-    }
-  }
-  ```
-* Command:
-
-  ```shell
-  curl -s -XPOST -H "Authorization: Bearer verylongJWT" -d 'requestjson' http://127.0.0.1:1789/api/v1/command
-  ```
-* Response:
-
-  ```json
-  {
-    "transaction": {
-      "inputData": "dGVzdGRhdG9837420b4b3yb23ybc4o1ui23yEK",
-      "signature": {
-        "value": "7f6g9sf8f8s76dfa867fda",
-        "algo": "vega/ed25519",
-        "version": 1
-      },
-      "from": {
-        "pubKey": "1122aabb..."
-      },
+```json
+{
+  "transaction": {
+    "inputData": "dGVzdGRhdG9837420b4b3yb23ybc4o1ui23yEK",
+    "signature": {
+      "value": "7f6g9sf8f8s76dfa867fda",
+      "algo": "vega/ed25519",
       "version": 1
-    }
+    },
+    "from": {
+      "pubKey": "1122aabb"
+    },
+    "version": 1
   }
-  ```
+}
+```
+
+#### Propagate
+
+In the request payload, when the `propagate` field can be set to true, the
+wallet service send the transaction on your behalf to the registered nodes after
+signing it successfully.
+
+### Sign data
+
+`POST api/v1/sign`
+
+**Authentication required.**
+
+Sign any base64-encoded data using the specified key pair, and returns the
+signed transaction. The key pair must belong to the logged wallet.
+
+#### Example
+
+##### Request
+
+```json
+{
+  "inputData": "dGVzdGRhdGEK==",
+  "pubKey": "1122aabb"
+}
+```
+
+##### Command
+
+```sh
+  curl -s -XPOST -H "Authorization: Bearer abcd.efgh.ijkl" -d 'YOUR_REQUEST' http://127.0.0.1:1789/api/v1/sign
+```
+
+##### Response
+
+```json
+{
+  "hexSignature": "0xhafdsf86df876af",
+  "base64Signature": "fad7h34k1jh3g413g=="
+}
+```
+
+### Verify data
+
+`POST api/v1/verify`
+
+Verify any base64-encoded data using the specified public key, and returns the
+confirmation.
+
+#### Example
+
+##### Request
+
+```json
+{
+  "inputData": "dGVzdGRhdGEK==",
+  "pubKey": "1122aabb"
+}
+```
+
+##### Command
+
+```sh
+  curl -s -XPOST -H "Authorization: Bearer abcd.efgh.ijkl" -d 'YOUR_REQUEST' http://127.0.0.1:1789/api/v1/sign
+```
+
+##### Response
+
+```json
+{
+  "hexSignature": "0xhafdsf86df876af",
+  "base64Signature": "fad7h34k1jh3g413g=="
+}
+```
