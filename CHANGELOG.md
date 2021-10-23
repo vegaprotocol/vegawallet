@@ -1,7 +1,14 @@
 # Changelog
 
+## 0.9.1
+*2021-10-23*
+
+### Fixes
+- [313](https://github.com/vegaprotocol/go-wallet/pull/313) - Fix release github action
+
+
 ## 0.9.0
-*2021-10-19*
+*2021-10-23*
 
 ### Improvements
 - [310](https://github.com/vegaprotocol/go-wallet/pull/310) - Rename repository to vegawallet
