@@ -115,7 +115,7 @@ func runCommand(_ *cobra.Command, pos []string) error {
 		}
 		exists, err := netStore.NetworkExists(commandArgs.network)
 		if err != nil {
-			return fmt.Errorf("couldn't verify network existance: %w", err)
+			return fmt.Errorf("couldn't verify network existence: %w", err)
 		}
 		if !exists {
 			return network.NewNetworkDoesNotExistError(commandArgs.network)

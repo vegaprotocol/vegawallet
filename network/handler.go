@@ -30,13 +30,13 @@ func InitialiseNetworks(store Store, overwrite bool) error {
 		}
 		net := &Network{}
 		if _, err := toml.Decode(string(data), &net); err != nil {
-			return fmt.Errorf("couldn't decode embeded data: %w", err)
+			return fmt.Errorf("couldn't decode embedded data: %w", err)
 		}
 
 		if !overwrite {
 			exists, err := store.NetworkExists(net.Name)
 			if err != nil {
-				return fmt.Errorf("couldn't verify network existance: %w", err)
+				return fmt.Errorf("couldn't verify network existence: %w", err)
 			}
 			if exists {
 				return NewNetworkAlreadyExistsError(net.Name)
@@ -54,7 +54,7 @@ func InitialiseNetworks(store Store, overwrite bool) error {
 func ImportNetwork(store Store, net *Network, overwrite bool) error {
 	exists, err := store.NetworkExists(net.Name)
 	if err != nil {
-		return fmt.Errorf("couldn't verify network existance: %w", err)
+		return fmt.Errorf("couldn't verify network existence: %w", err)
 	}
 	if exists && !overwrite {
 		return NewNetworkAlreadyExistsError(net.Name)
