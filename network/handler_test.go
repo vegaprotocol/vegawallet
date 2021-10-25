@@ -20,6 +20,7 @@ type testConfig struct {
 }
 
 func getTestConfig(t *testing.T) *testConfig {
+	t.Helper()
 	ctrl := gomock.NewController(t)
 	store := mocks.NewMockStore(ctrl)
 

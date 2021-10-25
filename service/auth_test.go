@@ -17,6 +17,7 @@ type testAuth struct {
 }
 
 func getTestAuth(t *testing.T) *testAuth {
+	t.Helper()
 	rsaKeys, err := service.GenerateRSAKeys()
 	if err != nil {
 		t.Fatal(err)

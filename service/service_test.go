@@ -43,12 +43,17 @@ type testService struct {
 }
 
 func getTestService(t *testing.T) *testService {
+	t.Helper()
+
 	ctrl := gomock.NewController(t)
 	handler := mocks.NewMockWalletHandler(ctrl)
 	auth := mocks.NewMockAuth(ctrl)
 	nodeForward := mocks.NewMockNodeForward(ctrl)
 	// no needs of the conf or path as we do not run an actual service
-	s, _ := service.NewService(zap.NewNop(), &network.Network{}, handler, auth, nodeForward)
+	s, err := service.NewService(zap.NewNop(), &network.Network{}, handler, auth, nodeForward)
+	if err != nil {
+		t.Fatalf("couldn't create service: %v", err)
+	}
 	return &testService{
 		Service:     s,
 		ctrl:        ctrl,

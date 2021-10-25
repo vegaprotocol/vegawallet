@@ -20,7 +20,6 @@ disable = [
     "paralleltest",
     "revive",
     "tagliatelle",
-    "thelper",
     "whitespace",
     "wrapcheck",
     "wsl",

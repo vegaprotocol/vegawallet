@@ -25,9 +25,9 @@ type testHandler struct {
 }
 
 func getTestHandler(t *testing.T) *testHandler {
+	t.Helper()
 	ctrl := gomock.NewController(t)
 	store := newMockedStore()
-
 	h := wallets.NewHandler(store)
 	return &testHandler{
 		Handler: h,
