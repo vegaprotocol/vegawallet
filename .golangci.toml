@@ -16,7 +16,6 @@ disable = [
     "gocognit",
     "goconst",
     "gocritic",
-    "lll",
     "misspell",
     "nestif",
     "nlreturn",
@@ -37,11 +36,12 @@ disable = [
     "scopelint",
     # Won't be fixed
     # gci doesn't match our code style.
-    "gci"
+    "gci",
+    # lll doesn't match our code style.
+    "lll",
 ]
 
-[issues]
-[[issues.exclude-rules]]
+[issues.exclude-rules]
 linters = ["staticcheck"]
 text = "SA1019:"
 
