@@ -14,9 +14,7 @@ import (
 	"code.vegaprotocol.io/vegawallet/wallet"
 )
 
-var (
-	ErrWrongPassphrase = errors.New("wrong passphrase")
-)
+var ErrWrongPassphrase = errors.New("wrong passphrase")
 
 type Store struct {
 	walletsHome string

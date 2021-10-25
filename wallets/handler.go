@@ -15,9 +15,7 @@ import (
 	wstorev1 "code.vegaprotocol.io/vegawallet/wallet/store/v1"
 )
 
-var (
-	ErrWalletDoesNotExists = errors.New("wallet does not exist")
-)
+var ErrWalletDoesNotExists = errors.New("wallet does not exist")
 
 // Store abstracts the underlying storage for wallet data.
 type Store interface {

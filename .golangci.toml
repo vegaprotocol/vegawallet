@@ -16,7 +16,6 @@ disable = [
     "gocognit",
     "goconst",
     "gocritic",
-    "gofumpt",
     "goimports",
     "gomnd",
     "ifshort",

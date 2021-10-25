@@ -182,7 +182,7 @@ func runServiceRun(_ *cobra.Command, _ []string) error {
 
 // waitSig will wait for a sigterm or sigint interrupt.
 func waitSig(ctx context.Context, cfunc func(), log *zap.Logger) {
-	var gracefulStop = make(chan os.Signal, 1)
+	gracefulStop := make(chan os.Signal, 1)
 	signal.Notify(gracefulStop, syscall.SIGTERM)
 	signal.Notify(gracefulStop, syscall.SIGINT)
 	signal.Notify(gracefulStop, syscall.SIGQUIT)

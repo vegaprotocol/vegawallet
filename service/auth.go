@@ -19,9 +19,7 @@ import (
 	"go.uber.org/zap"
 )
 
-var (
-	ErrSessionNotFound = errors.New("session not found")
-)
+var ErrSessionNotFound = errors.New("session not found")
 
 //go:generate go run github.com/golang/mock/mockgen -destination mocks/rsa_store_mock.go -package mocks code.vegaprotocol.io/vegawallet/service RSAStore
 type RSAStore interface {
@@ -143,7 +141,6 @@ func (a *auth) parseToken(tokenStr string) (*Claims, error) {
 		return claims, nil
 	}
 	return nil, err
-
 }
 
 // ExtractToken this is public for testing purposes.

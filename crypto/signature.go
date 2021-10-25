@@ -10,9 +10,7 @@ const (
 	Ed25519 string = "vega/ed25519"
 )
 
-var (
-	ErrUnsupportedSignatureAlgorithm = errors.New("unsupported signature algorithm")
-)
+var ErrUnsupportedSignatureAlgorithm = errors.New("unsupported signature algorithm")
 
 type SignatureAlgorithm struct {
 	impl signatureAlgorithmImpl

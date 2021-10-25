@@ -9,15 +9,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var (
-	// listCmd represents the list command.
-	listCmd = &cobra.Command{
-		Use:   "list",
-		Short: "List all registered wallets",
-		Long:  "List all registered wallets",
-		RunE:  runList,
-	}
-)
+// listCmd represents the list command.
+var listCmd = &cobra.Command{
+	Use:   "list",
+	Short: "List all registered wallets",
+	Long:  "List all registered wallets",
+	RunE:  runList,
+}
 
 func init() {
 	rootCmd.AddCommand(listCmd)

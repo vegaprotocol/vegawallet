@@ -7,10 +7,8 @@ import (
 	"github.com/zannen/toml"
 )
 
-var (
-	//go:embed defaults/*.toml
-	defaultNetworks embed.FS
-)
+//go:embed defaults/*.toml
+var defaultNetworks embed.FS
 
 //go:generate go run github.com/golang/mock/mockgen -destination mocks/store_mock.go -package mocks code.vegaprotocol.io/vegawallet/network Store
 type Store interface {

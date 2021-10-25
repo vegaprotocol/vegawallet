@@ -10,15 +10,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var (
-	// networkListCmd represents the network list command.
-	networkListCmd = &cobra.Command{
-		Use:   "list",
-		Short: "List all registered network",
-		Long:  "List all registered network",
-		RunE:  runNetworkList,
-	}
-)
+// networkListCmd represents the network list command.
+var networkListCmd = &cobra.Command{
+	Use:   "list",
+	Short: "List all registered network",
+	Long:  "List all registered network",
+	RunE:  runNetworkList,
+}
 
 func init() {
 	networkCmd.AddCommand(networkListCmd)

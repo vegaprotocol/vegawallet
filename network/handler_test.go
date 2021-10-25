@@ -122,6 +122,7 @@ func TestImportNetwork(t *testing.T) {
 	t.Run("Importing by overwriting existing network succeeds", testImportingByOverwritingNetworkSucceeds)
 	t.Run("Importing network with errors when saving fails", testImportingNetworkWithErrorsWhenSavingFails)
 }
+
 func testImportingNetworkSucceeds(t *testing.T) {
 	ts := getTestConfig(t)
 

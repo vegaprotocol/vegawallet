@@ -334,7 +334,6 @@ func testServiceGenKeypairFailInvalidRequest(t *testing.T) {
 
 	resp = w.Result()
 	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
-
 }
 
 func testServiceListPublicKeysOK(t *testing.T) {
