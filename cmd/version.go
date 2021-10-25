@@ -25,12 +25,12 @@ func runVersion(_ *cobra.Command, _ []string) error {
 		p.Text("Version:").NextLine().WarningText(version.Version).NextSection()
 		p.Text("Git hash:").NextLine().WarningText(version.VersionHash).NextSection()
 	} else if rootArgs.output == "json" {
-		return printVersionJson()
+		return printVersionJSON()
 	}
 	return nil
 }
 
-func printVersionJson() error {
+func printVersionJSON() error {
 	return vgjson.Print(struct {
 		Version string `json:"version"`
 		GitHash string `json:"gitHash"`

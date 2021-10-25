@@ -65,7 +65,7 @@ func runKeyIsolate(_ *cobra.Command, _ []string) error {
 		p.CheckMark().Text("Key pair has been isolated in wallet ").Bold(isolatedWallet.Name()).Text(" at: ").SuccessText(walletPath).NextLine()
 		p.CheckMark().SuccessText("Key isolation succeeded").NextSection()
 	} else if rootArgs.output == "json" {
-		return vgjson.Print(keyIsolateJson{
+		return vgjson.Print(keyIsolateJSON{
 			Wallet:   isolatedWallet.Name(),
 			FilePath: walletPath,
 		})
@@ -73,7 +73,7 @@ func runKeyIsolate(_ *cobra.Command, _ []string) error {
 	return nil
 }
 
-type keyIsolateJson struct {
+type keyIsolateJSON struct {
 	Wallet   string `json:"wallet"`
 	FilePath string `json:"filePath"`
 }

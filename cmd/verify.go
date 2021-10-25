@@ -76,13 +76,13 @@ func runVerify(_ *cobra.Command, _ []string) error {
 		p.Code(fmt.Sprintf("%s sign --wallet \"YOUR_NAME\" --pubkey %s --message \"YOUR_MESSAGE\"", os.Args[0], verifyArgs.pubkey)).NextSection()
 		p.Text("For more information, use ").Bold("--help").Text(" flag.").NextLine()
 	} else if rootArgs.output == "json" {
-		return printVerifyJson(isValid)
+		return printVerifyJSON(isValid)
 	}
 
 	return nil
 }
 
-func printVerifyJson(isValid bool) error {
+func printVerifyJSON(isValid bool) error {
 	return vgjson.Print(struct {
 		IsValid bool `json:"isValid"`
 	}{

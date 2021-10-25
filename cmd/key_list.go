@@ -62,23 +62,23 @@ func runKeyList(_ *cobra.Command, _ []string) error {
 			p.NextLine()
 		}
 	} else if rootArgs.output == "json" {
-		return printJsonKeyPairs(keys)
+		return printJSONKeyPairs(keys)
 	}
 
 	return nil
 }
 
-func printJsonKeyPairs(keys []wallet.KeyPair) error {
-	result := make([]keyGenerateKeyJson, 0, len(keys))
+func printJSONKeyPairs(keys []wallet.KeyPair) error {
+	result := make([]keyGenerateKeyJSON, 0, len(keys))
 
 	for _, keyPair := range keys {
 		result = append(result,
-			keyGenerateKeyJson{
-				KeyPair: keyGenerateKeyPairJson{
+			keyGenerateKeyJSON{
+				KeyPair: keyGenerateKeyPairJSON{
 					PrivateKey: keyPair.PrivateKey(),
 					PublicKey:  keyPair.PublicKey(),
 				},
-				Algorithm: keyGenerateAlgorithmJson{
+				Algorithm: keyGenerateAlgorithmJSON{
 					Name:    keyPair.AlgorithmName(),
 					Version: keyPair.AlgorithmVersion(),
 				},

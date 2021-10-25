@@ -61,7 +61,7 @@ func runInit(_ *cobra.Command, _ []string) error {
 	if rootArgs.output == "human" {
 		printInitHuman(svcStore, netStore)
 	} else if rootArgs.output == "json" {
-		return printInitJson(svcStore, netStore)
+		return printInitJSON(svcStore, netStore)
 	} else {
 		return NewUnsupportedCommandOutputError(rootArgs.output)
 	}
@@ -84,20 +84,20 @@ func printInitHuman(svcStore *svcstore.Store, netStore *netstore.Store) {
 	p.Text("For more information, use ").Bold("--help").Text(" flag.").NextLine()
 }
 
-type initJson struct {
-	RSAKeys      initRsaKeysJson `json:"rsaKeys"`
+type initJSON struct {
+	RSAKeys      initRsaKeysJSON `json:"rsaKeys"`
 	NetworksHome string          `json:"networksHome"`
 }
 
-type initRsaKeysJson struct {
+type initRsaKeysJSON struct {
 	PublicKeyFilePath  string `json:"publicKeyFilePath"`
 	PrivateKeyFilePath string `json:"privateKeyFilePath"`
 }
 
-func printInitJson(svcStore *svcstore.Store, netStore *netstore.Store) error {
+func printInitJSON(svcStore *svcstore.Store, netStore *netstore.Store) error {
 	pubRSAKeysPath, privRSAKeysPath := svcStore.GetRSAKeysPath()
-	result := initJson{
-		RSAKeys: initRsaKeysJson{
+	result := initJSON{
+		RSAKeys: initRsaKeysJSON{
 			PublicKeyFilePath:  pubRSAKeysPath,
 			PrivateKeyFilePath: privRSAKeysPath,
 		},

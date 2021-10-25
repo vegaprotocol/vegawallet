@@ -79,13 +79,13 @@ func runSign(_ *cobra.Command, _ []string) error {
 		p.Code(fmt.Sprintf("%s verify --pubkey %s --message \"%s\" --signature %s", os.Args[0], signArgs.pubKey, signArgs.message, encodedSig)).NextSection()
 		p.Text("For more information, use ").Bold("--help").Text(" flag.").NextLine()
 	} else if rootArgs.output == "json" {
-		return printSignJson(encodedSig)
+		return printSignJSON(encodedSig)
 	}
 
 	return nil
 }
 
-func printSignJson(sig string) error {
+func printSignJSON(sig string) error {
 	return vgjson.Print(struct {
 		Signature string `json:"signature"`
 	}{

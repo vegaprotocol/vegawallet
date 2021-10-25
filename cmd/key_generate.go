@@ -117,44 +117,44 @@ func printHuman(p *printer.HumanPrinter, mnemonic string, keyPair wallet.KeyPair
 	p.Text("For more information, use ").Bold("--help").Text(" flag.").NextLine()
 }
 
-type keyGenerateJson struct {
-	Wallet keyGenerateWalletJson `json:"wallet"`
-	Key    keyGenerateKeyJson    `json:"key"`
+type keyGenerateJSON struct {
+	Wallet keyGenerateWalletJSON `json:"wallet"`
+	Key    keyGenerateKeyJSON    `json:"key"`
 }
 
-type keyGenerateWalletJson struct {
+type keyGenerateWalletJSON struct {
 	FilePath string `json:"filePath"`
 	Mnemonic string `json:"mnemonic,omitempty"`
 }
 
-type keyGenerateKeyJson struct {
-	KeyPair   keyGenerateKeyPairJson   `json:"keyPair"`
-	Algorithm keyGenerateAlgorithmJson `json:"algorithm"`
+type keyGenerateKeyJSON struct {
+	KeyPair   keyGenerateKeyPairJSON   `json:"keyPair"`
+	Algorithm keyGenerateAlgorithmJSON `json:"algorithm"`
 	Meta      []wallet.Meta            `json:"meta"`
 }
 
-type keyGenerateKeyPairJson struct {
+type keyGenerateKeyPairJSON struct {
 	PrivateKey string `json:"privateKey"`
 	PublicKey  string `json:"publicKey"`
 }
 
-type keyGenerateAlgorithmJson struct {
+type keyGenerateAlgorithmJSON struct {
 	Name    string `json:"name"`
 	Version uint32 `json:"version"`
 }
 
 func printKeyGenerateJSON(mnemonic string, keyPair wallet.KeyPair, walletPath string) error {
-	result := keyGenerateJson{
-		Wallet: keyGenerateWalletJson{
+	result := keyGenerateJSON{
+		Wallet: keyGenerateWalletJSON{
 			FilePath: walletPath,
 			Mnemonic: mnemonic,
 		},
-		Key: keyGenerateKeyJson{
-			KeyPair: keyGenerateKeyPairJson{
+		Key: keyGenerateKeyJSON{
+			KeyPair: keyGenerateKeyPairJSON{
 				PrivateKey: keyPair.PrivateKey(),
 				PublicKey:  keyPair.PublicKey(),
 			},
-			Algorithm: keyGenerateAlgorithmJson{
+			Algorithm: keyGenerateAlgorithmJSON{
 				Name:    keyPair.AlgorithmName(),
 				Version: keyPair.AlgorithmVersion(),
 			},

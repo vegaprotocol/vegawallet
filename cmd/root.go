@@ -134,34 +134,33 @@ func getPassphrase(flaggedPassphraseFile string, confirmInput bool) (string, err
 		// user might have added \n at the end of the line, let's remove it.
 		cleanupPassphrase := strings.Trim(string(rawPassphrase), "\n")
 		return cleanupPassphrase, nil
-	} else {
-		if !isatty.IsTerminal(os.Stdout.Fd()) && !isatty.IsCygwinTerminal(os.Stdout.Fd()) {
-			return "", ErrPassphraseFileRequiredWithoutTTY
-		}
+	}
+	if !isatty.IsTerminal(os.Stdout.Fd()) && !isatty.IsCygwinTerminal(os.Stdout.Fd()) {
+		return "", ErrPassphraseFileRequiredWithoutTTY
+	}
 
-		passphrase, err := promptForPassphrase()
+	passphrase, err := promptForPassphrase()
+	if err != nil {
+		return "", fmt.Errorf("could not get passphrase: %w", err)
+	}
+
+	if len(passphrase) == 0 {
+		return "", ErrPassphraseCannotBeEmpty
+	}
+
+	if confirmInput {
+		confirmation, err := promptForPassphrase("Confirm passphrase: ")
 		if err != nil {
 			return "", fmt.Errorf("could not get passphrase: %w", err)
 		}
 
-		if len(passphrase) == 0 {
-			return "", ErrPassphraseCannotBeEmpty
+		if passphrase != confirmation {
+			return "", ErrPassphrasesDoNotMatch
 		}
-
-		if confirmInput {
-			confirmation, err := promptForPassphrase("Confirm passphrase: ")
-			if err != nil {
-				return "", fmt.Errorf("could not get passphrase: %w", err)
-			}
-
-			if passphrase != confirmation {
-				return "", ErrPassphrasesDoNotMatch
-			}
-		}
-		fmt.Println() //nolint:forbidigo
-
-		return passphrase, nil
 	}
+	fmt.Println() //nolint:forbidigo
+
+	return passphrase, nil
 }
 
 func promptForPassphrase(msg ...string) (string, error) {

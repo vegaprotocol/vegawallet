@@ -337,11 +337,11 @@ func addDefaultAlias(meta []wallet.Meta, w wallet.Wallet) []wallet.Meta {
 		}
 	}
 	if !hasName {
-		nextId := len(w.ListKeyPairs()) + 1
+		nextID := len(w.ListKeyPairs()) + 1
 
 		meta = append(meta, wallet.Meta{
 			Key:   "name",
-			Value: fmt.Sprintf("%s key %d", w.Name(), nextId),
+			Value: fmt.Sprintf("%s key %d", w.Name(), nextID),
 		})
 	}
 	return meta
