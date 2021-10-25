@@ -17,7 +17,7 @@ type ErrorsResponse struct {
 	Errors commands.Errors `json:"errors"`
 }
 
-type ErrorResponse struct {
+type ErrorResponse struct { //nolint:errname
 	ErrorStr string   `json:"error"`
 	Details  []string `json:"details"`
 }
