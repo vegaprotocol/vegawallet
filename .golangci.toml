@@ -43,6 +43,7 @@ disable = [
     "maligned",
     "scopelint",
     # Won't be fixed
+    # gci doesn't match our code style.
     "gci"
 ]
 
