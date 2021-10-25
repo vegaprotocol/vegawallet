@@ -13,9 +13,7 @@ import (
 	"code.vegaprotocol.io/vegawallet/network"
 )
 
-var (
-	fileExt = ".toml"
-)
+const fileExt = ".toml"
 
 type Store struct {
 	networksHome string

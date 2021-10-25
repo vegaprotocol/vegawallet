@@ -18,11 +18,11 @@ import (
 	"golang.org/x/term"
 )
 
-var (
-	// requestTimeout is the maximum time the program will wait for a response
-	// after issuing a request.
-	requestTimeout = 30 * time.Second
+// requestTimeout is the maximum time the program will wait for a response
+// after issuing a request.
+const requestTimeout = 30 * time.Second
 
+var (
 	rootArgs struct {
 		output         string
 		home           string
