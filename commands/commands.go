@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"errors"
 	"fmt"
 
 	"code.vegaprotocol.io/protos/commands"
@@ -131,10 +132,10 @@ func wrapRequestCommandIntoInputData(data *commandspb.InputData, req *walletpb.S
 }
 
 func toErrors(err error) commands.Errors {
-	e, ok := err.(commands.Errors)
-	if !ok {
+	errs := &commands.Errors{}
+	if !errors.As(err, errs) {
 		errs := commands.NewErrors()
 		return errs.FinalAdd(err)
 	}
-	return e
+	return *errs
 }

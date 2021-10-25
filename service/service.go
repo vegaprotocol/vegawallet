@@ -5,19 +5,20 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 
-	wcommands "code.vegaprotocol.io/vegawallet/commands"
-	"code.vegaprotocol.io/vegawallet/network"
-	"code.vegaprotocol.io/vegawallet/version"
-	"code.vegaprotocol.io/vegawallet/wallet"
 	"code.vegaprotocol.io/protos/commands"
 	typespb "code.vegaprotocol.io/protos/vega"
 	api "code.vegaprotocol.io/protos/vega/api/v1"
 	commandspb "code.vegaprotocol.io/protos/vega/commands/v1"
 	walletpb "code.vegaprotocol.io/protos/vega/wallet/v1"
+	wcommands "code.vegaprotocol.io/vegawallet/commands"
+	"code.vegaprotocol.io/vegawallet/network"
+	"code.vegaprotocol.io/vegawallet/version"
+	"code.vegaprotocol.io/vegawallet/wallet"
 
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/proto"
@@ -570,7 +571,7 @@ func (s *Service) GetPublicKey(t string, w http.ResponseWriter, _ *http.Request,
 	key, err := s.handler.GetPublicKey(name, ps.ByName("keyid"))
 	if err != nil {
 		var statusCode int
-		if err == wallet.ErrPubKeyDoesNotExist {
+		if  errors.Is(err, wallet.ErrPubKeyDoesNotExist) {
 			statusCode = http.StatusNotFound
 		} else {
 			statusCode = http.StatusForbidden

@@ -6,13 +6,13 @@ import (
 	"fmt"
 	"sync"
 
+	"code.vegaprotocol.io/protos/commands"
+	commandspb "code.vegaprotocol.io/protos/vega/commands/v1"
+	walletpb "code.vegaprotocol.io/protos/vega/wallet/v1"
 	wcommands "code.vegaprotocol.io/vegawallet/commands"
 	wcrypto "code.vegaprotocol.io/vegawallet/crypto"
 	"code.vegaprotocol.io/vegawallet/wallet"
 	wstorev1 "code.vegaprotocol.io/vegawallet/wallet/store/v1"
-	"code.vegaprotocol.io/protos/commands"
-	commandspb "code.vegaprotocol.io/protos/vega/commands/v1"
-	walletpb "code.vegaprotocol.io/protos/vega/wallet/v1"
 )
 
 var (
@@ -104,7 +104,7 @@ func (h *Handler) LoginWallet(name, passphrase string) error {
 
 	w, err := h.store.GetWallet(name, passphrase)
 	if err != nil {
-		if err == wstorev1.ErrWrongPassphrase {
+		if errors.Is(err, wstorev1.ErrWrongPassphrase) {
 			return err
 		}
 		return fmt.Errorf("couldn't get wallet %s: %w", name, err)
@@ -125,7 +125,7 @@ func (h *Handler) GenerateKeyPair(name, passphrase string, meta []wallet.Meta) (
 
 	w, err := h.store.GetWallet(name, passphrase)
 	if err != nil {
-		if err == wstorev1.ErrWrongPassphrase {
+		if errors.Is(err, wstorev1.ErrWrongPassphrase) {
 			return nil, err
 		}
 		return nil, fmt.Errorf("couldn't get wallet %s: %w", name, err)
@@ -250,7 +250,7 @@ func (h *Handler) TaintKey(name, pubKey, passphrase string) error {
 
 	w, err := h.store.GetWallet(name, passphrase)
 	if err != nil {
-		if err == wstorev1.ErrWrongPassphrase {
+		if errors.Is(err, wstorev1.ErrWrongPassphrase) {
 			return err
 		}
 		return fmt.Errorf("couldn't get wallet %s: %w", name, err)
@@ -270,7 +270,7 @@ func (h *Handler) UntaintKey(name string, pubKey string, passphrase string) erro
 
 	w, err := h.store.GetWallet(name, passphrase)
 	if err != nil {
-		if err == wstorev1.ErrWrongPassphrase {
+		if errors.Is(err, wstorev1.ErrWrongPassphrase) {
 			return err
 		}
 		return fmt.Errorf("couldn't get wallet %s: %w", name, err)
@@ -290,7 +290,7 @@ func (h *Handler) UpdateMeta(name, pubKey, passphrase string, meta []wallet.Meta
 
 	w, err := h.store.GetWallet(name, passphrase)
 	if err != nil {
-		if err == wstorev1.ErrWrongPassphrase {
+		if errors.Is(err, wstorev1.ErrWrongPassphrase) {
 			return err
 		}
 		return fmt.Errorf("couldn't get wallet %s: %w", name, err)

@@ -2,12 +2,14 @@ package cmd
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 
+	"code.vegaprotocol.io/shared/paths"
 	"code.vegaprotocol.io/vegawallet/cmd/printer"
 	"code.vegaprotocol.io/vegawallet/console"
 	vglog "code.vegaprotocol.io/vegawallet/libs/zap"
@@ -17,7 +19,6 @@ import (
 	"code.vegaprotocol.io/vegawallet/service"
 	svcstore "code.vegaprotocol.io/vegawallet/service/store/v1"
 	"code.vegaprotocol.io/vegawallet/wallets"
-	"code.vegaprotocol.io/shared/paths"
 	"github.com/skratchdot/open-golang/open"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
@@ -110,7 +111,7 @@ func runServiceRun(_ *cobra.Command, _ []string) error {
 	go func() {
 		defer cancel()
 		err := srv.Start()
-		if err != nil && err != http.ErrServerClosed {
+		if err != nil && errors.Is(err, http.ErrServerClosed) {
 			log.Error("error starting wallet http server", zap.Error(err))
 		}
 	}()
@@ -128,7 +129,7 @@ func runServiceRun(_ *cobra.Command, _ []string) error {
 		go func() {
 			defer cancel()
 			err := cs.Start()
-			if err != nil && err != http.ErrServerClosed {
+			if err != nil && errors.Is(err, http.ErrServerClosed) {
 				log.Error("error starting console proxy server", zap.Error(err))
 			}
 		}()
