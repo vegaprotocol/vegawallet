@@ -19,7 +19,6 @@ disable = [
     "nestif",
     "paralleltest",
     "revive",
-    "stylecheck",
     "tagliatelle",
     "thelper",
     "whitespace",
