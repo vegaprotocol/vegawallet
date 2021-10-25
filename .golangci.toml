@@ -17,7 +17,6 @@ disable = [
     "goconst",
     "gocritic",
     "nestif",
-    "nlreturn",
     "noctx",
     "paralleltest",
     "prealloc",
@@ -38,6 +37,8 @@ disable = [
     "gci",
     # lll doesn't match our code style.
     "lll",
+    # nlreturn doesn't match our code style.
+    "nlreturn",
 ]
 
 [issues.exclude-rules]
