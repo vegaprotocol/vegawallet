@@ -85,7 +85,6 @@ func checkVersion() error {
 			p.Text("Version ").SuccessText(v.String()).Text(" is available. Your current version is ").DangerText(version.Version).Text(".").NextLine()
 			p.Text("Download the latest version at: ").Underline(version.GetReleaseURL(v)).NextSection()
 		}
-
 	}
 	return nil
 }
