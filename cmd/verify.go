@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"os"
 
+	vgjson "code.vegaprotocol.io/shared/libs/json"
 	"code.vegaprotocol.io/vegawallet/cmd/printer"
 	"code.vegaprotocol.io/vegawallet/wallets"
-	vgjson "code.vegaprotocol.io/shared/libs/json"
 	"github.com/spf13/cobra"
 )
 
@@ -25,6 +25,9 @@ var (
 		Long:  "Verify the signature for a blob of data",
 		RunE:  runVerify,
 	}
+
+	ErrMessageShouldBeBase64 = errors.New("message should be encoded into base64")
+	ErrSignatureShouldBeBase64 = errors.New("signature should be encoded into base64")
 )
 
 func init() {
@@ -47,12 +50,12 @@ func runVerify(_ *cobra.Command, _ []string) error {
 
 	decodedMessage, err := base64.StdEncoding.DecodeString(verifyArgs.message)
 	if err != nil {
-		return errors.New("message should be encoded into base64")
+		return ErrMessageShouldBeBase64
 	}
 
 	decodedSig, err := base64.StdEncoding.DecodeString(verifyArgs.sig)
 	if err != nil {
-		return errors.New("signature should be encoded into base64")
+		return ErrSignatureShouldBeBase64
 	}
 
 	isValid, err := handler.VerifyAny(decodedMessage, decodedSig, verifyArgs.pubkey)

@@ -117,7 +117,7 @@ func testHDWalletImportingWalletWithInvalidMnemonicFails(t *testing.T) {
 			w, err := wallet.ImportHDWallet(name, "vladimir harkonnen doesn't like trees", tc.version)
 
 			// then
-			require.EqualError(tt, err, wallet.ErrInvalidMnemonic.Error())
+			require.ErrorIs(tt, err, wallet.ErrInvalidMnemonic)
 			assert.Nil(tt, w)
 		})
 	}
@@ -213,7 +213,7 @@ func testHDWalletGeneratingKeyPairOnIsolatedWalletFails(t *testing.T) {
 			keyPair, err := isolatedWallet.GenerateKeyPair([]wallet.Meta{})
 
 			// then
-			require.EqualError(tt, err, wallet.ErrIsolatedWalletCantGenerateKeyPairs.Error())
+			require.ErrorIs(tt, err, wallet.ErrIsolatedWalletCantGenerateKeyPairs)
 			require.Nil(tt, keyPair)
 		})
 	}
@@ -312,7 +312,7 @@ func testHDWalletTaintingKeyThatIsAlreadyTaintedFails(t *testing.T) {
 			err = w.TaintKey(kp.PublicKey())
 
 			// then
-			assert.EqualError(tt, err, wallet.ErrPubKeyAlreadyTainted.Error())
+			assert.ErrorIs(tt, err, wallet.ErrPubKeyAlreadyTainted)
 
 			// when
 			pubKey, err := w.DescribePublicKey(kp.PublicKey())
@@ -355,7 +355,7 @@ func testHDWalletTaintingUnknownKeyFails(t *testing.T) {
 			err = w.TaintKey("vladimirharkonnen")
 
 			// then
-			assert.EqualError(tt, err, wallet.ErrPubKeyDoesNotExist.Error())
+			assert.ErrorIs(tt, err, wallet.ErrPubKeyDoesNotExist)
 		})
 	}
 }
@@ -461,7 +461,7 @@ func testHDWalletUntaintingKeyThatIsNotTaintedFails(t *testing.T) {
 			err = w.UntaintKey(kp.PublicKey())
 
 			// then
-			assert.EqualError(tt, err, wallet.ErrPubKeyNotTainted.Error())
+			assert.ErrorIs(tt, err, wallet.ErrPubKeyNotTainted)
 
 			// when
 			pubKey, err := w.DescribePublicKey(kp.PublicKey())
@@ -504,7 +504,7 @@ func testHDWalletUntaintingUnknownKeyFails(t *testing.T) {
 			err = w.UntaintKey("vladimirharkonnen")
 
 			// then
-			assert.EqualError(tt, err, wallet.ErrPubKeyDoesNotExist.Error())
+			assert.ErrorIs(tt, err, wallet.ErrPubKeyDoesNotExist)
 		})
 	}
 }
@@ -673,7 +673,7 @@ func testHDWalletDescribingUnknownPublicKeysFails(t *testing.T) {
 			pubKey, err := w.DescribePublicKey("vladimirharkonnen")
 
 			// then
-			require.EqualError(tt, err, wallet.ErrPubKeyDoesNotExist.Error())
+			require.ErrorIs(tt, err, wallet.ErrPubKeyDoesNotExist)
 			assert.Empty(tt, pubKey)
 		})
 	}
@@ -872,7 +872,7 @@ func testHDWalletSigningTxWithTaintedKeyFails(t *testing.T) {
 			signature, err := w.SignTx(kp.PublicKey(), data)
 
 			// then
-			require.EqualError(tt, err, wallet.ErrPubKeyIsTainted.Error())
+			require.ErrorIs(tt, err, wallet.ErrPubKeyIsTainted)
 			assert.Nil(tt, signature)
 		})
 	}
@@ -916,7 +916,7 @@ func testHDWalletSigningTxWithUnknownKeyFails(t *testing.T) {
 			signature, err := w.SignTx("vladimirharkonnen", data)
 
 			// then
-			require.EqualError(tt, err, wallet.ErrPubKeyDoesNotExist.Error())
+			require.ErrorIs(tt, err, wallet.ErrPubKeyDoesNotExist)
 			assert.Empty(tt, signature)
 		})
 	}
@@ -1013,7 +1013,7 @@ func testHDWalletSigningAnyMessageWithTaintedKeyFails(t *testing.T) {
 			signature, err := w.SignAny(kp.PublicKey(), data)
 
 			// then
-			require.EqualError(tt, err, wallet.ErrPubKeyIsTainted.Error())
+			require.ErrorIs(tt, err, wallet.ErrPubKeyIsTainted)
 			assert.Empty(tt, signature)
 		})
 	}
@@ -1050,7 +1050,7 @@ func testHDWalletSigningAnyMessageWithUnknownKeyFails(t *testing.T) {
 			signature, err := w.SignAny("vladimirharkonnen", data)
 
 			// then
-			require.EqualError(tt, err, wallet.ErrPubKeyDoesNotExist.Error())
+			require.ErrorIs(tt, err, wallet.ErrPubKeyDoesNotExist)
 			assert.Empty(tt, signature)
 		})
 	}
@@ -1135,7 +1135,7 @@ func testHDWalletVerifyingAnyMessageWithUnknownKeyFails(t *testing.T) {
 			signature, err := w.VerifyAny("vladimirharkonnen", data, sig)
 
 			// then
-			require.EqualError(tt, err, wallet.ErrPubKeyDoesNotExist.Error())
+			require.ErrorIs(tt, err, wallet.ErrPubKeyDoesNotExist)
 			assert.Empty(tt, signature)
 		})
 	}
@@ -1457,7 +1457,7 @@ func testHDWalletIsolatingWalletWithTaintedKeyPairFails(t *testing.T) {
 			isolatedWallet, err := w.IsolateWithKey(kp1.PublicKey())
 
 			// then
-			require.EqualError(tt, err, wallet.ErrPubKeyIsTainted.Error())
+			require.ErrorIs(tt, err, wallet.ErrPubKeyIsTainted)
 			require.Nil(tt, isolatedWallet)
 		})
 	}
@@ -1493,7 +1493,7 @@ func testHDWalletIsolatingWalletWithNonExistingKeyPairFails(t *testing.T) {
 			isolatedWallet, err := w.IsolateWithKey("0xdeadbeef")
 
 			// then
-			require.EqualError(tt, err, wallet.ErrPubKeyDoesNotExist.Error())
+			require.ErrorIs(tt, err, wallet.ErrPubKeyDoesNotExist)
 			require.Nil(tt, isolatedWallet)
 		})
 	}

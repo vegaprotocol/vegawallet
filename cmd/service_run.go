@@ -14,6 +14,7 @@ import (
 	"code.vegaprotocol.io/vegawallet/console"
 	vglog "code.vegaprotocol.io/vegawallet/libs/zap"
 	"code.vegaprotocol.io/vegawallet/logger"
+	"code.vegaprotocol.io/vegawallet/network"
 	netstore "code.vegaprotocol.io/vegawallet/network/store/v1"
 	"code.vegaprotocol.io/vegawallet/node"
 	"code.vegaprotocol.io/vegawallet/service"
@@ -67,7 +68,7 @@ func runServiceRun(_ *cobra.Command, _ []string) error {
 		return fmt.Errorf("couldn't verify the network existence: %w", err)
 	}
 	if !exists {
-		return fmt.Errorf("network \"%s\" doesn't exist", serviceRunArgs.network)
+		return network.NewNetworkDoesNotExistError(serviceRunArgs.network)
 	}
 
 	cfg, err := netStore.GetNetwork(serviceRunArgs.network)

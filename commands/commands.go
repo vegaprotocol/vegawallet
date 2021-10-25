@@ -127,7 +127,7 @@ func wrapRequestCommandIntoInputData(data *commandspb.InputData, req *walletpb.S
 			UndelegateSubmission: req.GetUndelegateSubmission(),
 		}
 	default:
-		panic(fmt.Errorf("command %v is not supported", cmd))
+		panic(fmt.Sprintf("command %v is not supported", cmd))
 	}
 }
 

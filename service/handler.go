@@ -1,7 +1,6 @@
 package service
 
 import (
-	"errors"
 	"fmt"
 )
 
@@ -23,7 +22,7 @@ func InitialiseService(store Store, overwrite bool) error {
 			return fmt.Errorf("couldn't verify RSA keys existance: %w", err)
 		}
 		if rsaKeysExists {
-			return errors.New("RSA keys already exist")
+			return ErrRSAKeysAlreadyExists
 		}
 	}
 

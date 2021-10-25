@@ -62,7 +62,7 @@ func (s *Store) GetNetwork(name string) (*network.Network, error) {
 		return nil, fmt.Errorf("couldn't read network configuration file: %w", err)
 	}
 	if name != net.Name {
-		return nil, fmt.Errorf("network configuration file name (%s) and network name (%s) don't match", name, net.Name)
+		return nil, NewDifferentNetworkNamesError(name, net.Name)
 	}
 	migrateNetwork(net)
 	return net, nil

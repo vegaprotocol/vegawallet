@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
 
 	"code.vegaprotocol.io/vegawallet/cmd/printer"
@@ -47,10 +46,10 @@ func runKeyAnnotate(_ *cobra.Command, _ []string) error {
 	handler := wallets.NewHandler(store)
 
 	if len(keyAnnotateArgs.metadata) == 0 && !keyAnnotateArgs.clear {
-		return errors.New("`--meta` is required or use `--clear` flag")
+		return ErrMetaOrClearIsRequired
 	}
 	if len(keyAnnotateArgs.metadata) != 0 && keyAnnotateArgs.clear {
-		return errors.New("can't have `--meta` and `--clear` flags at the same time")
+		return ErrCanNotHaveBothMetadataAndClearFlagsSet
 	}
 
 	passphrase, err := getPassphrase(keyAnnotateArgs.passphraseFile, false)

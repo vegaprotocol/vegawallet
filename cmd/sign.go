@@ -2,13 +2,12 @@ package cmd
 
 import (
 	"encoding/base64"
-	"errors"
 	"fmt"
 	"os"
 
+	vgjson "code.vegaprotocol.io/shared/libs/json"
 	"code.vegaprotocol.io/vegawallet/cmd/printer"
 	"code.vegaprotocol.io/vegawallet/wallets"
-	vgjson "code.vegaprotocol.io/shared/libs/json"
 	"github.com/spf13/cobra"
 )
 
@@ -50,7 +49,7 @@ func runSign(_ *cobra.Command, _ []string) error {
 
 	decodedMessage, err := base64.StdEncoding.DecodeString(signArgs.message)
 	if err != nil {
-		return errors.New("message should be encoded into base64")
+		return ErrMessageShouldBeBase64
 	}
 
 	passphrase, err := getPassphrase(signArgs.passphraseFile, false)

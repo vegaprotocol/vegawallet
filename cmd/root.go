@@ -37,6 +37,10 @@ var (
 		SilenceUsage:      true,
 		SilenceErrors:     true,
 	}
+
+	ErrPassphrasesDoNotMatch            = errors.New("passphrases do not match")
+	ErrPassphraseCannotBeEmpty          = errors.New("passphrase cannot be empty")
+	ErrPassphraseFileRequiredWithoutTTY = errors.New("passphrase-file flag required without TTY")
 )
 
 func rootPreRun(_ *cobra.Command, _ []string) error {
@@ -52,7 +56,7 @@ func rootPreRun(_ *cobra.Command, _ []string) error {
 
 func parseOutputFlag() error {
 	if rootArgs.output == "human" && !isatty.IsTerminal(os.Stdout.Fd()) && !isatty.IsCygwinTerminal(os.Stdout.Fd()) {
-		return errors.New("output \"human\" is not script-friendly, use \"json\" instead")
+		return ErrUseJSONOutputInScript
 	}
 
 	supportedOutput := []string{"json", "human"}
@@ -62,7 +66,7 @@ func parseOutputFlag() error {
 		}
 	}
 
-	return fmt.Errorf("unsupported output \"%s\"", rootArgs.output)
+	return NewUnsupportedOutputError(rootArgs.output)
 }
 
 func checkVersion() error {
@@ -133,7 +137,7 @@ func getPassphrase(flaggedPassphraseFile string, confirmInput bool) (string, err
 		return cleanupPassphrase, nil
 	} else {
 		if !isatty.IsTerminal(os.Stdout.Fd()) && !isatty.IsCygwinTerminal(os.Stdout.Fd()) {
-			return "", errors.New("passphrase-file flag required without TTY")
+			return "", ErrPassphraseFileRequiredWithoutTTY
 		}
 
 		passphrase, err := promptForPassphrase()
@@ -142,7 +146,7 @@ func getPassphrase(flaggedPassphraseFile string, confirmInput bool) (string, err
 		}
 
 		if len(passphrase) == 0 {
-			return "", fmt.Errorf("passphrase cannot be empty")
+			return "", ErrPassphraseCannotBeEmpty
 		}
 
 		if confirmInput {
@@ -152,7 +156,7 @@ func getPassphrase(flaggedPassphraseFile string, confirmInput bool) (string, err
 			}
 
 			if passphrase != confirmation {
-				return "", fmt.Errorf("passphrases do not match")
+				return "", ErrPassphrasesDoNotMatch
 			}
 		}
 		fmt.Println() //nolint:forbidigo

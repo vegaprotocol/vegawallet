@@ -86,7 +86,7 @@ func testRevokeValidToken(t *testing.T) {
 	assert.NoError(t, err)
 
 	w, err := auth.VerifyToken(tok)
-	assert.EqualError(t, err, service.ErrSessionNotFound.Error())
+	assert.ErrorIs(t, err, service.ErrSessionNotFound)
 	assert.Empty(t, w)
 }
 

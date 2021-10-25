@@ -7,10 +7,11 @@ import (
 )
 
 var (
-	ErrInvalidOrMissingToken     = newErrorResponse("invalid or missing token")
-	ErrCouldNotReadRequest       = errors.New("could not read request")
-	ErrCouldNotGetBlockHeight    = errors.New("could not get last block height")
-	ErrShouldBeBase64Encoded     = errors.New("should be base64 encoded")
+	ErrInvalidOrMissingToken  = newErrorResponse("invalid or missing token")
+	ErrCouldNotReadRequest    = errors.New("could not read request")
+	ErrCouldNotGetBlockHeight = errors.New("could not get last block height")
+	ErrShouldBeBase64Encoded  = errors.New("should be base64 encoded")
+	ErrRSAKeysAlreadyExists   = errors.New("RSA keys already exist")
 )
 
 type ErrorsResponse struct {

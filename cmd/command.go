@@ -2,10 +2,12 @@ package cmd
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"time"
 
+	api "code.vegaprotocol.io/protos/vega/api/v1"
+	walletpb "code.vegaprotocol.io/protos/vega/wallet/v1"
+	"code.vegaprotocol.io/shared/paths"
 	wcommands "code.vegaprotocol.io/vegawallet/commands"
 	vglog "code.vegaprotocol.io/vegawallet/libs/zap"
 	"code.vegaprotocol.io/vegawallet/logger"
@@ -13,9 +15,6 @@ import (
 	netstore "code.vegaprotocol.io/vegawallet/network/store/v1"
 	"code.vegaprotocol.io/vegawallet/node"
 	"code.vegaprotocol.io/vegawallet/wallets"
-	api "code.vegaprotocol.io/protos/vega/api/v1"
-	walletpb "code.vegaprotocol.io/protos/vega/wallet/v1"
-	"code.vegaprotocol.io/shared/paths"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
@@ -98,7 +97,7 @@ func runCommand(_ *cobra.Command, pos []string) error {
 	defer vglog.Sync(log)
 
 	if len(commandArgs.nodeAddress) != 0 && len(commandArgs.network) != 0 {
-		return errors.New("can't have both node address and network flag set")
+		return ErrCanNotHaveBothNodeAddressAndNetworkFlagsSet
 	}
 
 	var hosts []string
@@ -114,7 +113,7 @@ func runCommand(_ *cobra.Command, pos []string) error {
 			return fmt.Errorf("couldn't verify network existance: %w", err)
 		}
 		if !exists {
-			return fmt.Errorf("network %s does not exist", commandArgs.network)
+			return network.NewNetworkDoesNotExistError(commandArgs.network)
 		}
 		net, err := netStore.GetNetwork(commandArgs.network)
 		if err != nil {
@@ -122,7 +121,7 @@ func runCommand(_ *cobra.Command, pos []string) error {
 		}
 		hosts = net.API.GRPC.Hosts
 	} else {
-		return errors.New("should set node address or network flag")
+		return ErrShouldSetNodeAddressOrNetworkFlag
 	}
 
 	forwarder, err := node.NewForwarder(log.Named("forwarder"), network.GRPCConfig{

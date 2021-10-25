@@ -56,7 +56,7 @@ func (a *SignatureAlgorithm) Version() uint32 {
 
 func (a *SignatureAlgorithm) MarshalJSON() ([]byte, error) {
 	if a == nil {
-		return nil, errors.New("nil signature")
+		return nil, ErrSignatureIsNil
 	}
 	return json.Marshal(&jsonAlgorithm{
 		Name:    a.Name(),

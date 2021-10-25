@@ -295,7 +295,7 @@ func (w *HDWallet) deriveKeyNode(nextIndex uint32) (*slip10.Node, error) {
 	case 2:
 		derivationFn = w.deriveKeyNodeV2
 	default:
-		return nil, fmt.Errorf("wallet with version %d isn't supported", w.version)
+		return nil, NewUnsupportedWalletVersionError(w.version)
 	}
 
 	return derivationFn(nextIndex)

@@ -27,7 +27,7 @@ func testCreateEd25519SignatureOK(t *testing.T) {
 
 func testCreateSignatureFailureNotAnAlgo(t *testing.T) {
 	_, err := wcrypto.NewSignatureAlgorithm("not an algo", 1)
-	assert.EqualError(t, err, wcrypto.ErrUnsupportedSignatureAlgorithm.Error())
+	assert.ErrorIs(t, err, wcrypto.ErrUnsupportedSignatureAlgorithm)
 }
 
 func testVerifyOK(t *testing.T) {

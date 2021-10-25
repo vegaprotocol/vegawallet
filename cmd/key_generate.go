@@ -84,7 +84,7 @@ func runKeyGenerate(_ *cobra.Command, _ []string) error {
 	} else if rootArgs.output == "json" {
 		return printKeyGenerateJSON(mnemonic, keyPair, store.GetWalletPath(keyGenerateArgs.wallet))
 	} else {
-		return fmt.Errorf("output \"%s\" is not supported for this command", rootArgs.output)
+		return NewUnsupportedCommandOutputError(rootArgs.output)
 	}
 	return nil
 }
@@ -175,7 +175,7 @@ func parseMeta(metaStr string) ([]wallet.Meta, error) {
 	for _, v := range rawMetas {
 		rawMeta := strings.Split(v, ":")
 		if len(rawMeta) != 2 {
-			return nil, fmt.Errorf("invalid metadata format")
+			return nil, ErrInvalidMetadataFormat
 		}
 		metas = append(metas, wallet.Meta{Key: rawMeta[0], Value: rawMeta[1]})
 	}

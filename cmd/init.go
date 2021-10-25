@@ -4,14 +4,14 @@ import (
 	"fmt"
 	"os"
 
+	vgjson "code.vegaprotocol.io/shared/libs/json"
+	"code.vegaprotocol.io/shared/paths"
 	"code.vegaprotocol.io/vegawallet/cmd/printer"
 	"code.vegaprotocol.io/vegawallet/network"
 	netstore "code.vegaprotocol.io/vegawallet/network/store/v1"
 	"code.vegaprotocol.io/vegawallet/service"
 	svcstore "code.vegaprotocol.io/vegawallet/service/store/v1"
 	"code.vegaprotocol.io/vegawallet/wallets"
-	vgjson "code.vegaprotocol.io/shared/libs/json"
-	"code.vegaprotocol.io/shared/paths"
 
 	"github.com/spf13/cobra"
 )
@@ -63,7 +63,7 @@ func runInit(_ *cobra.Command, _ []string) error {
 	} else if rootArgs.output == "json" {
 		return printInitJson(svcStore, netStore)
 	} else {
-		return fmt.Errorf("output \"%s\" is not supported for this command", rootArgs.output)
+		return NewUnsupportedCommandOutputError(rootArgs.output)
 	}
 
 	return nil
