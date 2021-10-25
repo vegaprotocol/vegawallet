@@ -38,10 +38,10 @@ func runNetworkList(_ *cobra.Command, _ []string) error {
 	if rootArgs.output == "human" {
 		p := printer.NewHumanPrinter()
 		if len(nets) == 0 {
-			p.InfoText("No network registered").Jump()
+			p.InfoText("No network registered").NextLine()
 		}
 		for _, net := range nets {
-			p.Text(fmt.Sprintf("- %s", net)).Jump()
+			p.Text(fmt.Sprintf("- %s", net)).NextLine()
 		}
 	} else if rootArgs.output == "json" {
 		return vgjson.Print(struct {

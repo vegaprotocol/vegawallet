@@ -119,7 +119,7 @@ func runServiceRun(_ *cobra.Command, _ []string) error {
 
 	serviceHost := fmt.Sprintf("http://%v:%v", cfg.Host, cfg.Port)
 	if rootArgs.output == "human" {
-		p.CheckMark().Text("HTTP service started at: ").SuccessText(serviceHost).Jump()
+		p.CheckMark().Text("HTTP service started at: ").SuccessText(serviceHost).NextLine()
 	} else if rootArgs.output == "json" {
 		log.Info(fmt.Sprintf("HTTP service started at: %s", serviceHost))
 	}
@@ -137,7 +137,7 @@ func runServiceRun(_ *cobra.Command, _ []string) error {
 
 		consoleLocalHost := fmt.Sprintf("http://127.0.0.1:%v", cfg.Console.LocalPort)
 		if rootArgs.output == "human" {
-			p.CheckMark().Text("Console proxy pointing to ").Bold(cfg.Console.URL).Text(" started at: ").SuccessText(consoleLocalHost).Jump()
+			p.CheckMark().Text("Console proxy pointing to ").Bold(cfg.Console.URL).Text(" started at: ").SuccessText(consoleLocalHost).NextLine()
 		} else if rootArgs.output == "json" {
 			log.Info(fmt.Sprintf("console proxy pointing to %s started at: %s", cfg.Console.URL, consoleLocalHost))
 		}
@@ -152,11 +152,11 @@ func runServiceRun(_ *cobra.Command, _ []string) error {
 	}
 
 	if rootArgs.output == "human" {
-		p.CheckMark().SuccessText("Starting successful").NJump(2)
-		p.BlueArrow().InfoText("Available endpoints").Jump()
+		p.CheckMark().SuccessText("Starting successful").NextSection()
+		p.BlueArrow().InfoText("Available endpoints").NextLine()
 		printEndpoints(serviceHost)
-		p.NJump(2)
-		p.BlueArrow().InfoText("Logs").Jump()
+		p.NextSection()
+		p.BlueArrow().InfoText("Logs").NextLine()
 	}
 
 	waitSig(ctx, cancel, log)

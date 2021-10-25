@@ -78,10 +78,10 @@ func runKeyAnnotate(_ *cobra.Command, _ []string) error {
 	if rootArgs.output == "human" {
 		p := printer.NewHumanPrinter()
 		if keyAnnotateArgs.clear {
-			p.CheckMark().SuccessText("Annotation cleared").Jump()
+			p.CheckMark().SuccessText("Annotation cleared").NextLine()
 		} else {
-			p.CheckMark().SuccessText("Annotation succeeded").NJump(2)
-			p.Text("New metadata:").Jump()
+			p.CheckMark().SuccessText("Annotation succeeded").NextSection()
+			p.Text("New metadata:").NextLine()
 			printMeta(p, metadata)
 		}
 	}

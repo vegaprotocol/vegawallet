@@ -19,6 +19,8 @@ import (
 	"go.uber.org/zap"
 )
 
+const LengthForSessionHashSeed = 10
+
 var ErrSessionNotFound = errors.New("session not found")
 
 //go:generate go run github.com/golang/mock/mockgen -destination mocks/rsa_store_mock.go -package mocks code.vegaprotocol.io/vegawallet/service RSAStore
@@ -161,7 +163,7 @@ func ExtractToken(f func(string, http.ResponseWriter, *http.Request, httprouter.
 }
 
 func genSession() string {
-	return hex.EncodeToString(vgcrypto.Hash(vgrand.RandomBytes(10)))
+	return hex.EncodeToString(vgcrypto.Hash(vgrand.RandomBytes(LengthForSessionHashSeed)))
 }
 
 func writeError(w http.ResponseWriter, e error, status int) {

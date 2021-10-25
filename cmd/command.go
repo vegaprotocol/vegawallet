@@ -22,6 +22,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const (
+	DefaultForwarderRetryCount = 5
+	ForwarderRequestTimeout    = 5 * time.Second
+)
+
 var (
 	commandArgs struct {
 		network        string
@@ -48,7 +53,7 @@ func init() {
 	commandCmd.Flags().StringVarP(&commandArgs.pubKey, "pubkey", "", "", "The public key to use from the wallet")
 	commandCmd.Flags().StringVarP(&commandArgs.passphraseFile, "passphrase-file", "p", "", "Path of the file containing the passphrase to access the wallet")
 	commandCmd.Flags().StringVar(&commandArgs.nodeAddress, "node-address", "0.0.0.0:3002", "Address of the Vega node to use")
-	commandCmd.Flags().Uint64Var(&commandArgs.retries, "retries", 5, "Number of retries when contacting the Vega node")
+	commandCmd.Flags().Uint64Var(&commandArgs.retries, "retries", DefaultForwarderRetryCount, "Number of retries when contacting the Vega node")
 	_ = commandCmd.MarkFlagRequired("wallet")
 	_ = commandCmd.MarkFlagRequired("pubkey")
 }
@@ -137,7 +142,7 @@ func runCommand(_ *cobra.Command, pos []string) error {
 		_ = forwarder.Stop()
 	}()
 
-	ctx, cfunc := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cfunc := context.WithTimeout(context.Background(), ForwarderRequestTimeout)
 	defer cfunc()
 
 	blockHeight, err := forwarder.LastBlockHeight(ctx)

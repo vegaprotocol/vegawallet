@@ -37,10 +37,10 @@ func runList(_ *cobra.Command, _ []string) error {
 	if rootArgs.output == "human" {
 		p := printer.NewHumanPrinter()
 		if len(ws) == 0 {
-			p.InfoText("No wallet registered").Jump()
+			p.InfoText("No wallet registered").NextLine()
 		}
 		for _, w := range ws {
-			p.Text(fmt.Sprintf("- %s", w)).Jump()
+			p.Text(fmt.Sprintf("- %s", w)).NextLine()
 		}
 	} else if rootArgs.output == "json" {
 		return vgjson.Print(struct {

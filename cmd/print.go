@@ -8,11 +8,11 @@ import (
 )
 
 func printKeyPair(p *printer.HumanPrinter, keyPair wallet.KeyPair) {
-	p.Text("Private key:").Jump().WarningText(keyPair.PrivateKey()).Jump()
-	p.Text("Public key:").Jump().WarningText(keyPair.PublicKey()).Jump()
-	p.Text("Algorithm:").Jump().WarningText(fmt.Sprintf("%s (version %v)", keyPair.AlgorithmName(), keyPair.AlgorithmVersion())).Jump()
-	p.Text("Tainted:").Jump().WarningText(fmt.Sprintf("%v", keyPair.IsTainted())).Jump()
-	p.Text("Metadata:").Jump()
+	p.Text("Private key:").NextLine().WarningText(keyPair.PrivateKey()).NextLine()
+	p.Text("Public key:").NextLine().WarningText(keyPair.PublicKey()).NextLine()
+	p.Text("Algorithm:").NextLine().WarningText(fmt.Sprintf("%s (version %v)", keyPair.AlgorithmName(), keyPair.AlgorithmVersion())).NextLine()
+	p.Text("Tainted:").NextLine().WarningText(fmt.Sprintf("%v", keyPair.IsTainted())).NextLine()
+	p.Text("Metadata:").NextLine()
 	printMeta(p, keyPair.Meta())
 }
 
@@ -26,6 +26,6 @@ func printMeta(p *printer.HumanPrinter, meta []wallet.Meta) {
 	}
 
 	for _, m := range meta {
-		p.WarningText(fmt.Sprintf("%-*s", padding, m.Key)).Text(" | ").WarningText(m.Value).Jump()
+		p.WarningText(fmt.Sprintf("%-*s", padding, m.Key)).Text(" | ").WarningText(m.Value).NextLine()
 	}
 }

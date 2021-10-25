@@ -66,15 +66,15 @@ func runVerify(_ *cobra.Command, _ []string) error {
 	if rootArgs.output == "human" {
 		p := printer.NewHumanPrinter()
 		if isValid {
-			p.CheckMark().SuccessText("Valid signature").NJump(2)
+			p.CheckMark().SuccessText("Valid signature").NextSection()
 		} else {
-			p.CrossMark().DangerText("Invalid signature").NJump(2)
+			p.CrossMark().DangerText("Invalid signature").NextSection()
 		}
 
-		p.BlueArrow().InfoText("Sign a message").Jump()
-		p.Text("To sign a base-64 encoded message, use the following commands:").NJump(2)
-		p.Code(fmt.Sprintf("%s sign --wallet \"YOUR_NAME\" --pubkey %s --message \"YOUR_MESSAGE\"", os.Args[0], verifyArgs.pubkey)).NJump(2)
-		p.Text("For more information, use ").Bold("--help").Text(" flag.").Jump()
+		p.BlueArrow().InfoText("Sign a message").NextLine()
+		p.Text("To sign a base-64 encoded message, use the following commands:").NextSection()
+		p.Code(fmt.Sprintf("%s sign --wallet \"YOUR_NAME\" --pubkey %s --message \"YOUR_MESSAGE\"", os.Args[0], verifyArgs.pubkey)).NextSection()
+		p.Text("For more information, use ").Bold("--help").Text(" flag.").NextLine()
 	} else if rootArgs.output == "json" {
 		return printVerifyJson(isValid)
 	}

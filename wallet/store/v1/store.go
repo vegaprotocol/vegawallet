@@ -76,7 +76,7 @@ func (s *Store) GetWallet(name, passphrase string) (wallet.Wallet, error) {
 
 	var w wallet.Wallet
 	switch versionedWallet.Version {
-	case 1, 2:
+	case 1, 2: //nolint:gomnd
 		w = &wallet.HDWallet{}
 	default:
 		return nil, wallet.NewUnsupportedWalletVersionError(versionedWallet.Version)

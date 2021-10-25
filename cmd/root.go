@@ -73,7 +73,7 @@ func checkVersion() error {
 	if !rootArgs.noVersionCheck {
 		p := printer.NewHumanPrinter()
 		if version.IsUnreleased() {
-			p.CrossMark().DangerText("You are running an unreleased version of the Vega wallet. Use it at your own risk!").NJump(2)
+			p.CrossMark().DangerText("You are running an unreleased version of the Vega wallet. Use it at your own risk!").NextSection()
 		}
 
 		ctx, cancel := context.WithTimeout(context.Background(), requestTimeout)
@@ -83,8 +83,8 @@ func checkVersion() error {
 			return fmt.Errorf("could not check Vega wallet version updates: %w", err)
 		}
 		if v != nil {
-			p.Text("Version ").SuccessText(v.String()).Text(" is available. Your current version is ").DangerText(version.Version).Text(".").Jump()
-			p.Text("Download the latest version at: ").Underline(version.GetReleaseURL(v)).NJump(2)
+			p.Text("Version ").SuccessText(v.String()).Text(" is available. Your current version is ").DangerText(version.Version).Text(".").NextLine()
+			p.Text("Download the latest version at: ").Underline(version.GetReleaseURL(v)).NextSection()
 		}
 
 	}
@@ -98,7 +98,7 @@ func Execute() {
 		} else {
 			if rootArgs.output == "human" {
 				p := printer.NewHumanPrinter()
-				p.CrossMark().DangerText(err.Error()).Jump()
+				p.CrossMark().DangerText(err.Error()).NextLine()
 			} else if rootArgs.output == "json" {
 				jsonErr := vgjson.Print(struct {
 					Error string `json:"error"`

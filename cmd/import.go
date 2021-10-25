@@ -61,12 +61,12 @@ func runImport(_ *cobra.Command, _ []string) error {
 
 	if rootArgs.output == "human" {
 		p := printer.NewHumanPrinter()
-		p.CheckMark().SuccessText("Importing the wallet succeeded").NJump(2)
+		p.CheckMark().SuccessText("Importing the wallet succeeded").NextSection()
 
-		p.BlueArrow().InfoText("Generate a key pair").Jump()
-		p.Text("To generate a key pair on a given wallet, use the following command:").NJump(2)
-		p.Code(fmt.Sprintf("%s key generate --wallet \"%s\"", os.Args[0], importArgs.wallet)).NJump(2)
-		p.Text("For more information, use ").Bold("--help").Text(" flag.").Jump()
+		p.BlueArrow().InfoText("Generate a key pair").NextLine()
+		p.Text("To generate a key pair on a given wallet, use the following command:").NextSection()
+		p.Code(fmt.Sprintf("%s key generate --wallet \"%s\"", os.Args[0], importArgs.wallet)).NextSection()
+		p.Text("For more information, use ").Bold("--help").Text(" flag.").NextLine()
 	}
 
 	return nil

@@ -22,8 +22,8 @@ func init() {
 func runVersion(_ *cobra.Command, _ []string) error {
 	if rootArgs.output == "human" {
 		p := printer.NewHumanPrinter()
-		p.Text("Version:").Jump().WarningText(version.Version).NJump(2)
-		p.Text("Git hash:").Jump().WarningText(version.VersionHash).NJump(2)
+		p.Text("Version:").NextLine().WarningText(version.Version).NextSection()
+		p.Text("Git hash:").NextLine().WarningText(version.VersionHash).NextSection()
 	} else if rootArgs.output == "json" {
 		return printVersionJson()
 	}

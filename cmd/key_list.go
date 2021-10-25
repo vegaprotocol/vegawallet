@@ -57,9 +57,9 @@ func runKeyList(_ *cobra.Command, _ []string) error {
 	if rootArgs.output == "human" {
 		p := printer.NewHumanPrinter()
 		for i, keyPair := range keys {
-			p.InfoText(fmt.Sprintf("# Key %d", i+1)).Jump()
+			p.InfoText(fmt.Sprintf("# Key %d", i+1)).NextLine()
 			printKeyPair(p, keyPair)
-			p.Jump()
+			p.NextLine()
 		}
 	} else if rootArgs.output == "json" {
 		return printJsonKeyPairs(keys)

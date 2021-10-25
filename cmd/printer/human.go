@@ -75,17 +75,13 @@ func (p *HumanPrinter) DangerText(t string) *HumanPrinter {
 	return p
 }
 
-func (p *HumanPrinter) Jump() *HumanPrinter {
+func (p *HumanPrinter) NextLine() *HumanPrinter {
 	printOut("\n")
 	return p
 }
 
-func (p *HumanPrinter) NJump(num int) *HumanPrinter {
-	var jumps string
-	for i := 0; i < num; i++ {
-		jumps += "\n"
-	}
-	printOut(jumps)
+func (p *HumanPrinter) NextSection() *HumanPrinter {
+	printOut("\n\n")
 	return p
 }
 

@@ -64,9 +64,9 @@ func runNetworkImport(_ *cobra.Command, _ []string) error {
 	filePath := netStore.GetNetworkPath(net.Name)
 	if rootArgs.output == "human" {
 		p := printer.NewHumanPrinter()
-		p.CheckMark().SuccessText("Importing the network succeeded").NJump(2)
-		p.Text("Name:").Jump().WarningText(net.Name).Jump()
-		p.Text("File path:").Jump().WarningText(filePath).Jump()
+		p.CheckMark().SuccessText("Importing the network succeeded").NextSection()
+		p.Text("Name:").NextLine().WarningText(net.Name).NextLine()
+		p.Text("File path:").NextLine().WarningText(filePath).NextLine()
 	} else if rootArgs.output == "json" {
 		return vgjson.Print(struct {
 			FilePath string `json:"filePath"`

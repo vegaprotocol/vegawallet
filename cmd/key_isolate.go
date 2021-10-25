@@ -62,8 +62,8 @@ func runKeyIsolate(_ *cobra.Command, _ []string) error {
 
 	if rootArgs.output == "human" {
 		p := printer.NewHumanPrinter()
-		p.CheckMark().Text("Key pair has been isolated in wallet ").Bold(isolatedWallet.Name()).Text(" at: ").SuccessText(walletPath).Jump()
-		p.CheckMark().SuccessText("Key isolation succeeded").NJump(2)
+		p.CheckMark().Text("Key pair has been isolated in wallet ").Bold(isolatedWallet.Name()).Text(" at: ").SuccessText(walletPath).NextLine()
+		p.CheckMark().SuccessText("Key isolation succeeded").NextSection()
 	} else if rootArgs.output == "json" {
 		return vgjson.Print(keyIsolateJson{
 			Wallet:   isolatedWallet.Name(),
