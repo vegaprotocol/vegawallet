@@ -18,7 +18,6 @@ disable = [
     "gocritic",
     "nestif",
     "paralleltest",
-    "prealloc",
     "revive",
     "stylecheck",
     "tagliatelle",

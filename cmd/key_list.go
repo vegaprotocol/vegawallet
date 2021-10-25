@@ -69,7 +69,7 @@ func runKeyList(_ *cobra.Command, _ []string) error {
 }
 
 func printJsonKeyPairs(keys []wallet.KeyPair) error {
-	var result []keyGenerateKeyJson
+	result := make([]keyGenerateKeyJson, 0, len(keys))
 
 	for _, keyPair := range keys {
 		result = append(result,

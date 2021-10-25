@@ -27,10 +27,8 @@ func NewForwarder(log *zap.Logger, nodeConfigs network.GRPCConfig) (*Forwarder, 
 		return nil, ErrNoHostSpecified
 	}
 
-	var (
-		clts  []api.CoreServiceClient
-		conns []*grpc.ClientConn
-	)
+	clts := make([]api.CoreServiceClient, 0, len(nodeConfigs.Hosts))
+	conns := make([]*grpc.ClientConn, 0, len(nodeConfigs.Hosts))
 	for _, v := range nodeConfigs.Hosts {
 		conn, err := grpc.Dial(v, grpc.WithInsecure())
 		if err != nil {

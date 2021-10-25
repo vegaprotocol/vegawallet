@@ -165,13 +165,13 @@ func printKeyGenerateJSON(mnemonic string, keyPair wallet.KeyPair, walletPath st
 }
 
 func parseMeta(metaStr string) ([]wallet.Meta, error) {
-	var metas []wallet.Meta
-
 	if len(metaStr) == 0 {
-		return metas, nil
+		return nil, nil
 	}
 
 	rawMetas := strings.Split(metaStr, ";")
+
+	metas := make([]wallet.Meta, 0, len(rawMetas))
 	for _, v := range rawMetas {
 		rawMeta := strings.Split(v, ":")
 		if len(rawMeta) != 2 { //nolint:gomnd
