@@ -10,7 +10,6 @@ disable = [
     "cyclop",
     "dupl",
     "exhaustivestruct",
-    "forcetypeassert",
     "funlen",
     "gci",
     "gochecknoglobals",

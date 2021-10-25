@@ -732,7 +732,10 @@ func (s *Service) signTx(token string, w http.ResponseWriter, r *http.Request, _
 			if st, ok := status.FromError(err); ok {
 				var details []string
 				for _, v := range st.Details() {
-					v := v.(*typespb.ErrorDetail)
+					v, ok := v.(*typespb.ErrorDetail)
+					if !ok {
+						s.writeError(w, newErrorResponse(fmt.Sprintf("couldn't cast status details to error details: %v", v)), http.StatusInternalServerError)
+					}
 					details = append(details, v.Message)
 				}
 				s.writeError(w, newErrorWithDetails(err.Error(), details), http.StatusInternalServerError)

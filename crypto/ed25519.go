@@ -3,6 +3,7 @@ package crypto
 import (
 	"crypto"
 	"errors"
+	"fmt"
 
 	vgcrypto "code.vegaprotocol.io/shared/libs/crypto"
 
@@ -24,7 +25,10 @@ func newEd25519() *ed25519Sig {
 }
 
 func (e *ed25519Sig) Sign(priv crypto.PrivateKey, buf []byte) ([]byte, error) {
-	privBytes := priv.([]byte)
+	privBytes, ok := priv.([]byte)
+	if !ok {
+		return nil, fmt.Errorf("couldn't cast private key to bytes: %v", priv)
+	}
 	// Avoid panic by checking key length
 	if len(privBytes) != ed25519.PrivateKeySize {
 		return nil, ErrBadED25519PrivateKeyLength
@@ -33,7 +37,10 @@ func (e *ed25519Sig) Sign(priv crypto.PrivateKey, buf []byte) ([]byte, error) {
 }
 
 func (e *ed25519Sig) Verify(pub crypto.PublicKey, message, sig []byte) (bool, error) {
-	pubBytes := pub.([]byte)
+	pubBytes, ok := pub.([]byte)
+	if !ok {
+		return false, fmt.Errorf("couldn't cast public key to bytes: %v", pub)
+	}
 	// Avoid panic by checking key length
 	if len(pubBytes) != ed25519.PublicKeySize {
 		return false, ErrBadED25519PublicKeyLength

@@ -7,6 +7,7 @@ import (
 	wcrypto "code.vegaprotocol.io/vegawallet/crypto"
 	"github.com/oasisprotocol/curve25519-voi/primitives/ed25519"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestSignature(t *testing.T) {
@@ -56,7 +57,8 @@ func testSignBadKeyLength(t *testing.T) {
 	message := []byte("hello world")
 
 	// Chop one byte off the key
-	priv2 := priv.([]byte)
+	priv2, ok := priv.([]byte)
+	require.True(t, ok)
 	priv3 := priv2[0 : len(priv2)-1]
 	sig, err := s.Sign(crypto.PrivateKey(priv3), message)
 	assert.Error(t, err)
@@ -77,9 +79,10 @@ func testVerifyBadKeyLength(t *testing.T) {
 	assert.NotEmpty(t, sig)
 
 	// Chop one byte off the key
-	pub2 := pub.([]byte)
+	pub2, ok := pub.([]byte)
+	require.True(t, ok)
 	pub3 := pub2[0 : len(pub2)-1]
-	ok, err := s.Verify(crypto.PublicKey(pub3), message, sig)
+	ok, err = s.Verify(crypto.PublicKey(pub3), message, sig)
 	assert.Error(t, err)
 	assert.False(t, ok)
 }
