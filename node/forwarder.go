@@ -24,7 +24,7 @@ type Forwarder struct {
 }
 
 func NewForwarder(log *zap.Logger, nodeConfigs network.GRPCConfig) (*Forwarder, error) {
-	if len(nodeConfigs.Hosts) <= 0 {
+	if len(nodeConfigs.Hosts) == 0 {
 		return nil, errors.New("no node specified for node forwarding")
 	}
 

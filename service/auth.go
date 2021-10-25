@@ -150,12 +150,12 @@ func (a *auth) parseToken(tokenStr string) (*Claims, error) {
 func ExtractToken(f func(string, http.ResponseWriter, *http.Request, httprouter.Params)) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		token := r.Header.Get("Authorization")
-		if len(token) <= 0 {
+		if len(token) == 0 {
 			writeError(w, ErrInvalidOrMissingToken, http.StatusBadRequest)
 			return
 		}
 		splitToken := strings.Split(token, "Bearer")
-		if len(splitToken) != 2 || len(splitToken[1]) <= 0 {
+		if len(splitToken) != 2 || len(splitToken[1]) == 0 {
 			writeError(w, ErrInvalidOrMissingToken, http.StatusBadRequest)
 			return
 		}

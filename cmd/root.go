@@ -162,7 +162,7 @@ func getPassphrase(flaggedPassphraseFile string, confirmInput bool) (string, err
 }
 
 func promptForPassphrase(msg ...string) (string, error) {
-	if len(msg) <= 0 {
+	if len(msg) == 0 {
 		fmt.Print("Enter passphrase: ") //nolint:forbidigo
 	} else {
 		fmt.Print(msg[0]) //nolint:forbidigo
