@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	// networkListCmd represents the network list command
+	// networkListCmd represents the network list command.
 	networkListCmd = &cobra.Command{
 		Use:   "list",
 		Short: "List all registered network",

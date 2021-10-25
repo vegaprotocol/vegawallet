@@ -166,7 +166,7 @@ func ParseTaintKeyRequest(r *http.Request, keyID string) (*TaintKeyRequest, comm
 	return req, errs
 }
 
-// GenKeyPairRequest describes the request for GenerateKeyPair
+// GenKeyPairRequest describes the request for GenerateKeyPair.
 type GenKeyPairRequest struct {
 	Passphrase string        `json:"passphrase"`
 	Meta       []wallet.Meta `json:"meta"`

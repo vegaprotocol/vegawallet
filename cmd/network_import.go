@@ -23,7 +23,7 @@ var (
 		force    bool
 	}
 
-	// networkImportCmd represents the network import command
+	// networkImportCmd represents the network import command.
 	networkImportCmd = &cobra.Command{
 		Use:   "import",
 		Short: "Import a network configuration",

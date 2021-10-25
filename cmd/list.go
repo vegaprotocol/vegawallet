@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	// listCmd represents the list command
+	// listCmd represents the list command.
 	listCmd = &cobra.Command{
 		Use:   "list",
 		Short: "List all registered wallets",

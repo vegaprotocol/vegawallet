@@ -15,7 +15,7 @@ var (
 		passphraseFile string
 	}
 
-	// infoCmd represents the info command
+	// infoCmd represents the info command.
 	infoCmd = &cobra.Command{
 		Use:   "info",
 		Short: "Print wallet information",

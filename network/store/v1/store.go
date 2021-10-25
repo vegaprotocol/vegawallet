@@ -86,7 +86,7 @@ func (s *Store) fileNameToName(fileName string) string {
 
 // migrateNetwork ensures the legacy configuration is migrated to the new
 // one.
-// TO REMOVE Once the tools use the new API.GRPC
+// TO REMOVE Once the tools use the new API.GRPC.
 func migrateNetwork(net *network.Network) {
 	if len(net.Nodes.Hosts) > 0 && len(net.API.GRPC.Hosts) == 0 {
 		net.API.GRPC = net.Nodes

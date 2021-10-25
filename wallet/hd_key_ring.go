@@ -36,7 +36,7 @@ func (r *HDKeyRing) Upsert(keyPair HDKeyPair) {
 	}
 }
 
-// ListPublicKeys returns the list of public keys sorted by key index
+// ListPublicKeys returns the list of public keys sorted by key index.
 func (r *HDKeyRing) ListPublicKeys() []HDPublicKey {
 	sortedKeyPairs := r.ListKeyPairs()
 	pubKeys := make([]HDPublicKey, len(r.keys))
@@ -50,7 +50,7 @@ func (r *HDKeyRing) NextIndex() uint32 {
 	return r.nextIndex
 }
 
-// ListKeyPairs returns the list of key pairs sorted by key index
+// ListKeyPairs returns the list of key pairs sorted by key index.
 func (r *HDKeyRing) ListKeyPairs() []HDKeyPair {
 	keysList := make([]HDKeyPair, len(r.keys))
 	i := 0

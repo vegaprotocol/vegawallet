@@ -97,7 +97,7 @@ func (a *auth) NewSession(name string) (string, error) {
 	return ss, nil
 }
 
-// VerifyToken returns the wallet name associated for this session
+// VerifyToken returns the wallet name associated for this session.
 func (a *auth) VerifyToken(token string) (string, error) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -146,7 +146,7 @@ func (a *auth) parseToken(tokenStr string) (*Claims, error) {
 
 }
 
-// ExtractToken this is public for testing purposes
+// ExtractToken this is public for testing purposes.
 func ExtractToken(f func(string, http.ResponseWriter, *http.Request, httprouter.Params)) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		token := r.Header.Get("Authorization")

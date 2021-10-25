@@ -20,7 +20,7 @@ var (
 		pubKey         string
 	}
 
-	// signCmd represents the sign command
+	// signCmd represents the sign command.
 	signCmd = &cobra.Command{
 		Use:   "sign",
 		Short: "Sign a blob of data",
