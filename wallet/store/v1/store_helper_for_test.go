@@ -37,8 +37,7 @@ func (d walletsDir) WalletContent(name string) string {
 }
 
 func (d walletsDir) Remove() {
-	err := os.RemoveAll(d.path)
-	if err != nil {
+	if err := os.RemoveAll(d.path); err != nil {
 		panic(err)
 	}
 }

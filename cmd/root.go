@@ -44,8 +44,7 @@ var (
 )
 
 func rootPreRun(_ *cobra.Command, _ []string) error {
-	err := parseOutputFlag()
-	if err != nil {
+	if err := parseOutputFlag(); err != nil {
 		return err
 	}
 	if rootArgs.output == "human" {

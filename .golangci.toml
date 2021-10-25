@@ -16,7 +16,6 @@ disable = [
     "gocognit",
     "goconst",
     "gocritic",
-    "ifshort",
     "lll",
     "misspell",
     "nestif",
