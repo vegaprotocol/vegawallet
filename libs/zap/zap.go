@@ -11,7 +11,7 @@ func Sync(logger *zap.Logger) func() {
 		err := logger.Sync()
 		if err != nil {
 			// This is the ultimate warning, as we can't do anything else.
-			fmt.Printf("couldn't flush logger: %v", err)
+			fmt.Printf("couldn't flush logger: %v", err) //nolint:forbidigo
 		}
 	}
 }

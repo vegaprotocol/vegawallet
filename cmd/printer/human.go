@@ -26,57 +26,57 @@ func NewHumanPrinter() *HumanPrinter {
 }
 
 func (p *HumanPrinter) GreenArrow() *HumanPrinter {
-	fmt.Print(p.arrow.Foreground(p.profile.Color("2")).String())
+	printOut(p.arrow.Foreground(p.profile.Color("2")).String())
 	return p
 }
 
 func (p *HumanPrinter) RedArrow() *HumanPrinter {
-	fmt.Print(p.arrow.Foreground(p.profile.Color("1")).String())
+	printOut(p.arrow.Foreground(p.profile.Color("1")).String())
 	return p
 }
 
 func (p *HumanPrinter) BlueArrow() *HumanPrinter {
-	fmt.Print(p.arrow.Foreground(p.profile.Color("6")).String())
+	printOut(p.arrow.Foreground(p.profile.Color("6")).String())
 	return p
 }
 
 func (p *HumanPrinter) CheckMark() *HumanPrinter {
-	fmt.Print(p.checkMark)
+	printOut(p.checkMark)
 	return p
 }
 
 func (p *HumanPrinter) BangMark() *HumanPrinter {
-	fmt.Print(p.bangMark)
+	printOut(p.bangMark)
 	return p
 }
 
 func (p *HumanPrinter) CrossMark() *HumanPrinter {
-	fmt.Print(p.crossMark)
+	printOut(p.crossMark)
 	return p
 }
 
 func (p *HumanPrinter) SuccessText(t string) *HumanPrinter {
-	fmt.Print(termenv.String(t).Foreground(p.profile.Color("2")).String())
+	printOut(termenv.String(t).Foreground(p.profile.Color("2")).String())
 	return p
 }
 
 func (p *HumanPrinter) InfoText(t string) *HumanPrinter {
-	fmt.Print(termenv.String(t).Foreground(p.profile.Color("6")).String())
+	printOut(termenv.String(t).Foreground(p.profile.Color("6")).String())
 	return p
 }
 
 func (p *HumanPrinter) WarningText(t string) *HumanPrinter {
-	fmt.Print(termenv.String(t).Foreground(p.profile.Color("3")).String())
+	printOut(termenv.String(t).Foreground(p.profile.Color("3")).String())
 	return p
 }
 
 func (p *HumanPrinter) DangerText(t string) *HumanPrinter {
-	fmt.Print(termenv.String(t).Foreground(p.profile.Color("1")).String())
+	printOut(termenv.String(t).Foreground(p.profile.Color("1")).String())
 	return p
 }
 
 func (p *HumanPrinter) Jump() *HumanPrinter {
-	fmt.Println()
+	printOut("\n")
 	return p
 }
 
@@ -85,26 +85,30 @@ func (p *HumanPrinter) NJump(num int) *HumanPrinter {
 	for i := 0; i < num; i++ {
 		jumps += "\n"
 	}
-	fmt.Print(jumps)
+	printOut(jumps)
 	return p
 }
 
 func (p *HumanPrinter) Text(s string) *HumanPrinter {
-	fmt.Print(s)
+	printOut(s)
 	return p
 }
 
 func (p *HumanPrinter) Code(s string) *HumanPrinter {
-	fmt.Printf("    $ %s", s)
+	printOut(fmt.Sprintf("    $ %s", s))
 	return p
 }
 
 func (p *HumanPrinter) Bold(name string) *HumanPrinter {
-	fmt.Print(termenv.String(name).Bold().String())
+	printOut(termenv.String(name).Bold().String())
 	return p
 }
 
 func (p *HumanPrinter) Underline(name string) *HumanPrinter {
-	fmt.Print(termenv.String(name).Underline().String())
+	printOut(termenv.String(name).Underline().String())
 	return p
+}
+
+func printOut(s string) {
+	fmt.Print(s) //nolint:forbidigo
 }

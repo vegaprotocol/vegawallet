@@ -10,9 +10,9 @@ import (
 	"strings"
 	"time"
 
+	vgjson "code.vegaprotocol.io/shared/libs/json"
 	"code.vegaprotocol.io/vegawallet/cmd/printer"
 	"code.vegaprotocol.io/vegawallet/version"
-	vgjson "code.vegaprotocol.io/shared/libs/json"
 	"github.com/mattn/go-isatty"
 	"github.com/spf13/cobra"
 	"golang.org/x/term"
@@ -155,7 +155,7 @@ func getPassphrase(flaggedPassphraseFile string, confirmInput bool) (string, err
 				return "", fmt.Errorf("passphrases do not match")
 			}
 		}
-		fmt.Println()
+		fmt.Println() //nolint:forbidigo
 
 		return passphrase, nil
 	}
@@ -163,15 +163,15 @@ func getPassphrase(flaggedPassphraseFile string, confirmInput bool) (string, err
 
 func promptForPassphrase(msg ...string) (string, error) {
 	if len(msg) <= 0 {
-		fmt.Print("Enter passphrase: ")
+		fmt.Print("Enter passphrase: ") //nolint:forbidigo
 	} else {
-		fmt.Print(msg[0])
+		fmt.Print(msg[0]) //nolint:forbidigo
 	}
 	password, err := term.ReadPassword(int(os.Stdin.Fd()))
 	if err != nil {
 		return "", err
 	}
-	fmt.Println()
+	fmt.Println() //nolint:forbidigo
 
 	return string(password), nil
 }
