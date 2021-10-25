@@ -571,7 +571,7 @@ func (s *Service) GetPublicKey(t string, w http.ResponseWriter, _ *http.Request,
 	key, err := s.handler.GetPublicKey(name, ps.ByName("keyid"))
 	if err != nil {
 		var statusCode int
-		if  errors.Is(err, wallet.ErrPubKeyDoesNotExist) {
+		if errors.Is(err, wallet.ErrPubKeyDoesNotExist) {
 			statusCode = http.StatusNotFound
 		} else {
 			statusCode = http.StatusForbidden

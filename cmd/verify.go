@@ -26,7 +26,7 @@ var (
 		RunE:  runVerify,
 	}
 
-	ErrMessageShouldBeBase64 = errors.New("message should be encoded into base64")
+	ErrMessageShouldBeBase64   = errors.New("message should be encoded into base64")
 	ErrSignatureShouldBeBase64 = errors.New("signature should be encoded into base64")
 )
 

@@ -3,10 +3,10 @@ package cmd
 import (
 	"fmt"
 
-	"code.vegaprotocol.io/vegawallet/cmd/printer"
-	netstore "code.vegaprotocol.io/vegawallet/network/store/v1"
 	vgjson "code.vegaprotocol.io/shared/libs/json"
 	"code.vegaprotocol.io/shared/paths"
+	"code.vegaprotocol.io/vegawallet/cmd/printer"
+	netstore "code.vegaprotocol.io/vegawallet/network/store/v1"
 	"github.com/spf13/cobra"
 )
 

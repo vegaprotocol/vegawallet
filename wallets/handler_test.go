@@ -3,10 +3,10 @@ package wallets_test
 import (
 	"testing"
 
-	"code.vegaprotocol.io/vegawallet/wallet"
-	"code.vegaprotocol.io/vegawallet/wallets"
 	commandspb "code.vegaprotocol.io/protos/vega/commands/v1"
 	walletpb "code.vegaprotocol.io/protos/vega/wallet/v1"
+	"code.vegaprotocol.io/vegawallet/wallet"
+	"code.vegaprotocol.io/vegawallet/wallets"
 	"github.com/stretchr/testify/require"
 
 	"github.com/golang/mock/gomock"

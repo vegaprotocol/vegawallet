@@ -1,9 +1,9 @@
 package cmd
 
 import (
+	vgjson "code.vegaprotocol.io/shared/libs/json"
 	"code.vegaprotocol.io/vegawallet/cmd/printer"
 	"code.vegaprotocol.io/vegawallet/version"
-	vgjson "code.vegaprotocol.io/shared/libs/json"
 
 	"github.com/spf13/cobra"
 )

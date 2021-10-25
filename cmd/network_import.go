@@ -4,11 +4,11 @@ import (
 	"errors"
 	"fmt"
 
+	vgjson "code.vegaprotocol.io/shared/libs/json"
+	"code.vegaprotocol.io/shared/paths"
 	"code.vegaprotocol.io/vegawallet/cmd/printer"
 	"code.vegaprotocol.io/vegawallet/network"
 	netstore "code.vegaprotocol.io/vegawallet/network/store/v1"
-	vgjson "code.vegaprotocol.io/shared/libs/json"
-	"code.vegaprotocol.io/shared/paths"
 	"github.com/spf13/cobra"
 )
 
