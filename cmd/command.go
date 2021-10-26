@@ -2,10 +2,12 @@ package cmd
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"time"
 
+	api "code.vegaprotocol.io/protos/vega/api/v1"
+	walletpb "code.vegaprotocol.io/protos/vega/wallet/v1"
+	"code.vegaprotocol.io/shared/paths"
 	wcommands "code.vegaprotocol.io/vegawallet/commands"
 	vglog "code.vegaprotocol.io/vegawallet/libs/zap"
 	"code.vegaprotocol.io/vegawallet/logger"
@@ -13,14 +15,16 @@ import (
 	netstore "code.vegaprotocol.io/vegawallet/network/store/v1"
 	"code.vegaprotocol.io/vegawallet/node"
 	"code.vegaprotocol.io/vegawallet/wallets"
-	api "code.vegaprotocol.io/protos/vega/api/v1"
-	walletpb "code.vegaprotocol.io/protos/vega/wallet/v1"
-	"code.vegaprotocol.io/shared/paths"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/spf13/cobra"
+)
+
+const (
+	DefaultForwarderRetryCount = 5
+	ForwarderRequestTimeout    = 5 * time.Second
 )
 
 var (
@@ -49,7 +53,7 @@ func init() {
 	commandCmd.Flags().StringVarP(&commandArgs.pubKey, "pubkey", "", "", "The public key to use from the wallet")
 	commandCmd.Flags().StringVarP(&commandArgs.passphraseFile, "passphrase-file", "p", "", "Path of the file containing the passphrase to access the wallet")
 	commandCmd.Flags().StringVar(&commandArgs.nodeAddress, "node-address", "0.0.0.0:3002", "Address of the Vega node to use")
-	commandCmd.Flags().Uint64Var(&commandArgs.retries, "retries", 5, "Number of retries when contacting the Vega node")
+	commandCmd.Flags().Uint64Var(&commandArgs.retries, "retries", DefaultForwarderRetryCount, "Number of retries when contacting the Vega node")
 	_ = commandCmd.MarkFlagRequired("wallet")
 	_ = commandCmd.MarkFlagRequired("pubkey")
 }
@@ -98,7 +102,7 @@ func runCommand(_ *cobra.Command, pos []string) error {
 	defer vglog.Sync(log)
 
 	if len(commandArgs.nodeAddress) != 0 && len(commandArgs.network) != 0 {
-		return errors.New("can't have both node address and network flag set")
+		return ErrCanNotHaveBothNodeAddressAndNetworkFlagsSet
 	}
 
 	var hosts []string
@@ -111,10 +115,10 @@ func runCommand(_ *cobra.Command, pos []string) error {
 		}
 		exists, err := netStore.NetworkExists(commandArgs.network)
 		if err != nil {
-			return fmt.Errorf("couldn't verify network existance: %w", err)
+			return fmt.Errorf("couldn't verify network existence: %w", err)
 		}
 		if !exists {
-			return fmt.Errorf("network %s does not exist", commandArgs.network)
+			return network.NewNetworkDoesNotExistError(commandArgs.network)
 		}
 		net, err := netStore.GetNetwork(commandArgs.network)
 		if err != nil {
@@ -122,7 +126,7 @@ func runCommand(_ *cobra.Command, pos []string) error {
 		}
 		hosts = net.API.GRPC.Hosts
 	} else {
-		return errors.New("should set node address or network flag")
+		return ErrShouldSetNodeAddressOrNetworkFlag
 	}
 
 	forwarder, err := node.NewForwarder(log.Named("forwarder"), network.GRPCConfig{
@@ -138,7 +142,7 @@ func runCommand(_ *cobra.Command, pos []string) error {
 		_ = forwarder.Stop()
 	}()
 
-	ctx, cfunc := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cfunc := context.WithTimeout(context.Background(), ForwarderRequestTimeout)
 	defer cfunc()
 
 	blockHeight, err := forwarder.LastBlockHeight(ctx)

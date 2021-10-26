@@ -19,9 +19,9 @@ import (
 	"go.uber.org/zap"
 )
 
-var (
-	ErrSessionNotFound = errors.New("session not found")
-)
+const LengthForSessionHashSeed = 10
+
+var ErrSessionNotFound = errors.New("session not found")
 
 //go:generate go run github.com/golang/mock/mockgen -destination mocks/rsa_store_mock.go -package mocks code.vegaprotocol.io/vegawallet/service RSAStore
 type RSAStore interface {
@@ -97,7 +97,7 @@ func (a *auth) NewSession(name string) (string, error) {
 	return ss, nil
 }
 
-// VerifyToken returns the wallet name associated for this session
+// VerifyToken returns the wallet name associated for this session.
 func (a *auth) VerifyToken(token string) (string, error) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -143,19 +143,18 @@ func (a *auth) parseToken(tokenStr string) (*Claims, error) {
 		return claims, nil
 	}
 	return nil, err
-
 }
 
-// ExtractToken this is public for testing purposes
+// ExtractToken this is public for testing purposes.
 func ExtractToken(f func(string, http.ResponseWriter, *http.Request, httprouter.Params)) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		token := r.Header.Get("Authorization")
-		if len(token) <= 0 {
+		if len(token) == 0 {
 			writeError(w, ErrInvalidOrMissingToken, http.StatusBadRequest)
 			return
 		}
 		splitToken := strings.Split(token, "Bearer")
-		if len(splitToken) != 2 || len(splitToken[1]) <= 0 {
+		if len(splitToken) != 2 || len(splitToken[1]) == 0 {
 			writeError(w, ErrInvalidOrMissingToken, http.StatusBadRequest)
 			return
 		}
@@ -164,7 +163,7 @@ func ExtractToken(f func(string, http.ResponseWriter, *http.Request, httprouter.
 }
 
 func genSession() string {
-	return hex.EncodeToString(vgcrypto.Hash(vgrand.RandomBytes(10)))
+	return hex.EncodeToString(vgcrypto.Hash(vgrand.RandomBytes(LengthForSessionHashSeed)))
 }
 
 func writeError(w http.ResponseWriter, e error, status int) {

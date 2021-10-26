@@ -2,22 +2,24 @@ package cmd
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 
+	"code.vegaprotocol.io/shared/paths"
 	"code.vegaprotocol.io/vegawallet/cmd/printer"
 	"code.vegaprotocol.io/vegawallet/console"
 	vglog "code.vegaprotocol.io/vegawallet/libs/zap"
 	"code.vegaprotocol.io/vegawallet/logger"
+	"code.vegaprotocol.io/vegawallet/network"
 	netstore "code.vegaprotocol.io/vegawallet/network/store/v1"
 	"code.vegaprotocol.io/vegawallet/node"
 	"code.vegaprotocol.io/vegawallet/service"
 	svcstore "code.vegaprotocol.io/vegawallet/service/store/v1"
 	"code.vegaprotocol.io/vegawallet/wallets"
-	"code.vegaprotocol.io/shared/paths"
 	"github.com/skratchdot/open-golang/open"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
@@ -66,7 +68,7 @@ func runServiceRun(_ *cobra.Command, _ []string) error {
 		return fmt.Errorf("couldn't verify the network existence: %w", err)
 	}
 	if !exists {
-		return fmt.Errorf("network \"%s\" doesn't exist", serviceRunArgs.network)
+		return network.NewNetworkDoesNotExistError(serviceRunArgs.network)
 	}
 
 	cfg, err := netStore.GetNetwork(serviceRunArgs.network)
@@ -110,14 +112,14 @@ func runServiceRun(_ *cobra.Command, _ []string) error {
 	go func() {
 		defer cancel()
 		err := srv.Start()
-		if err != nil && err != http.ErrServerClosed {
+		if err != nil && errors.Is(err, http.ErrServerClosed) {
 			log.Error("error starting wallet http server", zap.Error(err))
 		}
 	}()
 
 	serviceHost := fmt.Sprintf("http://%v:%v", cfg.Host, cfg.Port)
 	if rootArgs.output == "human" {
-		p.CheckMark().Text("HTTP service started at: ").SuccessText(serviceHost).Jump()
+		p.CheckMark().Text("HTTP service started at: ").SuccessText(serviceHost).NextLine()
 	} else if rootArgs.output == "json" {
 		log.Info(fmt.Sprintf("HTTP service started at: %s", serviceHost))
 	}
@@ -128,14 +130,14 @@ func runServiceRun(_ *cobra.Command, _ []string) error {
 		go func() {
 			defer cancel()
 			err := cs.Start()
-			if err != nil && err != http.ErrServerClosed {
+			if err != nil && errors.Is(err, http.ErrServerClosed) {
 				log.Error("error starting console proxy server", zap.Error(err))
 			}
 		}()
 
 		consoleLocalHost := fmt.Sprintf("http://127.0.0.1:%v", cfg.Console.LocalPort)
 		if rootArgs.output == "human" {
-			p.CheckMark().Text("Console proxy pointing to ").Bold(cfg.Console.URL).Text(" started at: ").SuccessText(consoleLocalHost).Jump()
+			p.CheckMark().Text("Console proxy pointing to ").Bold(cfg.Console.URL).Text(" started at: ").SuccessText(consoleLocalHost).NextLine()
 		} else if rootArgs.output == "json" {
 			log.Info(fmt.Sprintf("console proxy pointing to %s started at: %s", cfg.Console.URL, consoleLocalHost))
 		}
@@ -150,11 +152,11 @@ func runServiceRun(_ *cobra.Command, _ []string) error {
 	}
 
 	if rootArgs.output == "human" {
-		p.CheckMark().SuccessText("Starting successful").NJump(2)
-		p.BlueArrow().InfoText("Available endpoints").Jump()
+		p.CheckMark().SuccessText("Starting successful").NextSection()
+		p.BlueArrow().InfoText("Available endpoints").NextLine()
 		printEndpoints(serviceHost)
-		p.NJump(2)
-		p.BlueArrow().InfoText("Logs").Jump()
+		p.NextSection()
+		p.BlueArrow().InfoText("Logs").NextLine()
 	}
 
 	waitSig(ctx, cancel, log)
@@ -180,7 +182,7 @@ func runServiceRun(_ *cobra.Command, _ []string) error {
 
 // waitSig will wait for a sigterm or sigint interrupt.
 func waitSig(ctx context.Context, cfunc func(), log *zap.Logger) {
-	var gracefulStop = make(chan os.Signal, 1)
+	gracefulStop := make(chan os.Signal, 1)
 	signal.Notify(gracefulStop, syscall.SIGTERM)
 	signal.Notify(gracefulStop, syscall.SIGINT)
 	signal.Notify(gracefulStop, syscall.SIGQUIT)

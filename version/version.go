@@ -34,7 +34,7 @@ func IsUnreleased() bool {
 }
 
 // Check returns a newer version, or an error or nil for both
-// if no error happened, and no updates are needed
+// if no error happened, and no updates are needed.
 func Check(releasesGetterFn ReleasesGetter, currentRelease string) (*semver.Version, error) {
 	releases, err := releasesGetterFn()
 	if err != nil {

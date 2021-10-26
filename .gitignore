@@ -1,0 +1,22 @@
+# Project
+vegawallet
+
+# Golang
+vendor/
+
+# MacOS
+.DS_Store
+
+# Environment
+.envrc
+
+# Editors
+.idea/
+.vscode/
+
+# Runtime files
+*.log
+.testCoverage.html
+.testCoverage.txt
+*.tmp
+tmp/

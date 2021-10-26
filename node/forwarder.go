@@ -2,13 +2,12 @@ package node
 
 import (
 	"context"
-	"errors"
 	"sync/atomic"
 	"time"
 
-	"code.vegaprotocol.io/vegawallet/network"
 	api "code.vegaprotocol.io/protos/vega/api/v1"
 	commandspb "code.vegaprotocol.io/protos/vega/commands/v1"
+	"code.vegaprotocol.io/vegawallet/network"
 
 	"github.com/cenkalti/backoff/v4"
 	"go.uber.org/zap"
@@ -24,14 +23,12 @@ type Forwarder struct {
 }
 
 func NewForwarder(log *zap.Logger, nodeConfigs network.GRPCConfig) (*Forwarder, error) {
-	if len(nodeConfigs.Hosts) <= 0 {
-		return nil, errors.New("no node specified for node forwarding")
+	if len(nodeConfigs.Hosts) == 0 {
+		return nil, ErrNoHostSpecified
 	}
 
-	var (
-		clts  []api.CoreServiceClient
-		conns []*grpc.ClientConn
-	)
+	clts := make([]api.CoreServiceClient, 0, len(nodeConfigs.Hosts))
+	conns := make([]*grpc.ClientConn, 0, len(nodeConfigs.Hosts))
 	for _, v := range nodeConfigs.Hosts {
 		conn, err := grpc.Dial(v, grpc.WithInsecure())
 		if err != nil {

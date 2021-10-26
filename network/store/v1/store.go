@@ -13,9 +13,7 @@ import (
 	"code.vegaprotocol.io/vegawallet/network"
 )
 
-var (
-	fileExt = ".toml"
-)
+const fileExt = ".toml"
 
 type Store struct {
 	networksHome string
@@ -64,7 +62,7 @@ func (s *Store) GetNetwork(name string) (*network.Network, error) {
 		return nil, fmt.Errorf("couldn't read network configuration file: %w", err)
 	}
 	if name != net.Name {
-		return nil, fmt.Errorf("network configuration file name (%s) and network name (%s) don't match", name, net.Name)
+		return nil, NewDifferentNetworkNamesError(name, net.Name)
 	}
 	migrateNetwork(net)
 	return net, nil
@@ -88,7 +86,7 @@ func (s *Store) fileNameToName(fileName string) string {
 
 // migrateNetwork ensures the legacy configuration is migrated to the new
 // one.
-// TO REMOVE Once the tools use the new API.GRPC
+// TO REMOVE Once the tools use the new API.GRPC.
 func migrateNetwork(net *network.Network) {
 	if len(net.Nodes.Hosts) > 0 && len(net.API.GRPC.Hosts) == 0 {
 		net.API.GRPC = net.Nodes

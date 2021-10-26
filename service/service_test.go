@@ -10,13 +10,13 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	api "code.vegaprotocol.io/protos/vega/api/v1"
+	commandspb "code.vegaprotocol.io/protos/vega/commands/v1"
 	"code.vegaprotocol.io/vegawallet/crypto"
 	"code.vegaprotocol.io/vegawallet/network"
 	"code.vegaprotocol.io/vegawallet/service"
 	"code.vegaprotocol.io/vegawallet/service/mocks"
 	"code.vegaprotocol.io/vegawallet/wallet"
-	api "code.vegaprotocol.io/protos/vega/api/v1"
-	commandspb "code.vegaprotocol.io/protos/vega/commands/v1"
 	"github.com/stretchr/testify/require"
 
 	"github.com/golang/mock/gomock"
@@ -31,6 +31,8 @@ const (
 	TestMnemonic = "swing ceiling chaos green put insane ripple desk match tip melt usual shrug turkey renew icon parade veteran lens govern path rough page render"
 )
 
+var errSomethingWentWrong = errors.New("something went wrong")
+
 type testService struct {
 	*service.Service
 
@@ -41,12 +43,17 @@ type testService struct {
 }
 
 func getTestService(t *testing.T) *testService {
+	t.Helper()
+
 	ctrl := gomock.NewController(t)
 	handler := mocks.NewMockWalletHandler(ctrl)
 	auth := mocks.NewMockAuth(ctrl)
 	nodeForward := mocks.NewMockNodeForward(ctrl)
 	// no needs of the conf or path as we do not run an actual service
-	s, _ := service.NewService(zap.NewNop(), &network.Network{}, handler, auth, nodeForward)
+	s, err := service.NewService(zap.NewNop(), &network.Network{}, handler, auth, nodeForward)
+	if err != nil {
+		t.Fatalf("couldn't create service: %v", err)
+	}
 	return &testService{
 		Service:     s,
 		ctrl:        ctrl,
@@ -332,7 +339,6 @@ func testServiceGenKeypairFailInvalidRequest(t *testing.T) {
 
 	resp = w.Result()
 	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
-
 }
 
 func testServiceListPublicKeysOK(t *testing.T) {
@@ -458,7 +464,7 @@ func testServiceGetPublicKeyFailMiscError(t *testing.T) {
 
 	s.auth.EXPECT().VerifyToken("eyXXzA").Times(1).Return("jeremy", nil)
 	s.handler.EXPECT().GetPublicKey(gomock.Any(), gomock.Any()).Times(1).
-		Return(nil, errors.New("an error"))
+		Return(nil, errSomethingWentWrong)
 
 	r := httptest.NewRequest("GET", "scheme://host/path", nil)
 	r.Header.Add("Authorization", "Bearer eyXXzA")
@@ -693,7 +699,7 @@ func testSigningTransactionWithFailedPropagationFails(t *testing.T) {
 	s.nodeForward.EXPECT().
 		SendTx(gomock.Any(), &commandspb.Transaction{}, api.SubmitTransactionRequest_TYPE_SYNC).
 		Times(1).
-		Return(errors.New("failure"))
+		Return(errSomethingWentWrong)
 	s.nodeForward.EXPECT().LastBlockHeight(gomock.Any()).
 		Times(1).Return(uint64(42), nil)
 
@@ -724,7 +730,7 @@ func testFailedSigningTransactionFails(t *testing.T) {
 	s.handler.EXPECT().
 		SignTx(name, gomock.Any(), gomock.Any()).
 		Times(1).
-		Return(nil, errors.New("failure"))
+		Return(nil, errSomethingWentWrong)
 	s.nodeForward.EXPECT().LastBlockHeight(gomock.Any()).
 		Times(1).Return(uint64(42), nil)
 

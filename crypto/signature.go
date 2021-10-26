@@ -10,9 +10,7 @@ const (
 	Ed25519 string = "vega/ed25519"
 )
 
-var (
-	ErrUnsupportedSignatureAlgorithm = errors.New("unsupported signature algorithm")
-)
+var ErrUnsupportedSignatureAlgorithm = errors.New("unsupported signature algorithm")
 
 type SignatureAlgorithm struct {
 	impl signatureAlgorithmImpl
@@ -56,7 +54,7 @@ func (a *SignatureAlgorithm) Version() uint32 {
 
 func (a *SignatureAlgorithm) MarshalJSON() ([]byte, error) {
 	if a == nil {
-		return nil, errors.New("nil signature")
+		return nil, ErrSignatureIsNil
 	}
 	return json.Marshal(&jsonAlgorithm{
 		Name:    a.Name(),

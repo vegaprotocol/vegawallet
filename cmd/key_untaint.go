@@ -52,10 +52,10 @@ func runKeyUntaint(_ *cobra.Command, _ []string) error {
 
 	if rootArgs.output == "human" {
 		p := printer.NewHumanPrinter()
-		p.CheckMark().SuccessText("Untainting succeeded").NJump(2)
+		p.CheckMark().SuccessText("Untainting succeeded").NextSection()
 
-		p.RedArrow().DangerText("Important").Jump()
-		p.Text("If you tainted a key for security reasons, you should not use it.").Jump()
+		p.RedArrow().DangerText("Important").NextLine()
+		p.Text("If you tainted a key for security reasons, you should not use it.").NextLine()
 	}
 
 	return nil

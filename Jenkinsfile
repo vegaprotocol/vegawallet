@@ -151,7 +151,7 @@ pipeline {
                         junit checksName: 'Unit Tests with Race', testResults: 'unit-test-race-report.xml'
                     }
                 }
-                stage('70+ linters [TODO improve]') {
+                stage('linters') {
                     steps {
                         sh '''#!/bin/bash -e
                             golangci-lint run -v --config .golangci.toml

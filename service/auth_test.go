@@ -17,6 +17,7 @@ type testAuth struct {
 }
 
 func getTestAuth(t *testing.T) *testAuth {
+	t.Helper()
 	rsaKeys, err := service.GenerateRSAKeys()
 	if err != nil {
 		t.Fatal(err)
@@ -86,7 +87,7 @@ func testRevokeValidToken(t *testing.T) {
 	assert.NoError(t, err)
 
 	w, err := auth.VerifyToken(tok)
-	assert.EqualError(t, err, service.ErrSessionNotFound.Error())
+	assert.ErrorIs(t, err, service.ErrSessionNotFound)
 	assert.Empty(t, w)
 }
 

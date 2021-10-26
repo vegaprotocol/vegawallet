@@ -3,10 +3,10 @@ package wallets_test
 import (
 	"testing"
 
-	"code.vegaprotocol.io/vegawallet/wallet"
-	"code.vegaprotocol.io/vegawallet/wallets"
 	commandspb "code.vegaprotocol.io/protos/vega/commands/v1"
 	walletpb "code.vegaprotocol.io/protos/vega/wallet/v1"
+	"code.vegaprotocol.io/vegawallet/wallet"
+	"code.vegaprotocol.io/vegawallet/wallets"
 	"github.com/stretchr/testify/require"
 
 	"github.com/golang/mock/gomock"
@@ -25,9 +25,9 @@ type testHandler struct {
 }
 
 func getTestHandler(t *testing.T) *testHandler {
+	t.Helper()
 	ctrl := gomock.NewController(t)
 	store := newMockedStore()
-
 	h := wallets.NewHandler(store)
 	return &testHandler{
 		Handler: h,
@@ -154,7 +154,7 @@ func testHandlerImportingWalletWithInvalidMnemonicFails(t *testing.T) {
 	err := h.ImportWallet(name, passphrase, "this is not a valid mnemonic")
 
 	// then
-	require.EqualError(t, err, wallet.ErrInvalidMnemonic.Error())
+	require.ErrorIs(t, err, wallet.ErrInvalidMnemonic)
 }
 
 func testHandlerImportingAlreadyExistingWalletFails(t *testing.T) {
@@ -233,7 +233,7 @@ func testHandlerRecreatingWalletWithSameNameFails(t *testing.T) {
 	mnemonic, err = h.CreateWallet(name, passphrase)
 
 	// then
-	require.EqualError(t, err, wallet.ErrWalletAlreadyExists.Error())
+	require.ErrorIs(t, err, wallet.ErrWalletAlreadyExists)
 	assert.Empty(t, mnemonic)
 }
 
@@ -257,7 +257,7 @@ func testHandlerRecreatingWalletWithSameNameButDifferentPassphraseFails(t *testi
 	mnemonic, err = h.CreateWallet(name, othPassphrase)
 
 	// then
-	require.EqualError(t, err, wallet.ErrWalletAlreadyExists.Error())
+	require.ErrorIs(t, err, wallet.ErrWalletAlreadyExists)
 	assert.Empty(t, mnemonic)
 }
 
@@ -294,7 +294,7 @@ func testHandlerLoginToNonExistingWalletFails(t *testing.T) {
 	err := h.LoginWallet(name, passphrase)
 
 	// then
-	assert.EqualError(t, err, wallets.ErrWalletDoesNotExists.Error())
+	assert.ErrorIs(t, err, wallets.ErrWalletDoesNotExists)
 }
 
 func testHandlerLogoutLoggedInWalletSucceeds(t *testing.T) {
@@ -600,7 +600,7 @@ func testHandlerListingPublicKeysWithLoggedOutWalletFails(t *testing.T) {
 	publicKeys, err := h.ListPublicKeys(name)
 
 	// then
-	require.EqualError(t, err, wallet.ErrWalletNotLoggedIn.Error())
+	require.ErrorIs(t, err, wallet.ErrWalletNotLoggedIn)
 	assert.Len(t, publicKeys, 0)
 }
 
@@ -624,7 +624,7 @@ func testHandlerListingPublicKeysWithInvalidNameFails(t *testing.T) {
 	key, err := h.ListPublicKeys(otherName)
 
 	// then
-	assert.EqualError(t, err, wallets.ErrWalletDoesNotExists.Error())
+	assert.ErrorIs(t, err, wallets.ErrWalletDoesNotExists)
 	assert.Empty(t, key)
 }
 
@@ -639,7 +639,7 @@ func testHandlerListingPublicKeysWithoutWalletFails(t *testing.T) {
 	key, err := h.ListPublicKeys(name)
 
 	// then
-	assert.EqualError(t, err, wallets.ErrWalletDoesNotExists.Error())
+	assert.ErrorIs(t, err, wallets.ErrWalletDoesNotExists)
 	assert.Empty(t, key)
 }
 
@@ -735,7 +735,7 @@ func testHandlerListingKeyPairsWithInvalidNameFails(t *testing.T) {
 	key, err := h.ListKeyPairs(otherName)
 
 	// then
-	assert.EqualError(t, err, wallets.ErrWalletDoesNotExists.Error())
+	assert.ErrorIs(t, err, wallets.ErrWalletDoesNotExists)
 	assert.Empty(t, key)
 }
 
@@ -750,7 +750,7 @@ func testHandlerListingKeyPairsWithoutWalletFails(t *testing.T) {
 	key, err := h.ListKeyPairs(name)
 
 	// then
-	assert.EqualError(t, err, wallets.ErrWalletDoesNotExists.Error())
+	assert.ErrorIs(t, err, wallets.ErrWalletDoesNotExists)
 	assert.Empty(t, key)
 }
 
@@ -765,7 +765,7 @@ func testHandlerGettingPublicKeyWithoutWalletFails(t *testing.T) {
 	key, err := h.GetPublicKey(name, name)
 
 	// then
-	assert.EqualError(t, err, wallets.ErrWalletDoesNotExists.Error())
+	assert.ErrorIs(t, err, wallets.ErrWalletDoesNotExists)
 	assert.Empty(t, key)
 }
 
@@ -860,7 +860,7 @@ func testHandlerGettingPublicKeyWithInvalidNameFails(t *testing.T) {
 	keyPair, err := h.GetPublicKey(otherName, key)
 
 	// then
-	assert.EqualError(t, err, wallets.ErrWalletDoesNotExists.Error())
+	assert.ErrorIs(t, err, wallets.ErrWalletDoesNotExists)
 	assert.Nil(t, keyPair)
 }
 
@@ -888,7 +888,7 @@ func testGettingNonExistingPublicKeyFails(t *testing.T) {
 
 	// when
 	keyPair, err := h.GetPublicKey(name, "non-existing-pub-key")
-	assert.EqualError(t, err, wallet.ErrPubKeyDoesNotExist.Error())
+	assert.ErrorIs(t, err, wallet.ErrPubKeyDoesNotExist)
 	assert.Nil(t, keyPair)
 }
 
@@ -1025,7 +1025,7 @@ func testHandlerTaintingKeyThatIsAlreadyTaintedFails(t *testing.T) {
 	err = h.TaintKey(name, key, passphrase)
 
 	// then
-	assert.EqualError(t, err, wallet.ErrPubKeyAlreadyTainted.Error())
+	assert.ErrorIs(t, err, wallet.ErrPubKeyAlreadyTainted)
 }
 
 func testHandlerUpdatingKeyPairMetaSucceeds(t *testing.T) {
@@ -1276,7 +1276,7 @@ func testHandlerSigningTxWithLoggedOutWalletFails(t *testing.T) {
 	tx, err := h.SignTx(name, req, 42)
 
 	// then
-	require.EqualError(t, err, wallet.ErrWalletNotLoggedIn.Error())
+	require.ErrorIs(t, err, wallet.ErrWalletNotLoggedIn)
 	assert.Nil(t, tx)
 }
 
@@ -1399,7 +1399,7 @@ func testHandlerSigningMessageWithLoggedOutWalletFails(t *testing.T) {
 	sig, err := h.SignAny(name, data, pubKey)
 
 	// then
-	require.EqualError(t, err, wallet.ErrWalletNotLoggedIn.Error())
+	require.ErrorIs(t, err, wallet.ErrWalletNotLoggedIn)
 	assert.Empty(t, sig)
 }
 

@@ -7,10 +7,8 @@ import (
 	"github.com/zannen/toml"
 )
 
-var (
-	//go:embed defaults/*.toml
-	defaultNetworks embed.FS
-)
+//go:embed defaults/*.toml
+var defaultNetworks embed.FS
 
 //go:generate go run github.com/golang/mock/mockgen -destination mocks/store_mock.go -package mocks code.vegaprotocol.io/vegawallet/network Store
 type Store interface {
@@ -32,16 +30,16 @@ func InitialiseNetworks(store Store, overwrite bool) error {
 		}
 		net := &Network{}
 		if _, err := toml.Decode(string(data), &net); err != nil {
-			return fmt.Errorf("couldn't decode embeded data: %w", err)
+			return fmt.Errorf("couldn't decode embedded data: %w", err)
 		}
 
 		if !overwrite {
 			exists, err := store.NetworkExists(net.Name)
 			if err != nil {
-				return fmt.Errorf("couldn't verify network existance: %w", err)
+				return fmt.Errorf("couldn't verify network existence: %w", err)
 			}
 			if exists {
-				return fmt.Errorf("network %s already exists", net.Name)
+				return NewNetworkAlreadyExistsError(net.Name)
 			}
 		}
 
@@ -56,10 +54,10 @@ func InitialiseNetworks(store Store, overwrite bool) error {
 func ImportNetwork(store Store, net *Network, overwrite bool) error {
 	exists, err := store.NetworkExists(net.Name)
 	if err != nil {
-		return fmt.Errorf("couldn't verify network existance: %w", err)
+		return fmt.Errorf("couldn't verify network existence: %w", err)
 	}
 	if exists && !overwrite {
-		return fmt.Errorf("network \"%s\" already exists", net.Name)
+		return NewNetworkAlreadyExistsError(net.Name)
 	}
 
 	if err := store.SaveNetwork(net); err != nil {

@@ -10,6 +10,10 @@ import (
 )
 
 const (
+	// MaxEntropyByteSize is the entropy bytes size used for mnemonic
+	// generation.
+	MaxEntropyByteSize = 256
+	// MagicIndex is the registered HD wallet index for Vega's wallets.
 	MagicIndex = 1789
 	// OriginIndex is a constant index used to derive a node from the master
 	// node. The resulting node will be used to generate the cryptographic keys.
@@ -292,10 +296,10 @@ func (w *HDWallet) deriveKeyNode(nextIndex uint32) (*slip10.Node, error) {
 	switch w.version {
 	case 1:
 		derivationFn = w.deriveKeyNodeV1
-	case 2:
+	case 2: //nolint:gomnd
 		derivationFn = w.deriveKeyNodeV2
 	default:
-		return nil, fmt.Errorf("wallet with version %d isn't supported", w.version)
+		return nil, NewUnsupportedWalletVersionError(w.version)
 	}
 
 	return derivationFn(nextIndex)
@@ -323,7 +327,7 @@ func (w *HDWallet) deriveKeyNodeV2(nextIndex uint32) (*slip10.Node, error) {
 
 // NewMnemonic generates a mnemonic with an entropy of 256 bits.
 func NewMnemonic() (string, error) {
-	entropy, err := bip39.NewEntropy(256)
+	entropy, err := bip39.NewEntropy(MaxEntropyByteSize)
 	if err != nil {
 		return "", fmt.Errorf("couldn't create new wallet: %w", err)
 	}
