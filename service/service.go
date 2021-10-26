@@ -103,6 +103,10 @@ func ParseImportWalletRequest(r *http.Request) (*ImportWalletRequest, commands.E
 		errs.AddForProperty("mnemonic", commands.ErrIsRequired)
 	}
 
+	if req.Version == 0 {
+		req.Version = wallet.LatestVersion
+	}
+
 	if !errs.Empty() {
 		return nil, errs
 	}
