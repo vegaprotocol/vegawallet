@@ -7,110 +7,184 @@ on:
       - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
 
 jobs:
-  release-linux:
-    name: Linux release
+  release-linux-adm64:
+    name: Linux release - AMD64
     runs-on: ubuntu-latest
     steps:
-    - name: Set up Go 1.x
-      uses: actions/setup-go@v2
-      with:
-        go-version: ^1.13
-      id: go
+      - name: Set up Go ^1.16
+        uses: actions/setup-go@v2
+        with:
+          go-version: ^1.16
+        id: go
 
-    - name: Check out code into the Go module directory
-      uses: actions/checkout@v2
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v2
 
-    - name: Get dependencies
-      run: |
-        go get -v -t -d ./...
+      - name: Get dependencies
+        run: |
+          go get -v -t -d ./...
 
-    - name: Tests
-      run: go test -v ./...
+      - name: Tests
+        run: go test -v ./...
 
-    - name: Set release version
-      id: vars
-      run: echo ::set-output name=tag::${GITHUB_REF#refs/*/}
+      - name: Set release version
+        id: vars
+        run: echo ::set-output name=tag::${GITHUB_REF#refs/*/}
 
-    - name: Build
-      env:
-        RELEASE_VERSION: ${{ steps.vars.outputs.tag }}
-      run: make release-linux
+      - name: Build
+        env:
+          RELEASE_VERSION: ${{ steps.vars.outputs.tag }}
+        run: make release-linux-amd64
 
-    - name: Release
-      uses: softprops/action-gh-release@v1
-      with:
-        files: build/*.zip
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: build/*.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  release-macos:
-    name: MacOS release
+  # No testing because we are cross-compiling, and cross-platform testing
+  # doesn't work.
+  release-linux-arm64:
+    name: Linux release - ARM64
+    runs-on: ubuntu-latest
+    env:
+      GOARCH: arm64
+    steps:
+      - name: Set up Go ^1.16
+        uses: actions/setup-go@v2
+        with:
+          go-version: ^1.16
+        id: go
+
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v2
+
+      - name: Get dependencies
+        run: |
+          go get -v -t -d ./...
+
+      - name: Set release version
+        id: vars
+        run: echo ::set-output name=tag::${GITHUB_REF#refs/*/}
+
+      - name: Build
+        env:
+          RELEASE_VERSION: ${{ steps.vars.outputs.tag }}
+        run: make release-linux-arm64
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: build/*.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  release-macos-amd64:
+    name: MacOS release - AMD64
     runs-on: macos-latest
     steps:
-    - name: Set up Go 1.x
-      uses: actions/setup-go@v2
-      with:
-        go-version: ^1.13
-      id: go
+      - name: Set up Go ^1.16
+        uses: actions/setup-go@v2
+        with:
+          go-version: ^1.16
+        id: go
 
-    - name: Check out code into the Go module directory
-      uses: actions/checkout@v2
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v2
 
-    - name: Get dependencies
-      run: |
-        go get -v -t -d ./...
+      - name: Get dependencies
+        run: |
+          go get -v -t -d ./...
 
-    - name: Tests
-      run: go test -v ./...
+      - name: Tests
+        run: go test -v ./...
 
-    - name: Set release version
-      id: vars
-      run: echo ::set-output name=tag::${GITHUB_REF#refs/*/}
+      - name: Set release version
+        id: vars
+        run: echo ::set-output name=tag::${GITHUB_REF#refs/*/}
 
-    - name: Build
-      env:
-        RELEASE_VERSION: ${{ steps.vars.outputs.tag }}
-      run: make release-macos
+      - name: Build
+        env:
+          RELEASE_VERSION: ${{ steps.vars.outputs.tag }}
+        run: make release-macos-amd64
 
-    - name: Release
-      uses: softprops/action-gh-release@v1
-      with:
-        files: build/*.zip
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: build/*.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  release-windows:
-    name: Windows release
+  # No testing because we are cross-compiling, and cross-platform testing
+  # doesn't work.
+  release-macos-arm64:
+    name: MacOS release - ARM64 (no testing)
+    runs-on: macos-latest
+    env:
+      GOARCH: arm64
+    steps:
+      - name: Set up Go ^1.16
+        uses: actions/setup-go@v2
+        with:
+          go-version: ^1.16
+        id: go
+
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v2
+
+      - name: Get dependencies
+        run: |
+          go get -v -t -d ./...
+
+      - name: Set release version
+        id: vars
+        run: echo ::set-output name=tag::${GITHUB_REF#refs/*/}
+
+      - name: Build
+        env:
+          RELEASE_VERSION: ${{ steps.vars.outputs.tag }}
+        run: make release-macos-arm64
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: build/*.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  release-windows-amd64:
+    name: Windows release - AMD64
     runs-on: windows-latest
     steps:
-    - name: Set up Go 1.x
-      uses: actions/setup-go@v2
-      with:
-        go-version: ^1.13
-      id: go
+      - name: Set up Go ^1.16
+        uses: actions/setup-go@v2
+        with:
+          go-version: ^1.16
+        id: go
 
-    - name: Check out code into the Go module directory
-      uses: actions/checkout@v2
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v2
 
-    - name: Get dependencies
-      run: |
-        go get -v -t -d ./...
+      - name: Get dependencies
+        run: |
+          go get -v -t -d ./...
 
-    - name: Tests
-      run: go test -v ./...
+      - name: Tests
+        run: go test -v ./...
 
-    - name: Set release version
-      id: vars
-      run: echo ::set-output name=tag::${GITHUB_REF#refs/*/}
+      - name: Set release version
+        id: vars
+        run: echo ::set-output name=tag::${GITHUB_REF#refs/*/}
 
-    - name: Build
-      env:
-        RELEASE_VERSION: ${{ steps.vars.outputs.tag }}
-      run: make release-windows
+      - name: Build
+        env:
+          RELEASE_VERSION: ${{ steps.vars.outputs.tag }}
+        run: make release-windows-amd64
 
-    - name: Release
-      uses: softprops/action-gh-release@v1
-      with:
-        files: build/*.zip
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: build/*.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
