@@ -76,7 +76,7 @@ func (h *Handler) CreateWallet(name, passphrase string) (string, error) {
 	return mnemonic, nil
 }
 
-func (h *Handler) ImportWallet(name, passphrase, mnemonic string) error {
+func (h *Handler) ImportWallet(name, passphrase, mnemonic string, version uint32) error {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 
@@ -84,7 +84,7 @@ func (h *Handler) ImportWallet(name, passphrase, mnemonic string) error {
 		return wallet.ErrWalletAlreadyExists
 	}
 
-	w, err := wallet.ImportHDWallet(name, mnemonic, 0)
+	w, err := wallet.ImportHDWallet(name, mnemonic, version)
 	if err != nil {
 		return err
 	}

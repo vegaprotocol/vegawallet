@@ -18,8 +18,6 @@ const (
 	// OriginIndex is a constant index used to derive a node from the master
 	// node. The resulting node will be used to generate the cryptographic keys.
 	OriginIndex = slip10.FirstHardenedIndex + MagicIndex
-
-	LatestVersion = uint32(2)
 )
 
 type HDWallet struct {
@@ -58,6 +56,10 @@ func NewHDWallet(name string) (*HDWallet, string, error) {
 func ImportHDWallet(name, mnemonic string, version uint32) (*HDWallet, error) {
 	if !bip39.IsMnemonicValid(mnemonic) {
 		return nil, ErrInvalidMnemonic
+	}
+
+	if !IsVersionSupported(version) {
+		return nil, NewUnsupportedWalletVersionError(version)
 	}
 
 	walletNode, err := deriveWalletNodeFromMnemonic(mnemonic)
@@ -294,9 +296,9 @@ func (w *HDWallet) UnmarshalJSON(data []byte) error {
 func (w *HDWallet) deriveKeyNode(nextIndex uint32) (*slip10.Node, error) {
 	var derivationFn func(uint32) (*slip10.Node, error)
 	switch w.version {
-	case 1:
+	case Version1:
 		derivationFn = w.deriveKeyNodeV1
-	case 2: //nolint:gomnd
+	case Version2:
 		derivationFn = w.deriveKeyNodeV2
 	default:
 		return nil, NewUnsupportedWalletVersionError(w.version)

@@ -137,20 +137,37 @@ func testServiceCreateWalletFailInvalidRequest(t *testing.T) {
 }
 
 func testServiceImportWalletOK(t *testing.T) {
-	s := getTestService(t)
-	defer s.ctrl.Finish()
+	tcs := []struct {
+		name    string
+		version uint32
+	}{
+		{
+			name:    "version 1",
+			version: 1,
+		}, {
+			name:    "version 2",
+			version: 2,
+		},
+	}
 
-	s.handler.EXPECT().ImportWallet("jeremy", "oh yea?", TestMnemonic).Times(1).Return(nil)
-	s.auth.EXPECT().NewSession("jeremy").Times(1).Return("this is a token", nil)
+	for _, tc := range tcs {
+		t.Run(tc.name, func(tt *testing.T) {
+			s := getTestService(t)
+			defer s.ctrl.Finish()
 
-	payload := fmt.Sprintf(`{"wallet": "jeremy", "passphrase": "oh yea?", "mnemonic": "%s"}`, TestMnemonic)
-	r := httptest.NewRequest("POST", "scheme://host/path", bytes.NewBufferString(payload))
-	w := httptest.NewRecorder()
+			s.handler.EXPECT().ImportWallet("jeremy", "oh yea?", TestMnemonic, tc.version).Times(1).Return(nil)
+			s.auth.EXPECT().NewSession("jeremy").Times(1).Return("this is a token", nil)
 
-	s.ImportWallet(w, r, nil)
+			payload := fmt.Sprintf(`{"wallet": "jeremy", "passphrase": "oh yea?", "mnemonic": "%s", "version": %d}`, TestMnemonic, tc.version)
+			r := httptest.NewRequest("POST", "scheme://host/path", bytes.NewBufferString(payload))
+			w := httptest.NewRecorder()
 
-	resp := w.Result()
-	assert.Equal(t, http.StatusOK, resp.StatusCode)
+			s.ImportWallet(w, r, nil)
+
+			resp := w.Result()
+			assert.Equal(t, http.StatusOK, resp.StatusCode)
+		})
+	}
 }
 
 func testServiceImportWalletFailInvalidRequest(t *testing.T) {

@@ -74,14 +74,11 @@ func (s *Store) GetWallet(name, passphrase string) (wallet.Wallet, error) {
 		return nil, fmt.Errorf("couldn't unmarshal wallet verion: %w", err)
 	}
 
-	var w wallet.Wallet
-	switch versionedWallet.Version {
-	case 1, 2: //nolint:gomnd
-		w = &wallet.HDWallet{}
-	default:
+	if !wallet.IsVersionSupported(versionedWallet.Version) {
 		return nil, wallet.NewUnsupportedWalletVersionError(versionedWallet.Version)
 	}
 
+	w := &wallet.HDWallet{}
 	err = json.Unmarshal(decBuf, w)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't unmarshal wallet: %w", err)

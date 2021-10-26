@@ -7,6 +7,7 @@ import (
 
 	vgfs "code.vegaprotocol.io/shared/libs/fs"
 	"code.vegaprotocol.io/vegawallet/cmd/printer"
+	"code.vegaprotocol.io/vegawallet/wallet"
 	"code.vegaprotocol.io/vegawallet/wallets"
 	"github.com/spf13/cobra"
 )
@@ -16,6 +17,7 @@ var (
 		wallet         string
 		passphraseFile string
 		mnemonicFile   string
+		version        uint32
 	}
 
 	importCmd = &cobra.Command{
@@ -31,6 +33,7 @@ func init() {
 	importCmd.Flags().StringVarP(&importArgs.wallet, "wallet", "w", "", "Name of the wallet to use")
 	importCmd.Flags().StringVarP(&importArgs.passphraseFile, "passphrase-file", "p", "", "Path of the file containing the passphrase to access the wallet")
 	importCmd.Flags().StringVarP(&importArgs.mnemonicFile, "mnemonic-file", "m", "", `Path of the file containing the mnemonic of the wallet "swing ceiling chaos..."`)
+	importCmd.Flags().Uint32Var(&importArgs.version, "version", wallet.LatestVersion, fmt.Sprintf("Version of the wallet to import: %v", wallet.SupportedVersions))
 	_ = importCmd.MarkFlagRequired("wallet")
 	_ = importCmd.MarkFlagRequired("mnemonic-file")
 }
@@ -54,7 +57,7 @@ func runImport(_ *cobra.Command, _ []string) error {
 	}
 	mnemonic := strings.Trim(string(rawMnemonic), "\n")
 
-	err = handler.ImportWallet(importArgs.wallet, passphrase, mnemonic)
+	err = handler.ImportWallet(importArgs.wallet, passphrase, mnemonic, importArgs.version)
 	if err != nil {
 		return fmt.Errorf("couldn't import wallet: %w", err)
 	}

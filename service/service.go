@@ -80,6 +80,7 @@ type ImportWalletRequest struct {
 	Wallet     string `json:"wallet"`
 	Passphrase string `json:"passphrase"`
 	Mnemonic   string `json:"mnemonic"`
+	Version    uint32 `json:"version"`
 }
 
 func ParseImportWalletRequest(r *http.Request) (*ImportWalletRequest, commands.Errors) {
@@ -371,7 +372,7 @@ type NetworkResponse struct {
 //go:generate go run github.com/golang/mock/mockgen -destination mocks/wallet_handler_mock.go -package mocks code.vegaprotocol.io/vegawallet/service WalletHandler
 type WalletHandler interface {
 	CreateWallet(name, passphrase string) (string, error)
-	ImportWallet(name, passphrase, mnemonic string) error
+	ImportWallet(name, passphrase, mnemonic string, version uint32) error
 	LoginWallet(name, passphrase string) error
 	LogoutWallet(name string)
 	SecureGenerateKeyPair(name, passphrase string, meta []wallet.Meta) (string, error)
@@ -478,7 +479,7 @@ func (s *Service) ImportWallet(w http.ResponseWriter, r *http.Request, _ httprou
 		return
 	}
 
-	err := s.handler.ImportWallet(req.Wallet, req.Passphrase, req.Mnemonic)
+	err := s.handler.ImportWallet(req.Wallet, req.Passphrase, req.Mnemonic, req.Version)
 	if err != nil {
 		s.writeForbiddenError(w, err)
 		return
