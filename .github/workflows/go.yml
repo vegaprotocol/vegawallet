@@ -8,12 +8,15 @@ on:
 
 jobs:
   build:
-    name: Build on ${{ matrix.os }}-${{ matrix.arch }}
+    name: Build on ${{ matrix.os }} ${{ matrix.arch }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        arch: [ amd64, arm64 ]
         os: [ macos-latest, windows-latest, ubuntu-latest ]
+        arch: [ amd64, arm64 ]
+        exclude:
+          - os: windows-latest
+            arch: arm64
     env:
       GOARCH: ${{ matrix.arch }}
     steps:
