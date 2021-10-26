@@ -128,54 +128,104 @@ func testHandlerCreatingAlreadyExistingWalletFails(t *testing.T) {
 }
 
 func testHandlerImportingWalletSucceeds(t *testing.T) {
-	h := getTestHandler(t)
-	defer h.ctrl.Finish()
+	tcs := []struct {
+		name    string
+		version uint32
+	}{
+		{
+			name:    "version 1",
+			version: 1,
+		}, {
+			name:    "version 2",
+			version: 2,
+		},
+	}
 
-	// given
-	name := "jeremy"
-	passphrase := "Th1isisasecurep@ssphraseinnit"
+	for _, tc := range tcs {
+		t.Run(tc.name, func(tt *testing.T) {
+			h := getTestHandler(t)
+			defer h.ctrl.Finish()
 
-	// when
-	err := h.ImportWallet(name, passphrase, TestMnemonic1)
+			// given
+			name := "jeremy"
+			passphrase := "Th1isisasecurep@ssphraseinnit"
 
-	// then
-	require.NoError(t, err)
+			// when
+			err := h.ImportWallet(name, passphrase, TestMnemonic1, tc.version)
+
+			// then
+			require.NoError(t, err)
+		})
+	}
 }
 
 func testHandlerImportingWalletWithInvalidMnemonicFails(t *testing.T) {
-	h := getTestHandler(t)
-	defer h.ctrl.Finish()
+	tcs := []struct {
+		name    string
+		version uint32
+	}{
+		{
+			name:    "version 1",
+			version: 1,
+		}, {
+			name:    "version 2",
+			version: 2,
+		},
+	}
 
-	// given
-	name := "jeremy"
-	passphrase := "Th1isisasecurep@ssphraseinnit"
+	for _, tc := range tcs {
+		t.Run(tc.name, func(tt *testing.T) {
+			h := getTestHandler(t)
+			defer h.ctrl.Finish()
 
-	// when
-	err := h.ImportWallet(name, passphrase, "this is not a valid mnemonic")
+			// given
+			name := "jeremy"
+			passphrase := "Th1isisasecurep@ssphraseinnit"
 
-	// then
-	require.ErrorIs(t, err, wallet.ErrInvalidMnemonic)
+			// when
+			err := h.ImportWallet(name, passphrase, "this is not a valid mnemonic", tc.version)
+
+			// then
+			require.ErrorIs(t, err, wallet.ErrInvalidMnemonic)
+		})
+	}
 }
 
 func testHandlerImportingAlreadyExistingWalletFails(t *testing.T) {
-	h := getTestHandler(t)
-	defer h.ctrl.Finish()
+	tcs := []struct {
+		name    string
+		version uint32
+	}{
+		{
+			name:    "version 1",
+			version: 1,
+		}, {
+			name:    "version 2",
+			version: 2,
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.name, func(tt *testing.T) {
+			h := getTestHandler(t)
+			defer h.ctrl.Finish()
 
-	// given
-	name := "jeremy"
-	passphrase := "Th1isisasecurep@ssphraseinnit"
+			// given
+			name := "jeremy"
+			passphrase := "Th1isisasecurep@ssphraseinnit"
 
-	// when
-	err := h.ImportWallet(name, passphrase, TestMnemonic1)
+			// when
+			err := h.ImportWallet(name, passphrase, TestMnemonic1, tc.version)
 
-	// then
-	require.NoError(t, err)
+			// then
+			require.NoError(t, err)
 
-	// when
-	err = h.ImportWallet(name, passphrase, TestMnemonic2)
+			// when
+			err = h.ImportWallet(name, passphrase, TestMnemonic2, tc.version)
 
-	// then
-	require.Error(t, err, wallet.ErrWalletAlreadyExists)
+			// then
+			require.Error(t, err, wallet.ErrWalletAlreadyExists)
+		})
+	}
 }
 
 func testHandlerVerifyingWalletExistenceSucceeds(t *testing.T) {

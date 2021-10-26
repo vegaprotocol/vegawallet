@@ -18,6 +18,7 @@ func TestHDWallet(t *testing.T) {
 	t.Run("Creating wallet succeeds", testHDWalletCreateWalletSucceeds)
 	t.Run("Importing wallet succeeds", testHDWalletImportingWalletSucceeds)
 	t.Run("Importing wallet with invalid mnemonic fails", testHDWalletImportingWalletWithInvalidMnemonicFails)
+	t.Run("Importing wallet with unsupported version fails", testHDWalletImportingWalletWithUnsupportedVersionFails)
 	t.Run("Generating key pair succeeds", testHDWalletGeneratingKeyPairSucceeds)
 	t.Run("Generating key pair on isolated wallet fails", testHDWalletGeneratingKeyPairOnIsolatedWalletFails)
 	t.Run("Tainting key pair succeeds", testHDWalletTaintingKeyPairSucceeds)
@@ -121,6 +122,18 @@ func testHDWalletImportingWalletWithInvalidMnemonicFails(t *testing.T) {
 			assert.Nil(tt, w)
 		})
 	}
+}
+
+func testHDWalletImportingWalletWithUnsupportedVersionFails(t *testing.T) {
+	// given
+	name := "duncan"
+
+	// when
+	w, err := wallet.ImportHDWallet(name, TestMnemonic1, 3)
+
+	// then
+	require.ErrorIs(t, err, wallet.NewUnsupportedWalletVersionError(3))
+	assert.Nil(t, w)
 }
 
 func testHDWalletGeneratingKeyPairSucceeds(t *testing.T) {
