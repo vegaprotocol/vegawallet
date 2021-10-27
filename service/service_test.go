@@ -252,8 +252,7 @@ func testServiceRevokeTokenOK(t *testing.T) {
 	s := getTestService(t)
 	defer s.ctrl.Finish()
 
-	s.auth.EXPECT().VerifyToken("eyXXzA").Times(1).Return("jeremy", nil)
-	s.auth.EXPECT().Revoke(gomock.Any()).Times(1).Return(nil)
+	s.auth.EXPECT().Revoke(gomock.Any()).Times(1).Return("jeremy", nil)
 	s.handler.EXPECT().LogoutWallet("jeremy").Times(1)
 
 	r := httptest.NewRequest("POST", "scheme://host/path", nil)
@@ -491,7 +490,7 @@ func testServiceGetPublicKeyFailMiscError(t *testing.T) {
 	service.ExtractToken(s.GetPublicKey)(w, r, httprouter.Params{{Key: "keyid", Value: "apubkey"}})
 
 	resp := w.Result()
-	assert.Equal(t, http.StatusForbidden, resp.StatusCode)
+	assert.Equal(t, http.StatusInternalServerError, resp.StatusCode)
 }
 
 func testServiceTaintOK(t *testing.T) {
@@ -756,7 +755,7 @@ func testFailedSigningTransactionFails(t *testing.T) {
 
 	// then
 	result := response.Result()
-	assert.Equal(t, http.StatusForbidden, result.StatusCode)
+	assert.Equal(t, http.StatusInternalServerError, result.StatusCode)
 }
 
 func testSigningTransactionWithInvalidPayloadFails(t *testing.T) {

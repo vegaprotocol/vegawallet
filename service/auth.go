@@ -115,21 +115,21 @@ func (a *auth) VerifyToken(token string) (string, error) {
 	return w, nil
 }
 
-func (a *auth) Revoke(token string) error {
+func (a *auth) Revoke(token string) (string, error) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 
 	claims, err := a.parseToken(token)
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	_, ok := a.sessions[claims.Session]
+	w, ok := a.sessions[claims.Session]
 	if !ok {
-		return ErrSessionNotFound
+		return "", ErrSessionNotFound
 	}
 	delete(a.sessions, claims.Session)
-	return nil
+	return w, nil
 }
 
 func (a *auth) parseToken(tokenStr string) (*Claims, error) {
@@ -137,12 +137,15 @@ func (a *auth) parseToken(tokenStr string) (*Claims, error) {
 		return a.pubKey, nil
 	})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("couldn't parse JWT token: %w", err)
 	}
-	if claims, ok := token.Claims.(*Claims); ok && token.Valid {
+	if !token.Valid {
+		return nil, ErrInvalidToken
+	}
+	if claims, ok := token.Claims.(*Claims); ok {
 		return claims, nil
 	}
-	return nil, err
+	return nil, ErrInvalidClaims
 }
 
 // ExtractToken this is public for testing purposes.
