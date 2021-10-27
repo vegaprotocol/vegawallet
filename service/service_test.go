@@ -846,10 +846,10 @@ func testVerifyingAnythingSucceeds(t *testing.T) {
 	service.ExtractToken(s.VerifyAny)(w, r, nil)
 
 	httpResponse := w.Result()
-	resp := service.SuccessResponse{}
+	resp := service.VerifyAnyResponse{}
 	assert.Equal(t, http.StatusOK, httpResponse.StatusCode)
 	unmarshalResponse(httpResponse, &resp)
-	assert.True(t, resp.Success)
+	assert.True(t, resp.Valid)
 }
 
 func testVerifyingAnythingFails(t *testing.T) {
@@ -867,10 +867,10 @@ func testVerifyingAnythingFails(t *testing.T) {
 	service.ExtractToken(s.VerifyAny)(w, r, nil)
 
 	httpResponse := w.Result()
-	resp := service.SuccessResponse{}
+	resp := service.VerifyAnyResponse{}
 	assert.Equal(t, http.StatusOK, httpResponse.StatusCode)
 	unmarshalResponse(httpResponse, &resp)
-	assert.False(t, resp.Success)
+	assert.False(t, resp.Valid)
 }
 
 func newAuthenticatedRequest(payload string) *http.Request {

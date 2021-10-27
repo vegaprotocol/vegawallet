@@ -348,6 +348,11 @@ type SignAnyResponse struct {
 	Base64Signature string `json:"base64Signature"`
 }
 
+// VerifyAnyResponse describes the response for VerifyAny.
+type VerifyAnyResponse struct {
+	Valid bool `json:"success"`
+}
+
 // SuccessResponse describes the response to a request that returns a simple true/false answer.
 type SuccessResponse struct {
 	Success bool `json:"success"`
@@ -691,7 +696,7 @@ func (s *Service) VerifyAny(_ string, w http.ResponseWriter, r *http.Request, _ 
 		return
 	}
 
-	s.writeSuccess(w, SuccessResponse{Success: verified})
+	s.writeSuccess(w, VerifyAnyResponse{Valid: verified})
 }
 
 func (s *Service) SignTxSync(token string, w http.ResponseWriter, r *http.Request, p httprouter.Params) {
