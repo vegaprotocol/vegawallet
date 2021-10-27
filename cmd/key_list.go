@@ -69,23 +69,41 @@ func runKeyList(_ *cobra.Command, _ []string) error {
 }
 
 func printJSONKeyPairs(keys []wallet.KeyPair) error {
-	result := make([]keyGenerateKeyJSON, 0, len(keys))
+	result := make([]keyDescriptionKeyJSON, 0, len(keys))
 
 	for _, keyPair := range keys {
 		result = append(result,
-			keyGenerateKeyJSON{
-				KeyPair: keyGenerateKeyPairJSON{
+			keyDescriptionKeyJSON{
+				KeyPair: keyDescriptionKeyPairJSON{
 					PrivateKey: keyPair.PrivateKey(),
 					PublicKey:  keyPair.PublicKey(),
 				},
-				Algorithm: keyGenerateAlgorithmJSON{
+				Algorithm: keyDescriptionAlgorithmJSON{
 					Name:    keyPair.AlgorithmName(),
 					Version: keyPair.AlgorithmVersion(),
 				},
-				Meta: keyPair.Meta(),
+				Meta:    keyPair.Meta(),
+				Tainted: keyPair.IsTainted(),
 			},
 		)
 	}
 
 	return vgjson.Print(result)
+}
+
+type keyDescriptionKeyJSON struct {
+	KeyPair   keyDescriptionKeyPairJSON   `json:"keyPair"`
+	Algorithm keyDescriptionAlgorithmJSON `json:"algorithm"`
+	Meta      []wallet.Meta               `json:"meta"`
+	Tainted   bool                        `json:"tainted"`
+}
+
+type keyDescriptionKeyPairJSON struct {
+	PrivateKey string `json:"privateKey"`
+	PublicKey  string `json:"publicKey"`
+}
+
+type keyDescriptionAlgorithmJSON struct {
+	Name    string `json:"name"`
+	Version uint32 `json:"version"`
 }
