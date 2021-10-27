@@ -3,8 +3,8 @@ package wallets
 import (
 	"fmt"
 
-	wstorev1 "code.vegaprotocol.io/vegawallet/wallet/store/v1"
 	"code.vegaprotocol.io/shared/paths"
+	wstorev1 "code.vegaprotocol.io/vegawallet/wallet/store/v1"
 )
 
 // InitialiseStore builds a wallet Store specifically for users wallets.

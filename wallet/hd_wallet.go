@@ -10,12 +10,14 @@ import (
 )
 
 const (
+	// MaxEntropyByteSize is the entropy bytes size used for mnemonic
+	// generation.
+	MaxEntropyByteSize = 256
+	// MagicIndex is the registered HD wallet index for Vega's wallets.
 	MagicIndex = 1789
 	// OriginIndex is a constant index used to derive a node from the master
 	// node. The resulting node will be used to generate the cryptographic keys.
 	OriginIndex = slip10.FirstHardenedIndex + MagicIndex
-
-	LatestVersion = uint32(2)
 )
 
 type HDWallet struct {
@@ -54,6 +56,10 @@ func NewHDWallet(name string) (*HDWallet, string, error) {
 func ImportHDWallet(name, mnemonic string, version uint32) (*HDWallet, error) {
 	if !bip39.IsMnemonicValid(mnemonic) {
 		return nil, ErrInvalidMnemonic
+	}
+
+	if !IsVersionSupported(version) {
+		return nil, NewUnsupportedWalletVersionError(version)
 	}
 
 	walletNode, err := deriveWalletNodeFromMnemonic(mnemonic)
@@ -290,12 +296,12 @@ func (w *HDWallet) UnmarshalJSON(data []byte) error {
 func (w *HDWallet) deriveKeyNode(nextIndex uint32) (*slip10.Node, error) {
 	var derivationFn func(uint32) (*slip10.Node, error)
 	switch w.version {
-	case 1:
+	case Version1:
 		derivationFn = w.deriveKeyNodeV1
-	case 2:
+	case Version2:
 		derivationFn = w.deriveKeyNodeV2
 	default:
-		return nil, fmt.Errorf("wallet with version %d isn't supported", w.version)
+		return nil, NewUnsupportedWalletVersionError(w.version)
 	}
 
 	return derivationFn(nextIndex)
@@ -323,7 +329,7 @@ func (w *HDWallet) deriveKeyNodeV2(nextIndex uint32) (*slip10.Node, error) {
 
 // NewMnemonic generates a mnemonic with an entropy of 256 bits.
 func NewMnemonic() (string, error) {
-	entropy, err := bip39.NewEntropy(256)
+	entropy, err := bip39.NewEntropy(MaxEntropyByteSize)
 	if err != nil {
 		return "", fmt.Errorf("couldn't create new wallet: %w", err)
 	}

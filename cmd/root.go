@@ -4,25 +4,24 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io/fs"
 	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
+	vgfs "code.vegaprotocol.io/shared/libs/fs"
+	vgjson "code.vegaprotocol.io/shared/libs/json"
 	"code.vegaprotocol.io/vegawallet/cmd/printer"
 	"code.vegaprotocol.io/vegawallet/version"
-	vgjson "code.vegaprotocol.io/shared/libs/json"
 	"github.com/mattn/go-isatty"
 	"github.com/spf13/cobra"
 	"golang.org/x/term"
 )
 
-var (
-	// requestTimeout is the maximum time the program will wait for a response
-	// after issuing a request.
-	requestTimeout = 30 * time.Second
+// requestTimeout is the maximum time the program will wait for a response
+// after issuing a request.
+const requestTimeout = 30 * time.Second
 
+var (
 	rootArgs struct {
 		output         string
 		home           string
@@ -37,11 +36,14 @@ var (
 		SilenceUsage:      true,
 		SilenceErrors:     true,
 	}
+
+	ErrPassphrasesDoNotMatch            = errors.New("passphrases do not match")
+	ErrPassphraseCannotBeEmpty          = errors.New("passphrase cannot be empty")
+	ErrPassphraseFileRequiredWithoutTTY = errors.New("passphrase-file flag required without TTY")
 )
 
 func rootPreRun(_ *cobra.Command, _ []string) error {
-	err := parseOutputFlag()
-	if err != nil {
+	if err := parseOutputFlag(); err != nil {
 		return err
 	}
 	if rootArgs.output == "human" {
@@ -52,7 +54,7 @@ func rootPreRun(_ *cobra.Command, _ []string) error {
 
 func parseOutputFlag() error {
 	if rootArgs.output == "human" && !isatty.IsTerminal(os.Stdout.Fd()) && !isatty.IsCygwinTerminal(os.Stdout.Fd()) {
-		return errors.New("output \"human\" is not script-friendly, use \"json\" instead")
+		return ErrUseJSONOutputInScript
 	}
 
 	supportedOutput := []string{"json", "human"}
@@ -62,14 +64,14 @@ func parseOutputFlag() error {
 		}
 	}
 
-	return fmt.Errorf("unsupported output \"%s\"", rootArgs.output)
+	return NewUnsupportedOutputError(rootArgs.output)
 }
 
 func checkVersion() error {
 	if !rootArgs.noVersionCheck {
 		p := printer.NewHumanPrinter()
 		if version.IsUnreleased() {
-			p.CrossMark().DangerText("You are running an unreleased version of the Vega wallet. Use it at your own risk!").NJump(2)
+			p.CrossMark().DangerText("You are running an unreleased version of the Vega wallet. Use it at your own risk!").NextSection()
 		}
 
 		ctx, cancel := context.WithTimeout(context.Background(), requestTimeout)
@@ -79,10 +81,9 @@ func checkVersion() error {
 			return fmt.Errorf("could not check Vega wallet version updates: %w", err)
 		}
 		if v != nil {
-			p.Text("Version ").SuccessText(v.String()).Text(" is available. Your current version is ").DangerText(version.Version).Text(".").Jump()
-			p.Text("Download the latest version at: ").Underline(version.GetReleaseURL(v)).NJump(2)
+			p.Text("Version ").SuccessText(v.String()).Text(" is available. Your current version is ").DangerText(version.Version).Text(".").NextLine()
+			p.Text("Download the latest version at: ").Underline(version.GetReleaseURL(v)).NextSection()
 		}
-
 	}
 	return nil
 }
@@ -94,7 +95,7 @@ func Execute() {
 		} else {
 			if rootArgs.output == "human" {
 				p := printer.NewHumanPrinter()
-				p.CrossMark().DangerText(err.Error()).Jump()
+				p.CrossMark().DangerText(err.Error()).NextLine()
 			} else if rootArgs.output == "json" {
 				jsonErr := vgjson.Print(struct {
 					Error string `json:"error"`
@@ -123,55 +124,53 @@ func getPassphrase(flaggedPassphraseFile string, confirmInput bool) (string, err
 	hasPassphraseFileFlag := len(flaggedPassphraseFile) != 0
 
 	if hasPassphraseFileFlag {
-		passphraseDir, passphraseFileName := filepath.Split(flaggedPassphraseFile)
-		rawPassphrase, err := fs.ReadFile(os.DirFS(passphraseDir), passphraseFileName)
+		rawPassphrase, err := vgfs.ReadFile(flaggedPassphraseFile)
 		if err != nil {
 			return "", err
 		}
 		// user might have added \n at the end of the line, let's remove it.
 		cleanupPassphrase := strings.Trim(string(rawPassphrase), "\n")
 		return cleanupPassphrase, nil
-	} else {
-		if !isatty.IsTerminal(os.Stdout.Fd()) && !isatty.IsCygwinTerminal(os.Stdout.Fd()) {
-			return "", errors.New("passphrase-file flag required without TTY")
-		}
+	}
+	if !isatty.IsTerminal(os.Stdout.Fd()) && !isatty.IsCygwinTerminal(os.Stdout.Fd()) {
+		return "", ErrPassphraseFileRequiredWithoutTTY
+	}
 
-		passphrase, err := promptForPassphrase()
+	passphrase, err := promptForPassphrase()
+	if err != nil {
+		return "", fmt.Errorf("could not get passphrase: %w", err)
+	}
+
+	if len(passphrase) == 0 {
+		return "", ErrPassphraseCannotBeEmpty
+	}
+
+	if confirmInput {
+		confirmation, err := promptForPassphrase("Confirm passphrase: ")
 		if err != nil {
 			return "", fmt.Errorf("could not get passphrase: %w", err)
 		}
 
-		if len(passphrase) == 0 {
-			return "", fmt.Errorf("passphrase cannot be empty")
+		if passphrase != confirmation {
+			return "", ErrPassphrasesDoNotMatch
 		}
-
-		if confirmInput {
-			confirmation, err := promptForPassphrase("Confirm passphrase: ")
-			if err != nil {
-				return "", fmt.Errorf("could not get passphrase: %w", err)
-			}
-
-			if passphrase != confirmation {
-				return "", fmt.Errorf("passphrases do not match")
-			}
-		}
-		fmt.Println()
-
-		return passphrase, nil
 	}
+	fmt.Println() //nolint:forbidigo
+
+	return passphrase, nil
 }
 
 func promptForPassphrase(msg ...string) (string, error) {
-	if len(msg) <= 0 {
-		fmt.Print("Enter passphrase: ")
+	if len(msg) == 0 {
+		fmt.Print("Enter passphrase: ") //nolint:forbidigo
 	} else {
-		fmt.Print(msg[0])
+		fmt.Print(msg[0]) //nolint:forbidigo
 	}
 	password, err := term.ReadPassword(int(os.Stdin.Fd()))
 	if err != nil {
 		return "", err
 	}
-	fmt.Println()
+	fmt.Println() //nolint:forbidigo
 
 	return string(password), nil
 }

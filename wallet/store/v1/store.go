@@ -9,14 +9,12 @@ import (
 	"path/filepath"
 	"sort"
 
-	"code.vegaprotocol.io/vegawallet/wallet"
 	vgcrypto "code.vegaprotocol.io/shared/libs/crypto"
 	vgfs "code.vegaprotocol.io/shared/libs/fs"
+	"code.vegaprotocol.io/vegawallet/wallet"
 )
 
-var (
-	ErrWrongPassphrase = errors.New("wrong passphrase")
-)
+var ErrWrongPassphrase = errors.New("wrong passphrase")
 
 type Store struct {
 	walletsHome string
@@ -54,16 +52,6 @@ func (s *Store) ListWallets() ([]string, error) {
 }
 
 func (s *Store) GetWallet(name, passphrase string) (wallet.Wallet, error) {
-	walletPath := s.walletPath(name)
-
-	exists, err := vgfs.FileExists(walletPath)
-	if err != nil {
-		return nil, fmt.Errorf("couldn't verify file presence at %s: %w", walletPath, err)
-	}
-	if !exists {
-		return nil, fmt.Errorf("no wallet file at %s", walletPath)
-	}
-
 	buf, err := fs.ReadFile(os.DirFS(s.walletsHome), name)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't read file at %s: %w", s.walletsHome, err)
@@ -86,14 +74,11 @@ func (s *Store) GetWallet(name, passphrase string) (wallet.Wallet, error) {
 		return nil, fmt.Errorf("couldn't unmarshal wallet verion: %w", err)
 	}
 
-	var w wallet.Wallet
-	switch versionedWallet.Version {
-	case 1, 2:
-		w = &wallet.HDWallet{}
-	default:
-		return nil, fmt.Errorf("wallet with version %d isn't supported", versionedWallet.Version)
+	if !wallet.IsVersionSupported(versionedWallet.Version) {
+		return nil, wallet.NewUnsupportedWalletVersionError(versionedWallet.Version)
 	}
 
+	w := &wallet.HDWallet{}
 	err = json.Unmarshal(decBuf, w)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't unmarshal wallet: %w", err)

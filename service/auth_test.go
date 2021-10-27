@@ -17,6 +17,7 @@ type testAuth struct {
 }
 
 func getTestAuth(t *testing.T) *testAuth {
+	t.Helper()
 	rsaKeys, err := service.GenerateRSAKeys()
 	if err != nil {
 		t.Fatal(err)
@@ -64,29 +65,30 @@ func testVerifyInvalidToken(t *testing.T) {
 	tok := "that's not a token"
 
 	w, err := auth.VerifyToken(tok)
-	assert.EqualError(t, err, "token is malformed: token contains an invalid number of segments")
+	assert.EqualError(t, err, "couldn't parse JWT token: token is malformed: token contains an invalid number of segments")
 	assert.Empty(t, w)
 }
 
 func testRevokeValidToken(t *testing.T) {
 	auth := getTestAuth(t)
-	walletname := "jeremy"
+	walletName := "jeremy"
 
 	// get a new session
-	tok, err := auth.NewSession(walletname)
+	tok, err := auth.NewSession(walletName)
 	assert.NoError(t, err)
 	assert.NotEmpty(t, tok)
 
 	wallet2, err := auth.VerifyToken(tok)
 	assert.NoError(t, err)
-	assert.Equal(t, walletname, wallet2)
+	assert.Equal(t, walletName, wallet2)
 
 	// now we made sure the token exists, let's revoke and re-verify it
-	err = auth.Revoke(tok)
+	name, err := auth.Revoke(tok)
 	assert.NoError(t, err)
+	assert.Equal(t, walletName, name)
 
 	w, err := auth.VerifyToken(tok)
-	assert.EqualError(t, err, service.ErrSessionNotFound.Error())
+	assert.ErrorIs(t, err, service.ErrSessionNotFound)
 	assert.Empty(t, w)
 }
 
@@ -94,6 +96,7 @@ func testRevokeInvalidToken(t *testing.T) {
 	auth := getTestAuth(t)
 	tok := "hehehe that's not a toekn"
 
-	err := auth.Revoke(tok)
-	assert.EqualError(t, err, "token is malformed: token contains an invalid number of segments")
+	name, err := auth.Revoke(tok)
+	assert.EqualError(t, err, "couldn't parse JWT token: token is malformed: token contains an invalid number of segments")
+	assert.Empty(t, name)
 }

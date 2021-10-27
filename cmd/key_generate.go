@@ -61,7 +61,7 @@ func runKeyGenerate(_ *cobra.Command, _ []string) error {
 	var mnemonic string
 	if !walletExists {
 		if rootArgs.output == "human" {
-			p.BangMark().Text("Wallet ").Bold(keyGenerateArgs.wallet).Text(" does not exist yet").Jump()
+			p.BangMark().Text("Wallet ").Bold(keyGenerateArgs.wallet).Text(" does not exist yet").NextLine()
 		}
 
 		mnemonic, err = handler.CreateWallet(keyGenerateArgs.wallet, passphrase)
@@ -70,7 +70,7 @@ func runKeyGenerate(_ *cobra.Command, _ []string) error {
 		}
 
 		if rootArgs.output == "human" {
-			p.CheckMark().Text("Wallet ").Bold(keyGenerateArgs.wallet).Text(" has been created at: ").SuccessText(store.GetWalletPath(keyGenerateArgs.wallet)).Jump()
+			p.CheckMark().Text("Wallet ").Bold(keyGenerateArgs.wallet).Text(" has been created at: ").SuccessText(store.GetWalletPath(keyGenerateArgs.wallet)).NextLine()
 		}
 	}
 
@@ -84,77 +84,77 @@ func runKeyGenerate(_ *cobra.Command, _ []string) error {
 	} else if rootArgs.output == "json" {
 		return printKeyGenerateJSON(mnemonic, keyPair, store.GetWalletPath(keyGenerateArgs.wallet))
 	} else {
-		return fmt.Errorf("output \"%s\" is not supported for this command", rootArgs.output)
+		return NewUnsupportedCommandOutputError(rootArgs.output)
 	}
 	return nil
 }
 
 func printHuman(p *printer.HumanPrinter, mnemonic string, keyPair wallet.KeyPair, walletPath string) {
-	p.CheckMark().Text("Key pair has been generated for wallet ").Bold(keyGenerateArgs.wallet).Text(" at: ").SuccessText(walletPath).Jump()
-	p.CheckMark().SuccessText("Generating a key pair succeeded").NJump(2)
+	p.CheckMark().Text("Key pair has been generated for wallet ").Bold(keyGenerateArgs.wallet).Text(" at: ").SuccessText(walletPath).NextLine()
+	p.CheckMark().SuccessText("Generating a key pair succeeded").NextSection()
 	if len(mnemonic) != 0 {
-		p.Text("Wallet mnemonic:").Jump().WarningText(mnemonic).Jump()
+		p.Text("Wallet mnemonic:").NextLine().WarningText(mnemonic).NextLine()
 	}
-	p.Text("Public key:").Jump().WarningText(keyPair.PublicKey()).Jump()
-	p.Text("Metadata:").Jump()
+	p.Text("Public key:").NextLine().WarningText(keyPair.PublicKey()).NextLine()
+	p.Text("Metadata:").NextLine()
 	printMeta(p, keyPair.Meta())
-	p.Jump()
+	p.NextLine()
 
-	p.RedArrow().DangerText("Important").Jump()
+	p.RedArrow().DangerText("Important").NextLine()
 	if len(mnemonic) != 0 {
-		p.DangerText("1. ").Text("Write down the mnemonic and store it somewhere safe and secure, now, as it will ").Underline("not").Text(" be displayed ever again!").Jump()
-		p.DangerText("2. ").Text("Do not share the mnemonic nor the private key.").NJump(2)
+		p.DangerText("1. ").Text("Write down the mnemonic and store it somewhere safe and secure, now, as it will ").Underline("not").Text(" be displayed ever again!").NextLine()
+		p.DangerText("2. ").Text("Do not share the mnemonic nor the private key.").NextSection()
 	} else {
-		p.Text("Do not share the mnemonic nor the private key.").NJump(2)
+		p.Text("Do not share the mnemonic nor the private key.").NextSection()
 	}
 
-	p.BlueArrow().InfoText("Run the service").Jump()
-	p.Text("Once you have a key pair generated, you can run the service with the following command:").NJump(2)
-	p.Code(fmt.Sprintf("%s service run --network <NETWORK_TO_CONNECT_TO>", os.Args[0])).NJump(2)
-	p.Text("If you want to open up a local version of Vega Console alongside the service, use the following command:").NJump(2)
-	p.Code(fmt.Sprintf("%s service run --network <NETWORK_TO_CONNECT_TO> --console-proxy", os.Args[0])).NJump(2)
-	p.Text("To terminate the process, hit ").Bold("ctrl+c").NJump(2)
-	p.Text("For more information, use ").Bold("--help").Text(" flag.").Jump()
+	p.BlueArrow().InfoText("Run the service").NextLine()
+	p.Text("Once you have a key pair generated, you can run the service with the following command:").NextSection()
+	p.Code(fmt.Sprintf("%s service run --network <NETWORK_TO_CONNECT_TO>", os.Args[0])).NextSection()
+	p.Text("If you want to open up a local version of Vega Console alongside the service, use the following command:").NextSection()
+	p.Code(fmt.Sprintf("%s service run --network <NETWORK_TO_CONNECT_TO> --console-proxy", os.Args[0])).NextSection()
+	p.Text("To terminate the process, hit ").Bold("ctrl+c").NextSection()
+	p.Text("For more information, use ").Bold("--help").Text(" flag.").NextLine()
 }
 
-type keyGenerateJson struct {
-	Wallet keyGenerateWalletJson `json:"wallet"`
-	Key    keyGenerateKeyJson    `json:"key"`
+type keyGenerateJSON struct {
+	Wallet keyGenerateWalletJSON `json:"wallet"`
+	Key    keyGenerateKeyJSON    `json:"key"`
 }
 
-type keyGenerateWalletJson struct {
+type keyGenerateWalletJSON struct {
 	FilePath string `json:"filePath"`
 	Mnemonic string `json:"mnemonic,omitempty"`
 }
 
-type keyGenerateKeyJson struct {
-	KeyPair   keyGenerateKeyPairJson   `json:"keyPair"`
-	Algorithm keyGenerateAlgorithmJson `json:"algorithm"`
+type keyGenerateKeyJSON struct {
+	KeyPair   keyGenerateKeyPairJSON   `json:"keyPair"`
+	Algorithm keyGenerateAlgorithmJSON `json:"algorithm"`
 	Meta      []wallet.Meta            `json:"meta"`
 }
 
-type keyGenerateKeyPairJson struct {
+type keyGenerateKeyPairJSON struct {
 	PrivateKey string `json:"privateKey"`
 	PublicKey  string `json:"publicKey"`
 }
 
-type keyGenerateAlgorithmJson struct {
+type keyGenerateAlgorithmJSON struct {
 	Name    string `json:"name"`
 	Version uint32 `json:"version"`
 }
 
 func printKeyGenerateJSON(mnemonic string, keyPair wallet.KeyPair, walletPath string) error {
-	result := keyGenerateJson{
-		Wallet: keyGenerateWalletJson{
+	result := keyGenerateJSON{
+		Wallet: keyGenerateWalletJSON{
 			FilePath: walletPath,
 			Mnemonic: mnemonic,
 		},
-		Key: keyGenerateKeyJson{
-			KeyPair: keyGenerateKeyPairJson{
+		Key: keyGenerateKeyJSON{
+			KeyPair: keyGenerateKeyPairJSON{
 				PrivateKey: keyPair.PrivateKey(),
 				PublicKey:  keyPair.PublicKey(),
 			},
-			Algorithm: keyGenerateAlgorithmJson{
+			Algorithm: keyGenerateAlgorithmJSON{
 				Name:    keyPair.AlgorithmName(),
 				Version: keyPair.AlgorithmVersion(),
 			},
@@ -165,17 +165,17 @@ func printKeyGenerateJSON(mnemonic string, keyPair wallet.KeyPair, walletPath st
 }
 
 func parseMeta(metaStr string) ([]wallet.Meta, error) {
-	var metas []wallet.Meta
-
 	if len(metaStr) == 0 {
-		return metas, nil
+		return nil, nil
 	}
 
 	rawMetas := strings.Split(metaStr, ";")
+
+	metas := make([]wallet.Meta, 0, len(rawMetas))
 	for _, v := range rawMetas {
 		rawMeta := strings.Split(v, ":")
-		if len(rawMeta) != 2 {
-			return nil, fmt.Errorf("invalid metadata format")
+		if len(rawMeta) != 2 { //nolint:gomnd
+			return nil, ErrInvalidMetadataFormat
 		}
 		metas = append(metas, wallet.Meta{Key: rawMeta[0], Value: rawMeta[1]})
 	}

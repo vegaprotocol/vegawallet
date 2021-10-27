@@ -4,11 +4,11 @@ import (
 	"errors"
 	"fmt"
 
+	vgjson "code.vegaprotocol.io/shared/libs/json"
+	"code.vegaprotocol.io/shared/paths"
 	"code.vegaprotocol.io/vegawallet/cmd/printer"
 	"code.vegaprotocol.io/vegawallet/network"
 	netstore "code.vegaprotocol.io/vegawallet/network/store/v1"
-	vgjson "code.vegaprotocol.io/shared/libs/json"
-	"code.vegaprotocol.io/shared/paths"
 	"github.com/spf13/cobra"
 )
 
@@ -23,7 +23,7 @@ var (
 		force    bool
 	}
 
-	// networkImportCmd represents the network import command
+	// networkImportCmd represents the network import command.
 	networkImportCmd = &cobra.Command{
 		Use:   "import",
 		Short: "Import a network configuration",
@@ -64,9 +64,9 @@ func runNetworkImport(_ *cobra.Command, _ []string) error {
 	filePath := netStore.GetNetworkPath(net.Name)
 	if rootArgs.output == "human" {
 		p := printer.NewHumanPrinter()
-		p.CheckMark().SuccessText("Importing the network succeeded").NJump(2)
-		p.Text("Name:").Jump().WarningText(net.Name).Jump()
-		p.Text("File path:").Jump().WarningText(filePath).Jump()
+		p.CheckMark().SuccessText("Importing the network succeeded").NextSection()
+		p.Text("Name:").NextLine().WarningText(net.Name).NextLine()
+		p.Text("File path:").NextLine().WarningText(filePath).NextLine()
 	} else if rootArgs.output == "json" {
 		return vgjson.Print(struct {
 			FilePath string `json:"filePath"`

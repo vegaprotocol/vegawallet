@@ -8,6 +8,8 @@ import (
 	"code.vegaprotocol.io/vegawallet/wallets"
 )
 
+var errWrongPassphrase = errors.New("wrong passphrase")
+
 type mockedStore struct {
 	passphrase string
 	wallets    map[string]wallet.Wallet
@@ -45,7 +47,7 @@ func (m *mockedStore) GetWallet(name, passphrase string) (wallet.Wallet, error) 
 		return nil, wallets.ErrWalletDoesNotExists
 	}
 	if passphrase != m.passphrase {
-		return nil, errors.New("wrong passphrase")
+		return nil, errWrongPassphrase
 	}
 	return w, nil
 }
@@ -57,12 +59,12 @@ func (m *mockedStore) GetWalletPath(name string) string {
 func (m *mockedStore) GetKey(name, pubKey string) wallet.PublicKey {
 	w, ok := m.wallets[name]
 	if !ok {
-		panic(fmt.Errorf("wallet \"%v\" not found", name))
+		panic(fmt.Sprintf("wallet \"%v\" not found", name))
 	}
 	for _, key := range w.ListPublicKeys() {
 		if key.Key() == pubKey {
 			return key
 		}
 	}
-	panic(fmt.Errorf("key \"%v\" not found", pubKey))
+	panic(fmt.Sprintf("key \"%v\" not found", pubKey))
 }

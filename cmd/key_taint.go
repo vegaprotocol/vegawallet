@@ -53,15 +53,15 @@ func runKeyTaint(_ *cobra.Command, _ []string) error {
 
 	if rootArgs.output == "human" {
 		p := printer.NewHumanPrinter()
-		p.CheckMark().SuccessText("Tainting succeeded").NJump(2)
+		p.CheckMark().SuccessText("Tainting succeeded").NextSection()
 
-		p.RedArrow().DangerText("Important").Jump()
-		p.Text("If you tainted a key for security reasons, you should not untaint it.").NJump(2)
+		p.RedArrow().DangerText("Important").NextLine()
+		p.Text("If you tainted a key for security reasons, you should not untaint it.").NextSection()
 
-		p.BlueArrow().InfoText("Untaint a key").Jump()
-		p.Text("You may have tainted a key by mistake. If you want to untaint it, use the following command:").NJump(2)
-		p.Code(fmt.Sprintf("%s key untaint --wallet \"%s\" --pubkey \"%s\"", os.Args[0], keyTaintArgs.wallet, keyTaintArgs.pubKey)).NJump(2)
-		p.Text("For more information, use ").Bold("--help").Text(" flag.").Jump()
+		p.BlueArrow().InfoText("Untaint a key").NextLine()
+		p.Text("You may have tainted a key by mistake. If you want to untaint it, use the following command:").NextSection()
+		p.Code(fmt.Sprintf("%s key untaint --wallet \"%s\" --pubkey \"%s\"", os.Args[0], keyTaintArgs.wallet, keyTaintArgs.pubKey)).NextSection()
+		p.Text("For more information, use ").Bold("--help").Text(" flag.").NextLine()
 	}
 
 	return nil

@@ -11,6 +11,8 @@ import (
 	"go.uber.org/zap"
 )
 
+var errSomethingWentWrong = errors.New("something went wrong")
+
 type testConfig struct {
 	ctrl  *gomock.Controller
 	log   *zap.Logger
@@ -18,6 +20,7 @@ type testConfig struct {
 }
 
 func getTestConfig(t *testing.T) *testConfig {
+	t.Helper()
 	ctrl := gomock.NewController(t)
 	store := mocks.NewMockStore(ctrl)
 
@@ -66,13 +69,13 @@ func testInitialisingNetworkWithErrorFails(t *testing.T) {
 	ts.store.EXPECT().
 		SaveNetwork(gomock.Any()).
 		Times(1).
-		Return(errors.New("some error"))
+		Return(errSomethingWentWrong)
 
 	// when
 	err := network.InitialiseNetworks(ts.store, false)
 
 	// then
-	require.EqualError(t, err, "couldn't save network configuration: some error")
+	require.EqualError(t, err, "couldn't save network configuration: something went wrong")
 }
 
 func testInitialisingNetworkWithExistingNetworkFails(t *testing.T) {
@@ -120,6 +123,7 @@ func TestImportNetwork(t *testing.T) {
 	t.Run("Importing by overwriting existing network succeeds", testImportingByOverwritingNetworkSucceeds)
 	t.Run("Importing network with errors when saving fails", testImportingNetworkWithErrorsWhenSavingFails)
 }
+
 func testImportingNetworkSucceeds(t *testing.T) {
 	ts := getTestConfig(t)
 
@@ -210,7 +214,7 @@ func testImportingNetworkWithErrorsWhenSavingFails(t *testing.T) {
 	ts.store.EXPECT().
 		SaveNetwork(net).
 		Times(1).
-		Return(errors.New("something went wrong"))
+		Return(errSomethingWentWrong)
 
 	// when
 	err := network.ImportNetwork(ts.store, net, true)

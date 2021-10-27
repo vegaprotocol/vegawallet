@@ -2,13 +2,12 @@ package cmd
 
 import (
 	"encoding/base64"
-	"errors"
 	"fmt"
 	"os"
 
+	vgjson "code.vegaprotocol.io/shared/libs/json"
 	"code.vegaprotocol.io/vegawallet/cmd/printer"
 	"code.vegaprotocol.io/vegawallet/wallets"
-	vgjson "code.vegaprotocol.io/shared/libs/json"
 	"github.com/spf13/cobra"
 )
 
@@ -20,7 +19,7 @@ var (
 		pubKey         string
 	}
 
-	// signCmd represents the sign command
+	// signCmd represents the sign command.
 	signCmd = &cobra.Command{
 		Use:   "sign",
 		Short: "Sign a blob of data",
@@ -50,7 +49,7 @@ func runSign(_ *cobra.Command, _ []string) error {
 
 	decodedMessage, err := base64.StdEncoding.DecodeString(signArgs.message)
 	if err != nil {
-		return errors.New("message should be encoded into base64")
+		return ErrMessageShouldBeBase64
 	}
 
 	passphrase, err := getPassphrase(signArgs.passphraseFile, false)
@@ -72,21 +71,21 @@ func runSign(_ *cobra.Command, _ []string) error {
 
 	if rootArgs.output == "human" {
 		p := printer.NewHumanPrinter()
-		p.CheckMark().SuccessText("Message signature successful").NJump(2)
-		p.Text("Signature (base64):").Jump().WarningText(encodedSig).NJump(2)
+		p.CheckMark().SuccessText("Message signature successful").NextSection()
+		p.Text("Signature (base64):").NextLine().WarningText(encodedSig).NextSection()
 
-		p.BlueArrow().InfoText("Verify a signature").Jump()
-		p.Text("To verify a base-64 encoded message, use the following commands:").NJump(2)
-		p.Code(fmt.Sprintf("%s verify --pubkey %s --message \"%s\" --signature %s", os.Args[0], signArgs.pubKey, signArgs.message, encodedSig)).NJump(2)
-		p.Text("For more information, use ").Bold("--help").Text(" flag.").Jump()
+		p.BlueArrow().InfoText("Verify a signature").NextLine()
+		p.Text("To verify a base-64 encoded message, use the following commands:").NextSection()
+		p.Code(fmt.Sprintf("%s verify --pubkey %s --message \"%s\" --signature %s", os.Args[0], signArgs.pubKey, signArgs.message, encodedSig)).NextSection()
+		p.Text("For more information, use ").Bold("--help").Text(" flag.").NextLine()
 	} else if rootArgs.output == "json" {
-		return printSignJson(encodedSig)
+		return printSignJSON(encodedSig)
 	}
 
 	return nil
 }
 
-func printSignJson(sig string) error {
+func printSignJSON(sig string) error {
 	return vgjson.Print(struct {
 		Signature string `json:"signature"`
 	}{

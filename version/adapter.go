@@ -8,9 +8,7 @@ import (
 	"net/http"
 )
 
-var (
-	ReleaseAPI = "https://api.github.com/repos/vegaprotocol/vegawallet/releases"
-)
+const ReleaseAPI = "https://api.github.com/repos/vegaprotocol/vegawallet/releases"
 
 type ReleasesGetter func() ([]string, error)
 

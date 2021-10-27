@@ -1,9 +1,9 @@
 package cmd
 
 import (
+	vgjson "code.vegaprotocol.io/shared/libs/json"
 	"code.vegaprotocol.io/vegawallet/cmd/printer"
 	"code.vegaprotocol.io/vegawallet/version"
-	vgjson "code.vegaprotocol.io/shared/libs/json"
 
 	"github.com/spf13/cobra"
 )
@@ -22,15 +22,15 @@ func init() {
 func runVersion(_ *cobra.Command, _ []string) error {
 	if rootArgs.output == "human" {
 		p := printer.NewHumanPrinter()
-		p.Text("Version:").Jump().WarningText(version.Version).NJump(2)
-		p.Text("Git hash:").Jump().WarningText(version.VersionHash).NJump(2)
+		p.Text("Version:").NextLine().WarningText(version.Version).NextSection()
+		p.Text("Git hash:").NextLine().WarningText(version.VersionHash).NextSection()
 	} else if rootArgs.output == "json" {
-		return printVersionJson()
+		return printVersionJSON()
 	}
 	return nil
 }
 
-func printVersionJson() error {
+func printVersionJSON() error {
 	return vgjson.Print(struct {
 		Version string `json:"version"`
 		GitHash string `json:"gitHash"`

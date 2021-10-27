@@ -10,13 +10,13 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	api "code.vegaprotocol.io/protos/vega/api/v1"
+	commandspb "code.vegaprotocol.io/protos/vega/commands/v1"
 	"code.vegaprotocol.io/vegawallet/crypto"
 	"code.vegaprotocol.io/vegawallet/network"
 	"code.vegaprotocol.io/vegawallet/service"
 	"code.vegaprotocol.io/vegawallet/service/mocks"
 	"code.vegaprotocol.io/vegawallet/wallet"
-	api "code.vegaprotocol.io/protos/vega/api/v1"
-	commandspb "code.vegaprotocol.io/protos/vega/commands/v1"
 	"github.com/stretchr/testify/require"
 
 	"github.com/golang/mock/gomock"
@@ -31,6 +31,8 @@ const (
 	TestMnemonic = "swing ceiling chaos green put insane ripple desk match tip melt usual shrug turkey renew icon parade veteran lens govern path rough page render"
 )
 
+var errSomethingWentWrong = errors.New("something went wrong")
+
 type testService struct {
 	*service.Service
 
@@ -41,12 +43,17 @@ type testService struct {
 }
 
 func getTestService(t *testing.T) *testService {
+	t.Helper()
+
 	ctrl := gomock.NewController(t)
 	handler := mocks.NewMockWalletHandler(ctrl)
 	auth := mocks.NewMockAuth(ctrl)
 	nodeForward := mocks.NewMockNodeForward(ctrl)
 	// no needs of the conf or path as we do not run an actual service
-	s, _ := service.NewService(zap.NewNop(), &network.Network{}, handler, auth, nodeForward)
+	s, err := service.NewService(zap.NewNop(), &network.Network{}, handler, auth, nodeForward)
+	if err != nil {
+		t.Fatalf("couldn't create service: %v", err)
+	}
 	return &testService{
 		Service:     s,
 		ctrl:        ctrl,
@@ -130,20 +137,37 @@ func testServiceCreateWalletFailInvalidRequest(t *testing.T) {
 }
 
 func testServiceImportWalletOK(t *testing.T) {
-	s := getTestService(t)
-	defer s.ctrl.Finish()
+	tcs := []struct {
+		name    string
+		version uint32
+	}{
+		{
+			name:    "version 1",
+			version: 1,
+		}, {
+			name:    "version 2",
+			version: 2,
+		},
+	}
 
-	s.handler.EXPECT().ImportWallet("jeremy", "oh yea?", TestMnemonic).Times(1).Return(nil)
-	s.auth.EXPECT().NewSession("jeremy").Times(1).Return("this is a token", nil)
+	for _, tc := range tcs {
+		t.Run(tc.name, func(tt *testing.T) {
+			s := getTestService(t)
+			defer s.ctrl.Finish()
 
-	payload := fmt.Sprintf(`{"wallet": "jeremy", "passphrase": "oh yea?", "mnemonic": "%s"}`, TestMnemonic)
-	r := httptest.NewRequest("POST", "scheme://host/path", bytes.NewBufferString(payload))
-	w := httptest.NewRecorder()
+			s.handler.EXPECT().ImportWallet("jeremy", "oh yea?", TestMnemonic, tc.version).Times(1).Return(nil)
+			s.auth.EXPECT().NewSession("jeremy").Times(1).Return("this is a token", nil)
 
-	s.ImportWallet(w, r, nil)
+			payload := fmt.Sprintf(`{"wallet": "jeremy", "passphrase": "oh yea?", "mnemonic": "%s", "version": %d}`, TestMnemonic, tc.version)
+			r := httptest.NewRequest("POST", "scheme://host/path", bytes.NewBufferString(payload))
+			w := httptest.NewRecorder()
 
-	resp := w.Result()
-	assert.Equal(t, http.StatusOK, resp.StatusCode)
+			s.ImportWallet(w, r, nil)
+
+			resp := w.Result()
+			assert.Equal(t, http.StatusOK, resp.StatusCode)
+		})
+	}
 }
 
 func testServiceImportWalletFailInvalidRequest(t *testing.T) {
@@ -228,8 +252,7 @@ func testServiceRevokeTokenOK(t *testing.T) {
 	s := getTestService(t)
 	defer s.ctrl.Finish()
 
-	s.auth.EXPECT().VerifyToken("eyXXzA").Times(1).Return("jeremy", nil)
-	s.auth.EXPECT().Revoke(gomock.Any()).Times(1).Return(nil)
+	s.auth.EXPECT().Revoke(gomock.Any()).Times(1).Return("jeremy", nil)
 	s.handler.EXPECT().LogoutWallet("jeremy").Times(1)
 
 	r := httptest.NewRequest("POST", "scheme://host/path", nil)
@@ -332,7 +355,6 @@ func testServiceGenKeypairFailInvalidRequest(t *testing.T) {
 
 	resp = w.Result()
 	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
-
 }
 
 func testServiceListPublicKeysOK(t *testing.T) {
@@ -458,7 +480,7 @@ func testServiceGetPublicKeyFailMiscError(t *testing.T) {
 
 	s.auth.EXPECT().VerifyToken("eyXXzA").Times(1).Return("jeremy", nil)
 	s.handler.EXPECT().GetPublicKey(gomock.Any(), gomock.Any()).Times(1).
-		Return(nil, errors.New("an error"))
+		Return(nil, errSomethingWentWrong)
 
 	r := httptest.NewRequest("GET", "scheme://host/path", nil)
 	r.Header.Add("Authorization", "Bearer eyXXzA")
@@ -468,7 +490,7 @@ func testServiceGetPublicKeyFailMiscError(t *testing.T) {
 	service.ExtractToken(s.GetPublicKey)(w, r, httprouter.Params{{Key: "keyid", Value: "apubkey"}})
 
 	resp := w.Result()
-	assert.Equal(t, http.StatusForbidden, resp.StatusCode)
+	assert.Equal(t, http.StatusInternalServerError, resp.StatusCode)
 }
 
 func testServiceTaintOK(t *testing.T) {
@@ -693,7 +715,7 @@ func testSigningTransactionWithFailedPropagationFails(t *testing.T) {
 	s.nodeForward.EXPECT().
 		SendTx(gomock.Any(), &commandspb.Transaction{}, api.SubmitTransactionRequest_TYPE_SYNC).
 		Times(1).
-		Return(errors.New("failure"))
+		Return(errSomethingWentWrong)
 	s.nodeForward.EXPECT().LastBlockHeight(gomock.Any()).
 		Times(1).Return(uint64(42), nil)
 
@@ -724,7 +746,7 @@ func testFailedSigningTransactionFails(t *testing.T) {
 	s.handler.EXPECT().
 		SignTx(name, gomock.Any(), gomock.Any()).
 		Times(1).
-		Return(nil, errors.New("failure"))
+		Return(nil, errSomethingWentWrong)
 	s.nodeForward.EXPECT().LastBlockHeight(gomock.Any()).
 		Times(1).Return(uint64(42), nil)
 
@@ -733,7 +755,7 @@ func testFailedSigningTransactionFails(t *testing.T) {
 
 	// then
 	result := response.Result()
-	assert.Equal(t, http.StatusForbidden, result.StatusCode)
+	assert.Equal(t, http.StatusInternalServerError, result.StatusCode)
 }
 
 func testSigningTransactionWithInvalidPayloadFails(t *testing.T) {
@@ -824,10 +846,10 @@ func testVerifyingAnythingSucceeds(t *testing.T) {
 	service.ExtractToken(s.VerifyAny)(w, r, nil)
 
 	httpResponse := w.Result()
-	resp := service.SuccessResponse{}
+	resp := service.VerifyAnyResponse{}
 	assert.Equal(t, http.StatusOK, httpResponse.StatusCode)
 	unmarshalResponse(httpResponse, &resp)
-	assert.True(t, resp.Success)
+	assert.True(t, resp.Valid)
 }
 
 func testVerifyingAnythingFails(t *testing.T) {
@@ -845,10 +867,10 @@ func testVerifyingAnythingFails(t *testing.T) {
 	service.ExtractToken(s.VerifyAny)(w, r, nil)
 
 	httpResponse := w.Result()
-	resp := service.SuccessResponse{}
+	resp := service.VerifyAnyResponse{}
 	assert.Equal(t, http.StatusOK, httpResponse.StatusCode)
 	unmarshalResponse(httpResponse, &resp)
-	assert.False(t, resp.Success)
+	assert.False(t, resp.Valid)
 }
 
 func newAuthenticatedRequest(payload string) *http.Request {

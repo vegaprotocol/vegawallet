@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
+	vgtest "code.vegaprotocol.io/shared/libs/test"
 	"code.vegaprotocol.io/vegawallet/wallet"
 	storev1 "code.vegaprotocol.io/vegawallet/wallet/store/v1"
-	vgtest "code.vegaprotocol.io/shared/libs/test"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -109,8 +109,8 @@ func testFileStoreV1GetWalletWithWrongPassphraseFails(t *testing.T) {
 	returnedWallet, err := s.GetWallet(w.Name(), othPassphrase)
 
 	// then
-	assert.Error(t, err)
-	assert.Equal(t, nil, returnedWallet)
+	assert.ErrorIs(t, err, storev1.ErrWrongPassphrase)
+	assert.Nil(t, returnedWallet)
 }
 
 func testFileStoreV1GetNonExistingWalletFails(t *testing.T) {
@@ -127,7 +127,7 @@ func testFileStoreV1GetNonExistingWalletFails(t *testing.T) {
 
 	// then
 	assert.Error(t, err)
-	assert.Equal(t, nil, returnedWallet)
+	assert.Nil(t, returnedWallet)
 }
 
 func testFileStoreV1GetWalletPathSucceeds(t *testing.T) {

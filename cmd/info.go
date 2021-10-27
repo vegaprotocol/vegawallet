@@ -3,9 +3,9 @@ package cmd
 import (
 	"fmt"
 
+	vgjson "code.vegaprotocol.io/shared/libs/json"
 	"code.vegaprotocol.io/vegawallet/cmd/printer"
 	"code.vegaprotocol.io/vegawallet/wallets"
-	vgjson "code.vegaprotocol.io/shared/libs/json"
 	"github.com/spf13/cobra"
 )
 
@@ -15,7 +15,7 @@ var (
 		passphraseFile string
 	}
 
-	// infoCmd represents the info command
+	// infoCmd represents the info command.
 	infoCmd = &cobra.Command{
 		Use:   "info",
 		Short: "Print wallet information",
@@ -50,9 +50,9 @@ func runInfo(_ *cobra.Command, _ []string) error {
 
 	if rootArgs.output == "human" {
 		p := printer.NewHumanPrinter()
-		p.Text("Type:").Jump().WarningText(w.Type()).Jump()
-		p.Text("Version:").Jump().WarningText(fmt.Sprintf("%d", w.Version())).Jump()
-		p.Text("ID:").Jump().WarningText(w.ID()).Jump()
+		p.Text("Type:").NextLine().WarningText(w.Type()).NextLine()
+		p.Text("Version:").NextLine().WarningText(fmt.Sprintf("%d", w.Version())).NextLine()
+		p.Text("ID:").NextLine().WarningText(w.ID()).NextLine()
 	} else if rootArgs.output == "json" {
 		return vgjson.Print(struct {
 			Type    string `json:"type"`

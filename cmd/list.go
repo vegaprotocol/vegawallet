@@ -3,21 +3,19 @@ package cmd
 import (
 	"fmt"
 
+	vgjson "code.vegaprotocol.io/shared/libs/json"
 	"code.vegaprotocol.io/vegawallet/cmd/printer"
 	"code.vegaprotocol.io/vegawallet/wallets"
-	vgjson "code.vegaprotocol.io/shared/libs/json"
 	"github.com/spf13/cobra"
 )
 
-var (
-	// listCmd represents the list command
-	listCmd = &cobra.Command{
-		Use:   "list",
-		Short: "List all registered wallets",
-		Long:  "List all registered wallets",
-		RunE:  runList,
-	}
-)
+// listCmd represents the list command.
+var listCmd = &cobra.Command{
+	Use:   "list",
+	Short: "List all registered wallets",
+	Long:  "List all registered wallets",
+	RunE:  runList,
+}
 
 func init() {
 	rootCmd.AddCommand(listCmd)
@@ -39,10 +37,10 @@ func runList(_ *cobra.Command, _ []string) error {
 	if rootArgs.output == "human" {
 		p := printer.NewHumanPrinter()
 		if len(ws) == 0 {
-			p.InfoText("No wallet registered").Jump()
+			p.InfoText("No wallet registered").NextLine()
 		}
 		for _, w := range ws {
-			p.Text(fmt.Sprintf("- %s", w)).Jump()
+			p.Text(fmt.Sprintf("- %s", w)).NextLine()
 		}
 	} else if rootArgs.output == "json" {
 		return vgjson.Print(struct {

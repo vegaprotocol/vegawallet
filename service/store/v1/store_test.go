@@ -3,9 +3,9 @@ package v1_test
 import (
 	"testing"
 
-	"code.vegaprotocol.io/vegawallet/service"
-	"code.vegaprotocol.io/vegawallet/service/store/v1"
 	vgtest "code.vegaprotocol.io/shared/libs/test"
+	"code.vegaprotocol.io/vegawallet/service"
+	v1 "code.vegaprotocol.io/vegawallet/service/store/v1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

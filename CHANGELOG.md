@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.9.2
+*2021-10-27*
+
+### Improvements
+- [319](https://github.com/vegaprotocol/vegawallet/pull/319) - Enable more golanci lints
+- [325](https://github.com/vegaprotocol/vegawallet/pull/325) - Importing a wallet via API default to version 2
+- [322](https://github.com/vegaprotocol/vegawallet/pull/322) - Build artifact for mac M1
+
+
+### Fixes
+- [323](https://github.com/vegaprotocol/vegawallet/pull/323) - Fix wallets with version 0
+- [308](https://github.com/vegaprotocol/vegawallet/pull/308) - Fix command subcommand
+- [330](https://github.com/vegaprotocol/vegawallet/pull/330) - Fix output for list keys command
+
+
 ## 0.9.1
 *2021-10-23*
 
@@ -9,6 +24,14 @@
 
 ## 0.9.0
 *2021-10-23*
+
+### Migration from v0.8.0
+* Flag `--name` and `-n` has been replaced by `--wallet` and `-w` respectively.
+* The service configuration `wallet-service/config.toml` no longer exists.
+* The network configurations are located in the `wallet-service/networks` config folder.
+* A new `--network` (shorthand `-n`) has been introduced on `command` and `service run` subcommands.
+* In the network configuration the `Nodes` configuration in now named `API.GRPC`.
+
 
 ### Improvements
 - [310](https://github.com/vegaprotocol/go-wallet/pull/310) - Rename repository to vegawallet

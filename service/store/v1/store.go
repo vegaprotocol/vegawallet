@@ -3,9 +3,9 @@ package v1
 import (
 	"fmt"
 
-	"code.vegaprotocol.io/vegawallet/service"
 	vgfs "code.vegaprotocol.io/shared/libs/fs"
 	"code.vegaprotocol.io/shared/paths"
+	"code.vegaprotocol.io/vegawallet/service"
 )
 
 type Store struct {

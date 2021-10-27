@@ -5,9 +5,9 @@
 package mocks
 
 import (
-	wallet "code.vegaprotocol.io/vegawallet/wallet"
 	v1 "code.vegaprotocol.io/protos/vega/commands/v1"
 	v10 "code.vegaprotocol.io/protos/vega/wallet/v1"
+	wallet "code.vegaprotocol.io/vegawallet/wallet"
 	gomock "github.com/golang/mock/gomock"
 	reflect "reflect"
 )
@@ -65,33 +65,18 @@ func (mr *MockWalletHandlerMockRecorder) GetPublicKey(arg0, arg1 interface{}) *g
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPublicKey", reflect.TypeOf((*MockWalletHandler)(nil).GetPublicKey), arg0, arg1)
 }
 
-// GetWalletPath mocks base method
-func (m *MockWalletHandler) GetWalletPath(arg0 string) (string, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetWalletPath", arg0)
-	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetWalletPath indicates an expected call of GetWalletPath
-func (mr *MockWalletHandlerMockRecorder) GetWalletPath(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetWalletPath", reflect.TypeOf((*MockWalletHandler)(nil).GetWalletPath), arg0)
-}
-
 // ImportWallet mocks base method
-func (m *MockWalletHandler) ImportWallet(arg0, arg1, arg2 string) error {
+func (m *MockWalletHandler) ImportWallet(arg0, arg1, arg2 string, arg3 uint32) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ImportWallet", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "ImportWallet", arg0, arg1, arg2, arg3)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // ImportWallet indicates an expected call of ImportWallet
-func (mr *MockWalletHandlerMockRecorder) ImportWallet(arg0, arg1, arg2 interface{}) *gomock.Call {
+func (mr *MockWalletHandlerMockRecorder) ImportWallet(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ImportWallet", reflect.TypeOf((*MockWalletHandler)(nil).ImportWallet), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ImportWallet", reflect.TypeOf((*MockWalletHandler)(nil).ImportWallet), arg0, arg1, arg2, arg3)
 }
 
 // ListPublicKeys mocks base method

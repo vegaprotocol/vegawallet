@@ -1,6 +1,9 @@
 package wallet
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+)
 
 var (
 	ErrIsolatedWalletCantGenerateKeyPairs = errors.New("isolated wallet can't generate key pairs")
@@ -12,3 +15,17 @@ var (
 	ErrWalletAlreadyExists                = errors.New("a wallet with the same name already exists")
 	ErrWalletNotLoggedIn                  = errors.New("wallet is not logged in")
 )
+
+type UnsupportedWalletVersionError struct {
+	UnsupportedVersion uint32
+}
+
+func NewUnsupportedWalletVersionError(v uint32) UnsupportedWalletVersionError {
+	return UnsupportedWalletVersionError{
+		UnsupportedVersion: v,
+	}
+}
+
+func (e UnsupportedWalletVersionError) Error() string {
+	return fmt.Sprintf("wallet with version %d isn't supported", e.UnsupportedVersion)
+}

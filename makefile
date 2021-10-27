@@ -16,14 +16,22 @@ endif
 install:
 	go install -v -ldflags "-X code.vegaprotocol.io/vegawallet/version.Version=${VERSION} -X code.vegaprotocol.io/vegawallet/version.VersionHash=${VERSION_HASH}"
 
-release-windows:
+release-windows-amd64:
 	GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -o build/vegawallet.exe -ldflags "-X code.vegaprotocol.io/vegawallet/version.Version=${VERSION} -X code.vegaprotocol.io/vegawallet/version.VersionHash=${VERSION_HASH}"
 	cd build && 7z a -tzip vegawallet-windows-amd64.zip vegawallet.exe
 
-release-macos:
+release-macos-amd64:
 	GOOS=darwin GOARCH=amd64 CGO_ENABLED=0 go build -o build/vegawallet -ldflags "-X code.vegaprotocol.io/vegawallet/version.Version=${VERSION} -X code.vegaprotocol.io/vegawallet/version.VersionHash=${VERSION_HASH}"
 	cd build && zip vegawallet-darwin-amd64.zip vegawallet
 
-release-linux:
+release-macos-arm64:
+	GOOS=darwin GOARCH=arm64 CGO_ENABLED=0 go build -o build/vegawallet -ldflags "-X code.vegaprotocol.io/vegawallet/version.Version=${VERSION} -X code.vegaprotocol.io/vegawallet/version.VersionHash=${VERSION_HASH}"
+	cd build && zip vegawallet-darwin-arm64.zip vegawallet
+
+release-linux-amd64:
 	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o build/vegawallet -ldflags "-X code.vegaprotocol.io/vegawallet/version.Version=${VERSION} -X code.vegaprotocol.io/vegawallet/version.VersionHash=${VERSION_HASH}"
 	cd build && zip vegawallet-linux-amd64.zip vegawallet
+
+release-linux-arm64:
+	GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -o build/vegawallet -ldflags "-X code.vegaprotocol.io/vegawallet/version.Version=${VERSION} -X code.vegaprotocol.io/vegawallet/version.VersionHash=${VERSION_HASH}"
+	cd build && zip vegawallet-linux-arm64.zip vegawallet

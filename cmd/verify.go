@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"os"
 
+	vgjson "code.vegaprotocol.io/shared/libs/json"
 	"code.vegaprotocol.io/vegawallet/cmd/printer"
 	"code.vegaprotocol.io/vegawallet/wallets"
-	vgjson "code.vegaprotocol.io/shared/libs/json"
 	"github.com/spf13/cobra"
 )
 
@@ -25,6 +25,9 @@ var (
 		Long:  "Verify the signature for a blob of data",
 		RunE:  runVerify,
 	}
+
+	ErrMessageShouldBeBase64   = errors.New("message should be encoded into base64")
+	ErrSignatureShouldBeBase64 = errors.New("signature should be encoded into base64")
 )
 
 func init() {
@@ -47,12 +50,12 @@ func runVerify(_ *cobra.Command, _ []string) error {
 
 	decodedMessage, err := base64.StdEncoding.DecodeString(verifyArgs.message)
 	if err != nil {
-		return errors.New("message should be encoded into base64")
+		return ErrMessageShouldBeBase64
 	}
 
 	decodedSig, err := base64.StdEncoding.DecodeString(verifyArgs.sig)
 	if err != nil {
-		return errors.New("signature should be encoded into base64")
+		return ErrSignatureShouldBeBase64
 	}
 
 	isValid, err := handler.VerifyAny(decodedMessage, decodedSig, verifyArgs.pubkey)
@@ -63,23 +66,23 @@ func runVerify(_ *cobra.Command, _ []string) error {
 	if rootArgs.output == "human" {
 		p := printer.NewHumanPrinter()
 		if isValid {
-			p.CheckMark().SuccessText("Valid signature").NJump(2)
+			p.CheckMark().SuccessText("Valid signature").NextSection()
 		} else {
-			p.CrossMark().DangerText("Invalid signature").NJump(2)
+			p.CrossMark().DangerText("Invalid signature").NextSection()
 		}
 
-		p.BlueArrow().InfoText("Sign a message").Jump()
-		p.Text("To sign a base-64 encoded message, use the following commands:").NJump(2)
-		p.Code(fmt.Sprintf("%s sign --wallet \"YOUR_NAME\" --pubkey %s --message \"YOUR_MESSAGE\"", os.Args[0], verifyArgs.pubkey)).NJump(2)
-		p.Text("For more information, use ").Bold("--help").Text(" flag.").Jump()
+		p.BlueArrow().InfoText("Sign a message").NextLine()
+		p.Text("To sign a base-64 encoded message, use the following commands:").NextSection()
+		p.Code(fmt.Sprintf("%s sign --wallet \"YOUR_NAME\" --pubkey %s --message \"YOUR_MESSAGE\"", os.Args[0], verifyArgs.pubkey)).NextSection()
+		p.Text("For more information, use ").Bold("--help").Text(" flag.").NextLine()
 	} else if rootArgs.output == "json" {
-		return printVerifyJson(isValid)
+		return printVerifyJSON(isValid)
 	}
 
 	return nil
 }
 
-func printVerifyJson(isValid bool) error {
+func printVerifyJSON(isValid bool) error {
 	return vgjson.Print(struct {
 		IsValid bool `json:"isValid"`
 	}{

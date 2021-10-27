@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
 
 	"code.vegaprotocol.io/vegawallet/cmd/printer"
@@ -47,10 +46,10 @@ func runKeyAnnotate(_ *cobra.Command, _ []string) error {
 	handler := wallets.NewHandler(store)
 
 	if len(keyAnnotateArgs.metadata) == 0 && !keyAnnotateArgs.clear {
-		return errors.New("`--meta` is required or use `--clear` flag")
+		return ErrMetaOrClearIsRequired
 	}
 	if len(keyAnnotateArgs.metadata) != 0 && keyAnnotateArgs.clear {
-		return errors.New("can't have `--meta` and `--clear` flags at the same time")
+		return ErrCanNotHaveBothMetadataAndClearFlagsSet
 	}
 
 	passphrase, err := getPassphrase(keyAnnotateArgs.passphraseFile, false)
@@ -79,10 +78,10 @@ func runKeyAnnotate(_ *cobra.Command, _ []string) error {
 	if rootArgs.output == "human" {
 		p := printer.NewHumanPrinter()
 		if keyAnnotateArgs.clear {
-			p.CheckMark().SuccessText("Annotation cleared").Jump()
+			p.CheckMark().SuccessText("Annotation cleared").NextLine()
 		} else {
-			p.CheckMark().SuccessText("Annotation succeeded").NJump(2)
-			p.Text("New metadata:").Jump()
+			p.CheckMark().SuccessText("Annotation succeeded").NextSection()
+			p.Text("New metadata:").NextLine()
 			printMeta(p, metadata)
 		}
 	}
