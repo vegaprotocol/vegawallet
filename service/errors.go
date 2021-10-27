@@ -7,6 +7,8 @@ import (
 )
 
 var (
+	ErrInvalidToken           = errors.New("invalid token")
+	ErrInvalidClaims          = errors.New("invalid claims")
 	ErrInvalidOrMissingToken  = newErrorResponse("invalid or missing token")
 	ErrCouldNotReadRequest    = errors.New("could not read request")
 	ErrCouldNotGetBlockHeight = errors.New("could not get last block height")
@@ -20,7 +22,7 @@ type ErrorsResponse struct {
 
 type ErrorResponse struct { //nolint:errname
 	ErrorStr string   `json:"error"`
-	Details  []string `json:"details"`
+	Details  []string `json:"details,omitempty"`
 }
 
 func (e ErrorResponse) Error() string {

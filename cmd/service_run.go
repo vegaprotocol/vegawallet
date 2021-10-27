@@ -30,6 +30,7 @@ var (
 		startConsole bool
 		noBrowser    bool
 		network      string
+		level        string
 	}
 
 	serviceRunCmd = &cobra.Command{
@@ -45,6 +46,7 @@ func init() {
 	serviceRunCmd.Flags().StringVarP(&serviceRunArgs.network, "network", "n", "", "Name of the network to use")
 	serviceRunCmd.Flags().BoolVar(&serviceRunArgs.startConsole, "console-proxy", false, "Start the vega console proxy and open the console in the default browser")
 	serviceRunCmd.Flags().BoolVar(&serviceRunArgs.noBrowser, "no-browser", false, "Do not open the default browser if the console proxy is stated")
+	serviceRunCmd.Flags().StringVar(&serviceRunArgs.level, "level", "", fmt.Sprintf("Change log level: %v", logger.SupportedLogLevels))
 	_ = serviceRunCmd.MarkFlagRequired("network")
 }
 
@@ -76,14 +78,13 @@ func runServiceRun(_ *cobra.Command, _ []string) error {
 		return fmt.Errorf("couldn't initialise network store: %w", err)
 	}
 
-	encoding := "json"
-	if rootArgs.output == "human" {
-		encoding = "console"
+	logLevel := cfg.Level.String()
+	if len(serviceRunArgs.level) != 0 {
+		logLevel = serviceRunArgs.level
 	}
-
-	log, err := logger.New(cfg.Level.Level, encoding)
+	log, err := logger.Build(rootArgs.output, logLevel)
 	if err != nil {
-		return fmt.Errorf("couldn't create logger: %w", err)
+		return err
 	}
 	defer vglog.Sync(log)
 
@@ -109,11 +110,14 @@ func runServiceRun(_ *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
+
+	log = log.Named("command")
+
 	go func() {
 		defer cancel()
 		err := srv.Start()
-		if err != nil && errors.Is(err, http.ErrServerClosed) {
-			log.Error("error starting wallet http server", zap.Error(err))
+		if err != nil && !errors.Is(err, http.ErrServerClosed) {
+			log.Error("error while starting HTTP server", zap.Error(err))
 		}
 	}()
 
@@ -130,8 +134,8 @@ func runServiceRun(_ *cobra.Command, _ []string) error {
 		go func() {
 			defer cancel()
 			err := cs.Start()
-			if err != nil && errors.Is(err, http.ErrServerClosed) {
-				log.Error("error starting console proxy server", zap.Error(err))
+			if err != nil && !errors.Is(err, http.ErrServerClosed) {
+				log.Error("error while starting the console proxy", zap.Error(err))
 			}
 		}()
 
@@ -163,18 +167,22 @@ func runServiceRun(_ *cobra.Command, _ []string) error {
 
 	err = srv.Stop()
 	if err != nil {
-		log.Error("error stopping wallet http server", zap.Error(err))
+		log.Error("error while stopping HTTP server", zap.Error(err))
 	} else {
-		log.Info("wallet http server stopped with success")
+		log.Info("HTTP server stopped with success")
 	}
 
 	if serviceRunArgs.startConsole {
 		err = cs.Stop()
 		if err != nil {
-			log.Error("error stopping console proxy server", zap.Error(err))
+			log.Error("error while stopping console proxy", zap.Error(err))
 		} else {
-			log.Info("console proxy server stopped with success")
+			log.Info("console proxy stopped with success")
 		}
+	}
+
+	if rootArgs.output == "human" {
+		p.CheckMark().SuccessText("Service stopped").NextLine()
 	}
 
 	return nil
@@ -189,7 +197,7 @@ func waitSig(ctx context.Context, cfunc func(), log *zap.Logger) {
 
 	select {
 	case sig := <-gracefulStop:
-		log.Info("caught signal", zap.String("wallet", fmt.Sprintf("%+v", sig)))
+		log.Info("caught signal", zap.String("signal", fmt.Sprintf("%+v", sig)))
 		cfunc()
 	case <-ctx.Done():
 		// nothing to do

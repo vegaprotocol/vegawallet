@@ -4,12 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io/fs"
 	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
+	vgfs "code.vegaprotocol.io/shared/libs/fs"
 	vgjson "code.vegaprotocol.io/shared/libs/json"
 	"code.vegaprotocol.io/vegawallet/cmd/printer"
 	"code.vegaprotocol.io/vegawallet/version"
@@ -125,8 +124,7 @@ func getPassphrase(flaggedPassphraseFile string, confirmInput bool) (string, err
 	hasPassphraseFileFlag := len(flaggedPassphraseFile) != 0
 
 	if hasPassphraseFileFlag {
-		passphraseDir, passphraseFileName := filepath.Split(flaggedPassphraseFile)
-		rawPassphrase, err := fs.ReadFile(os.DirFS(passphraseDir), passphraseFileName)
+		rawPassphrase, err := vgfs.ReadFile(flaggedPassphraseFile)
 		if err != nil {
 			return "", err
 		}

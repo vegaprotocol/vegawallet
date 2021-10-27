@@ -48,11 +48,12 @@ func (mr *MockAuthMockRecorder) NewSession(arg0 interface{}) *gomock.Call {
 }
 
 // Revoke mocks base method
-func (m *MockAuth) Revoke(arg0 string) error {
+func (m *MockAuth) Revoke(arg0 string) (string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Revoke", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // Revoke indicates an expected call of Revoke
