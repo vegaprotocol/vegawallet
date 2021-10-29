@@ -1,7 +1,15 @@
 package main
 
-import "code.vegaprotocol.io/vegawallet/cmd"
+import (
+	"os"
+
+	"code.vegaprotocol.io/vegawallet/cmd"
+)
 
 func main() {
-	cmd.Execute()
+	writer := &cmd.Writer{
+		Out: os.Stdout,
+		Err: os.Stderr,
+	}
+	cmd.Execute(writer)
 }

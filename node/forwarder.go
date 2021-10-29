@@ -81,7 +81,7 @@ func (n *Forwarder) LastBlockHeight(ctx context.Context) (uint64, error) {
 			clt := n.nextClt()
 			resp, err := clt.LastBlockHeight(ctx, &req)
 			if err != nil {
-				n.log.Debug("could not get last block", zap.Error(err))
+				n.log.Debug("couldn't get last block", zap.Error(err))
 				return err
 			}
 			height = resp.Height
@@ -91,7 +91,7 @@ func (n *Forwarder) LastBlockHeight(ctx context.Context) (uint64, error) {
 	)
 
 	if err != nil {
-		n.log.Error("could not get last block", zap.Error(err))
+		n.log.Error("couldn't get last block", zap.Error(err))
 	} else {
 		n.log.Debug("last block when sending transaction",
 			zap.Time("request.time", time.Now()),

@@ -33,6 +33,18 @@ func IsUnreleased() bool {
 	return v.isDevelopmentVersion
 }
 
+type GetVersionResponse struct {
+	Version string `json:"version"`
+	GitHash string `json:"gitHash"`
+}
+
+func GetVersionInfo() *GetVersionResponse {
+	return &GetVersionResponse{
+		Version: Version,
+		GitHash: VersionHash,
+	}
+}
+
 // Check returns a newer version, or an error or nil for both
 // if no error happened, and no updates are needed.
 func Check(releasesGetterFn ReleasesGetter, currentRelease string) (*semver.Version, error) {

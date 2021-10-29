@@ -2,61 +2,130 @@ package cmd
 
 import (
 	"fmt"
+	"io"
+	"os"
 
+	"code.vegaprotocol.io/vegawallet/cmd/cli"
+	"code.vegaprotocol.io/vegawallet/cmd/flags"
 	"code.vegaprotocol.io/vegawallet/cmd/printer"
+	"code.vegaprotocol.io/vegawallet/wallet"
 	"code.vegaprotocol.io/vegawallet/wallets"
 	"github.com/spf13/cobra"
 )
 
 var (
-	keyUntaintArgs struct {
-		wallet         string
-		passphraseFile string
-		pubKey         string
-	}
+	untaintKeyLong = cli.LongDesc(`
+		Remove the taint from a key pair.
 
-	keyUntaintCmd = &cobra.Command{
-		Use:   "untaint",
-		Short: "Untaint a public key",
-		Long:  "Untaint a public key",
-		RunE:  runKeyUntaint,
-	}
+		If you tainted a key for security reasons, you should not untaint it.
+	`)
+
+	untaintKeyExample = cli.Examples(`
+		# Untaint a key pair
+		vegawallet key untaint --wallet WALLET --pubkey PUBKEY
+	`)
 )
 
-func init() {
-	keyCmd.AddCommand(keyUntaintCmd)
-	keyUntaintCmd.Flags().StringVarP(&keyUntaintArgs.wallet, "wallet", "w", "", "Name of the wallet to use")
-	keyUntaintCmd.Flags().StringVarP(&keyUntaintArgs.passphraseFile, "passphrase-file", "p", "", "Path of the file containing the passphrase to access the wallet")
-	keyUntaintCmd.Flags().StringVarP(&keyUntaintArgs.pubKey, "pubkey", "k", "", "Public key to be used (hex)")
-	_ = keyUntaintCmd.MarkFlagRequired("wallet")
-	_ = keyUntaintCmd.MarkFlagRequired("pubkey")
+type UntaintKeyHandler func(*wallet.UntaintKeyRequest) error
+
+func NewCmdUntaintKey(w io.Writer, rf *RootFlags) *cobra.Command {
+	h := func(req *wallet.UntaintKeyRequest) error {
+		s, err := wallets.InitialiseStore(rf.Home)
+		if err != nil {
+			return fmt.Errorf("couldn't initialise wallets store: %w", err)
+		}
+
+		return wallet.UntaintKey(s, req)
+	}
+
+	return BuildCmdUntaintKey(w, h, rf)
 }
 
-func runKeyUntaint(_ *cobra.Command, _ []string) error {
-	store, err := wallets.InitialiseStore(rootArgs.home)
+func BuildCmdUntaintKey(w io.Writer, handler UntaintKeyHandler, rf *RootFlags) *cobra.Command {
+	f := &UntaintKeyFlags{}
+
+	cmd := &cobra.Command{
+		Use:     "untaint",
+		Short:   "Remove the taint from a key pair",
+		Long:    untaintKeyLong,
+		Example: untaintKeyExample,
+		RunE: func(_ *cobra.Command, _ []string) error {
+			req, err := f.Validate()
+			if err != nil {
+				return err
+			}
+
+			if err := handler(req); err != nil {
+				return err
+			}
+
+			switch rf.Output {
+			case flags.InteractiveOutput:
+				PrintUntaintKeyResponse(w)
+			case flags.JSONOutput:
+				return nil
+			}
+
+			return nil
+		},
+	}
+
+	cmd.Flags().StringVarP(&f.Wallet,
+		"wallet", "w",
+		"",
+		"Wallet holding the public key",
+	)
+	cmd.Flags().StringVarP(&f.PubKey,
+		"pubkey", "k",
+		"",
+		"Public key to untaint (hex-encoded)",
+	)
+	cmd.Flags().StringVarP(&f.PassphraseFile,
+		"passphrase-file", "p",
+		"",
+		"Path to the file containing the wallet's passphrase",
+	)
+
+	return cmd
+}
+
+type UntaintKeyFlags struct {
+	Wallet         string
+	PubKey         string
+	PassphraseFile string
+}
+
+func (f *UntaintKeyFlags) Validate() (*wallet.UntaintKeyRequest, error) {
+	req := &wallet.UntaintKeyRequest{}
+
+	if len(f.Wallet) == 0 {
+		return nil, flags.FlagMustBeSpecifiedError("wallet")
+	}
+	req.Wallet = f.Wallet
+
+	if len(f.PubKey) == 0 {
+		return nil, flags.FlagMustBeSpecifiedError("pubkey")
+	}
+	req.PubKey = f.PubKey
+
+	passphrase, err := flags.GetPassphrase(f.PassphraseFile)
 	if err != nil {
-		return fmt.Errorf("couldn't initialise wallets store: %w", err)
+		return nil, err
 	}
+	req.Passphrase = passphrase
 
-	handler := wallets.NewHandler(store)
+	return req, nil
+}
 
-	passphrase, err := getPassphrase(keyUntaintArgs.passphraseFile, false)
-	if err != nil {
-		return err
-	}
+func PrintUntaintKeyResponse(w io.Writer) {
+	p := printer.NewInteractivePrinter(w)
 
-	err = handler.UntaintKey(keyUntaintArgs.wallet, keyUntaintArgs.pubKey, passphrase)
-	if err != nil {
-		return fmt.Errorf("could not untaint the key: %w", err)
-	}
+	p.CheckMark().SuccessText("Untainting succeeded").NextSection()
 
-	if rootArgs.output == "human" {
-		p := printer.NewHumanPrinter()
-		p.CheckMark().SuccessText("Untainting succeeded").NextSection()
+	p.RedArrow().DangerText("Important").NextLine()
+	p.Text("If you tainted a key for security reasons, you should not use it.").NextLine()
 
-		p.RedArrow().DangerText("Important").NextLine()
-		p.Text("If you tainted a key for security reasons, you should not use it.").NextLine()
-	}
-
-	return nil
+	p.BlueArrow().InfoText("Taint a key").NextLine()
+	p.Text("To taint a key pair, see the following command:").NextSection()
+	p.Code(fmt.Sprintf("%s key taint --help", os.Args[0])).NextSection()
 }

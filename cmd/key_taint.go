@@ -2,67 +2,131 @@ package cmd
 
 import (
 	"fmt"
+	"io"
 	"os"
 
+	"code.vegaprotocol.io/vegawallet/cmd/cli"
+	"code.vegaprotocol.io/vegawallet/cmd/flags"
 	"code.vegaprotocol.io/vegawallet/cmd/printer"
+	"code.vegaprotocol.io/vegawallet/wallet"
 	"code.vegaprotocol.io/vegawallet/wallets"
 	"github.com/spf13/cobra"
 )
 
 var (
-	keyTaintArgs struct {
-		wallet         string
-		passphraseFile string
-		pubKey         string
-	}
+	taintKeyLong = cli.LongDesc(`
+		Tainting a key pair marks it as unsafe to use and ensure it will not be
+		used to sign transactions.
 
-	keyTaintCmd = &cobra.Command{
-		Use:   "taint",
-		Short: "Taint a public key",
-		Long:  "Taint a public key",
-		RunE:  runKeyTaint,
-	}
+		This mechanism is useful when the key pair has been compromised.
+	`)
+
+	taintKeyExample = cli.Examples(`
+		# Taint a key pair
+		vegawallet key taint --wallet WALLET --pubkey PUBKEY
+	`)
 )
 
-func init() {
-	keyCmd.AddCommand(keyTaintCmd)
-	keyTaintCmd.Flags().StringVarP(&keyTaintArgs.wallet, "wallet", "w", "", "Name of the wallet to use")
-	keyTaintCmd.Flags().StringVarP(&keyTaintArgs.passphraseFile, "passphrase-file", "p", "", "Path of the file containing the passphrase to access the wallet")
-	keyTaintCmd.Flags().StringVarP(&keyTaintArgs.pubKey, "pubkey", "k", "", "Public key to be used (hex)")
-	_ = keyTaintCmd.MarkFlagRequired("wallet")
-	_ = keyTaintCmd.MarkFlagRequired("pubkey")
+type TaintKeyHandler func(*wallet.TaintKeyRequest) error
+
+func NewCmdTaintKey(w io.Writer, rf *RootFlags) *cobra.Command {
+	h := func(req *wallet.TaintKeyRequest) error {
+		s, err := wallets.InitialiseStore(rf.Home)
+		if err != nil {
+			return fmt.Errorf("couldn't initialise wallets store: %w", err)
+		}
+
+		return wallet.TaintKey(s, req)
+	}
+
+	return BuildCmdTaintKey(w, h, rf)
 }
 
-func runKeyTaint(_ *cobra.Command, _ []string) error {
-	store, err := wallets.InitialiseStore(rootArgs.home)
+func BuildCmdTaintKey(w io.Writer, handler TaintKeyHandler, rf *RootFlags) *cobra.Command {
+	f := &TaintKeyFlags{}
+
+	cmd := &cobra.Command{
+		Use:     "taint",
+		Short:   "Mark a key pair as tainted",
+		Long:    taintKeyLong,
+		Example: taintKeyExample,
+		RunE: func(_ *cobra.Command, _ []string) error {
+			req, err := f.Validate()
+			if err != nil {
+				return err
+			}
+
+			if err := handler(req); err != nil {
+				return err
+			}
+
+			switch rf.Output {
+			case flags.InteractiveOutput:
+				PrintTaintKeyResponse(w)
+			case flags.JSONOutput:
+				return nil
+			}
+
+			return nil
+		},
+	}
+
+	cmd.Flags().StringVarP(&f.Wallet,
+		"wallet", "w",
+		"",
+		"Wallet holding the public key",
+	)
+	cmd.Flags().StringVarP(&f.PubKey,
+		"pubkey", "k",
+		"",
+		"Public key to taint (hex-encoded)",
+	)
+	cmd.Flags().StringVarP(&f.PassphraseFile,
+		"passphrase-file", "p",
+		"",
+		"Path to the file containing the wallet's passphrase",
+	)
+
+	return cmd
+}
+
+type TaintKeyFlags struct {
+	Wallet         string
+	PubKey         string
+	PassphraseFile string
+}
+
+func (f *TaintKeyFlags) Validate() (*wallet.TaintKeyRequest, error) {
+	req := &wallet.TaintKeyRequest{}
+
+	if len(f.Wallet) == 0 {
+		return nil, flags.FlagMustBeSpecifiedError("wallet")
+	}
+	req.Wallet = f.Wallet
+
+	if len(f.PubKey) == 0 {
+		return nil, flags.FlagMustBeSpecifiedError("pubkey")
+	}
+	req.PubKey = f.PubKey
+
+	passphrase, err := flags.GetPassphrase(f.PassphraseFile)
 	if err != nil {
-		return fmt.Errorf("couldn't initialise wallets store: %w", err)
+		return nil, err
 	}
+	req.Passphrase = passphrase
 
-	handler := wallets.NewHandler(store)
+	return req, nil
+}
 
-	passphrase, err := getPassphrase(keyTaintArgs.passphraseFile, false)
-	if err != nil {
-		return err
-	}
+func PrintTaintKeyResponse(w io.Writer) {
+	p := printer.NewInteractivePrinter(w)
 
-	err = handler.TaintKey(keyTaintArgs.wallet, keyTaintArgs.pubKey, passphrase)
-	if err != nil {
-		return fmt.Errorf("could not taint the key: %w", err)
-	}
+	p.CheckMark().SuccessText("Tainting succeeded").NextSection()
 
-	if rootArgs.output == "human" {
-		p := printer.NewHumanPrinter()
-		p.CheckMark().SuccessText("Tainting succeeded").NextSection()
+	p.RedArrow().DangerText("Important").NextLine()
+	p.Text("If you tainted a key for security reasons, you should not untaint it.").NextSection()
 
-		p.RedArrow().DangerText("Important").NextLine()
-		p.Text("If you tainted a key for security reasons, you should not untaint it.").NextSection()
-
-		p.BlueArrow().InfoText("Untaint a key").NextLine()
-		p.Text("You may have tainted a key by mistake. If you want to untaint it, use the following command:").NextSection()
-		p.Code(fmt.Sprintf("%s key untaint --wallet \"%s\" --pubkey \"%s\"", os.Args[0], keyTaintArgs.wallet, keyTaintArgs.pubKey)).NextSection()
-		p.Text("For more information, use ").Bold("--help").Text(" flag.").NextLine()
-	}
-
-	return nil
+	p.BlueArrow().InfoText("Untaint a key").NextLine()
+	p.Text("You may have tainted a key pair by mistake. If you want to untaint it, see the following command:").NextSection()
+	p.Code(fmt.Sprintf("%s key untaint --help", os.Args[0])).NextSection()
 }
