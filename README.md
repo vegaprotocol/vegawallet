@@ -21,11 +21,11 @@ If you want to know more about Vega Wallet, how it works and how to use it, refe
 
 ### I don't know how to set up a Vega Wallet...
 
-If you want to know more about how to create and use a Vega Wallet, refer to the page ["Create a Vega Wallet"][vega-documentation-website-getting-started].
+If you want to know more about how to create and use a Vega Wallet, refer to the page ["Create a Vega Wallet"][vega-documentation-website-create-wallet].
 
 ### I want to use the latest stable version...
 
-If you want to use a stable version, refer to ["Getting started with Vega Wallet"][vega-documentation-website-getting-started].
+If you want to use a stable version, refer to ["Create a Vega Wallet"][vega-documentation-website-create-wallet].
 
 ### Should I use the documentation in this repository?
 
@@ -84,12 +84,6 @@ To build the Vega Wallet from the source code, use the following
 cd vegawallet && go build
 ```
 
-### Usage
-
-**Note:** Whether you are building Vega Wallet from source code or installing it from the repository, this will install the program under the name
-`vegawallet`, and not `vegawallet`. Thus, when reading the documentation in the repository,
-replace `vegawallet` with `vegawallet`.
-
 #### Using the command-line
 
 See a list of commands available in the wallet [here](cmd/README.md).
@@ -119,7 +113,7 @@ Read more at [https://vega.xyz][vega-website].
 
 [vega-website]: https://vega.xyz
 [vega-documentation-website]: https://docs.fairground.vega.xyz
-[vega-documentation-website-getting-started]: https://docs.fairground.vega.xyz/docs/vega-wallet/create-wallet/
+[vega-documentation-website-create-wallet]: https://docs.fairground.vega.xyz/docs/vega-wallet/create-wallet/
 [vega-wallet-documentation-website]: https://docs.fairground.vega.xyz/docs/vega-wallet/
 [nolt]: https://vega-testnet.nolt.io/
 [discord]: https://vega.xyz/discord
