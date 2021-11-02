@@ -15,9 +15,13 @@ Learn more about how Vega works, and explore sample scripts for API trading
 
 ## Before continuing...
 
-### I don't know how to set up Vega Wallet...
+### I am not familiar with Vega Wallet...
 
-If you want to know more about how to create and start using a Vega Wallet, refer to the section ["Create a Vega Wallet"][vega-documentation-website-getting-started].
+If you want to know more about Vega Wallet, how it works and how to use it, refer to the page ["Using Vega Wallet"][vega-wallet-documentation-website].
+
+### I don't know how to set up a Vega Wallet...
+
+If you want to know more about how to create and use a Vega Wallet, refer to the page ["Create a Vega Wallet"][vega-documentation-website-getting-started].
 
 ### I want to use the latest stable version...
 
@@ -25,7 +29,7 @@ If you want to use a stable version, refer to ["Getting started with Vega Wallet
 
 ### Should I use the documentation in this repository?
 
-If you are looking for the documentation for the stable version of Vega Wallet, refer to the [documentation website][vega-documentation-website]. **Do not refer to the documentation in this repository.**
+If you are looking for the documentation for the stable version of Vega Wallet, refer to the [documentation website][vega-wallet-documentation-website]. **Do not refer to the documentation in this repository.**
 
 The documentation living in this repository contains information about unreleased and unstable features, and it is meant for people running a version of Vega Wallet that is built from source code.
 
@@ -116,6 +120,7 @@ Read more at [https://vega.xyz][vega-website].
 [vega-website]: https://vega.xyz
 [vega-documentation-website]: https://docs.fairground.vega.xyz
 [vega-documentation-website-getting-started]: https://docs.fairground.vega.xyz/docs/vega-wallet/create-wallet/
+[vega-wallet-documentation-website]: https://docs.fairground.vega.xyz/docs/vega-wallet/
 [nolt]: https://vega-testnet.nolt.io/
 [discord]: https://vega.xyz/discord
 [github-release]: https://github.com/vegaprotocol/vegawallet/releases
