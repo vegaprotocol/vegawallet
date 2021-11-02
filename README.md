@@ -115,7 +115,7 @@ Read more at [https://vega.xyz][vega-website].
 
 [vega-website]: https://vega.xyz
 [vega-documentation-website]: https://docs.fairground.vega.xyz
-[vega-documentation-website-getting-started]: https://docs.fairground.vega.xyz/docs/wallet/getting-started/
+[vega-documentation-website-getting-started]: https://docs.fairground.vega.xyz/docs/vega-wallet/create-wallet/
 [nolt]: https://vega-testnet.nolt.io/
 [discord]: https://vega.xyz/discord
 [github-release]: https://github.com/vegaprotocol/vegawallet/releases
