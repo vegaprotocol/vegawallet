@@ -7,7 +7,7 @@ key pairs.
 
 ## Documentation
 
-#### [Getting started with Vega Wallet][vega-documentation-website-getting-started]
+#### [Getting started with Vega Wallet][vega-documentation-website-create-wallet]
 Learn how to install and run the stable version of Vega Wallet.
 
 #### [Vega documentation][vega-documentation-website]
