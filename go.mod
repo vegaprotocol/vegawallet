@@ -1,6 +1,6 @@
 module code.vegaprotocol.io/vegawallet
 
-go 1.16
+go 1.17
 
 require (
 	code.vegaprotocol.io/protos v0.43.1-0.20211004102311-d2ad34ada37b
