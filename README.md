@@ -53,13 +53,14 @@ To install Vega Wallet, you can download a released binary, or install it using 
 
 From the [Releases][github-releases] page, download the ZIP file matching your platform and open it.
 
-|  Platform     | Associated ZIP file            |
-|---------------|--------------------------------|
-| Windows       | `vegawallet-windows-amd64.zip` |
-| MacOS         | `vegawallet-darwin-amd64.zip`  |
-| MacOS (ARM64) | `vegawallet-darwin-arm64.zip`  |
-| Linux         | `vegawallet-linux-amd64.zip`   |
-| Linux (ARM64) | `vegawallet-linux-arm64.zip`   |
+|  Platform       | Associated ZIP file            |
+|-----------------|--------------------------------|
+| Windows         | `vegawallet-windows-amd64.zip` |
+| Windows (ARM64) | `vegawallet-windows-arm64.zip` |
+| MacOS           | `vegawallet-darwin-amd64.zip`  |
+| MacOS (ARM64)   | `vegawallet-darwin-arm64.zip`  |
+| Linux           | `vegawallet-linux-amd64.zip`   |
+| Linux (ARM64)   | `vegawallet-linux-arm64.zip`   |
 
 
 ### Installing from repository
