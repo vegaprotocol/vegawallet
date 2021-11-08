@@ -1,15 +1,20 @@
 package cmd
 
 import (
+	"io"
+
 	"github.com/spf13/cobra"
 )
 
-var networkCmd = &cobra.Command{
-	Use:   "network",
-	Short: "Manage networks",
-	Long:  "Manage networks",
-}
+func NewCmdNetwork(w io.Writer, rf *RootFlags) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "network",
+		Short: "Manage networks",
+		Long:  "Manage networks",
+	}
 
-func init() {
-	rootCmd.AddCommand(networkCmd)
+	// create subcommands
+	cmd.AddCommand(NewCmdListNetworks(w, rf))
+	cmd.AddCommand(NewCmdImportNetwork(w, rf))
+	return cmd
 }

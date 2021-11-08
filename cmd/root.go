@@ -2,175 +2,121 @@ package cmd
 
 import (
 	"context"
-	"errors"
 	"fmt"
+	"io"
 	"os"
-	"strings"
 	"time"
 
-	vgfs "code.vegaprotocol.io/shared/libs/fs"
-	vgjson "code.vegaprotocol.io/shared/libs/json"
+	"code.vegaprotocol.io/vegawallet/cmd/flags"
 	"code.vegaprotocol.io/vegawallet/cmd/printer"
 	"code.vegaprotocol.io/vegawallet/version"
-	"github.com/mattn/go-isatty"
+	"github.com/blang/semver/v4"
 	"github.com/spf13/cobra"
-	"golang.org/x/term"
 )
 
-// requestTimeout is the maximum time the program will wait for a response
-// after issuing a request.
-const requestTimeout = 30 * time.Second
+var requestTimeout = 30 * time.Second
 
-var (
-	rootArgs struct {
-		output         string
-		home           string
-		noVersionCheck bool
-	}
+type CheckVersionHandler func() (*semver.Version, error)
 
-	rootCmd = &cobra.Command{
-		Use:               os.Args[0],
-		Short:             "The Vega wallet",
-		Long:              "The Vega wallet",
-		PersistentPreRunE: rootPreRun,
-		SilenceUsage:      true,
-		SilenceErrors:     true,
-	}
-
-	ErrPassphrasesDoNotMatch            = errors.New("passphrases do not match")
-	ErrPassphraseCannotBeEmpty          = errors.New("passphrase cannot be empty")
-	ErrPassphraseFileRequiredWithoutTTY = errors.New("passphrase-file flag required without TTY")
-)
-
-func rootPreRun(_ *cobra.Command, _ []string) error {
-	if err := parseOutputFlag(); err != nil {
-		return err
-	}
-	if rootArgs.output == "human" {
-		return checkVersion()
-	}
-	return nil
-}
-
-func parseOutputFlag() error {
-	if rootArgs.output == "human" && !isatty.IsTerminal(os.Stdout.Fd()) && !isatty.IsCygwinTerminal(os.Stdout.Fd()) {
-		return ErrUseJSONOutputInScript
-	}
-
-	supportedOutput := []string{"json", "human"}
-	for _, output := range supportedOutput {
-		if rootArgs.output == output {
-			return nil
-		}
-	}
-
-	return NewUnsupportedOutputError(rootArgs.output)
-}
-
-func checkVersion() error {
-	if !rootArgs.noVersionCheck {
-		p := printer.NewHumanPrinter()
-		if version.IsUnreleased() {
-			p.CrossMark().DangerText("You are running an unreleased version of the Vega wallet. Use it at your own risk!").NextSection()
-		}
-
+func NewCmdRoot(w io.Writer) *cobra.Command {
+	vh := func() (*semver.Version, error) {
 		ctx, cancel := context.WithTimeout(context.Background(), requestTimeout)
 		defer cancel()
 		v, err := version.Check(version.BuildReleasesRequestFromGithub(ctx), version.Version)
 		if err != nil {
-			return fmt.Errorf("could not check Vega wallet version updates: %w", err)
+			return nil, fmt.Errorf("couldn't check latest Vega wallet releases: %w", err)
 		}
-		if v != nil {
-			p.Text("Version ").SuccessText(v.String()).Text(" is available. Your current version is ").DangerText(version.Version).Text(".").NextLine()
-			p.Text("Download the latest version at: ").Underline(version.GetReleaseURL(v)).NextSection()
-		}
+		return v, nil
 	}
-	return nil
+
+	return BuildCmdRoot(w, vh)
 }
 
-func Execute() {
-	if err := rootCmd.Execute(); err != nil {
-		if rootArgs.output == "human" && !isatty.IsTerminal(os.Stdout.Fd()) && !isatty.IsCygwinTerminal(os.Stdout.Fd()) {
-			_, _ = fmt.Fprintln(os.Stderr, err)
-		} else {
-			if rootArgs.output == "human" {
-				p := printer.NewHumanPrinter()
-				p.CrossMark().DangerText(err.Error()).NextLine()
-			} else if rootArgs.output == "json" {
-				jsonErr := vgjson.Print(struct {
-					Error string `json:"error"`
-				}{
-					Error: err.Error(),
-				})
-				if jsonErr != nil {
-					_, _ = fmt.Fprintf(os.Stderr, "couldn't format JSON: %v\n", jsonErr)
-					_, _ = fmt.Fprintf(os.Stderr, "original error: %v\n", err)
-				}
-			} else {
-				_, _ = fmt.Fprintln(os.Stderr, err)
+func BuildCmdRoot(w io.Writer, vh CheckVersionHandler) *cobra.Command {
+	f := &RootFlags{}
+
+	cmd := &cobra.Command{
+		Use:           os.Args[0],
+		Short:         "The Vega wallet",
+		Long:          "The Vega wallet",
+		SilenceUsage:  true,
+		SilenceErrors: true,
+		PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
+			if err := f.Validate(); err != nil {
+				return err
 			}
-		}
-		os.Exit(1)
+
+			if !f.NoVersionCheck && f.Output == flags.InteractiveOutput {
+				p := printer.NewInteractivePrinter(w)
+				if version.IsUnreleased() {
+					p.CrossMark().DangerText("You are running an unreleased version of the Vega wallet (").DangerText(version.Version).DangerText("). Use it at your own risk!").NextSection()
+				}
+
+				v, err := vh()
+				if err != nil {
+					return err
+				}
+
+				if v != nil {
+					p.Text("Version ").SuccessText(v.String()).Text(" is available. Your current version is ").DangerText(version.Version).Text(".").NextLine()
+					p.Text("Download the latest version at: ").Underline(version.GetReleaseURL(v)).NextSection()
+				}
+			}
+			return nil
+		},
 	}
+
+	cmd.PersistentFlags().StringVarP(&f.Output,
+		"output", "o",
+		flags.InteractiveOutput,
+		fmt.Sprintf("Specify the output format: %v", flags.AvailableOutputs),
+	)
+	cmd.PersistentFlags().StringVar(&f.Home,
+		"home",
+		"",
+		"Specify the location of a custom Vega home",
+	)
+	cmd.PersistentFlags().BoolVar(&f.NoVersionCheck,
+		"no-version-check",
+		false,
+		"Do not check for new version of the Vega wallet",
+	)
+
+	// Root commands
+	cmd.AddCommand(NewCmdSendCommand(w, f))
+	cmd.AddCommand(NewCmdInit(w, f))
+	cmd.AddCommand(NewCmdSignMessage(w, f))
+	cmd.AddCommand(NewCmdVerifyMessage(w, f))
+	cmd.AddCommand(NewCmdVersion(w, f))
+
+	// Sub-commands
+	cmd.AddCommand(NewCmdKey(w, f))
+	cmd.AddCommand(NewCmdNetwork(w, f))
+	cmd.AddCommand(NewCmdService(w, f))
+
+	// Wallet commands
+	// We don't have a wrapper sub-command for wallet commands.
+	cmd.AddCommand(NewCmdGetInfoWallet(w, f))
+	cmd.AddCommand(NewCmdImportWallet(w, f))
+	cmd.AddCommand(NewCmdListWallets(w, f))
+
+	return cmd
 }
 
-func init() {
-	rootCmd.PersistentFlags().StringVarP(&rootArgs.output, "output", "o", "human", "Specify the output format: json,human")
-	rootCmd.PersistentFlags().StringVar(&rootArgs.home, "home", "", "Specify the location of a custom Vega home")
-	rootCmd.PersistentFlags().BoolVar(&rootArgs.noVersionCheck, "no-version-check", false, "Do not check for new version of the Vega wallet")
+type RootFlags struct {
+	Output         string
+	Home           string
+	NoVersionCheck bool
 }
 
-func getPassphrase(flaggedPassphraseFile string, confirmInput bool) (string, error) {
-	hasPassphraseFileFlag := len(flaggedPassphraseFile) != 0
-
-	if hasPassphraseFileFlag {
-		rawPassphrase, err := vgfs.ReadFile(flaggedPassphraseFile)
-		if err != nil {
-			return "", err
-		}
-		// user might have added \n at the end of the line, let's remove it.
-		cleanupPassphrase := strings.Trim(string(rawPassphrase), "\n")
-		return cleanupPassphrase, nil
-	}
-	if !isatty.IsTerminal(os.Stdout.Fd()) && !isatty.IsCygwinTerminal(os.Stdout.Fd()) {
-		return "", ErrPassphraseFileRequiredWithoutTTY
+func (f *RootFlags) Validate() error {
+	if err := flags.ValidateOutput(f.Output); err != nil {
+		// This flag has special treatment because error reporting depends on it,
+		// and we need to differentiate output errors from the rest to select the
+		// right way to print the data.
+		// As a result, we wrap generic errors in a specific one
+		return NewInvalidOutputError(err)
 	}
 
-	passphrase, err := promptForPassphrase()
-	if err != nil {
-		return "", fmt.Errorf("could not get passphrase: %w", err)
-	}
-
-	if len(passphrase) == 0 {
-		return "", ErrPassphraseCannotBeEmpty
-	}
-
-	if confirmInput {
-		confirmation, err := promptForPassphrase("Confirm passphrase: ")
-		if err != nil {
-			return "", fmt.Errorf("could not get passphrase: %w", err)
-		}
-
-		if passphrase != confirmation {
-			return "", ErrPassphrasesDoNotMatch
-		}
-	}
-	fmt.Println() //nolint:forbidigo
-
-	return passphrase, nil
-}
-
-func promptForPassphrase(msg ...string) (string, error) {
-	if len(msg) == 0 {
-		fmt.Print("Enter passphrase: ") //nolint:forbidigo
-	} else {
-		fmt.Print(msg[0]) //nolint:forbidigo
-	}
-	password, err := term.ReadPassword(int(os.Stdin.Fd()))
-	if err != nil {
-		return "", err
-	}
-	fmt.Println() //nolint:forbidigo
-
-	return string(password), nil
+	return nil
 }

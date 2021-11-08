@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased (0.10.0)
+
+### Breaking changes
+- [300](https://github.com/vegaprotocol/vegawallet/pull/300) - Move from semi-colon to comma separated metadata on `key annotate` and `key generate`
+- [300](https://github.com/vegaprotocol/vegawallet/pull/300) - Trim the `key list` output to only output name and public key
+
+### Improvements
+- [300](https://github.com/vegaprotocol/vegawallet/pull/300) - Internal restructuring of CLI building blocks to improve testability
+
+
 ## 0.9.2
 *2021-10-27*
 

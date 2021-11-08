@@ -48,6 +48,35 @@ func (mr *MockStoreMockRecorder) GetNetwork(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNetwork", reflect.TypeOf((*MockStore)(nil).GetNetwork), arg0)
 }
 
+// GetNetworkPath mocks base method
+func (m *MockStore) GetNetworkPath(arg0 string) string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetNetworkPath", arg0)
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// GetNetworkPath indicates an expected call of GetNetworkPath
+func (mr *MockStoreMockRecorder) GetNetworkPath(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNetworkPath", reflect.TypeOf((*MockStore)(nil).GetNetworkPath), arg0)
+}
+
+// ListNetworks mocks base method
+func (m *MockStore) ListNetworks() ([]string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListNetworks")
+	ret0, _ := ret[0].([]string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListNetworks indicates an expected call of ListNetworks
+func (mr *MockStoreMockRecorder) ListNetworks() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListNetworks", reflect.TypeOf((*MockStore)(nil).ListNetworks))
+}
+
 // NetworkExists mocks base method
 func (m *MockStore) NetworkExists(arg0 string) (bool, error) {
 	m.ctrl.T.Helper()

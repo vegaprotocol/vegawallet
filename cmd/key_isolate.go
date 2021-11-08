@@ -2,78 +2,133 @@ package cmd
 
 import (
 	"fmt"
+	"io"
 
-	vgjson "code.vegaprotocol.io/shared/libs/json"
+	"code.vegaprotocol.io/vegawallet/cmd/cli"
+	"code.vegaprotocol.io/vegawallet/cmd/flags"
 	"code.vegaprotocol.io/vegawallet/cmd/printer"
+	"code.vegaprotocol.io/vegawallet/wallet"
 	"code.vegaprotocol.io/vegawallet/wallets"
 	"github.com/spf13/cobra"
 )
 
 var (
-	keyIsolateArgs struct {
-		name           string
-		passphraseFile string
-		pubkey         string
-	}
+	isolateKeyLong = cli.LongDesc(`
+		Extract the specified key pair into an isolated wallet.
+	
+		An isolated wallet is a wallet that contains a single key pair and that
+		has been stripped from its cryptographic node.
+		
+		Removing the cryptographic node from the wallet minimizes the impact of a
+		stolen wallet, as it makes it impossible to retrieve or generate keys out
+		of it.
 
-	keyIsolateCmd = &cobra.Command{
-		Use:   "isolate",
-		Short: "Isolate a wallet with the specified key pair",
-		Long:  "Isolate a wallet with the specified key pair, without the root node responsible of key pairs generation. This allows extra layer of security.",
-		RunE:  runKeyIsolate,
-	}
+		This creates a wallet that is only able to sign and verify transactions.
+
+		This adds an extra layer of security.
+	`)
+
+	isolateKeyExample = cli.Examples(`
+		# Isolate a key pair
+		vegawallet key isolate --wallet WALLET --pubkey PUBKEY
+	`)
 )
 
-func init() {
-	keyCmd.AddCommand(keyIsolateCmd)
-	keyIsolateCmd.Flags().StringVarP(&keyIsolateArgs.name, "wallet", "w", "", "Name of the wallet to use")
-	keyIsolateCmd.Flags().StringVarP(&keyIsolateArgs.passphraseFile, "passphrase-file", "p", "", "Path of the file containing the passphrase to access the wallet")
-	keyIsolateCmd.Flags().StringVarP(&keyIsolateArgs.pubkey, "pubkey", "k", "", "Public key to be used (hex)")
-	_ = keyIsolateCmd.MarkFlagRequired("wallet")
-	_ = keyIsolateCmd.MarkFlagRequired("pubkey")
+type IsolateKeyHandler func(*wallet.IsolateKeyRequest) (*wallet.IsolateKeyResponse, error)
+
+func NewCmdIsolateKey(w io.Writer, rf *RootFlags) *cobra.Command {
+	h := func(req *wallet.IsolateKeyRequest) (*wallet.IsolateKeyResponse, error) {
+		s, err := wallets.InitialiseStore(rf.Home)
+		if err != nil {
+			return nil, fmt.Errorf("couldn't initialise wallets store: %w", err)
+		}
+
+		return wallet.IsolateKey(s, req)
+	}
+
+	return BuildCmdIsolateKey(w, h, rf)
 }
 
-func runKeyIsolate(_ *cobra.Command, _ []string) error {
-	store, err := wallets.InitialiseStore(rootArgs.home)
-	if err != nil {
-		return fmt.Errorf("couldn't initialise wallets store: %w", err)
+func BuildCmdIsolateKey(w io.Writer, handler IsolateKeyHandler, rf *RootFlags) *cobra.Command {
+	f := &IsolateKeyFlags{}
+
+	cmd := &cobra.Command{
+		Use:     "isolate",
+		Short:   "Extract the specified key pair into an isolated wallet",
+		Long:    isolateKeyLong,
+		Example: isolateKeyExample,
+		RunE: func(_ *cobra.Command, _ []string) error {
+			req, err := f.Validate()
+			if err != nil {
+				return err
+			}
+
+			resp, err := handler(req)
+			if err != nil {
+				return err
+			}
+
+			switch rf.Output {
+			case flags.InteractiveOutput:
+				PrintIsolateKeyResponse(w, resp)
+			case flags.JSONOutput:
+				return printer.FprintJSON(w, resp)
+			}
+
+			return nil
+		},
 	}
 
-	passphrase, err := getPassphrase(keyIsolateArgs.passphraseFile, false)
-	if err != nil {
-		return err
-	}
+	cmd.Flags().StringVarP(&f.Wallet,
+		"wallet", "w",
+		"",
+		"Wallet holding the public key",
+	)
+	cmd.Flags().StringVarP(&f.PubKey,
+		"pubkey", "k",
+		"",
+		"Public key to isolate (hex-encoded)",
+	)
+	cmd.Flags().StringVarP(&f.PassphraseFile,
+		"passphrase-file", "p",
+		"",
+		"Path to the file containing the wallet's passphrase",
+	)
 
-	w, err := store.GetWallet(keyIsolateArgs.name, passphrase)
-	if err != nil {
-		return fmt.Errorf("couldn't get wallet %s: %w", keyIsolateArgs.name, err)
-	}
-
-	isolatedWallet, err := w.IsolateWithKey(keyIsolateArgs.pubkey)
-	if err != nil {
-		return fmt.Errorf("couldn't isolate wallet %s: %w", keyIsolateArgs.name, err)
-	}
-
-	if err := store.SaveWallet(isolatedWallet, passphrase); err != nil {
-		return fmt.Errorf("couldn't save isolated wallet %s: %w", isolatedWallet.Name(), err)
-	}
-
-	walletPath := store.GetWalletPath(isolatedWallet.Name())
-
-	if rootArgs.output == "human" {
-		p := printer.NewHumanPrinter()
-		p.CheckMark().Text("Key pair has been isolated in wallet ").Bold(isolatedWallet.Name()).Text(" at: ").SuccessText(walletPath).NextLine()
-		p.CheckMark().SuccessText("Key isolation succeeded").NextSection()
-	} else if rootArgs.output == "json" {
-		return vgjson.Print(keyIsolateJSON{
-			Wallet:   isolatedWallet.Name(),
-			FilePath: walletPath,
-		})
-	}
-	return nil
+	return cmd
 }
 
-type keyIsolateJSON struct {
-	Wallet   string `json:"wallet"`
-	FilePath string `json:"filePath"`
+type IsolateKeyFlags struct {
+	Wallet         string
+	PubKey         string
+	PassphraseFile string
+}
+
+func (f *IsolateKeyFlags) Validate() (*wallet.IsolateKeyRequest, error) {
+	req := &wallet.IsolateKeyRequest{}
+
+	if len(f.Wallet) == 0 {
+		return nil, flags.FlagMustBeSpecifiedError("wallet")
+	}
+	req.Wallet = f.Wallet
+
+	if len(f.PubKey) == 0 {
+		return nil, flags.FlagMustBeSpecifiedError("pubkey")
+	}
+	req.PubKey = f.PubKey
+
+	passphrase, err := flags.GetPassphrase(f.PassphraseFile)
+	if err != nil {
+		return nil, err
+	}
+	req.Passphrase = passphrase
+
+	return req, nil
+}
+
+func PrintIsolateKeyResponse(w io.Writer, resp *wallet.IsolateKeyResponse) {
+	p := printer.NewInteractivePrinter(w)
+
+	p.CheckMark().Text("Key pair has been isolated in wallet ").Bold(resp.Wallet).Text(" at: ").SuccessText(resp.FilePath).NextLine()
+	p.CheckMark().SuccessText("Key isolation succeeded").NextSection()
 }

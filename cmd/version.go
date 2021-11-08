@@ -1,41 +1,59 @@
 package cmd
 
 import (
-	vgjson "code.vegaprotocol.io/shared/libs/json"
+	"io"
+
+	"code.vegaprotocol.io/vegawallet/cmd/cli"
+	"code.vegaprotocol.io/vegawallet/cmd/flags"
 	"code.vegaprotocol.io/vegawallet/cmd/printer"
 	"code.vegaprotocol.io/vegawallet/version"
 
 	"github.com/spf13/cobra"
 )
 
-var versionCmd = &cobra.Command{
-	Use:   "version",
-	Short: "Show the version of the Vega wallet",
-	Long:  "Show the version of the Vega wallet",
-	RunE:  runVersion,
+var (
+	versionLong = cli.LongDesc(`
+		Get the version of the program.
+	`)
+
+	versionExample = cli.Examples(`
+		# Get the version of the program
+		vegawallet version
+	`)
+)
+
+type GetVersionHandler func() *version.GetVersionResponse
+
+func NewCmdVersion(w io.Writer, rf *RootFlags) *cobra.Command {
+	return BuildCmdGetVersion(w, version.GetVersionInfo, rf)
 }
 
-func init() {
-	rootCmd.AddCommand(versionCmd)
-}
+func BuildCmdGetVersion(w io.Writer, handler GetVersionHandler, rf *RootFlags) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "version",
+		Short:   "Get the version of the program",
+		Long:    versionLong,
+		Example: versionExample,
+		RunE: func(_ *cobra.Command, _ []string) error {
+			resp := handler()
 
-func runVersion(_ *cobra.Command, _ []string) error {
-	if rootArgs.output == "human" {
-		p := printer.NewHumanPrinter()
-		p.Text("Version:").NextLine().WarningText(version.Version).NextSection()
-		p.Text("Git hash:").NextLine().WarningText(version.VersionHash).NextSection()
-	} else if rootArgs.output == "json" {
-		return printVersionJSON()
+			switch rf.Output {
+			case flags.InteractiveOutput:
+				PrintGetVersionResponse(w, resp)
+			case flags.JSONOutput:
+				return printer.FprintJSON(w, resp)
+			}
+
+			return nil
+		},
 	}
-	return nil
+
+	return cmd
 }
 
-func printVersionJSON() error {
-	return vgjson.Print(struct {
-		Version string `json:"version"`
-		GitHash string `json:"gitHash"`
-	}{
-		Version: version.Version,
-		GitHash: version.VersionHash,
-	})
+func PrintGetVersionResponse(w io.Writer, resp *version.GetVersionResponse) {
+	p := printer.NewInteractivePrinter(w)
+
+	p.Text("Version:").NextLine().WarningText(resp.Version).NextSection()
+	p.Text("Git hash:").NextLine().WarningText(resp.GitHash).NextSection()
 }

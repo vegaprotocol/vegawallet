@@ -3,92 +3,145 @@ package cmd
 import (
 	"encoding/base64"
 	"fmt"
+	"io"
 	"os"
 
-	vgjson "code.vegaprotocol.io/shared/libs/json"
+	"code.vegaprotocol.io/vegawallet/cmd/cli"
+	"code.vegaprotocol.io/vegawallet/cmd/flags"
 	"code.vegaprotocol.io/vegawallet/cmd/printer"
+	"code.vegaprotocol.io/vegawallet/wallet"
 	"code.vegaprotocol.io/vegawallet/wallets"
 	"github.com/spf13/cobra"
 )
 
 var (
-	signArgs struct {
-		wallet         string
-		passphraseFile string
-		message        string
-		pubKey         string
-	}
+	signMessageLong = cli.LongDesc(`
+		Sign any message using a Vega wallet key.
+	`)
 
-	// signCmd represents the sign command.
-	signCmd = &cobra.Command{
-		Use:   "sign",
-		Short: "Sign a blob of data",
-		Long:  "Sign a blob of dara base64 encoded",
-		RunE:  runSign,
-	}
+	signMessageExample = cli.Examples(`
+		# Sign a message
+		vegawallet sign --message MESSAGE --wallet WALLET --pubkey PUBKEY
+	`)
 )
 
-func init() {
-	rootCmd.AddCommand(signCmd)
-	signCmd.Flags().StringVarP(&signArgs.wallet, "wallet", "w", "", "Name of the wallet to use")
-	signCmd.Flags().StringVarP(&signArgs.passphraseFile, "passphrase-file", "p", "", "Path of the file containing the passphrase to access the wallet")
-	signCmd.Flags().StringVarP(&signArgs.message, "message", "m", "", "Message to be signed (base64)")
-	signCmd.Flags().StringVarP(&signArgs.pubKey, "pubkey", "k", "", "Public key to be used (hex)")
-	_ = signCmd.MarkFlagRequired("network")
-	_ = signCmd.MarkFlagRequired("pubkey")
-	_ = signCmd.MarkFlagRequired("message")
+type SignMessageHandler func(*wallet.SignMessageRequest) (*wallet.SignMessageResponse, error)
+
+func NewCmdSignMessage(w io.Writer, rf *RootFlags) *cobra.Command {
+	h := func(req *wallet.SignMessageRequest) (*wallet.SignMessageResponse, error) {
+		s, err := wallets.InitialiseStore(rf.Home)
+		if err != nil {
+			return nil, fmt.Errorf("couldn't initialise wallets store: %w", err)
+		}
+
+		return wallet.SignMessage(s, req)
+	}
+	return BuildCmdSignMessage(w, h, rf)
 }
 
-func runSign(_ *cobra.Command, _ []string) error {
-	store, err := wallets.InitialiseStore(rootArgs.home)
-	if err != nil {
-		return fmt.Errorf("couldn't initialise wallets store: %w", err)
+func BuildCmdSignMessage(w io.Writer, handler SignMessageHandler, rf *RootFlags) *cobra.Command {
+	f := &SignMessageFlags{}
+
+	cmd := &cobra.Command{
+		Use:     "sign",
+		Short:   "Sign a message using a Vega wallet key",
+		Long:    signMessageLong,
+		Example: signMessageExample,
+		RunE: func(_ *cobra.Command, _ []string) error {
+			req, err := f.Validate()
+			if err != nil {
+				return err
+			}
+
+			resp, err := handler(req)
+			if err != nil {
+				return err
+			}
+
+			switch rf.Output {
+			case flags.InteractiveOutput:
+				PrintSignMessageResponse(w, resp)
+			case flags.JSONOutput:
+				return printer.FprintJSON(w, struct {
+					Signature string `json:"signature"`
+				}{
+					Signature: resp.Base64,
+				})
+			}
+
+			return nil
+		},
 	}
 
-	handler := wallets.NewHandler(store)
+	cmd.Flags().StringVarP(&f.Wallet,
+		"wallet", "w",
+		"",
+		"Wallet holding the public key",
+	)
+	cmd.Flags().StringVarP(&f.PubKey,
+		"pubkey", "k",
+		"",
+		"Public key to use to the sign the message (hex-encoded)",
+	)
+	cmd.Flags().StringVarP(&f.Message,
+		"message", "m",
+		"",
+		"Message to be verified (base64-encoded)",
+	)
+	cmd.Flags().StringVarP(&f.PassphraseFile,
+		"passphrase-file", "p",
+		"",
+		"Path to the file containing the wallet's passphrase",
+	)
 
-	decodedMessage, err := base64.StdEncoding.DecodeString(signArgs.message)
-	if err != nil {
-		return ErrMessageShouldBeBase64
-	}
-
-	passphrase, err := getPassphrase(signArgs.passphraseFile, false)
-	if err != nil {
-		return err
-	}
-
-	err = handler.LoginWallet(signArgs.wallet, passphrase)
-	if err != nil {
-		return fmt.Errorf("could not login to the wallet: %w", err)
-	}
-
-	sig, err := handler.SignAny(signArgs.wallet, decodedMessage, signArgs.pubKey)
-	if err != nil {
-		return err
-	}
-
-	encodedSig := base64.StdEncoding.EncodeToString(sig)
-
-	if rootArgs.output == "human" {
-		p := printer.NewHumanPrinter()
-		p.CheckMark().SuccessText("Message signature successful").NextSection()
-		p.Text("Signature (base64):").NextLine().WarningText(encodedSig).NextSection()
-
-		p.BlueArrow().InfoText("Verify a signature").NextLine()
-		p.Text("To verify a base-64 encoded message, use the following commands:").NextSection()
-		p.Code(fmt.Sprintf("%s verify --pubkey %s --message \"%s\" --signature %s", os.Args[0], signArgs.pubKey, signArgs.message, encodedSig)).NextSection()
-		p.Text("For more information, use ").Bold("--help").Text(" flag.").NextLine()
-	} else if rootArgs.output == "json" {
-		return printSignJSON(encodedSig)
-	}
-
-	return nil
+	return cmd
 }
 
-func printSignJSON(sig string) error {
-	return vgjson.Print(struct {
-		Signature string `json:"signature"`
-	}{
-		Signature: sig,
-	})
+type SignMessageFlags struct {
+	Wallet         string
+	PubKey         string
+	Message        string
+	PassphraseFile string
+}
+
+func (f *SignMessageFlags) Validate() (*wallet.SignMessageRequest, error) {
+	req := &wallet.SignMessageRequest{}
+
+	if len(f.Wallet) == 0 {
+		return nil, flags.FlagMustBeSpecifiedError("wallet")
+	}
+	req.Wallet = f.Wallet
+
+	if len(f.PubKey) == 0 {
+		return nil, flags.FlagMustBeSpecifiedError("pubkey")
+	}
+	req.PubKey = f.PubKey
+
+	if len(f.Message) == 0 {
+		return nil, flags.FlagMustBeSpecifiedError("message")
+	}
+	decodedMessage, err := base64.StdEncoding.DecodeString(f.Message)
+	if err != nil {
+		return nil, flags.MustBase64EncodedError("message")
+	}
+	req.Message = decodedMessage
+
+	passphrase, err := flags.GetPassphrase(f.PassphraseFile)
+	if err != nil {
+		return nil, err
+	}
+	req.Passphrase = passphrase
+
+	return req, nil
+}
+
+func PrintSignMessageResponse(w io.Writer, req *wallet.SignMessageResponse) {
+	p := printer.NewInteractivePrinter(w)
+
+	p.CheckMark().SuccessText("Message signature successful").NextSection()
+	p.Text("Signature (base64-encoded):").NextLine().WarningText(req.Base64).NextSection()
+
+	p.BlueArrow().InfoText("Sign a message").NextLine()
+	p.Text("To verify a message, see the following command:").NextSection()
+	p.Code(fmt.Sprintf("%s verify --help", os.Args[0])).NextSection()
 }
