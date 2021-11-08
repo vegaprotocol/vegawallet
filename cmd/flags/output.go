@@ -1,7 +1,7 @@
 package flags
 
 const (
-	InteractiveOutput = "human"
+	InteractiveOutput = "interactive"
 	JSONOutput        = "json"
 )
 
