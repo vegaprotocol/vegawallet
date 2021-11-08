@@ -13,6 +13,7 @@
 
 ### Fixes
 - [356](https://github.com/vegaprotocol/vegawallet/pull/356) - Ensure the interactive printer is listening to color management env vars (`NO_COLOR` and `CLICOLOR`)
+- [357](https://github.com/vegaprotocol/vegawallet/pull/357) - Warn without failing when no connection on version verification
 
 ## 0.9.2
 *2021-10-27*
