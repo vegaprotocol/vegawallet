@@ -14,7 +14,7 @@ import (
 	vgcrypto "code.vegaprotocol.io/shared/libs/crypto"
 	vgrand "code.vegaprotocol.io/shared/libs/rand"
 
-	"github.com/dgrijalva/jwt-go/v4"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/julienschmidt/httprouter"
 	"go.uber.org/zap"
 )
@@ -81,7 +81,7 @@ func (a *auth) NewSession(name string) (string, error) {
 		Wallet:  name,
 		StandardClaims: jwt.StandardClaims{
 			// these are seconds
-			ExpiresAt: jwt.NewTime((float64)(expiresAt.Unix())),
+			ExpiresAt: expiresAt.Unix(),
 			Issuer:    "vega wallet",
 		},
 	}

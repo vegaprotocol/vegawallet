@@ -65,7 +65,7 @@ func testVerifyInvalidToken(t *testing.T) {
 	tok := "that's not a token"
 
 	w, err := auth.VerifyToken(tok)
-	assert.EqualError(t, err, "couldn't parse JWT token: token is malformed: token contains an invalid number of segments")
+	assert.EqualError(t, err, "couldn't parse JWT token: token contains an invalid number of segments")
 	assert.Empty(t, w)
 }
 
@@ -97,6 +97,6 @@ func testRevokeInvalidToken(t *testing.T) {
 	tok := "hehehe that's not a toekn"
 
 	name, err := auth.Revoke(tok)
-	assert.EqualError(t, err, "couldn't parse JWT token: token is malformed: token contains an invalid number of segments")
+	assert.EqualError(t, err, "couldn't parse JWT token: token contains an invalid number of segments")
 	assert.Empty(t, name)
 }
