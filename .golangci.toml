@@ -34,10 +34,9 @@ disable = [
     "lll",
     # nlreturn doesn't match our code style.
     "nlreturn",
+    "gomoddirectives",
 ]
 
 [issues.exclude-rules]
 linters = ["staticcheck"]
 text = "SA1019:"
-
-
