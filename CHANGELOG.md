@@ -9,6 +9,8 @@
 ### Improvements
 - [300](https://github.com/vegaprotocol/vegawallet/pull/300) - Internal restructuring of CLI building blocks to improve testability
 
+### Fixes
+- [](https://github.com/vegaprotocol/vegawallet/pull/) - Ensure the interactive printer is listening to color management env vars (`NO_COLOR` and `CLICOLOR`)
 
 ## 0.9.2
 *2021-10-27*

@@ -17,7 +17,7 @@ type InteractivePrinter struct {
 }
 
 func NewInteractivePrinter(w io.Writer) *InteractivePrinter {
-	profile := termenv.ColorProfile()
+	profile := termenv.EnvColorProfile()
 	return &InteractivePrinter{
 		writer:    w,
 		profile:   profile,
