@@ -5,35 +5,36 @@
 package mocks
 
 import (
+	reflect "reflect"
+
 	wallet "code.vegaprotocol.io/vegawallet/wallet"
 	gomock "github.com/golang/mock/gomock"
-	reflect "reflect"
 )
 
-// MockStore is a mock of Store interface
+// MockStore is a mock of Store interface.
 type MockStore struct {
 	ctrl     *gomock.Controller
 	recorder *MockStoreMockRecorder
 }
 
-// MockStoreMockRecorder is the mock recorder for MockStore
+// MockStoreMockRecorder is the mock recorder for MockStore.
 type MockStoreMockRecorder struct {
 	mock *MockStore
 }
 
-// NewMockStore creates a new mock instance
+// NewMockStore creates a new mock instance.
 func NewMockStore(ctrl *gomock.Controller) *MockStore {
 	mock := &MockStore{ctrl: ctrl}
 	mock.recorder = &MockStoreMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
+// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockStore) EXPECT() *MockStoreMockRecorder {
 	return m.recorder
 }
 
-// GetWallet mocks base method
+// GetWallet mocks base method.
 func (m *MockStore) GetWallet(arg0, arg1 string) (wallet.Wallet, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetWallet", arg0, arg1)
@@ -42,13 +43,13 @@ func (m *MockStore) GetWallet(arg0, arg1 string) (wallet.Wallet, error) {
 	return ret0, ret1
 }
 
-// GetWallet indicates an expected call of GetWallet
+// GetWallet indicates an expected call of GetWallet.
 func (mr *MockStoreMockRecorder) GetWallet(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetWallet", reflect.TypeOf((*MockStore)(nil).GetWallet), arg0, arg1)
 }
 
-// GetWalletPath mocks base method
+// GetWalletPath mocks base method.
 func (m *MockStore) GetWalletPath(arg0 string) string {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetWalletPath", arg0)
@@ -56,13 +57,13 @@ func (m *MockStore) GetWalletPath(arg0 string) string {
 	return ret0
 }
 
-// GetWalletPath indicates an expected call of GetWalletPath
+// GetWalletPath indicates an expected call of GetWalletPath.
 func (mr *MockStoreMockRecorder) GetWalletPath(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetWalletPath", reflect.TypeOf((*MockStore)(nil).GetWalletPath), arg0)
 }
 
-// ListWallets mocks base method
+// ListWallets mocks base method.
 func (m *MockStore) ListWallets() ([]string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListWallets")
@@ -71,13 +72,13 @@ func (m *MockStore) ListWallets() ([]string, error) {
 	return ret0, ret1
 }
 
-// ListWallets indicates an expected call of ListWallets
+// ListWallets indicates an expected call of ListWallets.
 func (mr *MockStoreMockRecorder) ListWallets() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListWallets", reflect.TypeOf((*MockStore)(nil).ListWallets))
 }
 
-// SaveWallet mocks base method
+// SaveWallet mocks base method.
 func (m *MockStore) SaveWallet(arg0 wallet.Wallet, arg1 string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SaveWallet", arg0, arg1)
@@ -85,13 +86,13 @@ func (m *MockStore) SaveWallet(arg0 wallet.Wallet, arg1 string) error {
 	return ret0
 }
 
-// SaveWallet indicates an expected call of SaveWallet
+// SaveWallet indicates an expected call of SaveWallet.
 func (mr *MockStoreMockRecorder) SaveWallet(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveWallet", reflect.TypeOf((*MockStore)(nil).SaveWallet), arg0, arg1)
 }
 
-// WalletExists mocks base method
+// WalletExists mocks base method.
 func (m *MockStore) WalletExists(arg0 string) bool {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "WalletExists", arg0)
@@ -99,7 +100,7 @@ func (m *MockStore) WalletExists(arg0 string) bool {
 	return ret0
 }
 
-// WalletExists indicates an expected call of WalletExists
+// WalletExists indicates an expected call of WalletExists.
 func (mr *MockStoreMockRecorder) WalletExists(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WalletExists", reflect.TypeOf((*MockStore)(nil).WalletExists), arg0)

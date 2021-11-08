@@ -20,7 +20,6 @@ type Store interface {
 	GetNetworkPath(string) string
 }
 
-//go:generate go run github.com/golang/mock/mockgen -destination mocks/reader_mock.go -package mocks code.vegaprotocol.io/vegawallet/network Reader
 type Reader func(uri string, net interface{}) error
 
 type Readers struct {

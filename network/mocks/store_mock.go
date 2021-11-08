@@ -5,35 +5,36 @@
 package mocks
 
 import (
+	reflect "reflect"
+
 	network "code.vegaprotocol.io/vegawallet/network"
 	gomock "github.com/golang/mock/gomock"
-	reflect "reflect"
 )
 
-// MockStore is a mock of Store interface
+// MockStore is a mock of Store interface.
 type MockStore struct {
 	ctrl     *gomock.Controller
 	recorder *MockStoreMockRecorder
 }
 
-// MockStoreMockRecorder is the mock recorder for MockStore
+// MockStoreMockRecorder is the mock recorder for MockStore.
 type MockStoreMockRecorder struct {
 	mock *MockStore
 }
 
-// NewMockStore creates a new mock instance
+// NewMockStore creates a new mock instance.
 func NewMockStore(ctrl *gomock.Controller) *MockStore {
 	mock := &MockStore{ctrl: ctrl}
 	mock.recorder = &MockStoreMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
+// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockStore) EXPECT() *MockStoreMockRecorder {
 	return m.recorder
 }
 
-// GetNetwork mocks base method
+// GetNetwork mocks base method.
 func (m *MockStore) GetNetwork(arg0 string) (*network.Network, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetNetwork", arg0)
@@ -42,13 +43,13 @@ func (m *MockStore) GetNetwork(arg0 string) (*network.Network, error) {
 	return ret0, ret1
 }
 
-// GetNetwork indicates an expected call of GetNetwork
+// GetNetwork indicates an expected call of GetNetwork.
 func (mr *MockStoreMockRecorder) GetNetwork(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNetwork", reflect.TypeOf((*MockStore)(nil).GetNetwork), arg0)
 }
 
-// GetNetworkPath mocks base method
+// GetNetworkPath mocks base method.
 func (m *MockStore) GetNetworkPath(arg0 string) string {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetNetworkPath", arg0)
@@ -56,13 +57,13 @@ func (m *MockStore) GetNetworkPath(arg0 string) string {
 	return ret0
 }
 
-// GetNetworkPath indicates an expected call of GetNetworkPath
+// GetNetworkPath indicates an expected call of GetNetworkPath.
 func (mr *MockStoreMockRecorder) GetNetworkPath(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNetworkPath", reflect.TypeOf((*MockStore)(nil).GetNetworkPath), arg0)
 }
 
-// ListNetworks mocks base method
+// ListNetworks mocks base method.
 func (m *MockStore) ListNetworks() ([]string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListNetworks")
@@ -71,13 +72,13 @@ func (m *MockStore) ListNetworks() ([]string, error) {
 	return ret0, ret1
 }
 
-// ListNetworks indicates an expected call of ListNetworks
+// ListNetworks indicates an expected call of ListNetworks.
 func (mr *MockStoreMockRecorder) ListNetworks() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListNetworks", reflect.TypeOf((*MockStore)(nil).ListNetworks))
 }
 
-// NetworkExists mocks base method
+// NetworkExists mocks base method.
 func (m *MockStore) NetworkExists(arg0 string) (bool, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "NetworkExists", arg0)
@@ -86,13 +87,13 @@ func (m *MockStore) NetworkExists(arg0 string) (bool, error) {
 	return ret0, ret1
 }
 
-// NetworkExists indicates an expected call of NetworkExists
+// NetworkExists indicates an expected call of NetworkExists.
 func (mr *MockStoreMockRecorder) NetworkExists(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NetworkExists", reflect.TypeOf((*MockStore)(nil).NetworkExists), arg0)
 }
 
-// SaveNetwork mocks base method
+// SaveNetwork mocks base method.
 func (m *MockStore) SaveNetwork(arg0 *network.Network) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SaveNetwork", arg0)
@@ -100,7 +101,7 @@ func (m *MockStore) SaveNetwork(arg0 *network.Network) error {
 	return ret0
 }
 
-// SaveNetwork indicates an expected call of SaveNetwork
+// SaveNetwork indicates an expected call of SaveNetwork.
 func (mr *MockStoreMockRecorder) SaveNetwork(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveNetwork", reflect.TypeOf((*MockStore)(nil).SaveNetwork), arg0)
