@@ -1,11 +1,13 @@
 name: ChangelogChecker
 on:
   pull_request:
-    types: [assigned, opened, synchronize, reopened, labeled, unlabeled]
+    types: [edited, synchronize, opened, reopened]
     branches:
       - develop
+      - master
 jobs:
   build:
+    if: startsWith(github.head_ref, 'renovate/') != true
     name: Check Actions
     runs-on: ubuntu-latest
     steps:
@@ -15,6 +17,6 @@ jobs:
         with:
           fileName: CHANGELOG.md
           #noChangelogLabel: my custom label # default `no changelog`
-          checkNotification: Simple # default `Detailed`
+          checkNotification: Simple
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
