@@ -41,7 +41,7 @@ func NewCmdRoot(w io.Writer) *cobra.Command {
 		defer cancel()
 		v, err := version.Check(version.BuildReleasesRequestFromGithub(ctx), version.Version)
 		if err != nil {
-			return nil, fmt.Errorf("couldn't check latest Vega wallet releases: %w", err)
+			return nil, fmt.Errorf("couldn't check latest releases: %w", err)
 		}
 		return v, nil
 	}
@@ -72,7 +72,8 @@ func BuildCmdRoot(w io.Writer, vh CheckVersionHandler) *cobra.Command {
 
 				v, err := vh()
 				if err != nil {
-					return err
+					p.CrossMark().DangerText(err.Error()).NextSection()
+					return nil
 				}
 
 				if v != nil {
