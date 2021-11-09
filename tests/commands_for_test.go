@@ -191,6 +191,79 @@ func KeyList(t *testing.T, args []string) (*ListKeysResponse, error) {
 	return resp, nil
 }
 
+type DescribeKeyResponse struct {
+	PublicKey string `json:"publicKey"`
+
+	Algorithm struct {
+		Name    string `json:"name"`
+		Version uint32 `json:"version"`
+	} `json:"algorithm"`
+	Meta []struct {
+		Key   string `json:"key"`
+		Value string `json:"value"`
+	}
+	IsTainted bool `json:"isTainted"`
+}
+
+func KeyDescribe(t *testing.T, args []string) (*DescribeKeyResponse, error) {
+	t.Helper()
+	argsWithCmd := []string{"key", "describe"}
+	argsWithCmd = append(argsWithCmd, args...)
+	output, err := ExecuteCmd(t, argsWithCmd)
+	if err != nil {
+		return nil, err
+	}
+	resp := &DescribeKeyResponse{}
+	if err := json.Unmarshal(output, resp); err != nil {
+		t.Fatalf("couldn't unmarshal command output: %v", err)
+	}
+	return resp, nil
+}
+
+type DescribeKeyAssertion struct {
+	t    *testing.T
+	resp *DescribeKeyResponse
+}
+
+func AssertDescribeKey(t *testing.T, resp *DescribeKeyResponse) *DescribeKeyAssertion {
+	t.Helper()
+
+	assert.NotNil(t, resp)
+	assert.NotEmpty(t, resp.PublicKey)
+	assert.NotEmpty(t, resp.Algorithm.Name)
+	assert.NotEmpty(t, resp.Algorithm.Version)
+
+	return &DescribeKeyAssertion{
+		t:    t,
+		resp: resp,
+	}
+}
+
+func (d *DescribeKeyAssertion) WithPubKey(pubkey string) *DescribeKeyAssertion {
+	assert.Equal(d.t, pubkey, d.resp.PublicKey)
+	return d
+}
+
+func (d *DescribeKeyAssertion) WithAlgorithm(name string, version uint32) *DescribeKeyAssertion {
+	assert.Equal(d.t, name, d.resp.Algorithm.Name)
+	assert.Equal(d.t, version, d.resp.Algorithm.Version)
+	return d
+}
+
+func (d *DescribeKeyAssertion) WithTainted(tainted bool) *DescribeKeyAssertion {
+	assert.Equal(d.t, tainted, d.resp.IsTainted)
+	return d
+}
+
+func (d *DescribeKeyAssertion) WithMeta(expected map[string]string) *DescribeKeyAssertion {
+	meta := map[string]string{}
+	for _, m := range d.resp.Meta {
+		meta[m.Key] = m.Value
+	}
+	assert.Equal(d.t, expected, meta)
+	return d
+}
+
 type IsolateKeyResponse struct {
 	Wallet   string `json:"wallet"`
 	FilePath string `json:"filePath"`

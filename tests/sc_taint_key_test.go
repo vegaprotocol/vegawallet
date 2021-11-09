@@ -16,14 +16,17 @@ func TestTaintKeys(t *testing.T) {
 
 	walletName := vgrand.RandomStr(5)
 
-	// when
-	generateKeyResp1, err := KeyGenerate(t, []string{
+	cmd := []string{
 		"--home", home,
 		"--output", "json",
 		"--wallet", walletName,
 		"--passphrase-file", passphraseFilePath,
+	}
+
+	// when
+	generateKeyResp1, err := KeyGenerate(t, append(cmd,
 		"--meta", "name:key-1,role:validation",
-	})
+	))
 
 	// then
 	require.NoError(t, err)
@@ -34,26 +37,36 @@ func TestTaintKeys(t *testing.T) {
 		LocatedUnder(home)
 
 	// when
-	err = KeyTaint(t, []string{
-		"--home", home,
-		"--output", "json",
-		"--wallet", walletName,
+	err = KeyTaint(t, append(cmd,
 		"--pubkey", generateKeyResp1.Key.KeyPair.PublicKey,
-		"--passphrase-file", passphraseFilePath,
-	})
+	))
 
 	// then
 	require.NoError(t, err)
 
 	// when
-	err = KeyUntaint(t, []string{
-		"--home", home,
-		"--output", "json",
-		"--wallet", walletName,
+	descResp, err := KeyDescribe(t, append(cmd,
 		"--pubkey", generateKeyResp1.Key.KeyPair.PublicKey,
-		"--passphrase-file", passphraseFilePath,
-	})
+	))
 
 	// then
 	require.NoError(t, err)
+	AssertDescribeKey(t, descResp).WithTainted(true)
+
+	// when
+	err = KeyUntaint(t, append(cmd,
+		"--pubkey", generateKeyResp1.Key.KeyPair.PublicKey,
+	))
+
+	// then
+	require.NoError(t, err)
+
+	// when
+	descResp, err = KeyDescribe(t, append(cmd,
+		"--pubkey", generateKeyResp1.Key.KeyPair.PublicKey,
+	))
+
+	// then
+	require.NoError(t, err)
+	AssertDescribeKey(t, descResp).WithTainted(false)
 }

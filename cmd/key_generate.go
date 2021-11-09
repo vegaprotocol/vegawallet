@@ -160,7 +160,7 @@ func PrintGenerateKeyResponse(w io.Writer, resp *wallet.GenerateKeyResponse) {
 	p.WarningText(resp.Key.KeyPair.PublicKey).NextLine()
 	p.Text("Metadata:").NextLine()
 	printMeta(p, resp.Key.Meta)
-	p.NextLine()
+	p.NextSection()
 
 	p.RedArrow().DangerText("Important").NextLine()
 	if walletHasBeenCreated {

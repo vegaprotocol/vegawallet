@@ -38,6 +38,15 @@ func BuildReleasesRequestFromGithub(ctx context.Context) ReleasesGetter {
 
 		responses := []releaseResponse{}
 		if err = json.Unmarshal(body, &responses); err != nil {
+			// try to parse as a general error message which would be useful information to know
+			// eg. if we were blocked due to githubs rate-limiting
+			m := struct {
+				Message string `json:"message"`
+			}{}
+			if mErr := json.Unmarshal(body, &m); mErr == nil {
+				return nil, fmt.Errorf("couldn't read releases API response message: %s: %w", m.Message, err)
+			}
+
 			return nil, fmt.Errorf("couldn't unmarshal releases API response body: %w", err)
 		}
 

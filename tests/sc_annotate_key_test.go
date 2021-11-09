@@ -16,14 +16,17 @@ func TestAnnotateKey(t *testing.T) {
 
 	walletName := vgrand.RandomStr(5)
 
-	// when
-	generateKeyResp, err := KeyGenerate(t, []string{
+	cmd := []string{
 		"--home", home,
 		"--output", "json",
 		"--wallet", walletName,
 		"--passphrase-file", passphraseFilePath,
+	}
+
+	// when
+	generateKeyResp, err := KeyGenerate(t, append(cmd,
 		"--meta", "name:key-1,role:validation",
-	})
+	))
 
 	// then
 	require.NoError(t, err)
@@ -34,41 +37,59 @@ func TestAnnotateKey(t *testing.T) {
 		LocatedUnder(home)
 
 	// when
-	err = KeyAnnotate(t, []string{
-		"--home", home,
-		"--output", "json",
-		"--wallet", walletName,
+	err = KeyAnnotate(t, append(cmd,
 		"--pubkey", generateKeyResp.Key.KeyPair.PublicKey,
-		"--passphrase-file", passphraseFilePath,
 		"--meta", "name:prefer-this-name",
-	})
+	))
 
 	// then
 	require.NoError(t, err)
 
 	// when
-	err = KeyAnnotate(t, []string{
-		"--home", home,
-		"--output", "json",
-		"--wallet", walletName,
+	descResp, err := KeyDescribe(t, append(cmd,
 		"--pubkey", generateKeyResp.Key.KeyPair.PublicKey,
-		"--passphrase-file", passphraseFilePath,
+	))
+
+	// then
+	require.NoError(t, err)
+	AssertDescribeKey(t, descResp).
+		WithMeta(map[string]string{"name": "prefer-this-name"})
+
+	// when
+	err = KeyAnnotate(t, append(cmd,
+		"--pubkey", generateKeyResp.Key.KeyPair.PublicKey,
 		"--clear",
-	})
+	))
 
 	// then
 	require.NoError(t, err)
 
 	// when
-	err = KeyAnnotate(t, []string{
-		"--home", home,
-		"--output", "json",
-		"--wallet", walletName,
+	descResp, err = KeyDescribe(t, append(cmd,
 		"--pubkey", generateKeyResp.Key.KeyPair.PublicKey,
-		"--passphrase-file", passphraseFilePath,
-		"--meta", "name:key-1,role:validation",
-	})
+	))
 
 	// then
 	require.NoError(t, err)
+	AssertDescribeKey(t, descResp).
+		WithMeta(map[string]string{})
+
+	// when
+	err = KeyAnnotate(t, append(cmd,
+		"--pubkey", generateKeyResp.Key.KeyPair.PublicKey,
+		"--meta", "name:key-1,role:validation",
+	))
+
+	// then
+	require.NoError(t, err)
+
+	// when
+	descResp, err = KeyDescribe(t, append(cmd,
+		"--pubkey", generateKeyResp.Key.KeyPair.PublicKey,
+	))
+
+	// then
+	require.NoError(t, err)
+	AssertDescribeKey(t, descResp).
+		WithMeta(map[string]string{"name": "key-1", "role": "validation"})
 }

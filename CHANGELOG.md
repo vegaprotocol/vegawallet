@@ -9,6 +9,7 @@
 
 ### Improvements
 - [300](https://github.com/vegaprotocol/vegawallet/pull/300) - Internal restructuring of CLI building blocks to improve testability
+- [359](https://github.com/vegaprotocol/vegawallet/pull/359) - Add `key describe` subcommand to allow querying of key information
 
 ### Fixes
 - [356](https://github.com/vegaprotocol/vegawallet/pull/356) - Ensure the interactive printer is listening to color management env vars (`NO_COLOR` and `CLICOLOR`)
