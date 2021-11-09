@@ -7,6 +7,7 @@ import (
 	"os"
 	"time"
 
+	"code.vegaprotocol.io/vegawallet/cmd/cli"
 	"code.vegaprotocol.io/vegawallet/cmd/flags"
 	"code.vegaprotocol.io/vegawallet/cmd/printer"
 	"code.vegaprotocol.io/vegawallet/version"
@@ -14,7 +15,23 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var requestTimeout = 30 * time.Second
+var (
+	requestTimeout = 30 * time.Second
+
+	rootExamples = cli.Examples(`
+		# Specify a custom Vega home directory
+		vegawallet --home PATH_TO_DIR COMMAND
+
+		# Change the output to JSON
+		vegawallet --output json COMMAND
+
+		# Disable colors on output using environment variable
+		NO_COLOR=1 vegawallet COMMAND
+
+		# Disable the verification of the program version
+		vegawallet --no-version-check COMMAND
+	`)
+)
 
 type CheckVersionHandler func() (*semver.Version, error)
 
@@ -39,6 +56,7 @@ func BuildCmdRoot(w io.Writer, vh CheckVersionHandler) *cobra.Command {
 		Use:           os.Args[0],
 		Short:         "The Vega wallet",
 		Long:          "The Vega wallet",
+		Example:       rootExamples,
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
