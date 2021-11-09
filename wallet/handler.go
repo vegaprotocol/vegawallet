@@ -198,6 +198,23 @@ type ListKeysResponse struct {
 	Keys []NamedPubKey `json:"keys"`
 }
 
+type DescribeKeyRequest struct {
+	Wallet     string
+	Passphrase string
+	PubKey     string
+}
+
+type DescribeKeyResponse struct {
+	PublicKey string `json:"publicKey"`
+
+	Algorithm struct {
+		Name    string `json:"name"`
+		Version uint32 `json:"version"`
+	} `json:"algorithm"`
+	Meta      []Meta `json:"meta"`
+	IsTainted bool   `json:"isTainted"`
+}
+
 type NamedPubKey struct {
 	Name      string `json:"name"`
 	PublicKey string `json:"publicKey"`
@@ -221,6 +238,25 @@ func ListKeys(store Store, req *ListKeysRequest) (*ListKeysResponse, error) {
 	return &ListKeysResponse{
 		Keys: keys,
 	}, nil
+}
+
+func DescribeKey(store Store, req *DescribeKeyRequest) (*DescribeKeyResponse, error) {
+	resp := &DescribeKeyResponse{}
+	w, err := getWallet(store, req.Wallet, req.Passphrase)
+	if err != nil {
+		return nil, err
+	}
+
+	kp, err := w.DescribeKeyPair(req.PubKey)
+	if err != nil {
+		return nil, err
+	}
+	resp.PublicKey = kp.PublicKey()
+	resp.Algorithm.Name = kp.AlgorithmName()
+	resp.Algorithm.Version = kp.AlgorithmVersion()
+	resp.Meta = kp.Meta()
+	resp.IsTainted = kp.IsTainted()
+	return resp, nil
 }
 
 type GetWalletInfoRequest struct {

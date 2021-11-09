@@ -108,7 +108,7 @@ func PrintListKeysResponse(w io.Writer, resp *wallet.ListKeysResponse) {
 	p := printer.NewInteractivePrinter(w)
 
 	for _, key := range resp.Keys {
-		p.Text("Name: ").WarningText(key.Name).NextLine()
+		p.Text("Name:       ").WarningText(key.Name).NextLine()
 		p.Text("Public key: ").WarningText(key.PublicKey).NextSection()
 	}
 }

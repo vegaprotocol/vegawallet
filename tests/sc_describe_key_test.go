@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestGenerateAndListKeys(t *testing.T) {
+func TestDescribeKey(t *testing.T) {
 	// given
 	home, cleanUpFn := NewTempDir(t)
 	defer cleanUpFn(t)
@@ -24,13 +24,13 @@ func TestGenerateAndListKeys(t *testing.T) {
 	}
 
 	// when
-	generateKeyResp1, err := KeyGenerate(t, append(cmd,
+	generateKeyResp, err := KeyGenerate(t, append(cmd,
 		"--meta", "name:key-1,role:validation",
 	))
 
 	// then
 	require.NoError(t, err)
-	AssertGenerateKey(t, generateKeyResp1).
+	AssertGenerateKey(t, generateKeyResp).
 		WithWalletCreation().
 		WithName(walletName).
 		WithMeta(map[string]string{"name": "key-1", "role": "validation"}).
@@ -38,36 +38,21 @@ func TestGenerateAndListKeys(t *testing.T) {
 
 	// when
 	descResp, err := KeyDescribe(t, append(cmd,
-		"--pubkey", generateKeyResp1.Key.KeyPair.PublicKey,
+		"--pubkey", generateKeyResp.Key.KeyPair.PublicKey,
 	))
 
 	// then
 	require.NoError(t, err)
 	AssertDescribeKey(t, descResp).
+		WithPubKey(generateKeyResp.Key.KeyPair.PublicKey).
 		WithMeta(map[string]string{"name": "key-1", "role": "validation"}).
 		WithAlgorithm("vega/ed25519", 1).
 		WithTainted(false)
 
-	// when
-	generateKeyResp2, err := KeyGenerate(t, cmd)
-
-	// then
-	require.NoError(t, err)
-	AssertGenerateKey(t, generateKeyResp2).
-		WithoutWalletCreation().
-		WithName(walletName).
-		WithMeta(map[string]string{"name": DefaultMetaName(t, walletName, 2)}).
-		LocatedUnder(home)
-
-	// when
+	// when non-existent public key
 	descResp, err = KeyDescribe(t, append(cmd,
-		"--pubkey", generateKeyResp2.Key.KeyPair.PublicKey,
+		"--pubkey", generateKeyResp.Key.KeyPair.PublicKey[1:],
 	))
-
-	// then
-	require.NoError(t, err)
-	AssertDescribeKey(t, descResp).
-		WithMeta(map[string]string{"name": DefaultMetaName(t, walletName, 2)}).
-		WithAlgorithm("vega/ed25519", 1).
-		WithTainted(false)
+	require.Error(t, err)
+	require.Nil(t, descResp)
 }

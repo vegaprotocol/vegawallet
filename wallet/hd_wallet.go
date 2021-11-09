@@ -99,7 +99,16 @@ func (w *HDWallet) SetName(newName string) {
 	w.name = newName
 }
 
-// DescribePublicKey returns all the information associated to a public key,
+// DescribeKeyPair returns all the information associated with a public key.
+func (w *HDWallet) DescribeKeyPair(pubKey string) (KeyPair, error) {
+	keyPair, ok := w.keyRing.FindPair(pubKey)
+	if !ok {
+		return nil, ErrPubKeyDoesNotExist
+	}
+	return &keyPair, nil
+}
+
+// DescribePublicKey returns all the information associated with a public key,
 // except the private key.
 func (w *HDWallet) DescribePublicKey(pubKey string) (PublicKey, error) {
 	keyPair, ok := w.keyRing.FindPair(pubKey)

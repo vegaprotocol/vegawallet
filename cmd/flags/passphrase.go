@@ -50,8 +50,9 @@ func ReadPassphraseFile(passphraseFilePath string) (string, error) {
 		return "", fmt.Errorf("couldn't read passphrase file: %w", err)
 	}
 
-	// user might have added \n at the end of the line, let's remove it.
-	cleanupPassphrase := strings.Trim(string(rawPassphrase), "\n")
+	// user might have added a newline at the end of the line, let's remove it,
+	// remembering Windows does things differently
+	cleanupPassphrase := strings.Trim(string(rawPassphrase), "\r\n")
 	if len(cleanupPassphrase) == 0 {
 		return "", ErrPassphraseMustBeSpecified
 	}

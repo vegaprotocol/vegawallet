@@ -14,14 +14,14 @@ import (
 
 var (
 	annotateKeyLong = cli.LongDesc(`
-		Add metadata to a key pair. The metadata are not updated in place, they are
-		replaced.
+		Add metadata to a key pair. All existing metadata is removed and replaced
+		by the specified new metadata.
+
+		The metadata is a list of key-value pairs. A key-value is colon-separated, and
+		the key-values are comma-separated.
 
 		It is possible to give a name to a key pair, that is recognised by user
 		interfaces, by setting the metadata "name".
-
-		The metadata are a list of key-value. A key-value is colon-separated, and
-		the key-values are comma-separated.
 	`)
 
 	annotateKeyExample = cli.Examples(`

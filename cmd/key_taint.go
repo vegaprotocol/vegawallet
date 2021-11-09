@@ -15,7 +15,7 @@ import (
 
 var (
 	taintKeyLong = cli.LongDesc(`
-		Tainting a key pair marks it as unsafe to use and ensure it will not be
+		Tainting a key pair marks it as unsafe to use and ensures it will not be
 		used to sign transactions.
 
 		This mechanism is useful when the key pair has been compromised.
