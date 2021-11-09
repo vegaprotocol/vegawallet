@@ -17,6 +17,7 @@ type InteractivePrinter struct {
 }
 
 func NewInteractivePrinter(w io.Writer) *InteractivePrinter {
+	enableLegacyWindowsANSI()
 	profile := termenv.EnvColorProfile()
 	return &InteractivePrinter{
 		writer:    w,
