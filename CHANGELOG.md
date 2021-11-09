@@ -5,6 +5,7 @@
 ### Breaking changes
 - [300](https://github.com/vegaprotocol/vegawallet/pull/300) - Move from semi-colon to comma separated metadata on `key annotate` and `key generate`
 - [300](https://github.com/vegaprotocol/vegawallet/pull/300) - Trim the `key list` output to only output name and public key
+- [358](https://github.com/vegaprotocol/vegawallet/pull/358) - Rename "human" output to "interactive"
 
 ### Improvements
 - [300](https://github.com/vegaprotocol/vegawallet/pull/300) - Internal restructuring of CLI building blocks to improve testability
