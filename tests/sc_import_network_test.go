@@ -1,7 +1,6 @@
 package tests_test
 
 import (
-	"fmt"
 	"sort"
 	"testing"
 
@@ -14,7 +13,7 @@ func TestImportNetwork(t *testing.T) {
 	home, cleanUpFn := NewTempDir(t)
 	defer cleanUpFn(t)
 
-	networkFile1 := NewFile(t, home, "my-network-1.toml", fakeNetwork("my-network-1"))
+	networkFile1 := NewFile(t, home, "my-network-1.toml", FakeNetwork("my-network-1"))
 
 	// when
 	importNetworkResp1, err := NetworkImport(t, []string{
@@ -41,7 +40,7 @@ func TestImportNetwork(t *testing.T) {
 	require.Equal(t, []string{"my-network-1"}, listNetsResp1.Networks)
 
 	// given
-	networkFile2 := NewFile(t, home, "my-network-2.toml", fakeNetwork("my-network-2"))
+	networkFile2 := NewFile(t, home, "my-network-2.toml", FakeNetwork("my-network-2"))
 
 	// when
 	importNetworkResp2, err := NetworkImport(t, []string{
@@ -73,7 +72,7 @@ func TestForceImportNetwork(t *testing.T) {
 	home, cleanUpFn := NewTempDir(t)
 	defer cleanUpFn(t)
 
-	networkFile := NewFile(t, home, "my-network.toml", fakeNetwork("my-network"))
+	networkFile := NewFile(t, home, "my-network.toml", FakeNetwork("my-network"))
 
 	// when
 	importNetworkResp1, err := NetworkImport(t, []string{
@@ -130,7 +129,7 @@ func TestImportNetworkWithNewName(t *testing.T) {
 	home, cleanUpFn := NewTempDir(t)
 	defer cleanUpFn(t)
 
-	networkFile := NewFile(t, home, "my-network.toml", fakeNetwork("my-network"))
+	networkFile := NewFile(t, home, "my-network.toml", FakeNetwork("my-network"))
 
 	// when
 	importNetworkResp1, err := NetworkImport(t, []string{
@@ -185,34 +184,4 @@ func TestImportNetworkWithNewName(t *testing.T) {
 	expectedNets := []string{"my-network", networkName}
 	sort.Strings(expectedNets)
 	require.Equal(t, expectedNets, listNetsResp2.Networks)
-}
-
-func fakeNetwork(name string) string {
-	return fmt.Sprintf(`
-Name = "%s"
-Level = "info"
-TokenExpiry = "1h0m0s"
-Port = 8000
-Host = "127.0.0.1"
-
-[API.GRPC]
-Retries = 5
-Hosts = [
-    "example.com:3007",
-]
-
-[API.REST]
-Hosts = [
-    "https://example.com/rest"
-]
-
-[API.GraphQL]
-Hosts = [
-    "https://example.com/gql/query"
-]
-
-[Console]
-URL = "console.example.com"
-LocalPort = 1847
-`, name)
 }

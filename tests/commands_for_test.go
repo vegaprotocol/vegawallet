@@ -403,6 +403,100 @@ func NetworkList(t *testing.T, args []string) (*ListNetworksResponse, error) {
 	return resp, nil
 }
 
+type DescribeNetworkResponse struct {
+	Name        string `json:"name"`
+	Level       string `json:"logLevel"`
+	TokenExpiry string `json:"tokenExpiry"`
+	Port        int    `json:"port"`
+	Host        string `json:"host"`
+	API         struct {
+		GRPCConfig struct {
+			Hosts   []string `json:"hosts"`
+			Retries uint64   `json:"retries"`
+		} `json:"grpcConfig"`
+		RESTConfig struct {
+			Hosts []string `json:"hosts"`
+		} `json:"restConfig"`
+		GraphQLConfig struct {
+			Hosts []string `json:"hosts"`
+		} `json:"graphQLConfig"`
+	} `json:"api"`
+	Console struct {
+		URL       string `json:"url"`
+		LocalPort int    `json:"localPort"`
+	}
+}
+
+func NetworkDescribe(t *testing.T, args []string) (*DescribeNetworkResponse, error) {
+	t.Helper()
+	argsWithCmd := []string{"network", "describe"}
+	argsWithCmd = append(argsWithCmd, args...)
+	output, err := ExecuteCmd(t, argsWithCmd)
+	if err != nil {
+		return nil, err
+	}
+	resp := &DescribeNetworkResponse{}
+	if err := json.Unmarshal(output, resp); err != nil {
+		t.Fatalf("couldn't unmarshal command output: %v", err)
+	}
+	return resp, nil
+}
+
+type DescribeNetworkAssertion struct {
+	t    *testing.T
+	resp *DescribeNetworkResponse
+}
+
+func AssertDescribeNetwork(t *testing.T, resp *DescribeNetworkResponse) *DescribeNetworkAssertion {
+	t.Helper()
+
+	assert.NotNil(t, resp)
+	assert.NotEmpty(t, resp.Name)
+
+	return &DescribeNetworkAssertion{
+		t:    t,
+		resp: resp,
+	}
+}
+
+func (d *DescribeNetworkAssertion) WithName(expected string) *DescribeNetworkAssertion {
+	assert.Equal(d.t, expected, d.resp.Name)
+	return d
+}
+
+func (d *DescribeNetworkAssertion) WithHostAndPort(host string, port int) *DescribeNetworkAssertion {
+	assert.Equal(d.t, host, d.resp.Host)
+	assert.Equal(d.t, port, d.resp.Port)
+	return d
+}
+
+func (d *DescribeNetworkAssertion) WithTokenExpiry(expected string) *DescribeNetworkAssertion {
+	assert.Equal(d.t, expected, d.resp.TokenExpiry)
+	return d
+}
+
+func (d *DescribeNetworkAssertion) WithConsole(url string, port int) *DescribeNetworkAssertion {
+	assert.Equal(d.t, url, d.resp.Console.URL)
+	assert.Equal(d.t, port, d.resp.Console.LocalPort)
+	return d
+}
+
+func (d *DescribeNetworkAssertion) WithGRPCConfig(hosts []string, retires uint64) *DescribeNetworkAssertion {
+	assert.Equal(d.t, hosts, d.resp.API.GRPCConfig.Hosts)
+	assert.Equal(d.t, retires, d.resp.API.GRPCConfig.Retries)
+	return d
+}
+
+func (d *DescribeNetworkAssertion) WithGraphQLConfig(hosts []string) *DescribeNetworkAssertion {
+	assert.Equal(d.t, hosts, d.resp.API.GraphQLConfig.Hosts)
+	return d
+}
+
+func (d *DescribeNetworkAssertion) WithRESTConfig(hosts []string) *DescribeNetworkAssertion {
+	assert.Equal(d.t, hosts, d.resp.API.RESTConfig.Hosts)
+	return d
+}
+
 type SignMessageResponse struct {
 	Signature string `json:"signature"`
 }

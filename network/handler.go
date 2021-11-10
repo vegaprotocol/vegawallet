@@ -154,3 +154,53 @@ func ListNetworks(store Store) (*ListNetworksResponse, error) {
 type ListNetworksResponse struct {
 	Networks []string `json:"networks"`
 }
+
+func DescribeNetwork(store Store, req *DescribeNetworkRequest) (*DescribeNetworkResponse, error) {
+	resp := &DescribeNetworkResponse{}
+	net, err := GetNetwork(store, req.Name)
+	if err != nil {
+		return nil, err
+	}
+
+	resp.Name = net.Name
+	resp.TokenExpiry = net.TokenExpiry.String()
+	resp.Level = net.Level.String()
+	resp.Host = net.Host
+	resp.Port = net.Port
+	resp.API.GRPCConfig.Hosts = net.API.GRPC.Hosts
+	resp.API.GRPCConfig.Retries = net.API.GRPC.Retries
+	resp.API.RESTConfig.Hosts = net.API.REST.Hosts
+	resp.API.GraphQLConfig.Hosts = net.API.GraphQL.Hosts
+	resp.Console.LocalPort = net.Console.LocalPort
+	resp.Console.URL = net.Console.URL
+
+	return resp, nil
+}
+
+type DescribeNetworkRequest struct {
+	Name string
+}
+
+type DescribeNetworkResponse struct {
+	Name        string `json:"name"`
+	Level       string `json:"logLevel"`
+	TokenExpiry string `json:"tokenExpiry"`
+	Port        int    `json:"port"`
+	Host        string `json:"host"`
+	API         struct {
+		GRPCConfig struct {
+			Hosts   []string `json:"hosts"`
+			Retries uint64   `json:"retries"`
+		} `json:"grpcConfig"`
+		RESTConfig struct {
+			Hosts []string `json:"hosts"`
+		} `json:"restConfig"`
+		GraphQLConfig struct {
+			Hosts []string `json:"hosts"`
+		} `json:"graphQLConfig"`
+	} `json:"api"`
+	Console struct {
+		URL       string `json:"url"`
+		LocalPort int    `json:"localPort"`
+	}
+}
