@@ -12,6 +12,7 @@
 - [359](https://github.com/vegaprotocol/vegawallet/pull/359) - Add `key describe` subcommand to allow querying of key information
 - [364](https://github.com/vegaprotocol/vegawallet/pull/364) - Add changelog checker Github action
 - [361](https://github.com/vegaprotocol/vegawallet/pull/361) - Add `network describe` subcommand to allow querying of network information
+- [366](https://github.com/vegaprotocol/vegawallet/pull/366) - Update the changelog checker action to run when required only
 
 ### Fixes
 - [356](https://github.com/vegaprotocol/vegawallet/pull/356) - Ensure the interactive printer is listening to color management env vars (`NO_COLOR` and `CLICOLOR`)

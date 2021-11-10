@@ -1,7 +1,7 @@
 name: ChangelogChecker
 on:
   pull_request:
-    types: [edited, synchronize, opened, reopened]
+    types: [review_requested, ready_for_review]
     branches:
       - develop
       - master
