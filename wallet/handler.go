@@ -4,6 +4,10 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+
+	"code.vegaprotocol.io/protos/commands"
+	commandspb "code.vegaprotocol.io/protos/vega/commands/v1"
+	"github.com/golang/protobuf/proto"
 )
 
 //go:generate go run github.com/golang/mock/mockgen -destination mocks/store_mock.go -package mocks code.vegaprotocol.io/vegawallet/wallet Store
@@ -241,11 +245,12 @@ func ListKeys(store Store, req *ListKeysRequest) (*ListKeysResponse, error) {
 }
 
 func DescribeKey(store Store, req *DescribeKeyRequest) (*DescribeKeyResponse, error) {
-	resp := &DescribeKeyResponse{}
 	w, err := getWallet(store, req.Wallet, req.Passphrase)
 	if err != nil {
 		return nil, err
 	}
+
+	resp := &DescribeKeyResponse{}
 
 	kp, err := w.DescribeKeyPair(req.PubKey)
 	if err != nil {
@@ -257,6 +262,57 @@ func DescribeKey(store Store, req *DescribeKeyRequest) (*DescribeKeyResponse, er
 	resp.Meta = kp.Meta()
 	resp.IsTainted = kp.IsTainted()
 	return resp, nil
+}
+
+type RotateKeyRequest struct {
+	Wallet      string
+	NewPubKey   string
+	Passphrase  string
+	BlockHeight uint32
+}
+
+type RotateKeyResponse struct {
+	MasterPublicKey   string `json:"master_public_key"`
+	NewPublicKey      string `json:"new_public_key"`
+	Base64Transaction string `json:"base64_transaction"`
+}
+
+func RotateKey(store Store, req *RotateKeyRequest) (*RotateKeyResponse, error) {
+	w, err := getWallet(store, req.Wallet, req.Passphrase)
+	if err != nil {
+		return nil, err
+	}
+
+	mKeyPair, err := w.GetMasterKeyPair()
+	if err != nil {
+		return nil, err
+	}
+
+	// @TODO we need the message here!
+	data := []byte("transaction")
+	sign, err := mKeyPair.Sign(data)
+	if err != nil {
+		return nil, fmt.Errorf("failed to sign transaction: %w", err)
+	}
+
+	protoSignature := &commandspb.Signature{
+		Value:   sign.Value,
+		Algo:    sign.Algo,
+		Version: sign.Version,
+	}
+
+	transaction := commands.NewTransaction(mKeyPair.PublicKey(), data, protoSignature)
+
+	transactionRaw, err := proto.Marshal(transaction)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal transaction: %w", err)
+	}
+
+	return &RotateKeyResponse{
+		MasterPublicKey:   mKeyPair.PublicKey(),
+		NewPublicKey:      req.NewPubKey,
+		Base64Transaction: base64.RawStdEncoding.EncodeToString(transactionRaw),
+	}, nil
 }
 
 type GetWalletInfoRequest struct {
