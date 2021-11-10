@@ -109,7 +109,7 @@ func BuildCmdSendCommand(w io.Writer, handler SendCommandHandler, rf *RootFlags)
 	cmd.Flags().StringVarP(&f.PubKey,
 		"pubkey", "k",
 		"",
-		"Public key to isolate (hex-encoded)",
+		"Public key of the key pair to use for signing (hex-encoded)",
 	)
 	cmd.Flags().StringVarP(&f.PassphraseFile,
 		"passphrase-file", "p",
