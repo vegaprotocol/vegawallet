@@ -5,18 +5,15 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"time"
 
 	api "code.vegaprotocol.io/protos/vega/api/v1"
 	walletpb "code.vegaprotocol.io/protos/vega/wallet/v1"
-	"code.vegaprotocol.io/shared/paths"
 	"code.vegaprotocol.io/vegawallet/cmd/cli"
 	"code.vegaprotocol.io/vegawallet/cmd/flags"
 	"code.vegaprotocol.io/vegawallet/cmd/printer"
 	wcommands "code.vegaprotocol.io/vegawallet/commands"
 	vglog "code.vegaprotocol.io/vegawallet/libs/zap"
 	"code.vegaprotocol.io/vegawallet/network"
-	netstore "code.vegaprotocol.io/vegawallet/network/store/v1"
 	"code.vegaprotocol.io/vegawallet/node"
 	"code.vegaprotocol.io/vegawallet/wallets"
 	"go.uber.org/zap"
@@ -26,14 +23,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const (
-	DefaultForwarderRetryCount = 5
-	ForwarderRequestTimeout    = 5 * time.Second
-)
-
 var (
-	ErrNetworkDoesNotHaveGRPCHostConfigured = errors.New("network does not have gRPC hosts configured")
-	ErrDoNotSetPubKeyInCommand              = errors.New("do not set the public key through the command, use --pubkey flag instead")
+	ErrDoNotSetPubKeyInCommand = errors.New("do not set the public key through the command, use --pubkey flag instead")
 
 	sendCommandLong = cli.LongDesc(`
 		Send a command to a Vega node via the gRPC API. The command can be sent to 
@@ -235,7 +226,7 @@ func SendCommand(w io.Writer, rf *RootFlags, req *SendCommandRequest) error {
 
 	var hosts []string
 	if len(req.Network) != 0 {
-		hosts, err = getHostsFromNetwork(rf, req)
+		hosts, err = getHostsFromNetwork(rf, req.Network)
 		if err != nil {
 			return err
 		}
@@ -251,9 +242,9 @@ func SendCommand(w io.Writer, rf *RootFlags, req *SendCommandRequest) error {
 		return fmt.Errorf("couldn't initialise the node forwarder: %w", err)
 	}
 	defer func() {
-		// We can ignore this non-blocking error without logging as it's already
-		// logged down stream.
-		_ = forwarder.Stop()
+		if err = forwarder.Stop(); err != nil {
+			log.Warn("couldn't stop the forwarder", zap.Error(err))
+		}
 	}()
 
 	p := printer.NewInteractivePrinter(w)
@@ -287,21 +278,4 @@ func SendCommand(w io.Writer, rf *RootFlags, req *SendCommandRequest) error {
 	log.Info("transaction successfully sent")
 
 	return nil
-}
-
-func getHostsFromNetwork(rf *RootFlags, req *SendCommandRequest) ([]string, error) {
-	netStore, err := netstore.InitialiseStore(paths.New(rf.Home))
-	if err != nil {
-		return nil, fmt.Errorf("couldn't initialise network store: %w", err)
-	}
-	net, err := network.GetNetwork(netStore, req.Network)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(net.API.GRPC.Hosts) == 0 {
-		return nil, ErrNetworkDoesNotHaveGRPCHostConfigured
-	}
-
-	return net.API.GRPC.Hosts, nil
 }

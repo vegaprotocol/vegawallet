@@ -2,6 +2,7 @@ package flags
 
 import (
 	"fmt"
+	"strings"
 )
 
 type FlagError struct {
@@ -27,6 +28,12 @@ func FlagMustBeSpecifiedError(name string) error {
 func ArgMustBeSpecifiedError(name string) error {
 	return FlagError{
 		message: fmt.Sprintf("%s argument must be specified", name),
+	}
+}
+
+func TooManyArgsError(names ...string) error {
+	return FlagError{
+		message: fmt.Sprintf("too many arguments specified, only expect: %v", strings.Join(names, ", ")),
 	}
 }
 
