@@ -8,6 +8,7 @@ type Wallet interface {
 	Type() string
 	DescribePublicKey(pubKey string) (PublicKey, error)
 	DescribeKeyPair(pubKey string) (KeyPair, error)
+	GetKeyPair(pubKey string) (KeyPair, error)
 	ListPublicKeys() []PublicKey
 	ListKeyPairs() []KeyPair
 	GetMasterKeyPair() (MasterKeyPair, error)
@@ -26,6 +27,7 @@ type KeyPair interface {
 	PrivateKey() string
 	IsTainted() bool
 	Meta() []Meta
+	Index() uint32
 	AlgorithmVersion() uint32
 	AlgorithmName() string
 	SignAny(data []byte) ([]byte, error)

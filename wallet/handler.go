@@ -2,11 +2,13 @@ package wallet
 
 import (
 	"encoding/base64"
+	"encoding/hex"
 	"errors"
 	"fmt"
 
 	"code.vegaprotocol.io/protos/commands"
 	commandspb "code.vegaprotocol.io/protos/vega/commands/v1"
+	vgcrypto "code.vegaprotocol.io/shared/libs/crypto"
 	"github.com/golang/protobuf/proto"
 )
 
@@ -265,10 +267,11 @@ func DescribeKey(store Store, req *DescribeKeyRequest) (*DescribeKeyResponse, er
 }
 
 type RotateKeyRequest struct {
-	Wallet      string
-	NewPubKey   string
-	Passphrase  string
-	BlockHeight uint32
+	Wallet            string
+	Passphrase        string
+	NewPublicKey      string
+	TXBlockHeight     uint32
+	TargetBlockHeight uint32
 }
 
 type RotateKeyResponse struct {
@@ -288,11 +291,29 @@ func RotateKey(store Store, req *RotateKeyRequest) (*RotateKeyResponse, error) {
 		return nil, err
 	}
 
-	// @TODO we need the message here!
-	data := []byte("transaction")
+	newKeyPair, err := w.GetKeyPair(req.NewPublicKey)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get new key pair: %w", err)
+	}
+
+	inputData := commands.NewInputData(uint64(req.TXBlockHeight))
+	inputData.Command = &commandspb.InputData_KeyRotateSubmission{
+		KeyRotateSubmission: &commandspb.KeyRotateSubmission{
+			KeyNumber:     uint64(newKeyPair.Index()),
+			TargetBlock:   uint64(req.TargetBlockHeight),
+			Time:          0, // @TODO fill this
+			NewPubKeyHash: hex.EncodeToString(vgcrypto.Hash([]byte(req.NewPublicKey))),
+		},
+	}
+
+	data, err := proto.Marshal(inputData)
+	if err != nil {
+		return nil, fmt.Errorf("failed marshal key rotate submission input data: %w", err)
+	}
+
 	sign, err := mKeyPair.Sign(data)
 	if err != nil {
-		return nil, fmt.Errorf("failed to sign transaction: %w", err)
+		return nil, fmt.Errorf("failed to sign key rotate submission input data: %w", err)
 	}
 
 	protoSignature := &commandspb.Signature{
@@ -302,7 +323,6 @@ func RotateKey(store Store, req *RotateKeyRequest) (*RotateKeyResponse, error) {
 	}
 
 	transaction := commands.NewTransaction(mKeyPair.PublicKey(), data, protoSignature)
-
 	transactionRaw, err := proto.Marshal(transaction)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal transaction: %w", err)
@@ -310,8 +330,8 @@ func RotateKey(store Store, req *RotateKeyRequest) (*RotateKeyResponse, error) {
 
 	return &RotateKeyResponse{
 		MasterPublicKey:   mKeyPair.PublicKey(),
-		NewPublicKey:      req.NewPubKey,
-		Base64Transaction: base64.RawStdEncoding.EncodeToString(transactionRaw),
+		NewPublicKey:      req.NewPublicKey,
+		Base64Transaction: base64.StdEncoding.EncodeToString(transactionRaw),
 	}, nil
 }
 
