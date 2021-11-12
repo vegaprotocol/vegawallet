@@ -30,8 +30,7 @@ var (
 		# Get signed transaction for rotating to new key public key
 		vegawallet key rotate --wallet WALLET --tx-height TX_HEIGHT --target-height TARGET_HEIGHT PUBLIC_KEY
 	`)
-	targetLessThenTxHeighErr = errors.New("--target-height flag must be greater then --tx-height")
-	tooManyArgumentsErr      = errors.New("too many arguments specified")
+	errTargetLessThenTxHeigh = errors.New("--target-height flag must be greater then --tx-height")
 )
 
 type RotateKeyHandler func(*wallet.RotateKeyRequest) (*wallet.RotateKeyResponse, error)
@@ -61,7 +60,7 @@ func BuildCmdRotateKey(w io.Writer, handler RotateKeyHandler, rf *RootFlags) *co
 			if aLen := len(args); aLen == 0 {
 				return flags.ArgMustBeSpecifiedError("public-key")
 			} else if aLen > 1 {
-				return tooManyArgumentsErr
+				return flags.TooManyArgsError("public-key")
 			}
 			f.NewPublicKey = args[0]
 
@@ -134,7 +133,7 @@ func (f *RotateKeyFlags) Validate() (*wallet.RotateKeyRequest, error) {
 	req.TXBlockHeight = f.TXBlockHeight
 
 	if req.TargetBlockHeight <= req.TXBlockHeight {
-		return nil, targetLessThenTxHeighErr
+		return nil, errTargetLessThenTxHeigh
 	}
 
 	if len(f.Wallet) == 0 {
