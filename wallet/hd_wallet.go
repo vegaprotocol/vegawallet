@@ -263,8 +263,10 @@ func (w *HDWallet) IsIsolated() bool {
 }
 
 type jsonHDWallet struct {
+	// The wallet name is retrieved from the file name it is stored in, so no
+	// need to serialize it.
+
 	Version uint32       `json:"version"`
-	Name    string       `json:"name"`
 	Node    *slip10.Node `json:"node,omitempty"`
 	ID      string       `json:"id,omitempty"`
 	Keys    []HDKeyPair  `json:"keys"`
@@ -273,7 +275,6 @@ type jsonHDWallet struct {
 func (w *HDWallet) MarshalJSON() ([]byte, error) {
 	jsonW := jsonHDWallet{
 		Version: w.Version(),
-		Name:    w.Name(),
 		Keys:    w.keyRing.ListKeyPairs(),
 		Node:    w.node,
 		ID:      w.id,
@@ -289,7 +290,6 @@ func (w *HDWallet) UnmarshalJSON(data []byte) error {
 
 	*w = HDWallet{
 		version: jsonW.Version,
-		name:    jsonW.Name,
 		keyRing: LoadHDKeyRing(jsonW.Keys),
 		node:    jsonW.Node,
 		id:      jsonW.ID,

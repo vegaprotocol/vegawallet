@@ -18,10 +18,12 @@
 - [366](https://github.com/vegaprotocol/vegawallet/pull/366) - Update the changelog checker action to run when required only
 - [368](https://github.com/vegaprotocol/vegawallet/pull/368) - Add `send tx` subcommand to send raw transaction
 
+
 ### Fixes
 - [356](https://github.com/vegaprotocol/vegawallet/pull/356) - Ensure the interactive printer is listening to color management env vars (`NO_COLOR` and `CLICOLOR`)
 - [357](https://github.com/vegaprotocol/vegawallet/pull/357) - Warn without failing when no connection on version verification
 - [360](https://github.com/vegaprotocol/vegawallet/pull/360) - Attempt to enable ANSI colors in Windows terminal
+- [372](https://github.com/vegaprotocol/vegawallet/pull/372) - Remove wallet name serialisation to allow wallet file to be renamed
 
 ## 0.9.2
 *2021-10-27*
