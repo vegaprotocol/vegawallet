@@ -45,7 +45,7 @@ func testSendCommandFlagsValidFlagsSucceeds(t *testing.T) {
 		Retries:        10,
 		LogLevel:       "debug",
 		PassphraseFile: passphraseFilePath,
-		RawRequest:     `{"voteSubmission": {"proposalId": "some-id", "value": "VALUE_YES"}}`,
+		RawCommand:     `{"voteSubmission": {"proposalId": "some-id", "value": "VALUE_YES"}}`,
 	}
 
 	expectedReq := &cmd.SendCommandRequest{
@@ -180,13 +180,13 @@ func testSendCommandFlagsMissingRequestFails(t *testing.T) {
 
 	// given
 	f := newSendCommandFlags(t, testDir)
-	f.RawRequest = ""
+	f.RawCommand = ""
 
 	// when
 	req, err := f.Validate()
 
 	// then
-	assert.ErrorIs(t, err, flags.ArgMustBeSpecifiedError("request"))
+	assert.ErrorIs(t, err, flags.ArgMustBeSpecifiedError("command"))
 	assert.Nil(t, req)
 }
 
@@ -196,7 +196,7 @@ func testSendCommandFlagsMalformedRequestFails(t *testing.T) {
 
 	// given
 	f := newSendCommandFlags(t, testDir)
-	f.RawRequest = `<request>Not gonna support that</request>`
+	f.RawCommand = `<request>Not gonna support that</request>`
 
 	// when
 	req, err := f.Validate()
@@ -212,7 +212,7 @@ func testSendCommandFlagsInvalidRequestFails(t *testing.T) {
 
 	// given
 	f := newSendCommandFlags(t, testDir)
-	f.RawRequest = `{"voteSubmission": {}}`
+	f.RawCommand = `{"voteSubmission": {}}`
 
 	// when
 	req, err := f.Validate()
@@ -228,13 +228,13 @@ func testSendCommandFlagsRequestWithPubKeyFails(t *testing.T) {
 
 	// given
 	f := newSendCommandFlags(t, testDir)
-	f.RawRequest = `{"pubKey": "qwerty123456", "voteSubmission": {"proposalId": "some-id", "value": "VALUE_YES"}}`
+	f.RawCommand = `{"pubKey": "qwerty123456", "voteSubmission": {"proposalId": "some-id", "value": "VALUE_YES"}}`
 
 	// when
 	req, err := f.Validate()
 
 	// then
-	assert.ErrorIs(t, err, cmd.ErrDoNotSetPubKeyInRequest)
+	assert.ErrorIs(t, err, cmd.ErrDoNotSetPubKeyInCommand)
 	assert.Nil(t, req)
 }
 
@@ -251,7 +251,7 @@ func newSendCommandFlags(t *testing.T, testDir string) *cmd.SendCommandFlags {
 		NodeAddress:    "",
 		Retries:        10,
 		LogLevel:       "debug",
-		RawRequest:     `{"voteSubmission": {"proposalId": "some-id", "value": "VALUE_YES"}}`,
+		RawCommand:     `{"voteSubmission": {"proposalId": "some-id", "value": "VALUE_YES"}}`,
 		Wallet:         walletName,
 		PubKey:         pubKey,
 		PassphraseFile: passphraseFilePath,

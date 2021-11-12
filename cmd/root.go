@@ -102,7 +102,7 @@ func BuildCmdRoot(w io.Writer, vh CheckVersionHandler) *cobra.Command {
 	)
 
 	// Root commands
-	cmd.AddCommand(NewCmdSendCommand(w, f))
+	cmd.AddCommand(NewCmdCommand(w, f))
 	cmd.AddCommand(NewCmdInit(w, f))
 	cmd.AddCommand(NewCmdSignMessage(w, f))
 	cmd.AddCommand(NewCmdVerifyMessage(w, f))
@@ -111,6 +111,7 @@ func BuildCmdRoot(w io.Writer, vh CheckVersionHandler) *cobra.Command {
 	// Sub-commands
 	cmd.AddCommand(NewCmdKey(w, f))
 	cmd.AddCommand(NewCmdNetwork(w, f))
+	cmd.AddCommand(NewCmdSend(w, f))
 	cmd.AddCommand(NewCmdService(w, f))
 
 	// Wallet commands
