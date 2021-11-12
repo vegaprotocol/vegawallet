@@ -1163,11 +1163,11 @@ func testHDWalletMarshalingWalletSucceeds(t *testing.T) {
 		{
 			name:    "version 1",
 			version: 1,
-			result:  `{"version":1,"name":"duncan","node":"PjI6zxEu4dtcTu92dYlB/2Da+rvSpg7KzvmLMQ9wv6i6n75/ftik1rPYiZ/nTfBzqVttvNnoswyldTjPCjV5kw==","id":"9df682a3c87d90567f260566a9c223ccbbb7529c38340cf163b8fe199dbf0f2e","keys":[{"index":1,"public_key":"30ebce58d94ad37c4ff6a9014c955c20e12468da956163228cc7ec9b98d3a371","private_key":"1bbd4efb460d0bf457251e866697d5d2e9b58c5dcb96a964cd9cfff1a712a2b930ebce58d94ad37c4ff6a9014c955c20e12468da956163228cc7ec9b98d3a371","meta":[],"tainted":false,"algorithm":{"name":"vega/ed25519","version":1}}]}`,
+			result:  `{"version":1,"node":"PjI6zxEu4dtcTu92dYlB/2Da+rvSpg7KzvmLMQ9wv6i6n75/ftik1rPYiZ/nTfBzqVttvNnoswyldTjPCjV5kw==","id":"9df682a3c87d90567f260566a9c223ccbbb7529c38340cf163b8fe199dbf0f2e","keys":[{"index":1,"public_key":"30ebce58d94ad37c4ff6a9014c955c20e12468da956163228cc7ec9b98d3a371","private_key":"1bbd4efb460d0bf457251e866697d5d2e9b58c5dcb96a964cd9cfff1a712a2b930ebce58d94ad37c4ff6a9014c955c20e12468da956163228cc7ec9b98d3a371","meta":[],"tainted":false,"algorithm":{"name":"vega/ed25519","version":1}}]}`,
 		}, {
 			name:    "version 2",
 			version: 2,
-			result:  `{"version":2,"name":"duncan","node":"PjI6zxEu4dtcTu92dYlB/2Da+rvSpg7KzvmLMQ9wv6i6n75/ftik1rPYiZ/nTfBzqVttvNnoswyldTjPCjV5kw==","id":"9df682a3c87d90567f260566a9c223ccbbb7529c38340cf163b8fe199dbf0f2e","keys":[{"index":1,"public_key":"b5fd9d3c4ad553cb3196303b6e6df7f484cf7f5331a572a45031239fd71ad8a0","private_key":"0bfdfb4a04e22d7252a4f24eb9d0f35a82efdc244cb0876d919361e61f6f56a2b5fd9d3c4ad553cb3196303b6e6df7f484cf7f5331a572a45031239fd71ad8a0","meta":[],"tainted":false,"algorithm":{"name":"vega/ed25519","version":1}}]}`,
+			result:  `{"version":2,"node":"PjI6zxEu4dtcTu92dYlB/2Da+rvSpg7KzvmLMQ9wv6i6n75/ftik1rPYiZ/nTfBzqVttvNnoswyldTjPCjV5kw==","id":"9df682a3c87d90567f260566a9c223ccbbb7529c38340cf163b8fe199dbf0f2e","keys":[{"index":1,"public_key":"b5fd9d3c4ad553cb3196303b6e6df7f484cf7f5331a572a45031239fd71ad8a0","private_key":"0bfdfb4a04e22d7252a4f24eb9d0f35a82efdc244cb0876d919361e61f6f56a2b5fd9d3c4ad553cb3196303b6e6df7f484cf7f5331a572a45031239fd71ad8a0","meta":[],"tainted":false,"algorithm":{"name":"vega/ed25519","version":1}}]}`,
 		},
 	}
 
@@ -1209,11 +1209,11 @@ func testHDWalletMarshalingIsolatedWalletSucceeds(t *testing.T) {
 		{
 			name:      "version 1",
 			version:   1,
-			marshaled: `{"version":1,"name":"duncan.30ebce58.isolated","id":"9df682a3c87d90567f260566a9c223ccbbb7529c38340cf163b8fe199dbf0f2e","keys":[{"index":1,"public_key":"30ebce58d94ad37c4ff6a9014c955c20e12468da956163228cc7ec9b98d3a371","private_key":"1bbd4efb460d0bf457251e866697d5d2e9b58c5dcb96a964cd9cfff1a712a2b930ebce58d94ad37c4ff6a9014c955c20e12468da956163228cc7ec9b98d3a371","meta":[],"tainted":false,"algorithm":{"name":"vega/ed25519","version":1}}]}`,
+			marshaled: `{"version":1,"id":"9df682a3c87d90567f260566a9c223ccbbb7529c38340cf163b8fe199dbf0f2e","keys":[{"index":1,"public_key":"30ebce58d94ad37c4ff6a9014c955c20e12468da956163228cc7ec9b98d3a371","private_key":"1bbd4efb460d0bf457251e866697d5d2e9b58c5dcb96a964cd9cfff1a712a2b930ebce58d94ad37c4ff6a9014c955c20e12468da956163228cc7ec9b98d3a371","meta":[],"tainted":false,"algorithm":{"name":"vega/ed25519","version":1}}]}`,
 		}, {
 			name:      "version 2",
 			version:   2,
-			marshaled: `{"version":2,"name":"duncan.b5fd9d3c.isolated","id":"9df682a3c87d90567f260566a9c223ccbbb7529c38340cf163b8fe199dbf0f2e","keys":[{"index":1,"public_key":"b5fd9d3c4ad553cb3196303b6e6df7f484cf7f5331a572a45031239fd71ad8a0","private_key":"0bfdfb4a04e22d7252a4f24eb9d0f35a82efdc244cb0876d919361e61f6f56a2b5fd9d3c4ad553cb3196303b6e6df7f484cf7f5331a572a45031239fd71ad8a0","meta":[],"tainted":false,"algorithm":{"name":"vega/ed25519","version":1}}]}`,
+			marshaled: `{"version":2,"id":"9df682a3c87d90567f260566a9c223ccbbb7529c38340cf163b8fe199dbf0f2e","keys":[{"index":1,"public_key":"b5fd9d3c4ad553cb3196303b6e6df7f484cf7f5331a572a45031239fd71ad8a0","private_key":"0bfdfb4a04e22d7252a4f24eb9d0f35a82efdc244cb0876d919361e61f6f56a2b5fd9d3c4ad553cb3196303b6e6df7f484cf7f5331a572a45031239fd71ad8a0","meta":[],"tainted":false,"algorithm":{"name":"vega/ed25519","version":1}}]}`,
 		},
 	}
 
@@ -1264,14 +1264,14 @@ func testHDWalletUnmarshalingWalletSucceeds(t *testing.T) {
 		{
 			name:       "version 1",
 			version:    1,
-			marshaled:  `{"version":1,"name":"duncan","node":"CZ13XhuFZ8K7TxNTAdKmMXh+OIVX6TFxTToXgnAqGlcO5eTY/5AVqZkWRIU3zfr8hvE7i2yIYAB6HT28ibi1fg==","keys":[{"index":1,"public_key":"30ebce58d94ad37c4ff6a9014c955c20e12468da956163228cc7ec9b98d3a371","private_key":"1bbd4efb460d0bf457251e866697d5d2e9b58c5dcb96a964cd9cfff1a712a2b930ebce58d94ad37c4ff6a9014c955c20e12468da956163228cc7ec9b98d3a371","meta":null,"tainted":false,"algorithm":{"name":"vega/ed25519","version":1}}]}`,
+			marshaled:  `{"version":1,"node":"CZ13XhuFZ8K7TxNTAdKmMXh+OIVX6TFxTToXgnAqGlcO5eTY/5AVqZkWRIU3zfr8hvE7i2yIYAB6HT28ibi1fg==","keys":[{"index":1,"public_key":"30ebce58d94ad37c4ff6a9014c955c20e12468da956163228cc7ec9b98d3a371","private_key":"1bbd4efb460d0bf457251e866697d5d2e9b58c5dcb96a964cd9cfff1a712a2b930ebce58d94ad37c4ff6a9014c955c20e12468da956163228cc7ec9b98d3a371","meta":null,"tainted":false,"algorithm":{"name":"vega/ed25519","version":1}}]}`,
 			publicKey:  "30ebce58d94ad37c4ff6a9014c955c20e12468da956163228cc7ec9b98d3a371",
 			privateKey: "1bbd4efb460d0bf457251e866697d5d2e9b58c5dcb96a964cd9cfff1a712a2b930ebce58d94ad37c4ff6a9014c955c20e12468da956163228cc7ec9b98d3a371",
 		},
 		{
 			name:       "version 2",
 			version:    2,
-			marshaled:  `{"version":2,"name":"duncan","node":"CZ13XhuFZ8K7TxNTAdKmMXh+OIVX6TFxTToXgnAqGlcO5eTY/5AVqZkWRIU3zfr8hvE7i2yIYAB6HT28ibi1fg==","keys":[{"index":1,"public_key":"b5fd9d3c4ad553cb3196303b6e6df7f484cf7f5331a572a45031239fd71ad8a0","private_key":"0bfdfb4a04e22d7252a4f24eb9d0f35a82efdc244cb0876d919361e61f6f56a2b5fd9d3c4ad553cb3196303b6e6df7f484cf7f5331a572a45031239fd71ad8a0","meta":null,"tainted":false,"algorithm":{"name":"vega/ed25519","version":1}}]}`,
+			marshaled:  `{"version":2,"node":"CZ13XhuFZ8K7TxNTAdKmMXh+OIVX6TFxTToXgnAqGlcO5eTY/5AVqZkWRIU3zfr8hvE7i2yIYAB6HT28ibi1fg==","keys":[{"index":1,"public_key":"b5fd9d3c4ad553cb3196303b6e6df7f484cf7f5331a572a45031239fd71ad8a0","private_key":"0bfdfb4a04e22d7252a4f24eb9d0f35a82efdc244cb0876d919361e61f6f56a2b5fd9d3c4ad553cb3196303b6e6df7f484cf7f5331a572a45031239fd71ad8a0","meta":null,"tainted":false,"algorithm":{"name":"vega/ed25519","version":1}}]}`,
 			publicKey:  "b5fd9d3c4ad553cb3196303b6e6df7f484cf7f5331a572a45031239fd71ad8a0",
 			privateKey: "0bfdfb4a04e22d7252a4f24eb9d0f35a82efdc244cb0876d919361e61f6f56a2b5fd9d3c4ad553cb3196303b6e6df7f484cf7f5331a572a45031239fd71ad8a0",
 		},
@@ -1288,7 +1288,6 @@ func testHDWalletUnmarshalingWalletSucceeds(t *testing.T) {
 			// then
 			assert.NoError(tt, err)
 			assert.Equal(tt, tc.version, w.Version())
-			assert.Equal(tt, "duncan", w.Name())
 			keyPairs := w.ListKeyPairs()
 			assert.Len(tt, keyPairs, 1)
 			assert.Equal(tt, tc.publicKey, keyPairs[0].PublicKey())

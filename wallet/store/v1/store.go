@@ -81,6 +81,10 @@ func (s *Store) GetWallet(name, passphrase string) (wallet.Wallet, error) {
 		return nil, fmt.Errorf("couldn't unmarshal wallet: %w", err)
 	}
 
+	// The wallet name is not saved in the file to avoid de-synchronisation
+	// between file name and file content
+	w.SetName(name)
+
 	return w, nil
 }
 
