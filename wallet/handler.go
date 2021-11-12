@@ -291,7 +291,7 @@ func RotateKey(store Store, req *RotateKeyRequest) (*RotateKeyResponse, error) {
 		return nil, err
 	}
 
-	newKeyPair, err := w.GetKeyPair(req.NewPublicKey)
+	newKeyPair, err := w.DescribeKeyPair(req.NewPublicKey)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get new key pair: %w", err)
 	}

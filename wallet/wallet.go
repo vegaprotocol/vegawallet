@@ -8,7 +8,6 @@ type Wallet interface {
 	Type() string
 	DescribePublicKey(pubKey string) (PublicKey, error)
 	DescribeKeyPair(pubKey string) (KeyPair, error)
-	GetKeyPair(pubKey string) (KeyPair, error)
 	ListPublicKeys() []PublicKey
 	ListKeyPairs() []KeyPair
 	GetMasterKeyPair() (MasterKeyPair, error)
