@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"io"
 
@@ -58,7 +59,7 @@ func BuildCmdRotateKey(w io.Writer, handler RotateKeyHandler, rf *RootFlags) *co
 			if aLen := len(args); aLen == 0 {
 				return flags.ArgMustBeSpecifiedError("public-key")
 			} else if aLen > 1 {
-				return fmt.Errorf("too many arguments specified")
+				return errors.New("too many arguments specified")
 			}
 			f.NewPublicKey = args[0]
 
@@ -131,7 +132,7 @@ func (f *RotateKeyFlags) Validate() (*wallet.RotateKeyRequest, error) {
 	req.TXBlockHeight = f.TXBlockHeight
 
 	if req.TargetBlockHeight <= req.TXBlockHeight {
-		return nil, fmt.Errorf("--target-height flag must be greater then --tx-height")
+		return nil, errors.New("--target-height flag must be greater then --tx-height")
 	}
 
 	if len(f.Wallet) == 0 {
