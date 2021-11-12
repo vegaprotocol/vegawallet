@@ -51,7 +51,7 @@ func InvalidFlagFormatError(name string) error {
 
 func UnsupportedFlagValueError(name string, unsupported interface{}, supported []interface{}) error {
 	return FlagError{
-		message: fmt.Sprintf("--%s flag doesn't support value %s in %v", name, unsupported, supported),
+		message: fmt.Sprintf("--%s flag doesn't support value %s, only %v", name, unsupported, supported),
 	}
 }
 

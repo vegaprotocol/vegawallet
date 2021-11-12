@@ -30,7 +30,7 @@ func Execute(w *Writer) {
 
 	defer os.Exit(1)
 
-	if errors.Is(execErr, &InvalidOutputError{}) {
+	if errors.Is(execErr, flags.ErrUnsupportedOutput) {
 		_, _ = fmt.Fprintln(w.Err, execErr)
 	}
 

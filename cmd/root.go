@@ -130,13 +130,5 @@ type RootFlags struct {
 }
 
 func (f *RootFlags) Validate() error {
-	if err := flags.ValidateOutput(f.Output); err != nil {
-		// This flag has special treatment because error reporting depends on it,
-		// and we need to differentiate output errors from the rest to select the
-		// right way to print the data.
-		// As a result, we wrap generic errors in a specific one
-		return NewInvalidOutputError(err)
-	}
-
-	return nil
+	return flags.ValidateOutput(f.Output)
 }
