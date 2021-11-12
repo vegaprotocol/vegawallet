@@ -21,7 +21,7 @@
 - [361](https://github.com/vegaprotocol/vegawallet/pull/361) - Add `network describe` subcommand to allow querying of network information
 - [366](https://github.com/vegaprotocol/vegawallet/pull/366) - Update the changelog checker action to run when required only
 - [368](https://github.com/vegaprotocol/vegawallet/pull/368) - Add `send tx` subcommand to send raw transaction
-
+- [367](https://github.com/vegaprotocol/vegawallet/pull/367) - Add `key rotate` subcommand to generate key rotation transaction payload
 
 ### Fixes
 - [356](https://github.com/vegaprotocol/vegawallet/pull/356) - Ensure the interactive printer is listening to color management env vars (`NO_COLOR` and `CLICOLOR`)
