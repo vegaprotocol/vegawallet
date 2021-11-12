@@ -14,17 +14,19 @@ import (
 
 var (
 	rotateKeyLong = cli.LongDesc(`
-		Get signed key rotation transaction.
-		This transaction can be applied to Vega protocol trough wallet command.
-		A new public key to rotate to is selected.
-		
-		The transaction is outputted as a base64 string.
+		Get a signed key rotation transaction as a Base64 encoded string by choosing a new public key to rotate to and target block height.
+
+		Later the transaction is applied to Vega protocol through the wallet's "send tx" command.
 	`)
 
 	rotateKeyExample = cli.Examples(`
-		Given that a new public key PUBLIC_KEY has been previously generated in the wallet:
+		Given that those variables exists:
+			- WALLET - Vega wallet to be used.
+			- PUBLIC_KEY - A newly generated public key. Should be generate by wallet's "generate" command.
+			- TARGET_HEIGHT - Height of block where the new public key change will take effect
+			- TX_HEIGHT - It should be close to the current block height when the transaction is applied, with a threshold of ~ - 150 blocks.
 
-		# Get signed transaction for rotating new key
+		# Get signed transaction for rotating to new key public key
 		vegawallet key rotate --wallet WALLET --tx-height TX_HEIGHT --target-height TARGET_HEIGHT PUBLIC_KEY
 	`)
 )
@@ -92,7 +94,7 @@ func BuildCmdRotateKey(w io.Writer, handler RotateKeyHandler, rf *RootFlags) *co
 		"Path to the file containing the wallet's passphrase",
 	)
 	cmd.Flags().Uint32VarP(&f.TXBlockHeight,
-		"tx-height", "th",
+		"tx-height", "xh",
 		0,
 		"Block height of which the transaction will be applied at",
 	)
@@ -155,5 +157,4 @@ func PrintRotateKeyResponse(w io.Writer, req *wallet.RotateKeyResponse) {
 	p.Text(req.NewPublicKey).NextLine()
 	p.Text("Master public key used:").NextLine()
 	p.Text(req.MasterPublicKey).NextLine()
-
 }
