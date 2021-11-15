@@ -10,7 +10,7 @@ import (
 const (
 	TaggedReleaseURL   = "https://github.com/vegaprotocol/vegawallet/releases/tag"
 	defaultVersionHash = "unknown"
-	defaultVersion     = "v0.10.0"
+	defaultVersion     = "v0.11.0+dev"
 )
 
 var (
