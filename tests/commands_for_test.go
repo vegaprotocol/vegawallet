@@ -324,6 +324,44 @@ func KeyTaint(t *testing.T, args []string) error {
 	return nil
 }
 
+type KeyRotateResponse struct {
+	MasterPublicKey   string `json:"masterPublicKey"`
+	Base64Transaction string `json:"base64Transaction"`
+}
+
+func KeyRotate(t *testing.T, args []string) (*KeyRotateResponse, error) {
+	t.Helper()
+	argsWithCmd := []string{"key", "rotate"}
+	argsWithCmd = append(argsWithCmd, args...)
+	output, err := ExecuteCmd(t, argsWithCmd)
+	if err != nil {
+		return nil, err
+	}
+	resp := &KeyRotateResponse{}
+	if err := json.Unmarshal(output, resp); err != nil {
+		t.Fatalf("couldn't unmarshal command output: %v", err)
+	}
+	return resp, nil
+}
+
+type KeyRotateAssertion struct {
+	t    *testing.T
+	resp *KeyRotateResponse
+}
+
+func AssertKeyRotate(t *testing.T, resp *KeyRotateResponse) *KeyRotateAssertion {
+	t.Helper()
+
+	assert.NotNil(t, resp)
+	assert.NotEmpty(t, resp.Base64Transaction)
+	assert.NotEmpty(t, resp.MasterPublicKey)
+
+	return &KeyRotateAssertion{
+		t:    t,
+		resp: resp,
+	}
+}
+
 func KeyUntaint(t *testing.T, args []string) error {
 	t.Helper()
 	argsWithCmd := []string{"key", "untaint"}

@@ -569,12 +569,12 @@ func testRotateKeySucceeds(t *testing.T) {
 	req := &wallet.RotateKeyRequest{
 		Wallet:            w.Name(),
 		Passphrase:        "passphrase",
-		NewPublicKey:      kp.PublicKey(),
+		PublicKey:         kp.PublicKey(),
 		TxBlockHeight:     20,
 		TargetBlockHeight: 25,
 	}
 
-	expectedNewPubHash := hex.EncodeToString(vgcrypto.Hash([]byte(req.NewPublicKey)))
+	expectedNewPubHash := hex.EncodeToString(vgcrypto.Hash([]byte(req.PublicKey)))
 
 	// setup
 	store := handlerMocks(t)
@@ -588,7 +588,6 @@ func testRotateKeySucceeds(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, resp)
 	require.Equal(t, masterKeyPair.PublicKey(), resp.MasterPublicKey)
-	require.Equal(t, kp.PublicKey(), resp.NewPublicKey)
 
 	transactionRaw, err := base64.StdEncoding.DecodeString(resp.Base64Transaction)
 	require.NoError(t, err)
@@ -616,7 +615,7 @@ func testRotateWithNonExistingWalletFails(t *testing.T) {
 	req := &wallet.RotateKeyRequest{
 		Wallet:            vgrand.RandomStr(5),
 		Passphrase:        "passphrase",
-		NewPublicKey:      "nonexisting",
+		PublicKey:         "nonexisting",
 		TxBlockHeight:     20,
 		TargetBlockHeight: 25,
 	}
@@ -641,7 +640,7 @@ func testRotateKeyWithNonExistingPublicKeyFails(t *testing.T) {
 	req := &wallet.RotateKeyRequest{
 		Wallet:            w.Name(),
 		Passphrase:        "passphrase",
-		NewPublicKey:      "nonexisting",
+		PublicKey:         "nonexisting",
 		TxBlockHeight:     20,
 		TargetBlockHeight: 25,
 	}
@@ -670,7 +669,7 @@ func testRotateKeyWithTainedPublicKeyFails(t *testing.T) {
 	req := &wallet.RotateKeyRequest{
 		Wallet:            w.Name(),
 		Passphrase:        "passphrase",
-		NewPublicKey:      kp.PublicKey(),
+		PublicKey:         kp.PublicKey(),
 		TxBlockHeight:     20,
 		TargetBlockHeight: 25,
 	}

@@ -267,14 +267,13 @@ func DescribeKey(store Store, req *DescribeKeyRequest) (*DescribeKeyResponse, er
 type RotateKeyRequest struct {
 	Wallet            string
 	Passphrase        string
-	NewPublicKey      string
+	PublicKey         string
 	TxBlockHeight     uint64
 	TargetBlockHeight uint64
 }
 
 type RotateKeyResponse struct {
 	MasterPublicKey   string `json:"masterPublicKey"`
-	NewPublicKey      string `json:"newPublicKey"`
 	Base64Transaction string `json:"base64Transaction"`
 }
 
@@ -285,11 +284,14 @@ func RotateKey(store Store, req *RotateKeyRequest) (*RotateKeyResponse, error) {
 	}
 
 	mKeyPair, err := w.GetMasterKeyPair()
+	if errors.Is(err, ErrIsolatedWalletCantGetMasterKeyPair) {
+		return nil, fmt.Errorf("couldn't rotate key in isolated wallet")
+	}
 	if err != nil {
 		return nil, err
 	}
 
-	pubKey, err := w.DescribePublicKey(req.NewPublicKey)
+	pubKey, err := w.DescribePublicKey(req.PublicKey)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't get the public key: %w", err)
 	}
@@ -332,7 +334,6 @@ func RotateKey(store Store, req *RotateKeyRequest) (*RotateKeyResponse, error) {
 
 	return &RotateKeyResponse{
 		MasterPublicKey:   mKeyPair.PublicKey(),
-		NewPublicKey:      req.NewPublicKey,
 		Base64Transaction: base64.StdEncoding.EncodeToString(transactionRaw),
 	}, nil
 }

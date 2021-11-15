@@ -34,7 +34,7 @@ func testRotateKeyFlagsValidFlagsSucceeds(t *testing.T) {
 	f := &cmd.RotateKeyFlags{
 		Wallet:            walletName,
 		PassphraseFile:    passphraseFilePath,
-		NewPublicKey:      pubKey,
+		PublicKey:         pubKey,
 		TxBlockHeight:     txBlockHeight,
 		TargetBlockHeight: targetBlockHeight,
 	}
@@ -42,7 +42,7 @@ func testRotateKeyFlagsValidFlagsSucceeds(t *testing.T) {
 	expectedReq := &wallet.RotateKeyRequest{
 		Wallet:            walletName,
 		Passphrase:        passphrase,
-		NewPublicKey:      pubKey,
+		PublicKey:         pubKey,
 		TxBlockHeight:     txBlockHeight,
 		TargetBlockHeight: targetBlockHeight,
 	}
@@ -110,7 +110,7 @@ func testRotateKeyFlagsMissingPublicKeyFails(t *testing.T) {
 
 	// given
 	f := newRotateKeyFlags(t, testDir)
-	f.NewPublicKey = ""
+	f.PublicKey = ""
 
 	// when
 	req, err := f.Validate()
@@ -148,7 +148,7 @@ func newRotateKeyFlags(t *testing.T, testDir string) *cmd.RotateKeyFlags {
 
 	return &cmd.RotateKeyFlags{
 		Wallet:            walletName,
-		NewPublicKey:      pubKey,
+		PublicKey:         pubKey,
 		PassphraseFile:    passphraseFilePath,
 		TxBlockHeight:     txBlockHeight,
 		TargetBlockHeight: targetBlockHeight,
