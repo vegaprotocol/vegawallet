@@ -111,8 +111,6 @@ type RotateKeyFlags struct {
 func (f *RotateKeyFlags) Validate() (*wallet.RotateKeyRequest, error) {
 	req := &wallet.RotateKeyRequest{}
 
-	fmt.Println(f.PublicKey)
-
 	if f.PublicKey == "" {
 		return nil, flags.FlagMustBeSpecifiedError("public-key")
 	}
