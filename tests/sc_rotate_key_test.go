@@ -156,7 +156,7 @@ func TestRotateKeyFailsInIsolatedWallet(t *testing.T) {
 
 	// then
 	require.Nil(t, resp)
-	require.EqualError(t, err, "couldn't rotate key in isolated wallet")
+	require.ErrorIs(t, err, wallet.ErrCantRotateKeyInIsolatedWallet)
 }
 
 func TestRotateKeyFailsOnNonExitingKey(t *testing.T) {
