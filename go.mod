@@ -3,7 +3,7 @@ module code.vegaprotocol.io/vegawallet
 go 1.17
 
 require (
-	code.vegaprotocol.io/protos v0.43.1-0.20211004102311-d2ad34ada37b
+	code.vegaprotocol.io/protos v0.45.2-0.20211026143814-fd1dc62fd4e8
 	code.vegaprotocol.io/shared v0.0.0-20211015074835-9ed837d93090
 	github.com/blang/semver/v4 v4.0.0
 	github.com/cenkalti/backoff/v4 v4.0.2
@@ -22,6 +22,7 @@ require (
 	github.com/vegaprotocol/go-slip10 v0.1.0
 	github.com/zannen/toml v0.3.2
 	go.uber.org/zap v1.13.0
+	golang.org/x/sys v0.0.0-20210615035016-665e8c7367d1
 	golang.org/x/term v0.0.0-20210615171337-6886f2dfbf5b
 	google.golang.org/grpc v1.38.0
 )
@@ -46,7 +47,6 @@ require (
 	golang.org/x/lint v0.0.0-20210508222113-6edffad5e616 // indirect
 	golang.org/x/mod v0.4.2 // indirect
 	golang.org/x/net v0.0.0-20210610132358-84b48f89b13b // indirect
-	golang.org/x/sys v0.0.0-20210615035016-665e8c7367d1 // indirect
 	golang.org/x/text v0.3.6 // indirect
 	golang.org/x/tools v0.1.2 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect

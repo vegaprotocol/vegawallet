@@ -1,6 +1,10 @@
 # Changelog
 
-## Unreleased (0.10.0)
+## Unreleased (0.11.0)
+
+
+## 0.10.0
+*2021-11-15*
 
 ### Breaking changes
 - [300](https://github.com/vegaprotocol/vegawallet/pull/300) - Move from semi-colon to comma separated metadata on `key annotate` and `key generate`
