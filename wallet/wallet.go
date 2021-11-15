@@ -38,8 +38,10 @@ type PublicKey interface {
 	Key() string
 	IsTainted() bool
 	Meta() []Meta
+	Index() uint32
 	AlgorithmVersion() uint32
 	AlgorithmName() string
+	Hash() string
 
 	MarshalJSON() ([]byte, error)
 	UnmarshalJSON(data []byte) error

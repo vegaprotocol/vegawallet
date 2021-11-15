@@ -555,6 +555,7 @@ func TestRotateKey(t *testing.T) {
 	t.Run("Rotate key succeeds", testRotateKeySucceeds)
 	t.Run("Rotate key with non existing wallet fails", testRotateWithNonExistingWalletFails)
 	t.Run("Rotate key with non existing public key fails", testRotateKeyWithNonExistingPublicKeyFails)
+	t.Run("Rotate key tained public key fails", testRotateKeyWithTainedPublicKeyFails)
 }
 
 func testRotateKeySucceeds(t *testing.T) {
@@ -569,7 +570,7 @@ func testRotateKeySucceeds(t *testing.T) {
 		Wallet:            w.Name(),
 		Passphrase:        "passphrase",
 		NewPublicKey:      kp.PublicKey(),
-		TXBlockHeight:     20,
+		TxBlockHeight:     20,
 		TargetBlockHeight: 25,
 	}
 
@@ -604,9 +605,9 @@ func testRotateKeySucceeds(t *testing.T) {
 	require.True(t, ok)
 	require.NotNil(t, keyRotate)
 
-	require.Equal(t, uint64(req.TXBlockHeight), inputData.BlockHeight)
-	require.Equal(t, uint64(kp.Index()), keyRotate.KeyRotateSubmission.KeyNumber)
-	require.Equal(t, uint64(req.TargetBlockHeight), keyRotate.KeyRotateSubmission.TargetBlock)
+	require.Equal(t, req.TxBlockHeight, inputData.BlockHeight)
+	require.Equal(t, kp.Index(), keyRotate.KeyRotateSubmission.KeyNumber)
+	require.Equal(t, req.TargetBlockHeight, keyRotate.KeyRotateSubmission.TargetBlock)
 	require.Equal(t, expectedNewPubHash, keyRotate.KeyRotateSubmission.NewPubKeyHash)
 }
 
@@ -616,7 +617,7 @@ func testRotateWithNonExistingWalletFails(t *testing.T) {
 		Wallet:            vgrand.RandomStr(5),
 		Passphrase:        "passphrase",
 		NewPublicKey:      "nonexisting",
-		TXBlockHeight:     20,
+		TxBlockHeight:     20,
 		TargetBlockHeight: 25,
 	}
 
@@ -641,7 +642,7 @@ func testRotateKeyWithNonExistingPublicKeyFails(t *testing.T) {
 		Wallet:            w.Name(),
 		Passphrase:        "passphrase",
 		NewPublicKey:      "nonexisting",
-		TXBlockHeight:     20,
+		TxBlockHeight:     20,
 		TargetBlockHeight: 25,
 	}
 
@@ -656,6 +657,35 @@ func testRotateKeyWithNonExistingPublicKeyFails(t *testing.T) {
 	// then
 	require.Nil(t, resp)
 	require.Error(t, err)
+}
+
+func testRotateKeyWithTainedPublicKeyFails(t *testing.T) {
+	// given
+	w := importWalletWithKey(t)
+	kp := w.ListKeyPairs()[0]
+
+	err := w.TaintKey(kp.PublicKey())
+	require.NoError(t, err)
+
+	req := &wallet.RotateKeyRequest{
+		Wallet:            w.Name(),
+		Passphrase:        "passphrase",
+		NewPublicKey:      kp.PublicKey(),
+		TxBlockHeight:     20,
+		TargetBlockHeight: 25,
+	}
+
+	// setup
+	store := handlerMocks(t)
+	store.EXPECT().WalletExists(req.Wallet).Times(1).Return(true)
+	store.EXPECT().GetWallet(req.Wallet, req.Passphrase).Times(1).Return(w, nil)
+
+	// when
+	resp, err := wallet.RotateKey(store, req)
+
+	// then
+	require.Nil(t, resp)
+	require.ErrorIs(t, err, wallet.ErrPubKeyIsTainted)
 }
 
 func newWalletWithKey(t *testing.T) *wallet.HDWallet {

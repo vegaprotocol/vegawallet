@@ -24,6 +24,7 @@ func NewCmdKey(w io.Writer, rf *RootFlags) *cobra.Command {
 	cmd.AddCommand(NewCmdDescribeKey(w, rf))
 	cmd.AddCommand(NewCmdTaintKey(w, rf))
 	cmd.AddCommand(NewCmdUntaintKey(w, rf))
+	cmd.AddCommand(NewCmdRotateKey(w, rf))
 	return cmd
 }
 

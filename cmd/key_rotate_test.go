@@ -14,9 +14,10 @@ import (
 func TestRotateKeyFlags(t *testing.T) {
 	t.Run("Valid flags succeeds", testRotateKeyFlagsValidFlagsSucceeds)
 	t.Run("Missing wallet fails", testRotateKeyFlagsMissingWalletFails)
+	t.Run("Missing public key fails", testRotateKeyFlagsMissingPublicKeyFails)
 	t.Run("Missing tx height fails", testRotateKeyFlagsMissingTxBlockHeightFails)
 	t.Run("Missing target height fails", testRotateKeyFlagsMissingTargetBlockHeightFails)
-	t.Run("Validate fails when target height is less then tx height", testRotateKeyFlagsTargetFailsWhenBlockHeightIsLessThenTXHeight)
+	t.Run("Validate fails when target height is less then tx height", testRotateKeyFlagsTargetFailsWhenBlockHeightIsLessThanTXHeight)
 }
 
 func testRotateKeyFlagsValidFlagsSucceeds(t *testing.T) {
@@ -27,14 +28,14 @@ func testRotateKeyFlagsValidFlagsSucceeds(t *testing.T) {
 	passphrase, passphraseFilePath := NewPassphraseFile(t, testDir)
 	walletName := vgrand.RandomStr(10)
 	pubKey := vgrand.RandomStr(20)
-	txBlockHeight := uint32(20)
-	targetBlockHeight := uint32(25)
+	txBlockHeight := uint64(20)
+	targetBlockHeight := uint64(25)
 
 	f := &cmd.RotateKeyFlags{
 		Wallet:            walletName,
 		PassphraseFile:    passphraseFilePath,
 		NewPublicKey:      pubKey,
-		TXBlockHeight:     txBlockHeight,
+		TxBlockHeight:     txBlockHeight,
 		TargetBlockHeight: targetBlockHeight,
 	}
 
@@ -42,7 +43,7 @@ func testRotateKeyFlagsValidFlagsSucceeds(t *testing.T) {
 		Wallet:            walletName,
 		Passphrase:        passphrase,
 		NewPublicKey:      pubKey,
-		TXBlockHeight:     txBlockHeight,
+		TxBlockHeight:     txBlockHeight,
 		TargetBlockHeight: targetBlockHeight,
 	}
 
@@ -77,7 +78,7 @@ func testRotateKeyFlagsMissingTxBlockHeightFails(t *testing.T) {
 
 	// given
 	f := newRotateKeyFlags(t, testDir)
-	f.TXBlockHeight = 0
+	f.TxBlockHeight = 0
 
 	// when
 	req, err := f.Validate()
@@ -103,20 +104,36 @@ func testRotateKeyFlagsMissingTargetBlockHeightFails(t *testing.T) {
 	assert.Nil(t, req)
 }
 
-func testRotateKeyFlagsTargetFailsWhenBlockHeightIsLessThenTXHeight(t *testing.T) {
+func testRotateKeyFlagsMissingPublicKeyFails(t *testing.T) {
 	testDir, cleanUpFn := NewTempDir(t)
 	defer cleanUpFn(t)
 
 	// given
 	f := newRotateKeyFlags(t, testDir)
-	f.TXBlockHeight = 25
+	f.NewPublicKey = ""
+
+	// when
+	req, err := f.Validate()
+
+	// then
+	assert.ErrorIs(t, err, flags.FlagMustBeSpecifiedError("public-key"))
+	assert.Nil(t, req)
+}
+
+func testRotateKeyFlagsTargetFailsWhenBlockHeightIsLessThanTXHeight(t *testing.T) {
+	testDir, cleanUpFn := NewTempDir(t)
+	defer cleanUpFn(t)
+
+	// given
+	f := newRotateKeyFlags(t, testDir)
+	f.TxBlockHeight = 25
 	f.TargetBlockHeight = 20
 
 	// when
 	req, err := f.Validate()
 
 	// then
-	assert.EqualError(t, err, "--target-height flag must be greater then --tx-height")
+	assert.EqualError(t, err, "--target-height flag must be greater than --tx-height")
 	assert.Nil(t, req)
 }
 
@@ -126,14 +143,14 @@ func newRotateKeyFlags(t *testing.T, testDir string) *cmd.RotateKeyFlags {
 	_, passphraseFilePath := NewPassphraseFile(t, testDir)
 	walletName := vgrand.RandomStr(10)
 	pubKey := vgrand.RandomStr(20)
-	txBlockHeight := uint32(20)
-	targetBlockHeight := uint32(25)
+	txBlockHeight := uint64(20)
+	targetBlockHeight := uint64(25)
 
 	return &cmd.RotateKeyFlags{
 		Wallet:            walletName,
 		NewPublicKey:      pubKey,
 		PassphraseFile:    passphraseFilePath,
-		TXBlockHeight:     txBlockHeight,
+		TxBlockHeight:     txBlockHeight,
 		TargetBlockHeight: targetBlockHeight,
 	}
 }
