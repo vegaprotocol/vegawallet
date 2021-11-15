@@ -1,15 +1,19 @@
 package cmd
 
 import (
+	"io"
+
 	"github.com/spf13/cobra"
 )
 
-var serviceCmd = &cobra.Command{
-	Use:   "service",
-	Short: "Manage the service",
-	Long:  "Manage the service",
-}
+func NewCmdService(w io.Writer, rf *RootFlags) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "service",
+		Short: "Manage the Vega wallet's service",
+		Long:  "Manage the Vega wallet's service",
+	}
 
-func init() {
-	rootCmd.AddCommand(serviceCmd)
+	// create subcommands
+	cmd.AddCommand(NewCmdRunService(w, rf))
+	return cmd
 }

@@ -109,7 +109,7 @@ func testFileStoreV1GetWalletWithWrongPassphraseFails(t *testing.T) {
 	returnedWallet, err := s.GetWallet(w.Name(), othPassphrase)
 
 	// then
-	assert.ErrorIs(t, err, storev1.ErrWrongPassphrase)
+	assert.ErrorIs(t, err, wallet.ErrWrongPassphrase)
 	assert.Nil(t, returnedWallet)
 }
 

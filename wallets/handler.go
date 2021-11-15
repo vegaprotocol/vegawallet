@@ -1,7 +1,6 @@
 package wallets
 
 import (
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"sync"
@@ -12,7 +11,6 @@ import (
 	wcommands "code.vegaprotocol.io/vegawallet/commands"
 	wcrypto "code.vegaprotocol.io/vegawallet/crypto"
 	"code.vegaprotocol.io/vegawallet/wallet"
-	wstorev1 "code.vegaprotocol.io/vegawallet/wallet/store/v1"
 )
 
 var ErrWalletDoesNotExists = errors.New("wallet does not exist")
@@ -102,7 +100,7 @@ func (h *Handler) LoginWallet(name, passphrase string) error {
 
 	w, err := h.store.GetWallet(name, passphrase)
 	if err != nil {
-		if errors.Is(err, wstorev1.ErrWrongPassphrase) {
+		if errors.Is(err, wallet.ErrWrongPassphrase) {
 			return err
 		}
 		return fmt.Errorf("couldn't get wallet %s: %w", name, err)
@@ -123,7 +121,7 @@ func (h *Handler) GenerateKeyPair(name, passphrase string, meta []wallet.Meta) (
 
 	w, err := h.store.GetWallet(name, passphrase)
 	if err != nil {
-		if errors.Is(err, wstorev1.ErrWrongPassphrase) {
+		if errors.Is(err, wallet.ErrWrongPassphrase) {
 			return nil, err
 		}
 		return nil, fmt.Errorf("couldn't get wallet %s: %w", name, err)
@@ -233,13 +231,11 @@ func (h *Handler) VerifyAny(inputData, sig []byte, pubKey string) (bool, error) 
 	h.mu.RLock()
 	defer h.mu.RUnlock()
 
-	decodedPubKey, err := hex.DecodeString(pubKey)
-	if err != nil {
-		return false, fmt.Errorf("couldn't decode public key: %w", err)
-	}
-
-	signatureAlgorithm := wcrypto.NewEd25519()
-	return signatureAlgorithm.Verify(decodedPubKey, inputData, sig)
+	return wcrypto.VerifyMessage(&wcrypto.VerifyMessageRequest{
+		Message:   inputData,
+		Signature: sig,
+		PubKey:    pubKey,
+	})
 }
 
 func (h *Handler) TaintKey(name, pubKey, passphrase string) error {
@@ -248,7 +244,7 @@ func (h *Handler) TaintKey(name, pubKey, passphrase string) error {
 
 	w, err := h.store.GetWallet(name, passphrase)
 	if err != nil {
-		if errors.Is(err, wstorev1.ErrWrongPassphrase) {
+		if errors.Is(err, wallet.ErrWrongPassphrase) {
 			return err
 		}
 		return fmt.Errorf("couldn't get wallet %s: %w", name, err)
@@ -268,7 +264,7 @@ func (h *Handler) UntaintKey(name string, pubKey string, passphrase string) erro
 
 	w, err := h.store.GetWallet(name, passphrase)
 	if err != nil {
-		if errors.Is(err, wstorev1.ErrWrongPassphrase) {
+		if errors.Is(err, wallet.ErrWrongPassphrase) {
 			return err
 		}
 		return fmt.Errorf("couldn't get wallet %s: %w", name, err)
@@ -288,7 +284,7 @@ func (h *Handler) UpdateMeta(name, pubKey, passphrase string, meta []wallet.Meta
 
 	w, err := h.store.GetWallet(name, passphrase)
 	if err != nil {
-		if errors.Is(err, wstorev1.ErrWrongPassphrase) {
+		if errors.Is(err, wallet.ErrWrongPassphrase) {
 			return err
 		}
 		return fmt.Errorf("couldn't get wallet %s: %w", name, err)

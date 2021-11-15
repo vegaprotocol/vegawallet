@@ -2,8 +2,10 @@ package cmd
 
 import (
 	"fmt"
+	"io"
 
-	vgjson "code.vegaprotocol.io/shared/libs/json"
+	"code.vegaprotocol.io/vegawallet/cmd/cli"
+	"code.vegaprotocol.io/vegawallet/cmd/flags"
 	"code.vegaprotocol.io/vegawallet/cmd/printer"
 	"code.vegaprotocol.io/vegawallet/wallet"
 	"code.vegaprotocol.io/vegawallet/wallets"
@@ -11,99 +13,102 @@ import (
 )
 
 var (
-	keyListArgs struct {
-		wallet         string
-		passphraseFile string
-	}
+	listKeysLong = cli.LongDesc(`
+		List the keys of a given wallet.
+	`)
 
-	keyListCmd = &cobra.Command{
-		Use:   "list",
-		Short: "List keys of a wallet",
-		Long:  "List all the keys for a given wallet",
-		RunE:  runKeyList,
-	}
+	listKeysExample = cli.Examples(`
+		# List all keys
+		vegawallet key list --wallet WALLET
+	`)
 )
 
-func init() {
-	keyCmd.AddCommand(keyListCmd)
-	keyListCmd.Flags().StringVarP(&keyListArgs.wallet, "wallet", "w", "", "Name of the wallet to use")
-	keyListCmd.Flags().StringVarP(&keyListArgs.passphraseFile, "passphrase-file", "p", "", "Path of the file containing the passphrase to access the wallet")
-	_ = keyListCmd.MarkFlagRequired("wallet")
-}
+type ListKeysHandler func(*wallet.ListKeysRequest) (*wallet.ListKeysResponse, error)
 
-func runKeyList(_ *cobra.Command, _ []string) error {
-	store, err := wallets.InitialiseStore(rootArgs.home)
-	if err != nil {
-		return fmt.Errorf("couldn't initialise wallets store: %w", err)
-	}
-
-	handler := wallets.NewHandler(store)
-
-	passphrase, err := getPassphrase(keyListArgs.passphraseFile, false)
-	if err != nil {
-		return err
-	}
-
-	err = handler.LoginWallet(keyListArgs.wallet, passphrase)
-	if err != nil {
-		return fmt.Errorf("could not login to the wallet: %w", err)
-	}
-
-	keys, err := handler.ListKeyPairs(keyListArgs.wallet)
-	if err != nil {
-		return fmt.Errorf("could not list the public keys: %w", err)
-	}
-
-	if rootArgs.output == "human" {
-		p := printer.NewHumanPrinter()
-		for i, keyPair := range keys {
-			p.InfoText(fmt.Sprintf("# Key %d", i+1)).NextLine()
-			printKeyPair(p, keyPair)
-			p.NextLine()
+func NewCmdListKeys(w io.Writer, rf *RootFlags) *cobra.Command {
+	h := func(req *wallet.ListKeysRequest) (*wallet.ListKeysResponse, error) {
+		s, err := wallets.InitialiseStore(rf.Home)
+		if err != nil {
+			return nil, fmt.Errorf("couldn't initialise wallets store: %w", err)
 		}
-	} else if rootArgs.output == "json" {
-		return printJSONKeyPairs(keys)
+
+		return wallet.ListKeys(s, req)
 	}
 
-	return nil
+	return BuildCmdListKeys(w, h, rf)
 }
 
-func printJSONKeyPairs(keys []wallet.KeyPair) error {
-	result := make([]keyDescriptionKeyJSON, 0, len(keys))
+func BuildCmdListKeys(w io.Writer, handler ListKeysHandler, rf *RootFlags) *cobra.Command {
+	f := &ListKeysFlags{}
 
-	for _, keyPair := range keys {
-		result = append(result,
-			keyDescriptionKeyJSON{
-				KeyPair: keyDescriptionKeyPairJSON{
-					PrivateKey: keyPair.PrivateKey(),
-					PublicKey:  keyPair.PublicKey(),
-				},
-				Algorithm: keyDescriptionAlgorithmJSON{
-					Name:    keyPair.AlgorithmName(),
-					Version: keyPair.AlgorithmVersion(),
-				},
-				Meta:    keyPair.Meta(),
-				Tainted: keyPair.IsTainted(),
-			},
-		)
+	cmd := &cobra.Command{
+		Use:     "list",
+		Short:   "List the keys of a given wallet",
+		Long:    listKeysLong,
+		Example: listKeysExample,
+		RunE: func(_ *cobra.Command, _ []string) error {
+			req, err := f.Validate()
+			if err != nil {
+				return err
+			}
+
+			resp, err := handler(req)
+			if err != nil {
+				return err
+			}
+
+			switch rf.Output {
+			case flags.InteractiveOutput:
+				PrintListKeysResponse(w, resp)
+			case flags.JSONOutput:
+				return printer.FprintJSON(w, resp)
+			}
+
+			return nil
+		},
 	}
 
-	return vgjson.Print(result)
+	cmd.Flags().StringVarP(&f.Wallet,
+		"wallet", "w",
+		"",
+		"Name of the wallet to use",
+	)
+	cmd.Flags().StringVarP(&f.PassphraseFile,
+		"passphrase-file", "p",
+		"",
+		"Path to the file containing the wallet's passphrase",
+	)
+
+	return cmd
 }
 
-type keyDescriptionKeyJSON struct {
-	KeyPair   keyDescriptionKeyPairJSON   `json:"keyPair"`
-	Algorithm keyDescriptionAlgorithmJSON `json:"algorithm"`
-	Meta      []wallet.Meta               `json:"meta"`
-	Tainted   bool                        `json:"tainted"`
+type ListKeysFlags struct {
+	Wallet         string
+	PassphraseFile string
 }
 
-type keyDescriptionKeyPairJSON struct {
-	PrivateKey string `json:"privateKey"`
-	PublicKey  string `json:"publicKey"`
+func (f *ListKeysFlags) Validate() (*wallet.ListKeysRequest, error) {
+	req := &wallet.ListKeysRequest{}
+
+	if len(f.Wallet) == 0 {
+		return nil, flags.FlagMustBeSpecifiedError("wallet")
+	}
+	req.Wallet = f.Wallet
+
+	passphrase, err := flags.GetPassphrase(f.PassphraseFile)
+	if err != nil {
+		return nil, err
+	}
+	req.Passphrase = passphrase
+
+	return req, nil
 }
 
-type keyDescriptionAlgorithmJSON struct {
-	Name    string `json:"name"`
-	Version uint32 `json:"version"`
+func PrintListKeysResponse(w io.Writer, resp *wallet.ListKeysResponse) {
+	p := printer.NewInteractivePrinter(w)
+
+	for _, key := range resp.Keys {
+		p.Text("Name:       ").WarningText(key.Name).NextLine()
+		p.Text("Public key: ").WarningText(key.PublicKey).NextSection()
+	}
 }

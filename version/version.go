@@ -10,7 +10,7 @@ import (
 const (
 	TaggedReleaseURL   = "https://github.com/vegaprotocol/vegawallet/releases/tag"
 	defaultVersionHash = "unknown"
-	defaultVersion     = "v0.9.2"
+	defaultVersion     = "v0.10.0"
 )
 
 var (
@@ -31,6 +31,18 @@ func IsUnreleased() bool {
 	}
 
 	return v.isDevelopmentVersion
+}
+
+type GetVersionResponse struct {
+	Version string `json:"version"`
+	GitHash string `json:"gitHash"`
+}
+
+func GetVersionInfo() *GetVersionResponse {
+	return &GetVersionResponse{
+		Version: Version,
+		GitHash: VersionHash,
+	}
 }
 
 // Check returns a newer version, or an error or nil for both

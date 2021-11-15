@@ -1,5 +1,35 @@
 # Changelog
 
+## Unreleased (0.11.0)
+
+
+## 0.10.0
+*2021-11-15*
+
+### Breaking changes
+- [300](https://github.com/vegaprotocol/vegawallet/pull/300) - Move from semi-colon to comma separated metadata on `key annotate` and `key generate`
+- [300](https://github.com/vegaprotocol/vegawallet/pull/300) - Trim the `key list` output to only output name and public key
+- [358](https://github.com/vegaprotocol/vegawallet/pull/358) - Rename "human" output to "interactive"
+
+### Deprecation
+- [368](https://github.com/vegaprotocol/vegawallet/pull/368) - Deprecate `command` subcommand in favor of `send command`
+
+### Improvements
+- [300](https://github.com/vegaprotocol/vegawallet/pull/300) - Internal restructuring of CLI building blocks to improve testability
+- [359](https://github.com/vegaprotocol/vegawallet/pull/359) - Add `key describe` subcommand to allow querying of key information
+- [364](https://github.com/vegaprotocol/vegawallet/pull/364) - Add changelog checker Github action
+- [361](https://github.com/vegaprotocol/vegawallet/pull/361) - Add `network describe` subcommand to allow querying of network information
+- [366](https://github.com/vegaprotocol/vegawallet/pull/366) - Update the changelog checker action to run when required only
+- [368](https://github.com/vegaprotocol/vegawallet/pull/368) - Add `send tx` subcommand to send raw transaction
+
+
+### Fixes
+- [356](https://github.com/vegaprotocol/vegawallet/pull/356) - Ensure the interactive printer is listening to color management env vars (`NO_COLOR` and `CLICOLOR`)
+- [357](https://github.com/vegaprotocol/vegawallet/pull/357) - Warn without failing when no connection on version verification
+- [360](https://github.com/vegaprotocol/vegawallet/pull/360) - Attempt to enable ANSI colors in Windows terminal
+- [372](https://github.com/vegaprotocol/vegawallet/pull/372) - Remove wallet name serialisation to allow wallet file to be renamed
+- [370](https://github.com/vegaprotocol/vegawallet/pull/370) - Ensure unsupported output is correctly reported
+
 ## 0.9.2
 *2021-10-27*
 

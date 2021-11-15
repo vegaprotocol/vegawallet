@@ -88,8 +88,7 @@ func testInitialisingNetworkWithExistingNetworkFails(t *testing.T) {
 		Return(true, nil)
 	ts.store.EXPECT().
 		SaveNetwork(gomock.Any()).
-		Times(1).
-		Return(nil)
+		Times(0)
 
 	// when
 	err := network.InitialiseNetworks(ts.store, false)

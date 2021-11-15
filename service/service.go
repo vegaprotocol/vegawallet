@@ -19,7 +19,6 @@ import (
 	"code.vegaprotocol.io/vegawallet/network"
 	"code.vegaprotocol.io/vegawallet/version"
 	"code.vegaprotocol.io/vegawallet/wallet"
-	wstorev1 "code.vegaprotocol.io/vegawallet/wallet/store/v1"
 
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/proto"
@@ -553,7 +552,7 @@ func (s *Service) GenerateKeyPair(t string, w http.ResponseWriter, r *http.Reque
 
 	pubKey, err := s.handler.SecureGenerateKeyPair(name, req.Passphrase, req.Meta)
 	if err != nil {
-		if errors.Is(err, wstorev1.ErrWrongPassphrase) {
+		if errors.Is(err, wallet.ErrWrongPassphrase) {
 			s.writeForbiddenError(w, err)
 		} else {
 			s.writeInternalError(w, err)
@@ -623,7 +622,7 @@ func (s *Service) TaintKey(t string, w http.ResponseWriter, r *http.Request, ps 
 	}
 
 	if err = s.handler.TaintKey(name, keyID, req.Passphrase); err != nil {
-		if errors.Is(err, wstorev1.ErrWrongPassphrase) {
+		if errors.Is(err, wallet.ErrWrongPassphrase) {
 			s.writeForbiddenError(w, err)
 		} else {
 			s.writeInternalError(w, err)
@@ -649,7 +648,7 @@ func (s *Service) UpdateMeta(t string, w http.ResponseWriter, r *http.Request, p
 	}
 
 	if err = s.handler.UpdateMeta(name, keyID, req.Passphrase, req.Meta); err != nil {
-		if errors.Is(err, wstorev1.ErrWrongPassphrase) {
+		if errors.Is(err, wallet.ErrWrongPassphrase) {
 			s.writeForbiddenError(w, err)
 		} else {
 			s.writeInternalError(w, err)

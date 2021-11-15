@@ -1,0 +1,22 @@
+name: ChangelogChecker
+on:
+  pull_request:
+    types: [review_requested, ready_for_review]
+    branches:
+      - develop
+      - master
+jobs:
+  build:
+    if: startsWith(github.head_ref, 'renovate/') != true
+    name: Check Actions
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - name: Changelog checker
+        uses: Zomzog/changelog-checker@v1.2.0
+        with:
+          fileName: CHANGELOG.md
+          #noChangelogLabel: my custom label # default `no changelog`
+          checkNotification: Simple
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

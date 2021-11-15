@@ -2,7 +2,6 @@ package v1
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/fs"
 	"os"
@@ -13,8 +12,6 @@ import (
 	vgfs "code.vegaprotocol.io/shared/libs/fs"
 	"code.vegaprotocol.io/vegawallet/wallet"
 )
-
-var ErrWrongPassphrase = errors.New("wrong passphrase")
 
 type Store struct {
 	walletsHome string
@@ -60,7 +57,7 @@ func (s *Store) GetWallet(name, passphrase string) (wallet.Wallet, error) {
 	decBuf, err := vgcrypto.Decrypt(buf, passphrase)
 	if err != nil {
 		if err.Error() == "cipher: message authentication failed" {
-			return nil, ErrWrongPassphrase
+			return nil, wallet.ErrWrongPassphrase
 		}
 		return nil, err
 	}
@@ -83,6 +80,10 @@ func (s *Store) GetWallet(name, passphrase string) (wallet.Wallet, error) {
 	if err != nil {
 		return nil, fmt.Errorf("couldn't unmarshal wallet: %w", err)
 	}
+
+	// The wallet name is not saved in the file to avoid de-synchronisation
+	// between file name and file content
+	w.SetName(name)
 
 	return w, nil
 }

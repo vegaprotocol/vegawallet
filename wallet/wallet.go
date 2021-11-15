@@ -7,6 +7,7 @@ type Wallet interface {
 	ID() string
 	Type() string
 	DescribePublicKey(pubKey string) (PublicKey, error)
+	DescribeKeyPair(pubKey string) (KeyPair, error)
 	ListPublicKeys() []PublicKey
 	ListKeyPairs() []KeyPair
 	GenerateKeyPair(meta []Meta) (KeyPair, error)

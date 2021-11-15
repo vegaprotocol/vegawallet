@@ -7,7 +7,7 @@ key pairs.
 
 ## Documentation
 
-#### [Getting started with Vega Wallet][vega-documentation-website-getting-started]
+#### [Getting started with Vega Wallet][vega-documentation-website-create-wallet]
 Learn how to install and run the stable version of Vega Wallet.
 
 #### [Vega documentation][vega-documentation-website]
@@ -17,15 +17,19 @@ Learn more about how Vega works, and explore sample scripts for API trading
 
 ### I am not familiar with Vega Wallet...
 
-If you want to know more about Vega Wallet, how it works and how to use it, refer to the section ["Getting started with Vega Wallet"][vega-documentation-website-getting-started].
+If you want to know more about Vega Wallet, how it works and how to use it, refer to the page ["Using Vega Wallet"][vega-wallet-documentation-website].
+
+### I don't know how to set up a Vega Wallet...
+
+If you want to know more about how to create and use a Vega Wallet, refer to the page ["Create a Vega Wallet"][vega-documentation-website-create-wallet].
 
 ### I want to use the latest stable version...
 
-If you want to use a stable version, refer to ["Getting started with Vega Wallet"][vega-documentation-website-getting-started].
+If you want to use a stable version, refer to ["Create a Vega Wallet"][vega-documentation-website-create-wallet].
 
 ### Should I use the documentation in this repository?
 
-If you are looking for the documentation for the stable version of Vega Wallet, refer to the [documentation website][vega-documentation-website]. **Do not refer to the documentation in this repository.**
+If you are looking for the documentation for the stable version of Vega Wallet, refer to the [documentation website][vega-wallet-documentation-website]. **Do not refer to the documentation in this repository.**
 
 The documentation living in this repository contains information about unreleased and unstable features, and it is meant for people running a version of Vega Wallet that is built from source code.
 
@@ -49,11 +53,14 @@ To install Vega Wallet, you can download a released binary, or install it using 
 
 From the [Releases][github-releases] page, download the ZIP file matching your platform and open it.
 
-|  Platform | Associated ZIP file            |
-|-----------|--------------------------------|
-| Windows   | `vegawallet-windows-amd64.zip` |
-|  MacOS    | `vegawallet-darwin-amd64.zip`  |
-| Linux     | `vegawallet-linux-amd64.zip`   |
+|  Platform       | Associated ZIP file            |
+|-----------------|--------------------------------|
+| Windows         | `vegawallet-windows-amd64.zip` |
+| Windows (ARM64) | `vegawallet-windows-arm64.zip` |
+| MacOS           | `vegawallet-darwin-amd64.zip`  |
+| MacOS (ARM64)   | `vegawallet-darwin-arm64.zip`  |
+| Linux           | `vegawallet-linux-amd64.zip`   |
+| Linux (ARM64)   | `vegawallet-linux-arm64.zip`   |
 
 
 ### Installing from repository
@@ -79,12 +86,6 @@ To build the Vega Wallet from the source code, use the following
 ```sh
 cd vegawallet && go build
 ```
-
-### Usage
-
-**Note:** Whether you are building Vega Wallet from source code or installing it from the repository, this will install the program under the name
-`vegawallet`, and not `vegawallet`. Thus, when reading the documentation in the repository,
-replace `vegawallet` with `vegawallet`.
 
 #### Using the command-line
 
@@ -115,7 +116,8 @@ Read more at [https://vega.xyz][vega-website].
 
 [vega-website]: https://vega.xyz
 [vega-documentation-website]: https://docs.fairground.vega.xyz
-[vega-documentation-website-getting-started]: https://docs.fairground.vega.xyz/docs/wallet/getting-started/
+[vega-documentation-website-create-wallet]: https://docs.fairground.vega.xyz/docs/vega-wallet/create-wallet/
+[vega-wallet-documentation-website]: https://docs.fairground.vega.xyz/docs/vega-wallet/
 [nolt]: https://vega-testnet.nolt.io/
 [discord]: https://vega.xyz/discord
-[github-release]: https://github.com/vegaprotocol/vegawallet/releases
+[github-releases]: https://github.com/vegaprotocol/vegawallet/releases

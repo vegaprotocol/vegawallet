@@ -1,13 +1,19 @@
-package logger
+package cmd
 
 import (
 	"fmt"
 
+	"code.vegaprotocol.io/vegawallet/cmd/flags"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
 
-var SupportedLogLevels = []zapcore.Level{zapcore.DebugLevel, zapcore.InfoLevel, zapcore.WarnLevel, zapcore.ErrorLevel}
+var SupportedLogLevels = []string{
+	zapcore.DebugLevel.String(),
+	zapcore.InfoLevel.String(),
+	zapcore.WarnLevel.String(),
+	zapcore.ErrorLevel.String(),
+}
 
 type LoggerError struct {
 	message string
@@ -57,7 +63,7 @@ func Build(output, level string) (*zap.Logger, error) {
 
 	cfg.Level = zap.NewAtomicLevelAt(*l)
 
-	if output == "human" {
+	if output == flags.InteractiveOutput {
 		cfg.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
 		cfg.Encoding = "console"
 	}
@@ -69,7 +75,28 @@ func Build(output, level string) (*zap.Logger, error) {
 	return log, nil
 }
 
+func ValidateLogLevel(level string) error {
+	if isSupportedLogLevel(level) {
+		return nil
+	}
+
+	return NewUnsupportedFlagValueError(level)
+}
+
+func NewUnsupportedFlagValueError(level string) error {
+	supportedLogLevels := make([]interface{}, len(SupportedLogLevels))
+	for i := range SupportedLogLevels {
+		supportedLogLevels[i] = SupportedLogLevels[i]
+	}
+
+	return flags.UnsupportedFlagValueError("level", level, supportedLogLevels)
+}
+
 func getLevel(level string) (*zapcore.Level, error) {
+	if !isSupportedLogLevel(level) {
+		return nil, UnsupportedLoggerLevelError(level)
+	}
+
 	l := new(zapcore.Level)
 
 	err := l.UnmarshalText([]byte(level))
@@ -77,16 +104,12 @@ func getLevel(level string) (*zapcore.Level, error) {
 		return nil, fmt.Errorf("couldn't parse logger level: %w", err)
 	}
 
-	if !isSupportedLogLevel(*l) {
-		return nil, UnsupportedLoggerLevelError(l.String())
-	}
-
 	return l, nil
 }
 
-func isSupportedLogLevel(selected zapcore.Level) bool {
+func isSupportedLogLevel(level string) bool {
 	for _, supported := range SupportedLogLevels {
-		if selected == supported {
+		if level == supported {
 			return true
 		}
 	}

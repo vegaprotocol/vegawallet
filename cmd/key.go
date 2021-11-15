@@ -1,15 +1,45 @@
 package cmd
 
 import (
+	"fmt"
+	"io"
+
+	"code.vegaprotocol.io/vegawallet/cmd/printer"
+	"code.vegaprotocol.io/vegawallet/wallet"
 	"github.com/spf13/cobra"
 )
 
-var keyCmd = &cobra.Command{
-	Use:   "key",
-	Short: "Manage keys",
-	Long:  "Manage keys",
+func NewCmdKey(w io.Writer, rf *RootFlags) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "key",
+		Short: "Manage Vega wallets' keys",
+		Long:  "Manage Vega wallets' keys",
+	}
+
+	// create subcommands
+	cmd.AddCommand(NewCmdAnnotateKey(w, rf))
+	cmd.AddCommand(NewCmdGenerateKey(w, rf))
+	cmd.AddCommand(NewCmdIsolateKey(w, rf))
+	cmd.AddCommand(NewCmdListKeys(w, rf))
+	cmd.AddCommand(NewCmdDescribeKey(w, rf))
+	cmd.AddCommand(NewCmdTaintKey(w, rf))
+	cmd.AddCommand(NewCmdUntaintKey(w, rf))
+	return cmd
 }
 
-func init() {
-	rootCmd.AddCommand(keyCmd)
+func printMeta(p *printer.InteractivePrinter, meta []wallet.Meta) {
+	padding := 0
+	for _, m := range meta {
+		keyLen := len(m.Key)
+		if keyLen > padding {
+			padding = keyLen
+		}
+	}
+
+	for i, m := range meta {
+		if i != 0 {
+			p.NextLine()
+		}
+		p.WarningText(fmt.Sprintf("%-*s", padding, m.Key)).Text(" | ").WarningText(m.Value)
+	}
 }

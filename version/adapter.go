@@ -20,25 +20,34 @@ func BuildReleasesRequestFromGithub(ctx context.Context) ReleasesGetter {
 	return func() ([]string, error) {
 		req, err := http.NewRequestWithContext(ctx, http.MethodGet, ReleaseAPI, nil)
 		if err != nil {
-			return nil, fmt.Errorf("couldn't build API request to get releases: %w", err)
+			return nil, fmt.Errorf("couldn't build request: %w", err)
 		}
 		req.Header.Add("Accept", "application/vnd.github.v3+json")
 
 		client := &http.Client{}
 		resp, err := client.Do(req)
 		if err != nil {
-			return nil, fmt.Errorf("couldn't successfully deliver API request to get releases: %w", err)
+			return nil, fmt.Errorf("couldn't deliver request: %w", err)
 		}
 		defer resp.Body.Close()
 
 		body, err := io.ReadAll(resp.Body)
 		if err != nil {
-			return nil, fmt.Errorf("couldn't read releases API response body: %w", err)
+			return nil, fmt.Errorf("couldn't read response body: %w", err)
 		}
 
 		responses := []releaseResponse{}
 		if err = json.Unmarshal(body, &responses); err != nil {
-			return nil, fmt.Errorf("couldn't unmarshal releases API response body: %w", err)
+			// try to parse as a general error message which would be useful information
+			// to know eg. if we were blocked due to githubs rate-limiting
+			m := struct {
+				Message string `json:"message"`
+			}{}
+			if mErr := json.Unmarshal(body, &m); mErr == nil {
+				return nil, fmt.Errorf("couldn't read response message: %s: %w", m.Message, err)
+			}
+
+			return nil, fmt.Errorf("couldn't unmarshal response body: %w", err)
 		}
 
 		releases := make([]string, 0, len(responses))

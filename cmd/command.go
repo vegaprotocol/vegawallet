@@ -1,175 +1,122 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
-	"time"
+	"io"
 
-	api "code.vegaprotocol.io/protos/vega/api/v1"
-	walletpb "code.vegaprotocol.io/protos/vega/wallet/v1"
-	"code.vegaprotocol.io/shared/paths"
+	"code.vegaprotocol.io/vegawallet/cmd/cli"
+	"code.vegaprotocol.io/vegawallet/cmd/flags"
 	"code.vegaprotocol.io/vegawallet/cmd/printer"
-	wcommands "code.vegaprotocol.io/vegawallet/commands"
-	vglog "code.vegaprotocol.io/vegawallet/libs/zap"
-	"code.vegaprotocol.io/vegawallet/logger"
-	"code.vegaprotocol.io/vegawallet/network"
-	netstore "code.vegaprotocol.io/vegawallet/network/store/v1"
-	"code.vegaprotocol.io/vegawallet/node"
-	"code.vegaprotocol.io/vegawallet/wallets"
-	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
-	"github.com/golang/protobuf/jsonpb"
 	"github.com/spf13/cobra"
 )
 
-const (
-	DefaultForwarderRetryCount = 5
-	ForwarderRequestTimeout    = 5 * time.Second
-)
-
 var (
-	commandArgs struct {
-		network        string
-		wallet         string
-		passphraseFile string
-		nodeAddress    string
-		retries        uint64
-		pubKey         string
-		level          string
-	}
+	commandLong = cli.LongDesc(`
+		DEPRECATED: use "send command" instead.
 
-	commandCmd = &cobra.Command{
-		Use:   "command",
-		Short: "Send a command to the Vega network",
-		Long:  "Send a command to the Vega network.",
-		Args:  cobra.ExactValidArgs(1),
-		RunE:  runCommand,
-	}
+		Send a command to a Vega node via the gRPC API. The command can be sent to 
+		any node of a registered network or to a specific node address.
+
+		The command should be a Vega command formatted as a JSON payload, as follows:
+
+		'{"commandName": {"someProperty": "someValue"} }'
+
+		For vote submission, it will look like this:
+
+		'{"voteSubmission": {"proposalId": "some-id", "value": "VALUE_YES"}}'
+	`)
+
+	commandExample = cli.Examples(`
+		# Send a command to a registered network
+		vegawallet command --network NETWORK --wallet WALLET --pubkey PUBKEY COMMAND
+
+		# Send a command to a specific Vega node address
+		vegawallet command --node-address ADDRESS --wallet WALLET --pubkey PUBKEY COMMAND
+
+		# Send a command with a log level set to debug
+		vegawallet command --network NETWORK --wallet WALLET --pubkey PUBKEY --level debug COMMAND
+
+		# Send a command with a maximum of 10 retry
+		vegawallet command --network NETWORK --wallet WALLET --pubkey PUBKEY --retries 10 COMMAND
+	`)
 )
 
-func init() {
-	rootCmd.AddCommand(commandCmd)
-	commandCmd.Flags().StringVarP(&commandArgs.network, "network", "n", "", "Name of the network to use")
-	commandCmd.Flags().StringVarP(&commandArgs.wallet, "wallet", "w", "", "Name of the wallet to use")
-	commandCmd.Flags().StringVarP(&commandArgs.passphraseFile, "passphrase-file", "p", "", "Path of the file containing the passphrase to access the wallet")
-	commandCmd.Flags().StringVarP(&commandArgs.pubKey, "pubkey", "k", "", "The public key to use from the wallet")
-	commandCmd.Flags().StringVar(&commandArgs.nodeAddress, "node-address", "", "Address of the Vega node to use")
-	commandCmd.Flags().Uint64Var(&commandArgs.retries, "retries", DefaultForwarderRetryCount, "Number of retries when contacting the Vega node")
-	commandCmd.Flags().StringVar(&commandArgs.level, "level", zapcore.InfoLevel.String(), fmt.Sprintf("Change log level: %v", logger.SupportedLogLevels))
-	_ = commandCmd.MarkFlagRequired("wallet")
-	_ = commandCmd.MarkFlagRequired("pubkey")
+func NewCmdCommand(w io.Writer, rf *RootFlags) *cobra.Command {
+	return BuildCmdCommand(w, SendCommand, rf)
 }
 
-func runCommand(_ *cobra.Command, pos []string) error {
-	p := printer.NewHumanPrinter()
+func BuildCmdCommand(w io.Writer, handler SendCommandHandler, rf *RootFlags) *cobra.Command {
+	f := &SendCommandFlags{}
 
-	wReq := &walletpb.SubmitTransactionRequest{}
-	err := jsonpb.UnmarshalString(pos[0], wReq)
-	if err != nil {
-		return fmt.Errorf("couldn't unmarshal request: %w", err)
+	cmd := &cobra.Command{
+		Use:     "command",
+		Short:   "Send a command to a Vega node",
+		Long:    commandLong,
+		Example: commandExample,
+		RunE: func(_ *cobra.Command, args []string) error {
+			if rf.Output == flags.InteractiveOutput {
+				p := printer.NewInteractivePrinter(w)
+				p.BangMark().DangerText("This command is DEPRECATED.").NextLine()
+				p.BangMark().DangerText("Use `vegawallet send command` instead").NextSection()
+			}
+
+			if aLen := len(args); aLen == 0 {
+				return flags.ArgMustBeSpecifiedError("command")
+			} else if aLen > 1 {
+				return flags.TooManyArgsError("command")
+			}
+			f.RawCommand = args[0]
+
+			req, err := f.Validate()
+			if err != nil {
+				return err
+			}
+
+			if err := handler(w, rf, req); err != nil {
+				return err
+			}
+
+			return nil
+		},
 	}
 
-	wReq.PubKey = commandArgs.pubKey
+	cmd.Flags().StringVarP(&f.Network,
+		"network", "n",
+		"",
+		"Network to which the command is sent",
+	)
+	cmd.Flags().StringVar(&f.NodeAddress,
+		"node-address",
+		"",
+		"Vega node address to which the command is sent",
+	)
+	cmd.Flags().StringVarP(&f.Wallet,
+		"wallet", "w",
+		"",
+		"Wallet holding the public key",
+	)
+	cmd.Flags().StringVarP(&f.PubKey,
+		"pubkey", "k",
+		"",
+		"Public key of the key pair to use for signing (hex-encoded)",
+	)
+	cmd.Flags().StringVarP(&f.PassphraseFile,
+		"passphrase-file", "p",
+		"",
+		"Path to the file containing the wallet's passphrase",
+	)
+	cmd.Flags().StringVar(&f.LogLevel,
+		"level",
+		zapcore.InfoLevel.String(),
+		fmt.Sprintf("Set the log level: %v", SupportedLogLevels),
+	)
+	cmd.Flags().Uint64Var(&f.Retries,
+		"retries",
+		DefaultForwarderRetryCount,
+		"Number of retries when contacting the Vega node",
+	)
 
-	errs := wcommands.CheckSubmitTransactionRequest(wReq)
-	if !errs.Empty() {
-		return fmt.Errorf("invalid request: %w", errs)
-	}
-
-	passphrase, err := getPassphrase(commandArgs.passphraseFile, false)
-	if err != nil {
-		return err
-	}
-
-	store, err := wallets.InitialiseStore(rootArgs.home)
-	if err != nil {
-		return fmt.Errorf("couldn't initialise wallets store: %w", err)
-	}
-
-	handler := wallets.NewHandler(store)
-
-	err = handler.LoginWallet(commandArgs.wallet, passphrase)
-	if err != nil {
-		return fmt.Errorf("couldn't login to the wallet %s: %w", commandArgs.wallet, err)
-	}
-	defer handler.LogoutWallet(commandArgs.wallet)
-
-	log, err := logger.Build(rootArgs.output, commandArgs.level)
-	if err != nil {
-		return err
-	}
-	defer vglog.Sync(log)
-
-	if len(commandArgs.nodeAddress) != 0 && len(commandArgs.network) != 0 {
-		return ErrCanNotHaveBothNodeAddressAndNetworkFlagsSet
-	}
-
-	var hosts []string
-	if len(commandArgs.nodeAddress) != 0 {
-		hosts = []string{commandArgs.nodeAddress}
-	} else if len(commandArgs.network) != 0 {
-		netStore, err := netstore.InitialiseStore(paths.New(rootArgs.home))
-		if err != nil {
-			return fmt.Errorf("couldn't initialise network store: %w", err)
-		}
-		exists, err := netStore.NetworkExists(commandArgs.network)
-		if err != nil {
-			return fmt.Errorf("couldn't verify network existence: %w", err)
-		}
-		if !exists {
-			return network.NewNetworkDoesNotExistError(commandArgs.network)
-		}
-		net, err := netStore.GetNetwork(commandArgs.network)
-		if err != nil {
-			return fmt.Errorf("couldn't get network %s: %w", commandArgs.network, err)
-		}
-		hosts = net.API.GRPC.Hosts
-	} else {
-		return ErrShouldSetNodeAddressOrNetworkFlag
-	}
-
-	forwarder, err := node.NewForwarder(log.Named("forwarder"), network.GRPCConfig{
-		Hosts:   hosts,
-		Retries: commandArgs.retries,
-	})
-	if err != nil {
-		return fmt.Errorf("couldn't initialise the node forwarder: %w", err)
-	}
-	defer func() {
-		// We can ignore this non-blocking error without logging as it's already
-		// logged down stream.
-		_ = forwarder.Stop()
-	}()
-
-	ctx, cfunc := context.WithTimeout(context.Background(), ForwarderRequestTimeout)
-	defer cfunc()
-
-	if rootArgs.output == "human" {
-		p.BlueArrow().InfoText("Logs").NextLine()
-	}
-
-	blockHeight, err := forwarder.LastBlockHeight(ctx)
-	if err != nil {
-		return fmt.Errorf("couldn't get last block height: %w", err)
-	}
-
-	log.Info(fmt.Sprintf("last block height found: %d", blockHeight))
-
-	tx, err := handler.SignTx(commandArgs.wallet, wReq, blockHeight)
-	if err != nil {
-		log.Error("couldn't sign transaction", zap.Error(err))
-		return fmt.Errorf("couldn't sign transaction: %w", err)
-	}
-
-	log.Info("transaction successfully signed", zap.String("signature", tx.Signature.Value))
-
-	if err = forwarder.SendTx(ctx, tx, api.SubmitTransactionRequest_TYPE_ASYNC); err != nil {
-		log.Error("couldn't send transaction", zap.Error(err))
-		return fmt.Errorf("couldn't send transaction: %w", err)
-	}
-
-	log.Info("transaction successfully sent")
-
-	return nil
+	return cmd
 }

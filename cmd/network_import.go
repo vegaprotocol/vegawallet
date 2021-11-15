@@ -1,11 +1,12 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
+	"io"
 
-	vgjson "code.vegaprotocol.io/shared/libs/json"
 	"code.vegaprotocol.io/shared/paths"
+	"code.vegaprotocol.io/vegawallet/cmd/cli"
+	"code.vegaprotocol.io/vegawallet/cmd/flags"
 	"code.vegaprotocol.io/vegawallet/cmd/printer"
 	"code.vegaprotocol.io/vegawallet/network"
 	netstore "code.vegaprotocol.io/vegawallet/network/store/v1"
@@ -13,89 +14,124 @@ import (
 )
 
 var (
-	ErrOnlySingleSourceMustBeSpecified = errors.New("only a single source must be specified")
-	ErrSourceMustBeSpecified           = errors.New("a source must be specified")
+	importNetworkLong = cli.LongDesc(`
+		Import a network configuration from a file or an URL.
+	`)
 
-	networkImportArgs struct {
-		filePath string
-		url      string
-		name     string
-		force    bool
-	}
+	importNetworkExample = cli.Examples(`
+		# import a network configuration from a file
+		vegawallet network import --from-file PATH_TO_NETWORK
 
-	// networkImportCmd represents the network import command.
-	networkImportCmd = &cobra.Command{
-		Use:   "import",
-		Short: "Import a network configuration",
-		Long:  "Import a network configuration",
-		RunE:  runNetworkImport,
-	}
+		# import a network configuration from an URL
+		vegawallet network import --from-url URL_TO_NETWORK
+
+		# overwrite existing network configuration
+		vegawallet network import --from-url URL_TO_NETWORK --force
+
+		# import a network configuration with a different name
+		vegawallet network import --from-url URL_TO_NETWORK --with-name NEW_NAME
+	`)
 )
 
-func init() {
-	networkCmd.AddCommand(networkImportCmd)
-	networkImportCmd.Flags().StringVar(&networkImportArgs.filePath, "from-file", "", `Path of the file containing the network configuration to import`)
-	networkImportCmd.Flags().StringVar(&networkImportArgs.url, "from-url", "", `URL of the file containing the network configuration to import`)
-	networkImportCmd.Flags().StringVar(&networkImportArgs.name, "with-name", "", `Change the name of the imported network`)
-	networkImportCmd.Flags().BoolVarP(&networkImportArgs.force, "force", "f", false, "Overwrite the existing network if it has the same name")
+type ImportNetworkFromSourceHandler func(*network.ImportNetworkFromSourceRequest) (*network.ImportNetworkFromSourceResponse, error)
+
+func NewCmdImportNetwork(w io.Writer, rf *RootFlags) *cobra.Command {
+	h := func(req *network.ImportNetworkFromSourceRequest) (*network.ImportNetworkFromSourceResponse, error) {
+		vegaPaths := paths.New(rf.Home)
+
+		s, err := netstore.InitialiseStore(vegaPaths)
+		if err != nil {
+			return nil, fmt.Errorf("couldn't initialise networks store: %w", err)
+		}
+
+		return network.ImportNetworkFromSource(s, network.NewReaders(), req)
+	}
+
+	return BuildCmdImportNetwork(w, h, rf)
 }
 
-func runNetworkImport(_ *cobra.Command, _ []string) error {
-	vegaPaths := paths.New(rootArgs.home)
+func BuildCmdImportNetwork(w io.Writer, handler ImportNetworkFromSourceHandler, rf *RootFlags) *cobra.Command {
+	f := &ImportNetworkFlags{}
 
-	netStore, err := netstore.InitialiseStore(vegaPaths)
-	if err != nil {
-		return fmt.Errorf("couldn't initialise networks store: %w", err)
+	cmd := &cobra.Command{
+		Use:     "import",
+		Short:   "Import a network configuration",
+		Long:    importNetworkLong,
+		Example: importNetworkExample,
+		RunE: func(_ *cobra.Command, _ []string) error {
+			req, err := f.Validate()
+			if err != nil {
+				return err
+			}
+
+			resp, err := handler(req)
+			if err != nil {
+				return err
+			}
+
+			switch rf.Output {
+			case flags.InteractiveOutput:
+				PrintImportNetworkResponse(w, resp)
+			case flags.JSONOutput:
+				return printer.FprintJSON(w, resp)
+			}
+
+			return nil
+		},
 	}
 
-	net, err := GetNetworkFromSource()
-	if err != nil {
-		return err
-	}
+	cmd.Flags().StringVar(&f.FilePath,
+		"from-file",
+		"",
+		"Path to the file containing the network configuration to import",
+	)
+	cmd.Flags().StringVar(&f.URL,
+		"from-url",
+		"",
+		"URL of the file containing the network configuration to import",
+	)
+	cmd.Flags().StringVar(&f.Name,
+		"with-name",
+		"",
+		"Change the name of the imported network",
+	)
+	cmd.Flags().BoolVarP(&f.Force,
+		"force", "f",
+		false,
+		"Overwrite the existing network if it has the same name",
+	)
 
-	if len(networkImportArgs.name) != 0 {
-		net.Name = networkImportArgs.name
-	}
-
-	if err := network.ImportNetwork(netStore, net, networkImportArgs.force); err != nil {
-		return fmt.Errorf("couldn't import network: %w", err)
-	}
-
-	filePath := netStore.GetNetworkPath(net.Name)
-	if rootArgs.output == "human" {
-		p := printer.NewHumanPrinter()
-		p.CheckMark().SuccessText("Importing the network succeeded").NextSection()
-		p.Text("Name:").NextLine().WarningText(net.Name).NextLine()
-		p.Text("File path:").NextLine().WarningText(filePath).NextLine()
-	} else if rootArgs.output == "json" {
-		return vgjson.Print(struct {
-			FilePath string `json:"filePath"`
-		}{
-			FilePath: filePath,
-		})
-	}
-
-	return nil
+	return cmd
 }
 
-func GetNetworkFromSource() (*network.Network, error) {
-	net := &network.Network{}
+type ImportNetworkFlags struct {
+	FilePath string
+	URL      string
+	Name     string
+	Force    bool
+}
 
-	if len(networkImportArgs.filePath) != 0 && len(networkImportArgs.url) != 0 {
-		return nil, ErrOnlySingleSourceMustBeSpecified
+func (f *ImportNetworkFlags) Validate() (*network.ImportNetworkFromSourceRequest, error) {
+	if len(f.FilePath) == 0 && len(f.URL) == 0 {
+		return nil, flags.OneOfFlagsMustBeSpecifiedError("from-file", "from-url")
 	}
 
-	if len(networkImportArgs.filePath) != 0 {
-		if err := paths.ReadStructuredFile(networkImportArgs.filePath, net); err != nil {
-			return nil, fmt.Errorf("couldn't read file from %s: %w", networkImportArgs.filePath, err)
-		}
-	} else if len(networkImportArgs.url) != 0 {
-		if err := paths.FetchStructuredFile(networkImportArgs.url, net); err != nil {
-			return nil, fmt.Errorf("couldn't fetch file from %s: %w", networkImportArgs.url, err)
-		}
-	} else {
-		return nil, ErrSourceMustBeSpecified
+	if len(f.FilePath) != 0 && len(f.URL) != 0 {
+		return nil, flags.FlagsMutuallyExclusiveError("from-file", "from-url")
 	}
 
-	return net, nil
+	return &network.ImportNetworkFromSourceRequest{
+		FilePath: f.FilePath,
+		URL:      f.URL,
+		Name:     f.Name,
+		Force:    f.Force,
+	}, nil
+}
+
+func PrintImportNetworkResponse(w io.Writer, resp *network.ImportNetworkFromSourceResponse) {
+	p := printer.NewInteractivePrinter(w)
+
+	p.CheckMark().SuccessText("Importing the network succeeded").NextSection()
+	p.Text("Name:").NextLine().WarningText(resp.Name).NextLine()
+	p.Text("File path:").NextLine().WarningText(resp.FilePath).NextLine()
 }
