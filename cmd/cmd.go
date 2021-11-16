@@ -5,11 +5,19 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"time"
 
 	"code.vegaprotocol.io/vegawallet/cmd/flags"
 	"code.vegaprotocol.io/vegawallet/cmd/printer"
 	vgterm "code.vegaprotocol.io/vegawallet/libs/term"
 )
+
+const (
+	DefaultForwarderRetryCount = 5
+	ForwarderRequestTimeout    = 5 * time.Second
+)
+
+var ErrNetworkDoesNotHaveGRPCHostConfigured = errors.New("network does not have gRPC hosts configured")
 
 type Error struct {
 	Err string `json:"error"`

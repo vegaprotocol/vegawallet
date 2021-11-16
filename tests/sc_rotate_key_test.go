@@ -40,7 +40,7 @@ func TestRotateKeySucceeds(t *testing.T) {
 
 	// when
 	resp, err := KeyRotate(t, append(cmd,
-		"--pubkey", generateKeyResp1.Key.KeyPair.PublicKey,
+		"--pubkey", generateKeyResp1.Key.PublicKey,
 		"--tx-height", "20",
 		"--target-height", "25",
 	))
@@ -81,7 +81,7 @@ func TestRotateKeyFailsOnTainedPublicKey(t *testing.T) {
 
 	// when
 	err = KeyTaint(t, append(cmd,
-		"--pubkey", generateKeyResp.Key.KeyPair.PublicKey,
+		"--pubkey", generateKeyResp.Key.PublicKey,
 	))
 
 	// then
@@ -89,7 +89,7 @@ func TestRotateKeyFailsOnTainedPublicKey(t *testing.T) {
 
 	// when
 	resp, err := KeyRotate(t, append(cmd,
-		"--pubkey", generateKeyResp.Key.KeyPair.PublicKey,
+		"--pubkey", generateKeyResp.Key.PublicKey,
 		"--tx-height", "20",
 		"--target-height", "25",
 	))
@@ -133,14 +133,14 @@ func TestRotateKeyFailsInIsolatedWallet(t *testing.T) {
 		"--home", home,
 		"--output", "json",
 		"--wallet", walletName,
-		"--pubkey", generateKeyResp.Key.KeyPair.PublicKey,
+		"--pubkey", generateKeyResp.Key.PublicKey,
 		"--passphrase-file", passphraseFilePath,
 	})
 
 	// then
 	require.NoError(t, err)
 	AssertIsolateKey(t, isolateKeyResp).
-		WithSpecialName(walletName, generateKeyResp.Key.KeyPair.PublicKey).
+		WithSpecialName(walletName, generateKeyResp.Key.PublicKey).
 		LocatedUnder(home)
 
 	// when
@@ -149,7 +149,7 @@ func TestRotateKeyFailsInIsolatedWallet(t *testing.T) {
 		"--output", "json",
 		"--wallet", isolateKeyResp.Wallet,
 		"--passphrase-file", passphraseFilePath,
-		"--pubkey", generateKeyResp.Key.KeyPair.PublicKey,
+		"--pubkey", generateKeyResp.Key.PublicKey,
 		"--tx-height", "20",
 		"--target-height", "25",
 	})

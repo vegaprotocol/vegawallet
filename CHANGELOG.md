@@ -3,6 +3,7 @@
 ## Unreleased (0.11.0)
 
 ### Breaking changes
+- [381](https://github.com/vegaprotocol/vegawallet/pull/381) - Make `send tx` and `send command` match `NOUN VERB` grammar
 - [384](https://github.com/vegaprotocol/vegawallet/pull/384) - Remove private key from key generate JSON output
 
 ### Improvements

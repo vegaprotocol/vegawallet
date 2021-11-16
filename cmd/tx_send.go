@@ -31,30 +31,30 @@ var (
 
 	sendTxExample = cli.Examples(`
 		# Send a command to a registered network
-		vegawallet send tx --network NETWORK BASE64_TRANSACTION
+		vegawallet tx send --network NETWORK BASE64_TRANSACTION
 
 		# Send a command to a specific Vega node address
-		vegawallet send tx --node-address ADDRESS BASE64_TRANSACTION
+		vegawallet tx send --node-address ADDRESS BASE64_TRANSACTION
 
 		# Send a command with a log level set to debug
-		vegawallet send tx --network NETWORK --level debug BASE64_TRANSACTION
+		vegawallet tx send --network NETWORK --level debug BASE64_TRANSACTION
 
 		# Send a command with a maximum of 10 retry
-		vegawallet send tx --network NETWORK --retries 10 BASE64_TRANSACTION
+		vegawallet tx send --network NETWORK --retries 10 BASE64_TRANSACTION
 	`)
 )
 
 type SendTxHandler func(io.Writer, *RootFlags, *SendTxRequest) error
 
-func NewCmdSendTx(w io.Writer, rf *RootFlags) *cobra.Command {
-	return BuildCmdSendTx(w, SendTx, rf)
+func NewCmdTxSend(w io.Writer, rf *RootFlags) *cobra.Command {
+	return BuildCmdTxSend(w, SendTx, rf)
 }
 
-func BuildCmdSendTx(w io.Writer, handler SendTxHandler, rf *RootFlags) *cobra.Command {
+func BuildCmdTxSend(w io.Writer, handler SendTxHandler, rf *RootFlags) *cobra.Command {
 	f := &SendTxFlags{}
 
 	cmd := &cobra.Command{
-		Use:     "command",
+		Use:     "send",
 		Short:   "Send a transaction to a Vega node",
 		Long:    sendTxLong,
 		Example: sendTxExample,
