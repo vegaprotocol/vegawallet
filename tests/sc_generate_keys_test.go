@@ -39,7 +39,7 @@ func TestGenerateAndListKeys(t *testing.T) {
 
 	// when
 	descResp, err := KeyDescribe(t, append(cmd,
-		"--pubkey", generateKeyResp1.Key.KeyPair.PublicKey,
+		"--pubkey", generateKeyResp1.Key.PublicKey,
 	))
 
 	// then
@@ -63,7 +63,7 @@ func TestGenerateAndListKeys(t *testing.T) {
 
 	// when
 	descResp, err = KeyDescribe(t, append(cmd,
-		"--pubkey", generateKeyResp2.Key.KeyPair.PublicKey,
+		"--pubkey", generateKeyResp2.Key.PublicKey,
 	))
 
 	// then

@@ -39,14 +39,14 @@ func TestIsolateWallet(t *testing.T) {
 		"--home", home,
 		"--output", "json",
 		"--wallet", walletName,
-		"--pubkey", generateKeyResp1.Key.KeyPair.PublicKey,
+		"--pubkey", generateKeyResp1.Key.PublicKey,
 		"--passphrase-file", passphraseFilePath,
 	})
 
 	// then
 	require.NoError(t, err)
 	AssertIsolateKey(t, isolateKeyResp).
-		WithSpecialName(walletName, generateKeyResp1.Key.KeyPair.PublicKey).
+		WithSpecialName(walletName, generateKeyResp1.Key.PublicKey).
 		LocatedUnder(home)
 
 	// when

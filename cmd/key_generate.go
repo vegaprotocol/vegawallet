@@ -159,7 +159,7 @@ func PrintGenerateKeyResponse(w io.Writer, resp *wallet.GenerateKeyResponse) {
 		p.WarningText(fmt.Sprintf("%d", resp.Wallet.Version)).NextLine()
 	}
 	p.Text("Public key:").NextLine()
-	p.WarningText(resp.Key.KeyPair.PublicKey).NextLine()
+	p.WarningText(resp.Key.PublicKey).NextLine()
 	p.Text("Metadata:").NextLine()
 	printMeta(p, resp.Key.Meta)
 	p.NextSection()

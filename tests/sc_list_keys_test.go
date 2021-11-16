@@ -47,7 +47,7 @@ func TestListKeys(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, listKeysResp1)
 	require.Len(t, listKeysResp1.Keys, 1)
-	assert.Equal(t, listKeysResp1.Keys[0].PublicKey, generateKeyResp1.Key.KeyPair.PublicKey)
+	assert.Equal(t, listKeysResp1.Keys[0].PublicKey, generateKeyResp1.Key.PublicKey)
 
 	// when
 	generateKeyResp2, err := KeyGenerate(t, []string{
@@ -77,6 +77,6 @@ func TestListKeys(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, listKeysResp2)
 	require.Len(t, listKeysResp2.Keys, 2)
-	assert.Equal(t, listKeysResp2.Keys[0].PublicKey, generateKeyResp1.Key.KeyPair.PublicKey)
-	assert.Equal(t, listKeysResp2.Keys[1].PublicKey, generateKeyResp2.Key.KeyPair.PublicKey)
+	assert.Equal(t, listKeysResp2.Keys[0].PublicKey, generateKeyResp1.Key.PublicKey)
+	assert.Equal(t, listKeysResp2.Keys[1].PublicKey, generateKeyResp2.Key.PublicKey)
 }

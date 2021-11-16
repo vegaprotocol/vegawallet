@@ -29,10 +29,7 @@ type GenerateKeyResponse struct {
 		Mnemonic string `json:"mnemonic,omitempty"`
 	} `json:"wallet"`
 	Key struct {
-		KeyPair struct {
-			PrivateKey string `json:"privateKey"`
-			PublicKey  string `json:"publicKey"`
-		} `json:"keyPair"`
+		PublicKey string `json:"publicKey"`
 		Algorithm struct {
 			Name    string `json:"name"`
 			Version uint32 `json:"version"`
@@ -80,8 +77,7 @@ func GenerateKey(store Store, req *GenerateKeyRequest) (*GenerateKeyResponse, er
 	resp.Wallet.Name = req.Wallet
 	resp.Wallet.Version = wal.Version()
 	resp.Wallet.FilePath = store.GetWalletPath(req.Wallet)
-	resp.Key.KeyPair.PublicKey = kp.PublicKey()
-	resp.Key.KeyPair.PrivateKey = kp.PrivateKey()
+	resp.Key.PublicKey = kp.PublicKey()
 	resp.Key.Algorithm.Name = kp.AlgorithmName()
 	resp.Key.Algorithm.Version = kp.AlgorithmVersion()
 	resp.Key.Meta = kp.Meta()

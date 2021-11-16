@@ -58,5 +58,5 @@ func TestRenameWallet(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, listKeysResp)
 	require.Len(t, listKeysResp.Keys, 1)
-	assert.Equal(t, listKeysResp.Keys[0].PublicKey, generateKeyResp.Key.KeyPair.PublicKey)
+	assert.Equal(t, listKeysResp.Keys[0].PublicKey, generateKeyResp.Key.PublicKey)
 }

@@ -53,7 +53,6 @@ func TestSignMessage(t *testing.T) {
 		WithVersion(2).
 		WithMeta(map[string]string{"name": "key-1", "role": "validation"}).
 		WithPublicKey("b5fd9d3c4ad553cb3196303b6e6df7f484cf7f5331a572a45031239fd71ad8a0").
-		WithPrivateKey("0bfdfb4a04e22d7252a4f24eb9d0f35a82efdc244cb0876d919361e61f6f56a2b5fd9d3c4ad553cb3196303b6e6df7f484cf7f5331a572a45031239fd71ad8a0").
 		LocatedUnder(home)
 
 	// given
@@ -65,7 +64,7 @@ func TestSignMessage(t *testing.T) {
 		"--home", home,
 		"--output", "json",
 		"--wallet", walletName,
-		"--pubkey", generateKeyResp.Key.KeyPair.PublicKey,
+		"--pubkey", generateKeyResp.Key.PublicKey,
 		"--message", encodedMessage,
 		"--passphrase-file", passphraseFilePath,
 	})
@@ -79,7 +78,7 @@ func TestSignMessage(t *testing.T) {
 	verifyResp, err := Verify(t, []string{
 		"--home", home,
 		"--output", "json",
-		"--pubkey", generateKeyResp.Key.KeyPair.PublicKey,
+		"--pubkey", generateKeyResp.Key.PublicKey,
 		"--message", encodedMessage,
 		"--signature", signResp.Signature,
 	})
@@ -133,7 +132,6 @@ func TestSignMessageWithTaintedKey(t *testing.T) {
 		WithName(walletName).
 		WithMeta(map[string]string{"name": "key-1", "role": "validation"}).
 		WithPublicKey("b5fd9d3c4ad553cb3196303b6e6df7f484cf7f5331a572a45031239fd71ad8a0").
-		WithPrivateKey("0bfdfb4a04e22d7252a4f24eb9d0f35a82efdc244cb0876d919361e61f6f56a2b5fd9d3c4ad553cb3196303b6e6df7f484cf7f5331a572a45031239fd71ad8a0").
 		LocatedUnder(home)
 
 	// when
@@ -141,7 +139,7 @@ func TestSignMessageWithTaintedKey(t *testing.T) {
 		"--home", home,
 		"--output", "json",
 		"--wallet", walletName,
-		"--pubkey", generateKeyResp.Key.KeyPair.PublicKey,
+		"--pubkey", generateKeyResp.Key.PublicKey,
 		"--passphrase-file", passphraseFilePath,
 	})
 
@@ -157,7 +155,7 @@ func TestSignMessageWithTaintedKey(t *testing.T) {
 		"--home", home,
 		"--output", "json",
 		"--wallet", walletName,
-		"--pubkey", generateKeyResp.Key.KeyPair.PublicKey,
+		"--pubkey", generateKeyResp.Key.PublicKey,
 		"--message", encodedMessage,
 		"--passphrase-file", passphraseFilePath,
 	})
@@ -171,7 +169,7 @@ func TestSignMessageWithTaintedKey(t *testing.T) {
 		"--home", home,
 		"--output", "json",
 		"--wallet", walletName,
-		"--pubkey", generateKeyResp.Key.KeyPair.PublicKey,
+		"--pubkey", generateKeyResp.Key.PublicKey,
 		"--passphrase-file", passphraseFilePath,
 	})
 
@@ -183,7 +181,7 @@ func TestSignMessageWithTaintedKey(t *testing.T) {
 		"--home", home,
 		"--output", "json",
 		"--wallet", walletName,
-		"--pubkey", generateKeyResp.Key.KeyPair.PublicKey,
+		"--pubkey", generateKeyResp.Key.PublicKey,
 		"--message", encodedMessage,
 		"--passphrase-file", passphraseFilePath,
 	})
