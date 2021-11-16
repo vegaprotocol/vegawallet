@@ -284,7 +284,7 @@ func RotateKey(store Store, req *RotateKeyRequest) (*RotateKeyResponse, error) {
 	}
 
 	mKeyPair, err := w.GetMasterKeyPair()
-	if errors.Is(err, ErrIsolatedWalletCantGetMasterKeyPair) {
+	if errors.Is(err, ErrIsolatedWalletDoesNotHaveMasterKey) {
 		return nil, ErrCantRotateKeyInIsolatedWallet
 	}
 	if err != nil {

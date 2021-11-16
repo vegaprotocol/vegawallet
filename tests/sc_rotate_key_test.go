@@ -40,7 +40,7 @@ func TestRotateKeySucceeds(t *testing.T) {
 
 	// when
 	resp, err := KeyRotate(t, append(cmd,
-		"--public-key", generateKeyResp1.Key.KeyPair.PublicKey,
+		"--pubkey", generateKeyResp1.Key.KeyPair.PublicKey,
 		"--tx-height", "20",
 		"--target-height", "25",
 	))
@@ -89,7 +89,7 @@ func TestRotateKeyFailsOnTainedPublicKey(t *testing.T) {
 
 	// when
 	resp, err := KeyRotate(t, append(cmd,
-		"--public-key", generateKeyResp.Key.KeyPair.PublicKey,
+		"--pubkey", generateKeyResp.Key.KeyPair.PublicKey,
 		"--tx-height", "20",
 		"--target-height", "25",
 	))
@@ -149,7 +149,7 @@ func TestRotateKeyFailsInIsolatedWallet(t *testing.T) {
 		"--output", "json",
 		"--wallet", isolateKeyResp.Wallet,
 		"--passphrase-file", passphraseFilePath,
-		"--public-key", generateKeyResp.Key.KeyPair.PublicKey,
+		"--pubkey", generateKeyResp.Key.KeyPair.PublicKey,
 		"--tx-height", "20",
 		"--target-height", "25",
 	})
@@ -190,7 +190,7 @@ func TestRotateKeyFailsOnNonExitingKey(t *testing.T) {
 
 	// when
 	resp, err := KeyRotate(t, append(cmd,
-		"--public-key", "nonexisting",
+		"--pubkey", "nonexisting",
 		"--tx-height", "20",
 		"--target-height", "25",
 	))
@@ -218,7 +218,7 @@ func TestRotateKeyFailsOnNonExitingWallet(t *testing.T) {
 
 	// when
 	resp, err := KeyRotate(t, append(cmd,
-		"--public-key", "nonexisting",
+		"--pubkey", "nonexisting",
 		"--tx-height", "20",
 		"--target-height", "25",
 	))
@@ -259,7 +259,7 @@ func TestRotateKeyFailsWhenTargetHeighIsLessnThanTxHeight(t *testing.T) {
 
 	// when
 	resp, err := KeyRotate(t, append(cmd,
-		"--public-key", "nonexisting",
+		"--pubkey", "nonexisting",
 		"--tx-height", "20",
 		"--target-height", "19",
 	))

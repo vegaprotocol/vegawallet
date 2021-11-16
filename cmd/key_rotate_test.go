@@ -116,7 +116,7 @@ func testRotateKeyFlagsMissingPublicKeyFails(t *testing.T) {
 	req, err := f.Validate()
 
 	// then
-	assert.ErrorIs(t, err, flags.FlagMustBeSpecifiedError("public-key"))
+	assert.ErrorIs(t, err, flags.FlagMustBeSpecifiedError("pubkey"))
 	assert.Nil(t, req)
 }
 
