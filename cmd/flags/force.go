@@ -12,7 +12,7 @@ var ErrExpectYesOrNo = errors.New("invalid answer, expect \"yes\" or \"no\"")
 
 func DoYouConfirm() (bool, error) {
 	reader := bufio.NewReader(os.Stdin)
-	fmt.Print("Are you sure? (yes/no) ") //nolint:forbidigo
+	fmt.Print("Are you sure? (y/n) ") //nolint:forbidigo
 	answer, err := reader.ReadString('\n')
 	if err != nil {
 		return false, fmt.Errorf("couldn't read password input: %w", err)
@@ -22,9 +22,9 @@ func DoYouConfirm() (bool, error) {
 	answer = strings.ToLower(strings.Trim(answer, " \n\t"))
 
 	switch answer {
-	case "yes":
+	case "yes", "y":
 		return true, nil
-	case "no":
+	case "no", "n":
 		return false, nil
 	default:
 		return false, ErrExpectYesOrNo

@@ -21,6 +21,7 @@ func testDeleteWalletFlagsValidFlagsSucceeds(t *testing.T) {
 
 	f := &cmd.DeleteWalletFlags{
 		Wallet: walletName,
+		Force:  true,
 	}
 
 	// when

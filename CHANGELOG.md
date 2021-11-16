@@ -9,6 +9,7 @@
 ### 🛠 Improvements
 - [383](https://github.com/vegaprotocol/vegawallet/pull/383) - Add wallet version to `key generate` output
 - [390](https://github.com/vegaprotocol/vegawallet/pull/390) - Add new project board Github action and update linked PR action version
+- [385](https://github.com/vegaprotocol/vegawallet/pull/385) - Add command `delete` to delete a wallet
 
 ### 🔥 Removal
 - [387](https://github.com/vegaprotocol/vegawallet/pull/387) - Remove network initialisation in favor of `network import`

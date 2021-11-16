@@ -40,6 +40,7 @@ func TestDeleteWallet(t *testing.T) {
 		"--home", home,
 		"--output", "json",
 		"--wallet", walletName,
+		"--force",
 	})
 
 	// then
@@ -56,6 +57,7 @@ func TestDeleteNonExistingWallet(t *testing.T) {
 		"--home", home,
 		"--output", "json",
 		"--wallet", vgrand.RandomStr(5),
+		"--force",
 	})
 
 	// then
