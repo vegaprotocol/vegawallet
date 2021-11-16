@@ -39,7 +39,7 @@ func TestTaintKeys(t *testing.T) {
 
 	// when
 	err = KeyTaint(t, append(cmd,
-		"--pubkey", generateKeyResp1.Key.KeyPair.PublicKey,
+		"--pubkey", generateKeyResp1.Key.PublicKey,
 	))
 
 	// then
@@ -47,7 +47,7 @@ func TestTaintKeys(t *testing.T) {
 
 	// when
 	descResp, err := KeyDescribe(t, append(cmd,
-		"--pubkey", generateKeyResp1.Key.KeyPair.PublicKey,
+		"--pubkey", generateKeyResp1.Key.PublicKey,
 	))
 
 	// then
@@ -56,7 +56,7 @@ func TestTaintKeys(t *testing.T) {
 
 	// when
 	err = KeyUntaint(t, append(cmd,
-		"--pubkey", generateKeyResp1.Key.KeyPair.PublicKey,
+		"--pubkey", generateKeyResp1.Key.PublicKey,
 	))
 
 	// then
@@ -64,7 +64,7 @@ func TestTaintKeys(t *testing.T) {
 
 	// when
 	descResp, err = KeyDescribe(t, append(cmd,
-		"--pubkey", generateKeyResp1.Key.KeyPair.PublicKey,
+		"--pubkey", generateKeyResp1.Key.PublicKey,
 	))
 
 	// then

@@ -78,10 +78,7 @@ type GenerateKeyResponse struct {
 		Mnemonic string `json:"mnemonic,omitempty"`
 	} `json:"wallet"`
 	Key struct {
-		KeyPair struct {
-			PrivateKey string `json:"privateKey"`
-			PublicKey  string `json:"publicKey"`
-		} `json:"keyPair"`
+		PublicKey string `json:"publicKey"`
 		Algorithm struct {
 			Name    string `json:"name"`
 			Version uint32 `json:"version"`
@@ -121,8 +118,7 @@ func AssertGenerateKey(t *testing.T, resp *GenerateKeyResponse) *GenerateKeyAsse
 	assert.NotEmpty(t, resp.Wallet.Version)
 	assert.NotEmpty(t, resp.Wallet.FilePath)
 	assert.FileExists(t, resp.Wallet.FilePath)
-	assert.NotEmpty(t, resp.Key.KeyPair.PublicKey)
-	assert.NotEmpty(t, resp.Key.KeyPair.PrivateKey)
+	assert.NotEmpty(t, resp.Key.PublicKey)
 	assert.Equal(t, "vega/ed25519", resp.Key.Algorithm.Name)
 	assert.Equal(t, uint32(1), resp.Key.Algorithm.Version)
 
@@ -162,12 +158,7 @@ func (a *GenerateKeyAssertion) WithMeta(expected map[string]string) *GenerateKey
 }
 
 func (a *GenerateKeyAssertion) WithPublicKey(expected string) *GenerateKeyAssertion {
-	assert.Equal(a.t, expected, a.resp.Key.KeyPair.PublicKey)
-	return a
-}
-
-func (a *GenerateKeyAssertion) WithPrivateKey(expected string) *GenerateKeyAssertion {
-	assert.Equal(a.t, expected, a.resp.Key.KeyPair.PrivateKey)
+	assert.Equal(a.t, expected, a.resp.Key.PublicKey)
 	return a
 }
 

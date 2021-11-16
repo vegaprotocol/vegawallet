@@ -2,6 +2,9 @@
 
 ## Unreleased (0.11.0)
 
+### Breaking changes
+- [384](https://github.com/vegaprotocol/vegawallet/pull/384) - Remove private key from key generate JSON output
+
 ### Improvements
 - [383](https://github.com/vegaprotocol/vegawallet/pull/383) - Add wallet version to `key generate` output
 

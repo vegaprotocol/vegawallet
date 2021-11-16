@@ -39,20 +39,20 @@ func TestDescribeKey(t *testing.T) {
 
 	// when
 	descResp, err := KeyDescribe(t, append(cmd,
-		"--pubkey", generateKeyResp.Key.KeyPair.PublicKey,
+		"--pubkey", generateKeyResp.Key.PublicKey,
 	))
 
 	// then
 	require.NoError(t, err)
 	AssertDescribeKey(t, descResp).
-		WithPubKey(generateKeyResp.Key.KeyPair.PublicKey).
+		WithPubKey(generateKeyResp.Key.PublicKey).
 		WithMeta(map[string]string{"name": "key-1", "role": "validation"}).
 		WithAlgorithm("vega/ed25519", 1).
 		WithTainted(false)
 
 	// when non-existent public key
 	descResp, err = KeyDescribe(t, append(cmd,
-		"--pubkey", generateKeyResp.Key.KeyPair.PublicKey[1:],
+		"--pubkey", generateKeyResp.Key.PublicKey[1:],
 	))
 	require.Error(t, err)
 	require.Nil(t, descResp)

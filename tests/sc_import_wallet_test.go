@@ -79,7 +79,6 @@ func TestImportWalletV1(t *testing.T) {
 		WithVersion(1).
 		WithMeta(map[string]string{"name": "key-1", "role": "validation"}).
 		WithPublicKey("30ebce58d94ad37c4ff6a9014c955c20e12468da956163228cc7ec9b98d3a371").
-		WithPrivateKey("1bbd4efb460d0bf457251e866697d5d2e9b58c5dcb96a964cd9cfff1a712a2b930ebce58d94ad37c4ff6a9014c955c20e12468da956163228cc7ec9b98d3a371").
 		LocatedUnder(home)
 }
 
@@ -155,6 +154,5 @@ func TestImportWalletV2(t *testing.T) {
 		WithVersion(2).
 		WithMeta(map[string]string{"name": "key-1", "role": "validation"}).
 		WithPublicKey("b5fd9d3c4ad553cb3196303b6e6df7f484cf7f5331a572a45031239fd71ad8a0").
-		WithPrivateKey("0bfdfb4a04e22d7252a4f24eb9d0f35a82efdc244cb0876d919361e61f6f56a2b5fd9d3c4ad553cb3196303b6e6df7f484cf7f5331a572a45031239fd71ad8a0").
 		LocatedUnder(home)
 }

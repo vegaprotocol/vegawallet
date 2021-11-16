@@ -39,7 +39,7 @@ func TestAnnotateKey(t *testing.T) {
 
 	// when
 	err = KeyAnnotate(t, append(cmd,
-		"--pubkey", generateKeyResp.Key.KeyPair.PublicKey,
+		"--pubkey", generateKeyResp.Key.PublicKey,
 		"--meta", "name:prefer-this-name",
 	))
 
@@ -48,7 +48,7 @@ func TestAnnotateKey(t *testing.T) {
 
 	// when
 	descResp, err := KeyDescribe(t, append(cmd,
-		"--pubkey", generateKeyResp.Key.KeyPair.PublicKey,
+		"--pubkey", generateKeyResp.Key.PublicKey,
 	))
 
 	// then
@@ -58,7 +58,7 @@ func TestAnnotateKey(t *testing.T) {
 
 	// when
 	err = KeyAnnotate(t, append(cmd,
-		"--pubkey", generateKeyResp.Key.KeyPair.PublicKey,
+		"--pubkey", generateKeyResp.Key.PublicKey,
 		"--clear",
 	))
 
@@ -67,7 +67,7 @@ func TestAnnotateKey(t *testing.T) {
 
 	// when
 	descResp, err = KeyDescribe(t, append(cmd,
-		"--pubkey", generateKeyResp.Key.KeyPair.PublicKey,
+		"--pubkey", generateKeyResp.Key.PublicKey,
 	))
 
 	// then
@@ -77,7 +77,7 @@ func TestAnnotateKey(t *testing.T) {
 
 	// when
 	err = KeyAnnotate(t, append(cmd,
-		"--pubkey", generateKeyResp.Key.KeyPair.PublicKey,
+		"--pubkey", generateKeyResp.Key.PublicKey,
 		"--meta", "name:key-1,role:validation",
 	))
 
@@ -86,7 +86,7 @@ func TestAnnotateKey(t *testing.T) {
 
 	// when
 	descResp, err = KeyDescribe(t, append(cmd,
-		"--pubkey", generateKeyResp.Key.KeyPair.PublicKey,
+		"--pubkey", generateKeyResp.Key.PublicKey,
 	))
 
 	// then
