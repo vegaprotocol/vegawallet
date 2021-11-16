@@ -50,6 +50,7 @@ func TestSignMessage(t *testing.T) {
 	AssertGenerateKey(t, generateKeyResp).
 		WithoutWalletCreation().
 		WithName(walletName).
+		WithVersion(2).
 		WithMeta(map[string]string{"name": "key-1", "role": "validation"}).
 		WithPublicKey("b5fd9d3c4ad553cb3196303b6e6df7f484cf7f5331a572a45031239fd71ad8a0").
 		WithPrivateKey("0bfdfb4a04e22d7252a4f24eb9d0f35a82efdc244cb0876d919361e61f6f56a2b5fd9d3c4ad553cb3196303b6e6df7f484cf7f5331a572a45031239fd71ad8a0").

@@ -73,6 +73,7 @@ func KeyAnnotate(t *testing.T, args []string) error {
 type GenerateKeyResponse struct {
 	Wallet struct {
 		Name     string `json:"name"`
+		Version  uint32 `json:"version"`
 		FilePath string `json:"filePath"`
 		Mnemonic string `json:"mnemonic,omitempty"`
 	} `json:"wallet"`
@@ -117,12 +118,13 @@ func AssertGenerateKey(t *testing.T, resp *GenerateKeyResponse) *GenerateKeyAsse
 
 	assert.NotNil(t, resp)
 	assert.NotEmpty(t, resp.Wallet.Name)
+	assert.NotEmpty(t, resp.Wallet.Version)
 	assert.NotEmpty(t, resp.Wallet.FilePath)
 	assert.FileExists(t, resp.Wallet.FilePath)
 	assert.NotEmpty(t, resp.Key.KeyPair.PublicKey)
 	assert.NotEmpty(t, resp.Key.KeyPair.PrivateKey)
-	assert.NotEmpty(t, resp.Key.Algorithm.Name)
-	assert.NotEmpty(t, resp.Key.Algorithm.Version)
+	assert.Equal(t, "vega/ed25519", resp.Key.Algorithm.Name)
+	assert.Equal(t, uint32(1), resp.Key.Algorithm.Version)
 
 	return &GenerateKeyAssertion{
 		t:    t,
@@ -142,6 +144,11 @@ func (a *GenerateKeyAssertion) WithoutWalletCreation() *GenerateKeyAssertion {
 
 func (a *GenerateKeyAssertion) WithName(expected string) *GenerateKeyAssertion {
 	assert.Equal(a.t, expected, a.resp.Wallet.Name)
+	return a
+}
+
+func (a *GenerateKeyAssertion) WithVersion(expected uint32) *GenerateKeyAssertion {
+	assert.Equal(a.t, expected, a.resp.Wallet.Version)
 	return a
 }
 

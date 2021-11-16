@@ -31,6 +31,7 @@ func TestListKeys(t *testing.T) {
 	AssertGenerateKey(t, generateKeyResp1).
 		WithWalletCreation().
 		WithName(walletName).
+		WithVersion(2).
 		WithMeta(map[string]string{"name": "key-1", "role": "validation"}).
 		LocatedUnder(home)
 

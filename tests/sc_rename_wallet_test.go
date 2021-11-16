@@ -32,6 +32,7 @@ func TestRenameWallet(t *testing.T) {
 	AssertGenerateKey(t, generateKeyResp).
 		WithWalletCreation().
 		WithName(walletName).
+		WithVersion(2).
 		LocatedUnder(home)
 
 	// given
