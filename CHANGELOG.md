@@ -2,6 +2,8 @@
 
 ## Unreleased (0.11.0)
 
+### Improvements
+- [383](https://github.com/vegaprotocol/vegawallet/pull/383) - Add wallet version to `key generate` output
 
 ## 0.10.0
 *2021-11-15*

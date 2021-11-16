@@ -33,6 +33,7 @@ func TestGenerateAndListKeys(t *testing.T) {
 	AssertGenerateKey(t, generateKeyResp1).
 		WithWalletCreation().
 		WithName(walletName).
+		WithVersion(2).
 		WithMeta(map[string]string{"name": "key-1", "role": "validation"}).
 		LocatedUnder(home)
 
@@ -56,6 +57,7 @@ func TestGenerateAndListKeys(t *testing.T) {
 	AssertGenerateKey(t, generateKeyResp2).
 		WithoutWalletCreation().
 		WithName(walletName).
+		WithVersion(2).
 		WithMeta(map[string]string{"name": DefaultMetaName(t, walletName, 2)}).
 		LocatedUnder(home)
 

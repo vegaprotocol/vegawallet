@@ -155,6 +155,8 @@ func PrintGenerateKeyResponse(w io.Writer, resp *wallet.GenerateKeyResponse) {
 	if walletHasBeenCreated {
 		p.Text("Wallet mnemonic:").NextLine()
 		p.WarningText(resp.Wallet.Mnemonic).NextLine()
+		p.Text("Wallet version:").NextLine()
+		p.WarningText(fmt.Sprintf("%d", resp.Wallet.Version)).NextLine()
 	}
 	p.Text("Public key:").NextLine()
 	p.WarningText(resp.Key.KeyPair.PublicKey).NextLine()
