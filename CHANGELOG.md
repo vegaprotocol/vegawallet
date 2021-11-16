@@ -10,6 +10,9 @@
 - [383](https://github.com/vegaprotocol/vegawallet/pull/383) - Add wallet version to `key generate` output
 - [390](https://github.com/vegaprotocol/vegawallet/pull/390) - Add new project board Github action and update linked PR action version
 
+### 🔥 Removal
+- [387](https://github.com/vegaprotocol/vegawallet/pull/387) - Remove network initialisation in favor of `network import`
+
 ## 0.10.0
 *2021-11-15*
 

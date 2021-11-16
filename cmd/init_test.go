@@ -30,8 +30,6 @@ func testInitialisingProgramSucceeds(t *testing.T) {
 	// then
 	require.NoError(t, err)
 	require.NotNil(t, resp)
-	assert.True(t, strings.HasPrefix(resp.NetworksHome, testDir))
-	assert.DirExists(t, resp.NetworksHome)
 	assert.True(t, strings.HasPrefix(resp.RSAKeys.PublicKeyFilePath, testDir))
 	assert.FileExists(t, resp.RSAKeys.PublicKeyFilePath)
 	assert.True(t, strings.HasPrefix(resp.RSAKeys.PublicKeyFilePath, testDir))
@@ -74,8 +72,6 @@ func testForcingProgramInitialisationSucceeds(t *testing.T) {
 	// then
 	require.NoError(t, err)
 	require.NotNil(t, resp)
-	assert.True(t, strings.HasPrefix(resp.NetworksHome, testDir))
-	assert.DirExists(t, resp.NetworksHome)
 	assert.True(t, strings.HasPrefix(resp.RSAKeys.PublicKeyFilePath, testDir))
 	assert.FileExists(t, resp.RSAKeys.PublicKeyFilePath)
 	assert.True(t, strings.HasPrefix(resp.RSAKeys.PublicKeyFilePath, testDir))
