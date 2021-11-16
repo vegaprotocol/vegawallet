@@ -4,6 +4,10 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+
+	"code.vegaprotocol.io/protos/commands"
+	commandspb "code.vegaprotocol.io/protos/vega/commands/v1"
+	"github.com/golang/protobuf/proto"
 )
 
 //go:generate go run github.com/golang/mock/mockgen -destination mocks/store_mock.go -package mocks code.vegaprotocol.io/vegawallet/wallet Store
@@ -241,11 +245,12 @@ func ListKeys(store Store, req *ListKeysRequest) (*ListKeysResponse, error) {
 }
 
 func DescribeKey(store Store, req *DescribeKeyRequest) (*DescribeKeyResponse, error) {
-	resp := &DescribeKeyResponse{}
 	w, err := getWallet(store, req.Wallet, req.Passphrase)
 	if err != nil {
 		return nil, err
 	}
+
+	resp := &DescribeKeyResponse{}
 
 	kp, err := w.DescribeKeyPair(req.PubKey)
 	if err != nil {
@@ -257,6 +262,80 @@ func DescribeKey(store Store, req *DescribeKeyRequest) (*DescribeKeyResponse, er
 	resp.Meta = kp.Meta()
 	resp.IsTainted = kp.IsTainted()
 	return resp, nil
+}
+
+type RotateKeyRequest struct {
+	Wallet            string
+	Passphrase        string
+	PublicKey         string
+	TxBlockHeight     uint64
+	TargetBlockHeight uint64
+}
+
+type RotateKeyResponse struct {
+	MasterPublicKey   string `json:"masterPublicKey"`
+	Base64Transaction string `json:"base64Transaction"`
+}
+
+func RotateKey(store Store, req *RotateKeyRequest) (*RotateKeyResponse, error) {
+	w, err := getWallet(store, req.Wallet, req.Passphrase)
+	if err != nil {
+		return nil, err
+	}
+
+	mKeyPair, err := w.GetMasterKeyPair()
+	if errors.Is(err, ErrIsolatedWalletDoesNotHaveMasterKey) {
+		return nil, ErrCantRotateKeyInIsolatedWallet
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	pubKey, err := w.DescribePublicKey(req.PublicKey)
+	if err != nil {
+		return nil, fmt.Errorf("couldn't get the public key: %w", err)
+	}
+
+	if pubKey.IsTainted() {
+		return nil, ErrPubKeyIsTainted
+	}
+
+	inputData := commands.NewInputData(req.TxBlockHeight)
+	inputData.Command = &commandspb.InputData_KeyRotateSubmission{
+		KeyRotateSubmission: &commandspb.KeyRotateSubmission{
+			KeyNumber:     pubKey.Index(),
+			TargetBlock:   req.TargetBlockHeight,
+			Time:          0, // @TODO fill this
+			NewPubKeyHash: pubKey.Hash(),
+		},
+	}
+
+	data, err := proto.Marshal(inputData)
+	if err != nil {
+		return nil, fmt.Errorf("couldn't marshal key rotate submission input data: %w", err)
+	}
+
+	sign, err := mKeyPair.Sign(data)
+	if err != nil {
+		return nil, fmt.Errorf("couldn't sign key rotate submission input data: %w", err)
+	}
+
+	protoSignature := &commandspb.Signature{
+		Value:   sign.Value,
+		Algo:    sign.Algo,
+		Version: sign.Version,
+	}
+
+	transaction := commands.NewTransaction(mKeyPair.PublicKey(), data, protoSignature)
+	transactionRaw, err := proto.Marshal(transaction)
+	if err != nil {
+		return nil, fmt.Errorf("couldn't marshal transaction: %w", err)
+	}
+
+	return &RotateKeyResponse{
+		MasterPublicKey:   mKeyPair.PublicKey(),
+		Base64Transaction: base64.StdEncoding.EncodeToString(transactionRaw),
+	}, nil
 }
 
 type GetWalletInfoRequest struct {

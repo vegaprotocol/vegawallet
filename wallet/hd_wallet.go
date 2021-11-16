@@ -108,7 +108,22 @@ func (w *HDWallet) DescribeKeyPair(pubKey string) (KeyPair, error) {
 	return &keyPair, nil
 }
 
-// DescribePublicKey returns all the information associated with a public key,
+// GetMasterKeyPair returns all the information associated to a master key pair.
+func (w *HDWallet) GetMasterKeyPair() (MasterKeyPair, error) {
+	if w.IsIsolated() {
+		return nil, ErrIsolatedWalletDoesNotHaveMasterKey
+	}
+
+	pubKey, priKey := w.node.Keypair()
+	keyPair, err := NewHDMasterKeyPair(pubKey, priKey)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get master key pair: %w", err)
+	}
+
+	return keyPair, nil
+}
+
+// DescribePublicKey returns all the information associated to a public key,
 // except the private key.
 func (w *HDWallet) DescribePublicKey(pubKey string) (PublicKey, error) {
 	keyPair, ok := w.keyRing.FindPair(pubKey)

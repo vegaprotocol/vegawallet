@@ -49,6 +49,7 @@ func TestHDWallet(t *testing.T) {
 	t.Run("Isolating wallet succeeds", testHDWalletIsolatingWalletSucceeds)
 	t.Run("Isolating wallet with tainted key pair fails", testHDWalletIsolatingWalletWithTaintedKeyPairFails)
 	t.Run("Isolating wallet with non-existing key pair fails", testHDWalletIsolatingWalletWithNonExistingKeyPairFails)
+	t.Run("Getting master key pair succeeds", testHDWalletGettingWalletMasterKeySucceeds)
 }
 
 func testHDWalletCreateWalletSucceeds(t *testing.T) {
@@ -1507,6 +1508,41 @@ func testHDWalletIsolatingWalletWithNonExistingKeyPairFails(t *testing.T) {
 			// then
 			require.ErrorIs(tt, err, wallet.ErrPubKeyDoesNotExist)
 			require.Nil(tt, isolatedWallet)
+		})
+	}
+}
+
+func testHDWalletGettingWalletMasterKeySucceeds(t *testing.T) {
+	tcs := []struct {
+		name    string
+		version uint32
+	}{
+		{
+			name:    "version 1",
+			version: 1,
+		}, {
+			name:    "version 2",
+			version: 2,
+		},
+	}
+
+	for _, tc := range tcs {
+		t.Run(tc.name, func(tt *testing.T) {
+			// given
+			name := "duncan"
+
+			// when
+			w, err := wallet.ImportHDWallet(name, TestMnemonic1, tc.version)
+			require.NoError(tt, err)
+			require.NotNil(tt, w)
+
+			masterKeyPair, err := w.GetMasterKeyPair()
+
+			// then
+			require.NoError(tt, err)
+			assert.Equal(tt, "9df682a3c87d90567f260566a9c223ccbbb7529c38340cf163b8fe199dbf0f2e", masterKeyPair.PublicKey())
+			assert.Equal(tt, "3e323acf112ee1db5c4eef76758941ff60dafabbd2a60ecacef98b310f70bfa89df682a3c87d90567f260566a9c223ccbbb7529c38340cf163b8fe199dbf0f2e", masterKeyPair.PrivateKey())
+			assert.Equal(tt, "HD wallet", w.Type())
 		})
 	}
 }

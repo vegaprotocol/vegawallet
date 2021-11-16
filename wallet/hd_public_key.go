@@ -1,7 +1,10 @@
 package wallet
 
 import (
+	"encoding/hex"
 	"encoding/json"
+
+	vgcrypto "code.vegaprotocol.io/shared/libs/crypto"
 )
 
 type HDPublicKey struct {
@@ -46,4 +49,8 @@ func (k *HDPublicKey) UnmarshalJSON(data []byte) error {
 	type alias HDPublicKey
 	aliasPublicKey := (*alias)(k)
 	return json.Unmarshal(data, aliasPublicKey)
+}
+
+func (k *HDPublicKey) Hash() string {
+	return hex.EncodeToString(vgcrypto.Hash([]byte(k.PublicKey)))
 }

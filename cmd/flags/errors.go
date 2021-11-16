@@ -25,6 +25,12 @@ func FlagMustBeSpecifiedError(name string) error {
 	}
 }
 
+func FlagRequireLessThanFlagError(less, greater string) error {
+	return FlagError{
+		message: fmt.Sprintf("--%s flag must be greater than --%s", greater, less),
+	}
+}
+
 func ArgMustBeSpecifiedError(name string) error {
 	return FlagError{
 		message: fmt.Sprintf("%s argument must be specified", name),
