@@ -741,3 +741,14 @@ func WalletList(t *testing.T, args []string) (*ListWalletsResponse, error) {
 	}
 	return resp, nil
 }
+
+func WalletDelete(t *testing.T, args []string) error {
+	t.Helper()
+	argsWithCmd := []string{"delete"}
+	argsWithCmd = append(argsWithCmd, args...)
+	_, err := ExecuteCmd(t, argsWithCmd)
+	if err != nil {
+		return err
+	}
+	return nil
+}

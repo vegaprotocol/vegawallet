@@ -27,6 +27,19 @@ func InitialiseStore(walletsHome string) (*Store, error) {
 	}, nil
 }
 
+func (s *Store) DeleteWallet(name string) error {
+	walletPath := s.walletPath(name)
+
+	if exists, _ := vgfs.PathExists(walletPath); !exists {
+		return wallet.ErrWalletDoesNotExists
+	}
+
+	if err := os.Remove(walletPath); err != nil {
+		return fmt.Errorf("couldn't remove wallet file at %s: %w", walletPath, err)
+	}
+	return nil
+}
+
 func (s *Store) WalletExists(name string) bool {
 	walletPath := s.walletPath(name)
 
