@@ -56,15 +56,15 @@ var (
 
 type SendCommandHandler func(io.Writer, *RootFlags, *SendCommandRequest) error
 
-func NewCmdSendCommand(w io.Writer, rf *RootFlags) *cobra.Command {
-	return BuildCmdSendCommand(w, SendCommand, rf)
+func NewCmdCommandSend(w io.Writer, rf *RootFlags) *cobra.Command {
+	return BuildCmdCommandSend(w, SendCommand, rf)
 }
 
-func BuildCmdSendCommand(w io.Writer, handler SendCommandHandler, rf *RootFlags) *cobra.Command {
+func BuildCmdCommandSend(w io.Writer, handler SendCommandHandler, rf *RootFlags) *cobra.Command {
 	f := &SendCommandFlags{}
 
 	cmd := &cobra.Command{
-		Use:     "command",
+		Use:     "send",
 		Short:   "Send a command to a Vega node",
 		Long:    sendCommandLong,
 		Example: sendCommandExample,
