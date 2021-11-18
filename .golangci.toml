@@ -11,7 +11,6 @@ disable = [
     "dupl",
     "exhaustivestruct",
     "funlen",
-    "gochecknoglobals",
     "gocognit",
     "goconst",
     "nestif",
@@ -32,6 +31,9 @@ disable = [
     "lll",
     # nlreturn doesn't match our code style.
     "nlreturn",
+    # Sometimes we can't just have a const variable, and we need to make it a
+    # variable instead.
+    "gochecknoglobals",
 ]
 
 [issues.exclude-rules]
