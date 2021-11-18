@@ -19,8 +19,7 @@ func TestDescribeKeyFlags(t *testing.T) {
 
 func testKeyDescribeValidFlagsSucceeds(t *testing.T) {
 	// given
-	testDir, cleanUpFn := NewTempDir(t)
-	defer cleanUpFn(t)
+	testDir := NewTempDir(t)
 
 	// given
 	passphrase, passphraseFilePath := NewPassphraseFile(t, testDir)
@@ -50,8 +49,7 @@ func testKeyDescribeValidFlagsSucceeds(t *testing.T) {
 
 func testKeyMissingWalletFails(t *testing.T) {
 	// given
-	testDir, cleanUpFn := NewTempDir(t)
-	defer cleanUpFn(t)
+	testDir := NewTempDir(t)
 
 	// given
 	_, passphraseFilePath := NewPassphraseFile(t, testDir)
@@ -72,8 +70,7 @@ func testKeyMissingWalletFails(t *testing.T) {
 
 func testKeyMissingPublicKeyFails(t *testing.T) {
 	// given
-	testDir, cleanUpFn := NewTempDir(t)
-	defer cleanUpFn(t)
+	testDir := NewTempDir(t)
 
 	// given
 	_, passphraseFilePath := NewPassphraseFile(t, testDir)

@@ -8,8 +8,7 @@ import (
 
 func TestDescribeNetwork(t *testing.T) {
 	// given
-	home, cleanUpFn := NewTempDir(t)
-	defer cleanUpFn(t)
+	home := NewTempDir(t)
 
 	networkFile := NewFile(t, home, "my-network-1.toml", FakeNetwork("my-network-1"))
 

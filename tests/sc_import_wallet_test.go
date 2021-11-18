@@ -9,8 +9,7 @@ import (
 
 func TestImportWalletV1(t *testing.T) {
 	// given
-	home, cleanUpFn := NewTempDir(t)
-	defer cleanUpFn(t)
+	home := NewTempDir(t)
 
 	_, passphraseFilePath := NewPassphraseFile(t, home)
 
@@ -84,8 +83,7 @@ func TestImportWalletV1(t *testing.T) {
 
 func TestImportWalletV2(t *testing.T) {
 	// given
-	home, cleanUpFn := NewTempDir(t)
-	defer cleanUpFn(t)
+	home := NewTempDir(t)
 
 	_, passphraseFilePath := NewPassphraseFile(t, home)
 

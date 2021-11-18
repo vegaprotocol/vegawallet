@@ -17,8 +17,7 @@ func TestGetWalletInfoFlags(t *testing.T) {
 }
 
 func testGetWalletInfoFlagsValidFlagsSucceeds(t *testing.T) {
-	testDir, cleanUpFn := NewTempDir(t)
-	defer cleanUpFn(t)
+	testDir := NewTempDir(t)
 
 	// given
 	passphrase, passphraseFilePath := NewPassphraseFile(t, testDir)
@@ -44,8 +43,7 @@ func testGetWalletInfoFlagsValidFlagsSucceeds(t *testing.T) {
 }
 
 func testGetWalletInfoFlagsMissingWalletFails(t *testing.T) {
-	testDir, cleanUpFn := NewTempDir(t)
-	defer cleanUpFn(t)
+	testDir := NewTempDir(t)
 
 	// given
 	f := newGetWalletInfoFlags(t, testDir)

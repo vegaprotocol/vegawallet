@@ -21,8 +21,7 @@ func TestSignMessageFlags(t *testing.T) {
 }
 
 func testSignMessageFlagsValidFlagsSucceeds(t *testing.T) {
-	testDir, cleanUpFn := NewTempDir(t)
-	defer cleanUpFn(t)
+	testDir := NewTempDir(t)
 
 	// given
 	passphrase, passphraseFilePath := NewPassphraseFile(t, testDir)
@@ -54,8 +53,7 @@ func testSignMessageFlagsValidFlagsSucceeds(t *testing.T) {
 }
 
 func testSignMessageFlagsMissingWalletFails(t *testing.T) {
-	testDir, cleanUpFn := NewTempDir(t)
-	defer cleanUpFn(t)
+	testDir := NewTempDir(t)
 
 	// given
 	f := newSignMessageFlags(t, testDir)
@@ -70,8 +68,7 @@ func testSignMessageFlagsMissingWalletFails(t *testing.T) {
 }
 
 func testSignMessageFlagsMissingPubKeyFails(t *testing.T) {
-	testDir, cleanUpFn := NewTempDir(t)
-	defer cleanUpFn(t)
+	testDir := NewTempDir(t)
 
 	// given
 	f := newSignMessageFlags(t, testDir)
@@ -86,8 +83,7 @@ func testSignMessageFlagsMissingPubKeyFails(t *testing.T) {
 }
 
 func testSignMessageFlagsMissingMessageFails(t *testing.T) {
-	testDir, cleanUpFn := NewTempDir(t)
-	defer cleanUpFn(t)
+	testDir := NewTempDir(t)
 
 	// given
 	f := newSignMessageFlags(t, testDir)
@@ -102,8 +98,7 @@ func testSignMessageFlagsMissingMessageFails(t *testing.T) {
 }
 
 func testSignMessageFlagsMalformedMessageFails(t *testing.T) {
-	testDir, cleanUpFn := NewTempDir(t)
-	defer cleanUpFn(t)
+	testDir := NewTempDir(t)
 
 	// given
 	f := newSignMessageFlags(t, testDir)

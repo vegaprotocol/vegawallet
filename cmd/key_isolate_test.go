@@ -18,8 +18,7 @@ func TestIsolateKeyFlags(t *testing.T) {
 }
 
 func testIsolateKeyFlagsValidFlagsSucceeds(t *testing.T) {
-	testDir, cleanUpFn := NewTempDir(t)
-	defer cleanUpFn(t)
+	testDir := NewTempDir(t)
 
 	// given
 	passphrase, passphraseFilePath := NewPassphraseFile(t, testDir)
@@ -48,8 +47,7 @@ func testIsolateKeyFlagsValidFlagsSucceeds(t *testing.T) {
 }
 
 func testIsolateKeyFlagsMissingWalletFails(t *testing.T) {
-	testDir, cleanUpFn := NewTempDir(t)
-	defer cleanUpFn(t)
+	testDir := NewTempDir(t)
 
 	// given
 	f := newIsolateKeyFlags(t, testDir)
@@ -64,8 +62,7 @@ func testIsolateKeyFlagsMissingWalletFails(t *testing.T) {
 }
 
 func testIsolateKeyFlagsMissingPubKeyFails(t *testing.T) {
-	testDir, cleanUpFn := NewTempDir(t)
-	defer cleanUpFn(t)
+	testDir := NewTempDir(t)
 
 	// given
 	f := newIsolateKeyFlags(t, testDir)

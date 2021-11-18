@@ -12,8 +12,7 @@ import (
 
 func TestRenameWallet(t *testing.T) {
 	// given
-	home, cleanUpFn := NewTempDir(t)
-	defer cleanUpFn(t)
+	home := NewTempDir(t)
 
 	_, passphraseFilePath := NewPassphraseFile(t, home)
 

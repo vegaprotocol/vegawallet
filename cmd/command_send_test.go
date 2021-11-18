@@ -28,8 +28,7 @@ func TestSendCommandFlags(t *testing.T) {
 }
 
 func testSendCommandFlagsValidFlagsSucceeds(t *testing.T) {
-	testDir, cleanUpFn := NewTempDir(t)
-	defer cleanUpFn(t)
+	testDir := NewTempDir(t)
 
 	// given
 	passphrase, passphraseFilePath := NewPassphraseFile(t, testDir)
@@ -77,8 +76,7 @@ func testSendCommandFlagsValidFlagsSucceeds(t *testing.T) {
 }
 
 func testSendCommandFlagsMissingWalletFails(t *testing.T) {
-	testDir, cleanUpFn := NewTempDir(t)
-	defer cleanUpFn(t)
+	testDir := NewTempDir(t)
 
 	// given
 	f := newSendCommandFlags(t, testDir)
@@ -93,8 +91,7 @@ func testSendCommandFlagsMissingWalletFails(t *testing.T) {
 }
 
 func testSendCommandFlagsMissingLogLevelFails(t *testing.T) {
-	testDir, cleanUpFn := NewTempDir(t)
-	defer cleanUpFn(t)
+	testDir := NewTempDir(t)
 
 	// given
 	f := newSendCommandFlags(t, testDir)
@@ -109,8 +106,7 @@ func testSendCommandFlagsMissingLogLevelFails(t *testing.T) {
 }
 
 func testSendCommandFlagsUnsupportedLogLevelFails(t *testing.T) {
-	testDir, cleanUpFn := NewTempDir(t)
-	defer cleanUpFn(t)
+	testDir := NewTempDir(t)
 
 	// given
 	f := newSendCommandFlags(t, testDir)
@@ -125,8 +121,7 @@ func testSendCommandFlagsUnsupportedLogLevelFails(t *testing.T) {
 }
 
 func testSendCommandFlagsMissingNetworkAndNodeAddressFails(t *testing.T) {
-	testDir, cleanUpFn := NewTempDir(t)
-	defer cleanUpFn(t)
+	testDir := NewTempDir(t)
 
 	// given
 	f := newSendCommandFlags(t, testDir)
@@ -142,8 +137,7 @@ func testSendCommandFlagsMissingNetworkAndNodeAddressFails(t *testing.T) {
 }
 
 func testSendCommandFlagsBothNetworkAndNodeAddressSpecifiedFails(t *testing.T) {
-	testDir, cleanUpFn := NewTempDir(t)
-	defer cleanUpFn(t)
+	testDir := NewTempDir(t)
 
 	// given
 	f := newSendCommandFlags(t, testDir)
@@ -159,8 +153,7 @@ func testSendCommandFlagsBothNetworkAndNodeAddressSpecifiedFails(t *testing.T) {
 }
 
 func testSendCommandFlagsMissingPubKeyFails(t *testing.T) {
-	testDir, cleanUpFn := NewTempDir(t)
-	defer cleanUpFn(t)
+	testDir := NewTempDir(t)
 
 	// given
 	f := newSendCommandFlags(t, testDir)
@@ -175,8 +168,7 @@ func testSendCommandFlagsMissingPubKeyFails(t *testing.T) {
 }
 
 func testSendCommandFlagsMissingRequestFails(t *testing.T) {
-	testDir, cleanUpFn := NewTempDir(t)
-	defer cleanUpFn(t)
+	testDir := NewTempDir(t)
 
 	// given
 	f := newSendCommandFlags(t, testDir)
@@ -191,8 +183,7 @@ func testSendCommandFlagsMissingRequestFails(t *testing.T) {
 }
 
 func testSendCommandFlagsMalformedRequestFails(t *testing.T) {
-	testDir, cleanUpFn := NewTempDir(t)
-	defer cleanUpFn(t)
+	testDir := NewTempDir(t)
 
 	// given
 	f := newSendCommandFlags(t, testDir)
@@ -207,8 +198,7 @@ func testSendCommandFlagsMalformedRequestFails(t *testing.T) {
 }
 
 func testSendCommandFlagsInvalidRequestFails(t *testing.T) {
-	testDir, cleanUpFn := NewTempDir(t)
-	defer cleanUpFn(t)
+	testDir := NewTempDir(t)
 
 	// given
 	f := newSendCommandFlags(t, testDir)
@@ -223,8 +213,7 @@ func testSendCommandFlagsInvalidRequestFails(t *testing.T) {
 }
 
 func testSendCommandFlagsRequestWithPubKeyFails(t *testing.T) {
-	testDir, cleanUpFn := NewTempDir(t)
-	defer cleanUpFn(t)
+	testDir := NewTempDir(t)
 
 	// given
 	f := newSendCommandFlags(t, testDir)

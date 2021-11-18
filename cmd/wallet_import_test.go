@@ -20,8 +20,7 @@ func TestImportWalletFlags(t *testing.T) {
 }
 
 func testImportWalletFlagsValidFlagsSucceeds(t *testing.T) {
-	testDir, cleanUpFn := NewTempDir(t)
-	defer cleanUpFn(t)
+	testDir := NewTempDir(t)
 
 	// given
 	passphrase, passphraseFilePath := NewPassphraseFile(t, testDir)
@@ -50,8 +49,7 @@ func testImportWalletFlagsValidFlagsSucceeds(t *testing.T) {
 }
 
 func testImportWalletFlagsMissingWalletFails(t *testing.T) {
-	testDir, cleanUpFn := NewTempDir(t)
-	defer cleanUpFn(t)
+	testDir := NewTempDir(t)
 
 	// given
 	f := newImportWalletFlags(t, testDir)
@@ -66,8 +64,7 @@ func testImportWalletFlagsMissingWalletFails(t *testing.T) {
 }
 
 func testImportWalletFlagsMissingMnemonicFileFails(t *testing.T) {
-	testDir, cleanUpFn := NewTempDir(t)
-	defer cleanUpFn(t)
+	testDir := NewTempDir(t)
 
 	// given
 	f := newImportWalletFlags(t, testDir)

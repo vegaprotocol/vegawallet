@@ -10,8 +10,7 @@ import (
 
 func TestSignMessage(t *testing.T) {
 	// given
-	home, cleanUpFn := NewTempDir(t)
-	defer cleanUpFn(t)
+	home := NewTempDir(t)
 
 	_, passphraseFilePath := NewPassphraseFile(t, home)
 
@@ -90,8 +89,7 @@ func TestSignMessage(t *testing.T) {
 
 func TestSignMessageWithTaintedKey(t *testing.T) {
 	// given
-	home, cleanUpFn := NewTempDir(t)
-	defer cleanUpFn(t)
+	home := NewTempDir(t)
 
 	_, passphraseFilePath := NewPassphraseFile(t, home)
 
