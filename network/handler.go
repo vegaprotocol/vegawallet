@@ -1,15 +1,10 @@
 package network
 
 import (
-	"embed"
 	"fmt"
 
 	"code.vegaprotocol.io/shared/paths"
-	"github.com/zannen/toml"
 )
-
-//go:embed defaults/*.toml
-var defaultNetworks embed.FS
 
 //go:generate go run github.com/golang/mock/mockgen -destination mocks/store_mock.go -package mocks code.vegaprotocol.io/vegawallet/network Store
 type Store interface {
@@ -33,40 +28,6 @@ func NewReaders() Readers {
 		ReadFromFile: paths.ReadStructuredFile,
 		ReadFromURL:  paths.FetchStructuredFile,
 	}
-}
-
-func InitialiseNetworks(store Store, overwrite bool) error {
-	entries, err := defaultNetworks.ReadDir("defaults")
-	if err != nil {
-		return fmt.Errorf("couldn't read defaults directory: %w", err)
-	}
-
-	for _, entry := range entries {
-		data, err := defaultNetworks.ReadFile(fmt.Sprintf("defaults/%s", entry.Name()))
-		if err != nil {
-			return fmt.Errorf("couldn't read file: %w", err)
-		}
-		net := &Network{}
-		if _, err := toml.Decode(string(data), &net); err != nil {
-			return fmt.Errorf("couldn't decode embedded data: %w", err)
-		}
-
-		if !overwrite {
-			exists, err := store.NetworkExists(net.Name)
-			if err != nil {
-				return fmt.Errorf("couldn't verify network existence: %w", err)
-			}
-			if exists {
-				return NewNetworkAlreadyExistsError(net.Name)
-			}
-		}
-
-		if err = store.SaveNetwork(net); err != nil {
-			return fmt.Errorf("couldn't save network configuration: %w", err)
-		}
-	}
-
-	return nil
 }
 
 func GetNetwork(store Store, name string) (*Network, error) {

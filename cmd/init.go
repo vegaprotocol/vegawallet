@@ -9,8 +9,6 @@ import (
 	"code.vegaprotocol.io/vegawallet/cmd/cli"
 	"code.vegaprotocol.io/vegawallet/cmd/flags"
 	"code.vegaprotocol.io/vegawallet/cmd/printer"
-	"code.vegaprotocol.io/vegawallet/network"
-	netstore "code.vegaprotocol.io/vegawallet/network/store/v1"
 	"code.vegaprotocol.io/vegawallet/service"
 	svcstore "code.vegaprotocol.io/vegawallet/service/store/v1"
 	"code.vegaprotocol.io/vegawallet/wallets"
@@ -20,7 +18,7 @@ import (
 
 var (
 	initLong = cli.LongDesc(`
-		Creates the folders, the configuration file and RSA keys needed by the service
+		Creates the folders, the configuration files and RSA keys needed by the service
 		to operate.
 	`)
 
@@ -82,7 +80,6 @@ type InitResponse struct {
 		PublicKeyFilePath  string `json:"publicKeyFilePath"`
 		PrivateKeyFilePath string `json:"privateKeyFilePath"`
 	} `json:"rsaKeys"`
-	NetworksHome string `json:"networksHome"`
 }
 
 func Init(home string, f *InitFlags) (*InitResponse, error) {
@@ -100,20 +97,10 @@ func Init(home string, f *InitFlags) (*InitResponse, error) {
 		return nil, fmt.Errorf("couldn't initialise the service: %w", err)
 	}
 
-	netStore, err := netstore.InitialiseStore(paths.New(home))
-	if err != nil {
-		return nil, fmt.Errorf("couldn't initialise service store: %w", err)
-	}
-
-	if err = network.InitialiseNetworks(netStore, f.Force); err != nil {
-		return nil, fmt.Errorf("couldn't initialise the networks: %w", err)
-	}
-
 	resp := &InitResponse{}
 	pubRSAKeysPath, privRSAKeysPath := svcStore.GetRSAKeysPath()
 	resp.RSAKeys.PublicKeyFilePath = pubRSAKeysPath
 	resp.RSAKeys.PrivateKeyFilePath = privRSAKeysPath
-	resp.NetworksHome = netStore.GetNetworksPath()
 
 	return resp, nil
 }
@@ -121,7 +108,6 @@ func Init(home string, f *InitFlags) (*InitResponse, error) {
 func PrintInitResponse(w io.Writer, resp *InitResponse) {
 	p := printer.NewInteractivePrinter(w)
 
-	p.CheckMark().Text("Networks configurations created at: ").SuccessText(resp.NetworksHome).NextLine()
 	p.CheckMark().Text("Service public RSA keys created at: ").SuccessText(resp.RSAKeys.PublicKeyFilePath).NextLine()
 	p.CheckMark().Text("Service private RSA keys created at: ").SuccessText(resp.RSAKeys.PrivateKeyFilePath).NextLine()
 	p.CheckMark().SuccessText("Initialisation succeeded").NextSection()
