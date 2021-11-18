@@ -41,16 +41,16 @@ var (
 
 	sendCommandExample = cli.Examples(`
 		# Send a command to a registered network
-		vegawallet send command --network NETWORK --wallet WALLET --pubkey PUBKEY COMMAND
+		vegawallet command send --network NETWORK --wallet WALLET --pubkey PUBKEY COMMAND
 
 		# Send a command to a specific Vega node address
-		vegawallet send command --node-address ADDRESS --wallet WALLET --pubkey PUBKEY COMMAND
+		vegawallet command send --node-address ADDRESS --wallet WALLET --pubkey PUBKEY COMMAND
 
 		# Send a command with a log level set to debug
-		vegawallet send command --network NETWORK --wallet WALLET --pubkey PUBKEY --level debug COMMAND
+		vegawallet command send --network NETWORK --wallet WALLET --pubkey PUBKEY --level debug COMMAND
 
 		# Send a command with a maximum of 10 retry
-		vegawallet send command --network NETWORK --wallet WALLET --pubkey PUBKEY --retries 10 COMMAND
+		vegawallet command send --network NETWORK --wallet WALLET --pubkey PUBKEY --retries 10 COMMAND
 	`)
 )
 
