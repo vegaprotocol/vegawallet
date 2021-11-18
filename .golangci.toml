@@ -15,7 +15,6 @@ disable = [
     "gochecknoinits",
     "gocognit",
     "goconst",
-    "gocritic",
     "nestif",
     "paralleltest",
     "revive",
