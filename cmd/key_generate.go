@@ -164,12 +164,10 @@ func PrintGenerateKeyResponse(w io.Writer, resp *wallet.GenerateKeyResponse) {
 	printMeta(p, resp.Key.Meta)
 	p.NextSection()
 
-	p.RedArrow().DangerText("Important").NextLine()
 	if walletHasBeenCreated {
-		p.DangerText("1. ").Text("Write down the mnemonic and store it somewhere safe and secure, now, as it will ").Underline("not").Text(" be displayed ever again!").NextLine()
-		p.DangerText("2. ").Text("Do not share the mnemonic nor the private key.").NextSection()
-	} else {
-		p.Text("Do not share the private key.").NextSection()
+		p.RedArrow().DangerText("Important").NextLine()
+		p.Text("Write down the ").Bold("mnemonic").Text(" and the ").Bold("wallet's version").Text(", and store it somewhere safe and secure, now.").NextLine()
+		p.DangerText("The mnemonic will not be displayed ever again, nor will you be able to retrieve it!").NextSection()
 	}
 
 	p.BlueArrow().InfoText("Run the service").NextLine()
