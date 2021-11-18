@@ -26,20 +26,20 @@ var (
 		Send a transaction to a Vega node via the gRPC API. The command can be sent to 
 		any node of a registered network or to a specific node address.
 
-		The transaction is base64-encoded.
+		The transaction should be base64-encoded.
 	`)
 
 	sendTxExample = cli.Examples(`
-		# Send a command to a registered network
+		# Send a transaction to a registered network
 		vegawallet tx send --network NETWORK BASE64_TRANSACTION
 
-		# Send a command to a specific Vega node address
+		# Send a transaction to a specific Vega node address
 		vegawallet tx send --node-address ADDRESS BASE64_TRANSACTION
 
-		# Send a command with a log level set to debug
+		# Send a transaction with a log level set to debug
 		vegawallet tx send --network NETWORK --level debug BASE64_TRANSACTION
 
-		# Send a command with a maximum of 10 retry
+		# Send a transaction with a maximum of 10 retry
 		vegawallet tx send --network NETWORK --retries 10 BASE64_TRANSACTION
 	`)
 )
