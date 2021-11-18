@@ -112,7 +112,7 @@ func (n *Forwarder) SendTx(ctx context.Context, tx *commandspb.Transaction, ty a
 			clt := n.nextClt()
 			resp, err := clt.SubmitTransaction(ctx, &req)
 			if err != nil {
-				n.log.Error("failed to send transaction", zap.Error(err))
+				n.log.Error("couldn't send transaction", zap.Error(err))
 				return err
 			}
 			n.log.Debug("response from SubmitTransactionV2", zap.Bool("success", resp.Success))

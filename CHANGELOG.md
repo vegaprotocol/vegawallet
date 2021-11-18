@@ -14,6 +14,9 @@
 ### 🔥 Removal
 - [387](https://github.com/vegaprotocol/vegawallet/pull/387) - Remove network initialisation in favor of `network import`
 
+### 🐛 Fixes
+- [395](https://github.com/vegaprotocol/vegawallet/pull/395) - Fix `command send` examples
+
 ## 0.10.0
 *2021-11-15*
 

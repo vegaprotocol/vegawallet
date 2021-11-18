@@ -17,7 +17,7 @@ var (
 		Build a signed key rotation transaction as a Base64 encoded string.
 		Choose a public key to rotate to and target block height.
 
-		Later the transaction is applied to Vega protocol through the wallet's "send tx" command.
+		The generated transaction can be sent using the command: "tx send".
 	`)
 
 	rotateKeyExample = cli.Examples(`
