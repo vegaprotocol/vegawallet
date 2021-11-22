@@ -110,13 +110,13 @@ func testSendCommandFlagsUnsupportedLogLevelFails(t *testing.T) {
 
 	// given
 	f := newSendCommandFlags(t, testDir)
-	f.LogLevel = "super-critical"
+	f.LogLevel = vgrand.RandomStr(5)
 
 	// when
 	req, err := f.Validate()
 
 	// then
-	assert.ErrorIs(t, err, cmd.NewUnsupportedFlagValueError("super-critical"))
+	assert.ErrorIs(t, err, cmd.NewUnsupportedFlagValueError(f.LogLevel))
 	assert.Nil(t, req)
 }
 

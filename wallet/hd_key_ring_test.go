@@ -54,7 +54,7 @@ func testHDKeyRingLoadingKeyRingSucceeds(t *testing.T) {
 
 func testHDKeyRingAddingNewKeySucceeds(t *testing.T) {
 	// given
-	kp := generateHDKeyPair()
+	kp := generateHDKeyPair(t)
 	ring := wallet.NewHDKeyRing()
 
 	// when
@@ -68,7 +68,7 @@ func testHDKeyRingAddingNewKeySucceeds(t *testing.T) {
 
 func testHDKeyRingUpdatingExistingKeySucceeds(t *testing.T) {
 	// given
-	kp := generateHDKeyPair()
+	kp := generateHDKeyPair(t)
 	ring := wallet.NewHDKeyRing()
 
 	// when
@@ -145,8 +145,8 @@ func testHDKeyRingGettingKeyPairsSucceeds(t *testing.T) {
 
 func testHDKeyRingFindingExistingKeyPairSucceeds(t *testing.T) {
 	// given
-	kp1 := generateHDKeyPair()
-	kp2 := generateHDKeyPair()
+	kp1 := generateHDKeyPair(t)
+	kp2 := generateHDKeyPair(t)
 	ring := wallet.NewHDKeyRing()
 
 	// setup
@@ -163,8 +163,8 @@ func testHDKeyRingFindingExistingKeyPairSucceeds(t *testing.T) {
 
 func testHDKeyRingFindingNonExistingKeyPairFails(t *testing.T) {
 	// given
-	kp1 := generateHDKeyPair()
-	kp2 := generateHDKeyPair()
+	kp1 := generateHDKeyPair(t)
+	kp2 := generateHDKeyPair(t)
 	ring := wallet.NewHDKeyRing()
 
 	// setup

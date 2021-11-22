@@ -553,7 +553,7 @@ func TestRotateKey(t *testing.T) {
 	t.Run("Rotate key succeeds", testRotateKeySucceeds)
 	t.Run("Rotate key with non existing wallet fails", testRotateWithNonExistingWalletFails)
 	t.Run("Rotate key with non existing public key fails", testRotateKeyWithNonExistingPublicKeyFails)
-	t.Run("Rotate key tained public key fails", testRotateKeyWithTainedPublicKeyFails)
+	t.Run("Rotate key tained public key fails", testRotateKeyWithTaintedPublicKeyFails)
 }
 
 func testRotateKeySucceeds(t *testing.T) {
@@ -656,7 +656,7 @@ func testRotateKeyWithNonExistingPublicKeyFails(t *testing.T) {
 	require.Error(t, err)
 }
 
-func testRotateKeyWithTainedPublicKeyFails(t *testing.T) {
+func testRotateKeyWithTaintedPublicKeyFails(t *testing.T) {
 	// given
 	w := importWalletWithKey(t)
 	kp := w.ListKeyPairs()[0]

@@ -102,7 +102,7 @@ func testSignMessageFlagsMalformedMessageFails(t *testing.T) {
 
 	// given
 	f := newSignMessageFlags(t, testDir)
-	f.Message = "not-base-64"
+	f.Message = vgrand.RandomStr(5)
 
 	// when
 	req, err := f.Validate()

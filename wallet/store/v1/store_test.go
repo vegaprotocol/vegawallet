@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	vgrand "code.vegaprotocol.io/shared/libs/rand"
 	vgtest "code.vegaprotocol.io/shared/libs/test"
 	"code.vegaprotocol.io/vegawallet/wallet"
 	storev1 "code.vegaprotocol.io/vegawallet/wallet/store/v1"
@@ -42,7 +43,7 @@ func testFileStoreV1ListWalletsSucceeds(t *testing.T) {
 
 	// given
 	s := InitialiseStore(walletsDir)
-	passphrase := "passphrase"
+	passphrase := vgrand.RandomStr(5)
 
 	var expectedWallets []string
 	for i := 0; i < 3; i++ {
@@ -73,7 +74,7 @@ func testFileStoreV1GetWalletSucceeds(t *testing.T) {
 	// given
 	s := InitialiseStore(walletsDir)
 	w := newHDWalletWithKeys()
-	passphrase := "passphrase"
+	passphrase := vgrand.RandomStr(5)
 
 	// when
 	err := s.SaveWallet(w, passphrase)
@@ -96,7 +97,7 @@ func testFileStoreV1GetWalletWithWrongPassphraseFails(t *testing.T) {
 	// given
 	s := InitialiseStore(walletsDir)
 	w := newHDWalletWithKeys()
-	passphrase := "passphrase"
+	passphrase := vgrand.RandomStr(5)
 	othPassphrase := "not-original-passphrase"
 
 	// when
@@ -119,8 +120,8 @@ func testFileStoreV1GetNonExistingWalletFails(t *testing.T) {
 
 	// given
 	s := InitialiseStore(walletsDir)
-	name := "john"
-	passphrase := "passphrase"
+	name := vgrand.RandomStr(5)
+	passphrase := vgrand.RandomStr(5)
 
 	// when
 	returnedWallet, err := s.GetWallet(name, passphrase)
@@ -136,7 +137,7 @@ func testFileStoreV1GetWalletPathSucceeds(t *testing.T) {
 
 	// given
 	s := InitialiseStore(walletsDir)
-	name := "john"
+	name := vgrand.RandomStr(5)
 
 	// when
 	path := s.GetWalletPath(name)
@@ -151,7 +152,7 @@ func testFileStoreV1NonExistingWalletFails(t *testing.T) {
 
 	// given
 	s := InitialiseStore(walletsDir)
-	name := "john"
+	name := vgrand.RandomStr(5)
 
 	// when
 	exists := s.WalletExists(name)
@@ -167,7 +168,7 @@ func testFileStoreV1ExistingWalletSucceeds(t *testing.T) {
 	// given
 	s := InitialiseStore(walletsDir)
 	w := newHDWalletWithKeys()
-	passphrase := "passphrase"
+	passphrase := vgrand.RandomStr(5)
 
 	// when
 	err := s.SaveWallet(w, passphrase)
@@ -187,7 +188,7 @@ func testFileStoreV1SaveHDWalletSucceeds(t *testing.T) {
 	defer walletsDir.Remove()
 
 	// given
-	passphrase := "passphrase"
+	passphrase := vgrand.RandomStr(5)
 	s := InitialiseStore(walletsDir)
 	w := newHDWalletWithKeys()
 

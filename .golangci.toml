@@ -11,7 +11,6 @@ disable = [
     "exhaustivestruct",
     "funlen",
     "gocognit",
-    "goconst",
     "nestif",
     "paralleltest",
     "revive",
