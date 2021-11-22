@@ -11,7 +11,7 @@ import (
 
 func TestDeleteWallet(t *testing.T) {
 	// given
-	home := NewTempDir(t)
+	home := t.TempDir()
 
 	_, passphraseFilePath := NewPassphraseFile(t, home)
 
@@ -48,7 +48,7 @@ func TestDeleteWallet(t *testing.T) {
 }
 
 func TestDeleteNonExistingWallet(t *testing.T) {
-	home := NewTempDir(t)
+	home := t.TempDir()
 
 	// when
 	err := WalletDelete(t, []string{

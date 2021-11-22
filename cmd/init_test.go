@@ -16,7 +16,7 @@ func TestInit(t *testing.T) {
 }
 
 func testInitialisingProgramSucceeds(t *testing.T) {
-	testDir := NewTempDir(t)
+	testDir := t.TempDir()
 
 	// given
 	f := &cmd.InitFlags{
@@ -36,7 +36,7 @@ func testInitialisingProgramSucceeds(t *testing.T) {
 }
 
 func testForcingProgramInitialisationSucceeds(t *testing.T) {
-	testDir := NewTempDir(t)
+	testDir := t.TempDir()
 
 	// given
 	f := &cmd.InitFlags{

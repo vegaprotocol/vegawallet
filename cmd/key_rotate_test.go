@@ -21,7 +21,7 @@ func TestRotateKeyFlags(t *testing.T) {
 }
 
 func testRotateKeyFlagsValidFlagsSucceeds(t *testing.T) {
-	testDir := NewTempDir(t)
+	testDir := t.TempDir()
 
 	// given
 	passphrase, passphraseFilePath := NewPassphraseFile(t, testDir)
@@ -56,7 +56,7 @@ func testRotateKeyFlagsValidFlagsSucceeds(t *testing.T) {
 }
 
 func testRotateKeyFlagsMissingWalletFails(t *testing.T) {
-	testDir := NewTempDir(t)
+	testDir := t.TempDir()
 
 	// given
 	f := newRotateKeyFlags(t, testDir)
@@ -71,7 +71,7 @@ func testRotateKeyFlagsMissingWalletFails(t *testing.T) {
 }
 
 func testRotateKeyFlagsMissingTxBlockHeightFails(t *testing.T) {
-	testDir := NewTempDir(t)
+	testDir := t.TempDir()
 
 	// given
 	f := newRotateKeyFlags(t, testDir)
@@ -86,7 +86,7 @@ func testRotateKeyFlagsMissingTxBlockHeightFails(t *testing.T) {
 }
 
 func testRotateKeyFlagsMissingTargetBlockHeightFails(t *testing.T) {
-	testDir := NewTempDir(t)
+	testDir := t.TempDir()
 
 	// given
 	f := newRotateKeyFlags(t, testDir)
@@ -101,7 +101,7 @@ func testRotateKeyFlagsMissingTargetBlockHeightFails(t *testing.T) {
 }
 
 func testRotateKeyFlagsMissingPublicKeyFails(t *testing.T) {
-	testDir := NewTempDir(t)
+	testDir := t.TempDir()
 
 	// given
 	f := newRotateKeyFlags(t, testDir)
@@ -116,7 +116,7 @@ func testRotateKeyFlagsMissingPublicKeyFails(t *testing.T) {
 }
 
 func testRotateKeyFlagsTargetFailsWhenBlockHeightIsLessThanTXHeight(t *testing.T) {
-	testDir := NewTempDir(t)
+	testDir := t.TempDir()
 
 	// given
 	f := newRotateKeyFlags(t, testDir)

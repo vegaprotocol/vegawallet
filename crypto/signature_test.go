@@ -33,7 +33,7 @@ func testCreateSignatureFailureNotAnAlgo(t *testing.T) {
 func testVerifyOK(t *testing.T) {
 	s, err := wcrypto.NewSignatureAlgorithm(wcrypto.Ed25519, 1)
 	assert.NoError(t, err)
-	pub, priv := generateKey()
+	pub, priv := generateKey(t)
 	assert.NoError(t, err)
 
 	message := []byte("hello world")
@@ -50,7 +50,7 @@ func testVerifyOK(t *testing.T) {
 func testSignBadKeyLength(t *testing.T) {
 	s, err := wcrypto.NewSignatureAlgorithm(wcrypto.Ed25519, 1)
 	assert.NoError(t, err)
-	_, priv := generateKey()
+	_, priv := generateKey(t)
 
 	assert.NoError(t, err)
 
@@ -68,7 +68,7 @@ func testSignBadKeyLength(t *testing.T) {
 func testVerifyBadKeyLength(t *testing.T) {
 	s, err := wcrypto.NewSignatureAlgorithm(wcrypto.Ed25519, 1)
 	assert.NoError(t, err)
-	pub, priv := generateKey()
+	pub, priv := generateKey(t)
 
 	assert.NoError(t, err)
 
@@ -90,7 +90,7 @@ func testVerifyBadKeyLength(t *testing.T) {
 func testVerifyFailWrongMessage(t *testing.T) {
 	s, err := wcrypto.NewSignatureAlgorithm(wcrypto.Ed25519, 1)
 	assert.NoError(t, err)
-	pub, priv := generateKey()
+	pub, priv := generateKey(t)
 	assert.NoError(t, err)
 
 	message := []byte("hello world")
@@ -109,9 +109,9 @@ func testVerifyFailWrongPubKey(t *testing.T) {
 	s, err := wcrypto.NewSignatureAlgorithm(wcrypto.Ed25519, 1)
 	assert.NoError(t, err)
 	// gen 2 sets of  keys
-	_, priv := generateKey()
+	_, priv := generateKey(t)
 	assert.NoError(t, err)
-	pub, _ := generateKey()
+	pub, _ := generateKey(t)
 	assert.NoError(t, err)
 
 	message := []byte("hello world")
@@ -125,10 +125,11 @@ func testVerifyFailWrongPubKey(t *testing.T) {
 	assert.False(t, ok)
 }
 
-func generateKey() (crypto.PublicKey, crypto.PrivateKey) {
+func generateKey(t *testing.T) (crypto.PublicKey, crypto.PrivateKey) {
+	t.Helper()
 	pub, priv, err := ed25519.GenerateKey(nil)
 	if err != nil {
-		panic(err)
+		t.Fatalf("couldn't generate key: %v", err)
 	}
 
 	return []byte(pub), []byte(priv)

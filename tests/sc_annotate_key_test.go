@@ -9,7 +9,7 @@ import (
 
 func TestAnnotateKey(t *testing.T) {
 	// given
-	home := NewTempDir(t)
+	home := t.TempDir()
 
 	_, passphraseFilePath := NewPassphraseFile(t, home)
 

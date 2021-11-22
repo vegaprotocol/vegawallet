@@ -8,7 +8,7 @@ import (
 
 func TestDescribeNetwork(t *testing.T) {
 	// given
-	home := NewTempDir(t)
+	home := t.TempDir()
 
 	networkFile := NewFile(t, home, "my-network-1.toml", FakeNetwork("my-network-1"))
 

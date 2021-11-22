@@ -1,7 +1,6 @@
 package version_test
 
 import (
-	"fmt"
 	"testing"
 
 	"code.vegaprotocol.io/vegawallet/version"
@@ -31,7 +30,7 @@ func testCheckingCurrentVersionSucceeds(t *testing.T) {
 			name:           "stable release against newer stable releases should update to latest stable release",
 			currentVersion: "v0.1.0",
 			releases:       []string{"v0.2.0", "v0.3.0"},
-			expectedResult: toSemVer("0.3.0"),
+			expectedResult: toSemVer(t, "0.3.0"),
 		}, {
 			name:           "stable release against same stable release should not update",
 			currentVersion: "v0.3.0",
@@ -41,7 +40,7 @@ func testCheckingCurrentVersionSucceeds(t *testing.T) {
 			name:           "stable against newer pre-release should update to latest stable release",
 			currentVersion: "v0.1.0",
 			releases:       []string{"v0.2.0", "v0.3.0-alpha"},
-			expectedResult: toSemVer("0.2.0"),
+			expectedResult: toSemVer(t, "0.2.0"),
 		}, {
 			name:           "stable release against older pre-release should not update",
 			currentVersion: "v0.3.0",
@@ -51,7 +50,7 @@ func testCheckingCurrentVersionSucceeds(t *testing.T) {
 			name:           "pre-release against newer stable release should update to latest stable release",
 			currentVersion: "v0.3.0-alpha",
 			releases:       []string{"v0.2.0", "v0.3.0"},
-			expectedResult: toSemVer("0.3.0"),
+			expectedResult: toSemVer(t, "0.3.0"),
 		}, {
 			name:           "pre-release against older stable release should not update",
 			currentVersion: "v0.4.0-alpha",
@@ -61,7 +60,7 @@ func testCheckingCurrentVersionSucceeds(t *testing.T) {
 			name:           "pre-release against newer pre-release should update to latest pre-release",
 			currentVersion: "v0.4.0-alpha",
 			releases:       []string{"v0.2.0", "v0.3.0", "v0.4.0-alpha", "v0.4.0-beta"},
-			expectedResult: toSemVer("0.4.0-beta"),
+			expectedResult: toSemVer(t, "0.4.0-beta"),
 		}, {
 			name:           "pre-release against same pre-release should not update",
 			currentVersion: "v0.4.0-alpha",
@@ -71,7 +70,7 @@ func testCheckingCurrentVersionSucceeds(t *testing.T) {
 			name:           "pre-release against newer pre-release separated by stable releases should update to latest stable release",
 			currentVersion: "v0.2.0-alpha",
 			releases:       []string{"v0.2.0-alpha", "v0.2.0", "v0.3.0-alpha", "v0.3.0", "v0.3.1", "v0.4.0-alpha"},
-			expectedResult: toSemVer("0.3.1"),
+			expectedResult: toSemVer(t, "0.3.1"),
 		}, {
 			name:           "pre-release against newer development pre-release should not update",
 			currentVersion: "v0.4.0-alpha",
@@ -81,12 +80,12 @@ func testCheckingCurrentVersionSucceeds(t *testing.T) {
 			name:           "development pre-release against non-development pre-release should update to non-development pre-release",
 			currentVersion: "v0.4.0-alpha+dev",
 			releases:       []string{"v0.2.0", "v0.3.0", "v0.4.0-alpha"},
-			expectedResult: toSemVer("0.4.0-alpha"),
+			expectedResult: toSemVer(t, "0.4.0-alpha"),
 		}, {
 			name:           "development pre-release against newer pre-release should update to latest pre-release",
 			currentVersion: "v0.4.0-alpha+dev",
 			releases:       []string{"v0.2.0", "v0.3.0", "v0.4.0-alpha", "v0.4.0-beta"},
-			expectedResult: toSemVer("0.4.0-beta"),
+			expectedResult: toSemVer(t, "0.4.0-beta"),
 		},
 	}
 
@@ -153,10 +152,11 @@ func testVerifyingUnreleasedVersionSucceeds(t *testing.T) {
 	}
 }
 
-func toSemVer(s string) *semver.Version {
+func toSemVer(t *testing.T, s string) *semver.Version {
+	t.Helper()
 	expectVersion, err := semver.New(s)
 	if err != nil {
-		panic(fmt.Errorf("couldn't parse the semver: %w", err))
+		t.Fatalf("couldn't parse the semver: %v", err)
 	}
 	return expectVersion
 }

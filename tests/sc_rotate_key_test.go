@@ -11,7 +11,7 @@ import (
 
 func TestRotateKeySucceeds(t *testing.T) {
 	// given
-	home := NewTempDir(t)
+	home := t.TempDir()
 
 	_, passphraseFilePath := NewPassphraseFile(t, home)
 
@@ -51,7 +51,7 @@ func TestRotateKeySucceeds(t *testing.T) {
 
 func TestRotateKeyFailsOnTainedPublicKey(t *testing.T) {
 	// given
-	home := NewTempDir(t)
+	home := t.TempDir()
 
 	_, passphraseFilePath := NewPassphraseFile(t, home)
 
@@ -99,7 +99,7 @@ func TestRotateKeyFailsOnTainedPublicKey(t *testing.T) {
 
 func TestRotateKeyFailsInIsolatedWallet(t *testing.T) {
 	// given
-	home := NewTempDir(t)
+	home := t.TempDir()
 
 	_, passphraseFilePath := NewPassphraseFile(t, home)
 
@@ -158,7 +158,7 @@ func TestRotateKeyFailsInIsolatedWallet(t *testing.T) {
 
 func TestRotateKeyFailsOnNonExitingKey(t *testing.T) {
 	// given
-	home := NewTempDir(t)
+	home := t.TempDir()
 
 	_, passphraseFilePath := NewPassphraseFile(t, home)
 
@@ -198,7 +198,7 @@ func TestRotateKeyFailsOnNonExitingKey(t *testing.T) {
 
 func TestRotateKeyFailsOnNonExitingWallet(t *testing.T) {
 	// given
-	home := NewTempDir(t)
+	home := t.TempDir()
 
 	_, passphraseFilePath := NewPassphraseFile(t, home)
 
@@ -225,7 +225,7 @@ func TestRotateKeyFailsOnNonExitingWallet(t *testing.T) {
 
 func TestRotateKeyFailsWhenTargetHeighIsLessnThanTxHeight(t *testing.T) {
 	// given
-	home := NewTempDir(t)
+	home := t.TempDir()
 
 	_, passphraseFilePath := NewPassphraseFile(t, home)
 

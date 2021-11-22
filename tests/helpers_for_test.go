@@ -2,7 +2,6 @@ package tests_test
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 	"testing"
 
@@ -11,17 +10,6 @@ import (
 )
 
 const testMnemonic = "swing ceiling chaos green put insane ripple desk match tip melt usual shrug turkey renew icon parade veteran lens govern path rough page render"
-
-func NewTempDir(t *testing.T) string {
-	t.Helper()
-	home := t.TempDir()
-	t.Cleanup(func() {
-		if err := os.RemoveAll(home); err != nil {
-			t.Fatalf("couldn't remove test folder: %v", err)
-		}
-	})
-	return home
-}
 
 func NewPassphraseFile(t *testing.T, path string) (string, string) {
 	t.Helper()

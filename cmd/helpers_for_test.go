@@ -1,7 +1,6 @@
 package cmd_test
 
 import (
-	"os"
 	"path/filepath"
 	"testing"
 
@@ -11,13 +10,7 @@ import (
 
 func NewTempDir(t *testing.T) string {
 	t.Helper()
-	home := t.TempDir()
-	t.Cleanup(func() {
-		if err := os.RemoveAll(home); err != nil {
-			t.Fatalf("couldn't remove test folder: %v", err)
-		}
-	})
-	return home
+	return t.TempDir()
 }
 
 func NewPassphraseFile(t *testing.T, path string) (string, string) {

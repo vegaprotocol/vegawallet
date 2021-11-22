@@ -9,7 +9,7 @@ import (
 
 func TestImportWalletV1(t *testing.T) {
 	// given
-	home := NewTempDir(t)
+	home := t.TempDir()
 
 	_, passphraseFilePath := NewPassphraseFile(t, home)
 
@@ -82,7 +82,7 @@ func TestImportWalletV1(t *testing.T) {
 
 func TestImportWalletV2(t *testing.T) {
 	// given
-	home := NewTempDir(t)
+	home := t.TempDir()
 
 	_, passphraseFilePath := NewPassphraseFile(t, home)
 

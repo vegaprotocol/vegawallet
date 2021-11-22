@@ -39,12 +39,12 @@ func testHDKeyPairNewKeyPairSucceeds(t *testing.T) {
 	publicKey := testPublicKey
 	rawPublicKey, err := hex.DecodeString(publicKey)
 	if err != nil {
-		t.Fatalf(fmt.Sprintf("couldn't decode public key: %v", err))
+		t.Fatalf("couldn't decode public key: %v", err)
 	}
 	privateKey := testPrivateKey
 	rawPrivateKey, err := hex.DecodeString(privateKey)
 	if err != nil {
-		t.Fatalf(fmt.Sprintf("couldn't decode private key: %v", err))
+		t.Fatalf("couldn't decode private key: %v", err)
 	}
 
 	// when
@@ -277,20 +277,18 @@ func testHDKeyPairUnmarshalingKeyPairSucceeds(t *testing.T) {
 func generateHDKeyPair(t *testing.T) *wallet.HDKeyPair {
 	t.Helper()
 
-	publicKey := testPublicKey
-	rawPublicKey, err := hex.DecodeString(publicKey)
+	rawPublicKey, err := hex.DecodeString(testPublicKey)
 	if err != nil {
-		t.Fatalf(fmt.Sprintf("couldn't decode public key: %v", err))
+		t.Fatalf("couldn't decode public key: %v", err)
 	}
-	privateKey := testPrivateKey
-	rawPrivateKey, err := hex.DecodeString(privateKey)
+	rawPrivateKey, err := hex.DecodeString(testPrivateKey)
 	if err != nil {
-		t.Fatalf(fmt.Sprintf("couldn't decode private key: %v", err))
+		t.Fatalf("couldn't decode private key: %v", err)
 	}
 
 	kp, err := wallet.NewHDKeyPair(1, rawPublicKey, rawPrivateKey)
 	if err != nil {
-		t.Fatalf(fmt.Sprintf("couldn't create HD key pair: %v", err))
+		t.Fatalf("couldn't create HD key pair: %v", err)
 	}
 
 	return kp

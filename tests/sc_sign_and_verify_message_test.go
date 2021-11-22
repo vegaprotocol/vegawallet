@@ -10,7 +10,7 @@ import (
 
 func TestSignMessage(t *testing.T) {
 	// given
-	home := NewTempDir(t)
+	home := t.TempDir()
 
 	_, passphraseFilePath := NewPassphraseFile(t, home)
 
@@ -88,7 +88,7 @@ func TestSignMessage(t *testing.T) {
 
 func TestSignMessageWithTaintedKey(t *testing.T) {
 	// given
-	home := NewTempDir(t)
+	home := t.TempDir()
 
 	_, passphraseFilePath := NewPassphraseFile(t, home)
 

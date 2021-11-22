@@ -21,7 +21,7 @@ func TestAnnotateKeyFlags(t *testing.T) {
 }
 
 func testAnnotateKeyFlagsValidFlagsSucceeds(t *testing.T) {
-	testDir := NewTempDir(t)
+	testDir := t.TempDir()
 
 	// given
 	passphrase, passphraseFilePath := NewPassphraseFile(t, testDir)
@@ -56,7 +56,7 @@ func testAnnotateKeyFlagsValidFlagsSucceeds(t *testing.T) {
 }
 
 func testAnnotateKeyFlagsMissingWalletFails(t *testing.T) {
-	testDir := NewTempDir(t)
+	testDir := t.TempDir()
 
 	// given
 	f := newAnnotateKeyFlags(t, testDir)
@@ -71,7 +71,7 @@ func testAnnotateKeyFlagsMissingWalletFails(t *testing.T) {
 }
 
 func testAnnotateKeyFlagsMissingPubKeyFails(t *testing.T) {
-	testDir := NewTempDir(t)
+	testDir := t.TempDir()
 
 	// given
 	f := newAnnotateKeyFlags(t, testDir)
@@ -86,7 +86,7 @@ func testAnnotateKeyFlagsMissingPubKeyFails(t *testing.T) {
 }
 
 func testAnnotateKeyFlagsMissingMetadataAndClearFails(t *testing.T) {
-	testDir := NewTempDir(t)
+	testDir := t.TempDir()
 
 	// given
 	f := newAnnotateKeyFlags(t, testDir)
@@ -101,7 +101,7 @@ func testAnnotateKeyFlagsMissingMetadataAndClearFails(t *testing.T) {
 }
 
 func testAnnotateKeyFlagsClearingWithMetadataFails(t *testing.T) {
-	testDir := NewTempDir(t)
+	testDir := t.TempDir()
 
 	// given
 	f := newAnnotateKeyFlags(t, testDir)
@@ -116,7 +116,7 @@ func testAnnotateKeyFlagsClearingWithMetadataFails(t *testing.T) {
 }
 
 func testAnnotateKeyFlagsInvalidMetadataFails(t *testing.T) {
-	testDir := NewTempDir(t)
+	testDir := t.TempDir()
 
 	// given
 	f := newAnnotateKeyFlags(t, testDir)
