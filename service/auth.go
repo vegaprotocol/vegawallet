@@ -19,7 +19,11 @@ import (
 	"go.uber.org/zap"
 )
 
-const LengthForSessionHashSeed = 10
+const (
+	LengthForSessionHashSeed = 10
+
+	jwtBearer = "Bearer "
+)
 
 var ErrSessionNotFound = errors.New("session not found")
 
@@ -148,20 +152,14 @@ func (a *auth) parseToken(tokenStr string) (*Claims, error) {
 	return nil, ErrInvalidClaims
 }
 
-// ExtractToken this is public for testing purposes.
-func ExtractToken(f func(string, http.ResponseWriter, *http.Request, httprouter.Params)) httprouter.Handle {
+func extractToken(f func(string, http.ResponseWriter, *http.Request, httprouter.Params)) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-		token := r.Header.Get("Authorization")
-		if len(token) == 0 {
+		token := strings.TrimSpace(r.Header.Get("Authorization"))
+		if !strings.HasPrefix(token, jwtBearer) {
 			writeError(w, ErrInvalidOrMissingToken, http.StatusBadRequest)
 			return
 		}
-		splitToken := strings.Split(token, "Bearer")
-		if len(splitToken) != 2 || len(splitToken[1]) == 0 {
-			writeError(w, ErrInvalidOrMissingToken, http.StatusBadRequest)
-			return
-		}
-		f(strings.TrimSpace(splitToken[1]), w, r, ps)
+		f(strings.TrimSpace(token[len(jwtBearer):]), w, r, ps)
 	}
 }
 

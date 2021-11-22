@@ -6,7 +6,6 @@ print-linter-name = true
 enable-all = true
 disable = [
     # To be fixed
-    "bodyclose",
     "cyclop",
     "dupl",
     "exhaustivestruct",

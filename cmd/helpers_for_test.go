@@ -1,7 +1,6 @@
 package cmd_test
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -15,7 +14,7 @@ func NewTempDir(t *testing.T) string {
 	home := t.TempDir()
 	t.Cleanup(func() {
 		if err := os.RemoveAll(home); err != nil {
-			t.Fatalf(fmt.Sprintf("couldn't remove test folder: %v", err))
+			t.Fatalf("couldn't remove test folder: %v", err)
 		}
 	})
 	return home
