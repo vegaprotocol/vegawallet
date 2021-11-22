@@ -5,7 +5,7 @@ print-linter-name = true
 [linters]
 enable-all = true
 disable = [
-    # To be fixed
+    # To be investigate
     "cyclop",
     "dupl",
     "exhaustivestruct",
