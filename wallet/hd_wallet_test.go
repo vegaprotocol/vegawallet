@@ -2,8 +2,10 @@ package wallet_test
 
 import (
 	"encoding/json"
+	"fmt"
 	"testing"
 
+	vgrand "code.vegaprotocol.io/shared/libs/rand"
 	"code.vegaprotocol.io/vegawallet/wallet"
 	"code.vegaprotocol.io/vegawallet/wallets"
 	"github.com/stretchr/testify/assert"
@@ -54,7 +56,7 @@ func TestHDWallet(t *testing.T) {
 
 func testHDWalletCreateWalletSucceeds(t *testing.T) {
 	// given
-	name := "duncan"
+	name := vgrand.RandomStr(5)
 
 	// when
 	w, mnemonic, err := wallet.NewHDWallet(name)
@@ -83,7 +85,7 @@ func testHDWalletImportingWalletSucceeds(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.name, func(tt *testing.T) {
 			// given
-			name := "duncan"
+			name := vgrand.RandomStr(5)
 
 			// when
 			w, err := wallet.ImportHDWallet(name, TestMnemonic1, tc.version)
@@ -113,7 +115,7 @@ func testHDWalletImportingWalletWithInvalidMnemonicFails(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.name, func(tt *testing.T) {
 			// given
-			name := "duncan"
+			name := vgrand.RandomStr(5)
 
 			// when
 			w, err := wallet.ImportHDWallet(name, "vladimir harkonnen doesn't like trees", tc.version)
@@ -127,7 +129,7 @@ func testHDWalletImportingWalletWithInvalidMnemonicFails(t *testing.T) {
 
 func testHDWalletImportingWalletWithUnsupportedVersionFails(t *testing.T) {
 	// given
-	name := "duncan"
+	name := vgrand.RandomStr(5)
 
 	// when
 	w, err := wallet.ImportHDWallet(name, TestMnemonic1, 3)
@@ -160,7 +162,7 @@ func testHDWalletGeneratingKeyPairSucceeds(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.name, func(tt *testing.T) {
 			// given
-			name := "duncan"
+			name := vgrand.RandomStr(5)
 			meta := []wallet.Meta{{Key: "env", Value: "test"}}
 
 			// when
@@ -200,7 +202,7 @@ func testHDWalletGeneratingKeyPairOnIsolatedWalletFails(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.name, func(tt *testing.T) {
 			// given
-			name := "duncan"
+			name := vgrand.RandomStr(5)
 
 			// when
 			w, err := wallet.ImportHDWallet(name, TestMnemonic1, tc.version)
@@ -250,7 +252,7 @@ func testHDWalletTaintingKeyPairSucceeds(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.name, func(tt *testing.T) {
 			// given
-			name := "duncan"
+			name := vgrand.RandomStr(5)
 
 			// when
 			w, err := wallet.ImportHDWallet(name, TestMnemonic1, tc.version)
@@ -300,7 +302,7 @@ func testHDWalletTaintingKeyThatIsAlreadyTaintedFails(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.name, func(tt *testing.T) {
 			// given
-			name := "duncan"
+			name := vgrand.RandomStr(5)
 
 			// when
 			w, err := wallet.ImportHDWallet(name, TestMnemonic1, tc.version)
@@ -356,7 +358,7 @@ func testHDWalletTaintingUnknownKeyFails(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.name, func(tt *testing.T) {
 			// given
-			name := "duncan"
+			name := vgrand.RandomStr(5)
 
 			// when
 			w, err := wallet.ImportHDWallet(name, TestMnemonic1, tc.version)
@@ -391,7 +393,7 @@ func testHDWalletUntaintingKeyPairSucceeds(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.name, func(tt *testing.T) {
 			// given
-			name := "duncan"
+			name := vgrand.RandomStr(5)
 
 			// when
 			w, err := wallet.ImportHDWallet(name, TestMnemonic1, tc.version)
@@ -455,7 +457,7 @@ func testHDWalletUntaintingKeyThatIsNotTaintedFails(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.name, func(tt *testing.T) {
 			// given
-			name := "duncan"
+			name := vgrand.RandomStr(5)
 
 			// when
 			w, err := wallet.ImportHDWallet(name, TestMnemonic1, tc.version)
@@ -505,7 +507,7 @@ func testHDWalletUntaintingUnknownKeyFails(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.name, func(tt *testing.T) {
 			// given
-			name := "duncan"
+			name := vgrand.RandomStr(5)
 
 			// when
 			w, err := wallet.ImportHDWallet(name, TestMnemonic1, tc.version)
@@ -540,7 +542,7 @@ func testHDWalletUpdatingKeyPairMetaSucceeds(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.name, func(tt *testing.T) {
 			// given
-			name := "duncan"
+			name := vgrand.RandomStr(5)
 			meta := []wallet.Meta{{Key: "primary", Value: "yes"}}
 
 			// when
@@ -591,7 +593,7 @@ func testHDWalletUpdatingKeyPairMetaWithUnknownPublicKeyFails(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.name, func(tt *testing.T) {
 			// given
-			name := "duncan"
+			name := vgrand.RandomStr(5)
 			meta := []wallet.Meta{{Key: "primary", Value: "yes"}}
 
 			// when
@@ -627,7 +629,7 @@ func testHDWalletDescribingPublicKeysSucceeds(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.name, func(tt *testing.T) {
 			// given
-			name := "duncan"
+			name := vgrand.RandomStr(5)
 
 			// when
 			w, err := wallet.ImportHDWallet(name, TestMnemonic1, tc.version)
@@ -674,7 +676,7 @@ func testHDWalletDescribingUnknownPublicKeysFails(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.name, func(tt *testing.T) {
 			// given
-			name := "duncan"
+			name := vgrand.RandomStr(5)
 
 			// when
 			w, err := wallet.ImportHDWallet(name, TestMnemonic1, tc.version)
@@ -710,7 +712,7 @@ func testHDWalletListingPublicKeysSucceeds(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.name, func(tt *testing.T) {
 			// given
-			name := "duncan"
+			name := vgrand.RandomStr(5)
 
 			// when
 			w, err := wallet.ImportHDWallet(name, TestMnemonic1, tc.version)
@@ -761,7 +763,7 @@ func testHDWalletListingKeyPairsSucceeds(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.name, func(tt *testing.T) {
 			// given
-			name := "duncan"
+			name := vgrand.RandomStr(5)
 
 			// when
 			w, err := wallet.ImportHDWallet(name, TestMnemonic1, tc.version)
@@ -813,7 +815,7 @@ func testHDWalletSigningTxSucceeds(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.name, func(tt *testing.T) {
 			// given
-			name := "duncan"
+			name := vgrand.RandomStr(5)
 			data := []byte("Je ne connaîtrai pas la peur car la peur tue l'esprit.")
 
 			// when
@@ -859,7 +861,7 @@ func testHDWalletSigningTxWithTaintedKeyFails(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.name, func(tt *testing.T) {
 			// given
-			name := "duncan"
+			name := vgrand.RandomStr(5)
 			data := []byte("Je ne connaîtrai pas la peur car la peur tue l'esprit.")
 
 			// when
@@ -909,7 +911,7 @@ func testHDWalletSigningTxWithUnknownKeyFails(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.name, func(tt *testing.T) {
 			// given
-			name := "duncan"
+			name := vgrand.RandomStr(5)
 			data := []byte("Je ne connaîtrai pas la peur car la peur tue l'esprit.")
 
 			// when
@@ -956,7 +958,7 @@ func testHDWalletSigningAnyMessageSucceeds(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.name, func(tt *testing.T) {
 			// given
-			name := "duncan"
+			name := vgrand.RandomStr(5)
 			data := []byte("Je ne connaîtrai pas la peur car la peur tue l'esprit.")
 
 			// when
@@ -1000,7 +1002,7 @@ func testHDWalletSigningAnyMessageWithTaintedKeyFails(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.name, func(tt *testing.T) {
 			// given
-			name := "duncan"
+			name := vgrand.RandomStr(5)
 			data := []byte("Je ne connaîtrai pas la peur car la peur tue l'esprit.")
 
 			// when
@@ -1050,7 +1052,7 @@ func testHDWalletSigningAnyMessageWithUnknownKeyFails(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.name, func(tt *testing.T) {
 			// given
-			name := "duncan"
+			name := vgrand.RandomStr(5)
 			data := []byte("Je ne connaîtrai pas la peur car la peur tue l'esprit.")
 
 			// when
@@ -1090,7 +1092,7 @@ func testHDWalletVerifyingAnyMessageSucceeds(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.name, func(tt *testing.T) {
 			// given
-			name := "duncan"
+			name := vgrand.RandomStr(5)
 			data := []byte("Je ne connaîtrai pas la peur car la peur tue l'esprit.")
 
 			// when
@@ -1134,7 +1136,7 @@ func testHDWalletVerifyingAnyMessageWithUnknownKeyFails(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.name, func(tt *testing.T) {
 			// given
-			name := "duncan"
+			name := vgrand.RandomStr(5)
 			data := []byte("Je ne connaîtrai pas la peur car la peur tue l'esprit.")
 			sig := []byte{0xd5, 0xc4, 0x9e, 0xfd, 0x13, 0x73, 0x9b, 0xdd, 0x36, 0x81, 0x75, 0xcc, 0x59, 0xc8, 0xbe, 0xe1, 0x20, 0x25, 0xe4, 0xb9, 0x14, 0x7a, 0x22, 0xbb, 0xa4, 0x84, 0xef, 0x7e, 0xe7, 0x2f, 0x55, 0x13, 0x5f, 0x52, 0x55, 0xad, 0x90, 0x35, 0x67, 0x6c, 0x91, 0x9d, 0xbb, 0x91, 0x21, 0x1f, 0x98, 0x53, 0xcc, 0x68, 0xe, 0x58, 0x5b, 0x4c, 0x26, 0xd7, 0xea, 0x20, 0x1, 0x50, 0x6c, 0x41, 0xcb, 0x3}
 
@@ -1175,7 +1177,7 @@ func testHDWalletMarshalingWalletSucceeds(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.name, func(tt *testing.T) {
 			// given
-			name := "duncan"
+			name := vgrand.RandomStr(5)
 
 			// when
 			w, err := wallet.ImportHDWallet(name, TestMnemonic1, tc.version)
@@ -1221,7 +1223,7 @@ func testHDWalletMarshalingIsolatedWalletSucceeds(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.name, func(tt *testing.T) {
 			// given
-			name := "duncan"
+			name := vgrand.RandomStr(5)
 
 			// when
 			w, err := wallet.ImportHDWallet(name, TestMnemonic1, tc.version)
@@ -1319,7 +1321,7 @@ func testHDWalletGettingWalletInfoSucceeds(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.name, func(tt *testing.T) {
 			// given
-			name := "duncan"
+			name := vgrand.RandomStr(5)
 
 			// when
 			w, err := wallet.ImportHDWallet(name, TestMnemonic1, tc.version)
@@ -1351,7 +1353,7 @@ func testHDWalletGettingIsolatedWalletInfoSucceeds(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.name, func(tt *testing.T) {
 			// given
-			name := "duncan"
+			name := vgrand.RandomStr(5)
 
 			// when
 			w, err := wallet.ImportHDWallet(name, TestMnemonic1, tc.version)
@@ -1381,6 +1383,7 @@ func testHDWalletGettingIsolatedWalletInfoSucceeds(t *testing.T) {
 }
 
 func testHDWalletIsolatingWalletSucceeds(t *testing.T) {
+	walletName := vgrand.RandomStr(5)
 	tcs := []struct {
 		name    string
 		version uint32
@@ -1389,21 +1392,18 @@ func testHDWalletIsolatingWalletSucceeds(t *testing.T) {
 		{
 			name:    "version 1",
 			version: 1,
-			wallet:  "duncan.30ebce58.isolated",
+			wallet:  fmt.Sprintf("%s.30ebce58.isolated", walletName),
 		}, {
 			name:    "version 2",
 			version: 2,
-			wallet:  "duncan.b5fd9d3c.isolated",
+			wallet:  fmt.Sprintf("%s.b5fd9d3c.isolated", walletName),
 		},
 	}
 
 	for _, tc := range tcs {
 		t.Run(tc.name, func(tt *testing.T) {
-			// given
-			name := "duncan"
-
 			// when
-			w, err := wallet.ImportHDWallet(name, TestMnemonic1, tc.version)
+			w, err := wallet.ImportHDWallet(walletName, TestMnemonic1, tc.version)
 
 			// then
 			require.NoError(tt, err)
@@ -1444,7 +1444,7 @@ func testHDWalletIsolatingWalletWithTaintedKeyPairFails(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.name, func(tt *testing.T) {
 			// given
-			name := "duncan"
+			name := vgrand.RandomStr(5)
 
 			// when
 			w, err := wallet.ImportHDWallet(name, TestMnemonic1, tc.version)
@@ -1493,7 +1493,7 @@ func testHDWalletIsolatingWalletWithNonExistingKeyPairFails(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.name, func(tt *testing.T) {
 			// given
-			name := "duncan"
+			name := vgrand.RandomStr(5)
 
 			// when
 			w, err := wallet.ImportHDWallet(name, TestMnemonic1, tc.version)
@@ -1529,7 +1529,7 @@ func testHDWalletGettingWalletMasterKeySucceeds(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.name, func(tt *testing.T) {
 			// given
-			name := "duncan"
+			name := vgrand.RandomStr(5)
 
 			// when
 			w, err := wallet.ImportHDWallet(name, TestMnemonic1, tc.version)

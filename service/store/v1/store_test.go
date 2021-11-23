@@ -1,9 +1,13 @@
 package v1_test
 
 import (
+	"os"
+	"path/filepath"
 	"testing"
 
+	vgrand "code.vegaprotocol.io/shared/libs/rand"
 	vgtest "code.vegaprotocol.io/shared/libs/test"
+	"code.vegaprotocol.io/shared/paths"
 	"code.vegaprotocol.io/vegawallet/service"
 	v1 "code.vegaprotocol.io/vegawallet/service/store/v1"
 	"github.com/stretchr/testify/assert"
@@ -21,22 +25,20 @@ func TestFileStoreV1(t *testing.T) {
 }
 
 func testNewStoreSucceeds(t *testing.T) {
-	configDir := newVegaHome()
-	defer configDir.Remove()
+	vegaHome := newVegaHome(t)
 
-	s, err := v1.InitialiseStore(configDir.Paths())
+	s, err := v1.InitialiseStore(vegaHome)
 
 	require.NoError(t, err)
 	assert.NotNil(t, s)
-	vgtest.AssertDirAccess(t, configDir.RSAKeysHome())
+	vgtest.AssertDirAccess(t, rsaKeysHome(t, vegaHome))
 }
 
 func testFileStoreV1SaveAlreadyExistingRSAKeysSucceeds(t *testing.T) {
-	configDir := newVegaHome()
-	defer configDir.Remove()
+	vegaHome := newVegaHome(t)
 
 	// given
-	s := InitialiseFromPath(configDir)
+	s := initialiseFromPath(t, vegaHome)
 	keys := &service.RSAKeys{
 		Pub:  []byte("my public key"),
 		Priv: []byte("my private key"),
@@ -56,11 +58,10 @@ func testFileStoreV1SaveAlreadyExistingRSAKeysSucceeds(t *testing.T) {
 }
 
 func testFileStoreV1SaveRSAKeysSucceeds(t *testing.T) {
-	configDir := newVegaHome()
-	defer configDir.Remove()
+	vegaHome := newVegaHome(t)
 
 	// given
-	s := InitialiseFromPath(configDir)
+	s := initialiseFromPath(t, vegaHome)
 	keys := &service.RSAKeys{
 		Pub:  []byte("my public key"),
 		Priv: []byte("my private key"),
@@ -71,8 +72,8 @@ func testFileStoreV1SaveRSAKeysSucceeds(t *testing.T) {
 
 	// then
 	require.NoError(t, err)
-	vgtest.AssertFileAccess(t, configDir.PublicRSAKeyFilePath())
-	vgtest.AssertFileAccess(t, configDir.PrivateRSAKeyFilePath())
+	vgtest.AssertFileAccess(t, publicRSAKeyFilePath(t, vegaHome))
+	vgtest.AssertFileAccess(t, privateRSAKeyFilePath(t, vegaHome))
 
 	// when
 	returnedKeys, err := s.GetRsaKeys()
@@ -83,11 +84,10 @@ func testFileStoreV1SaveRSAKeysSucceeds(t *testing.T) {
 }
 
 func testFileStoreV1VerifyingNonExistingRSAKeysFails(t *testing.T) {
-	configDir := newVegaHome()
-	defer configDir.Remove()
+	vegaHome := newVegaHome(t)
 
 	// given
-	s := InitialiseFromPath(configDir)
+	s := initialiseFromPath(t, vegaHome)
 
 	// when
 	exists, err := s.RSAKeysExists()
@@ -98,11 +98,10 @@ func testFileStoreV1VerifyingNonExistingRSAKeysFails(t *testing.T) {
 }
 
 func testFileStoreV1VerifyingExistingRSAKeysSucceeds(t *testing.T) {
-	configDir := newVegaHome()
-	defer configDir.Remove()
+	vegaHome := newVegaHome(t)
 
 	// given
-	s := InitialiseFromPath(configDir)
+	s := initialiseFromPath(t, vegaHome)
 	keys := &service.RSAKeys{
 		Pub:  []byte("my public key"),
 		Priv: []byte("my private key"),
@@ -113,8 +112,8 @@ func testFileStoreV1VerifyingExistingRSAKeysSucceeds(t *testing.T) {
 
 	// then
 	require.NoError(t, err)
-	vgtest.AssertFileAccess(t, configDir.PublicRSAKeyFilePath())
-	vgtest.AssertFileAccess(t, configDir.PrivateRSAKeyFilePath())
+	vgtest.AssertFileAccess(t, publicRSAKeyFilePath(t, vegaHome))
+	vgtest.AssertFileAccess(t, privateRSAKeyFilePath(t, vegaHome))
 
 	// when
 	exists, err := s.RSAKeysExists()
@@ -125,11 +124,10 @@ func testFileStoreV1VerifyingExistingRSAKeysSucceeds(t *testing.T) {
 }
 
 func testFileStoreV1GetNonExistingRSAKeysFails(t *testing.T) {
-	configDir := newVegaHome()
-	defer configDir.Remove()
+	vegaHome := newVegaHome(t)
 
 	// given
-	s := InitialiseFromPath(configDir)
+	s := initialiseFromPath(t, vegaHome)
 
 	// when
 	keys, err := s.GetRsaKeys()
@@ -140,11 +138,10 @@ func testFileStoreV1GetNonExistingRSAKeysFails(t *testing.T) {
 }
 
 func testFileStoreV1GetExistingRSAKeysSucceeds(t *testing.T) {
-	configDir := newVegaHome()
-	defer configDir.Remove()
+	vegaHome := newVegaHome(t)
 
 	// given
-	s := InitialiseFromPath(configDir)
+	s := initialiseFromPath(t, vegaHome)
 	keys := &service.RSAKeys{
 		Pub:  []byte("my public key"),
 		Priv: []byte("my private key"),
@@ -155,8 +152,8 @@ func testFileStoreV1GetExistingRSAKeysSucceeds(t *testing.T) {
 
 	// then
 	require.NoError(t, err)
-	vgtest.AssertFileAccess(t, configDir.PublicRSAKeyFilePath())
-	vgtest.AssertFileAccess(t, configDir.PrivateRSAKeyFilePath())
+	vgtest.AssertFileAccess(t, publicRSAKeyFilePath(t, vegaHome))
+	vgtest.AssertFileAccess(t, privateRSAKeyFilePath(t, vegaHome))
 
 	// when
 	returnedKeys, err := s.GetRsaKeys()
@@ -166,11 +163,39 @@ func testFileStoreV1GetExistingRSAKeysSucceeds(t *testing.T) {
 	assert.Equal(t, keys, returnedKeys)
 }
 
-func InitialiseFromPath(h vegaHome) *v1.Store {
-	s, err := v1.InitialiseStore(h.Paths())
+func initialiseFromPath(t *testing.T, vegaHome *paths.CustomPaths) *v1.Store {
+	t.Helper()
+	s, err := v1.InitialiseStore(vegaHome)
 	if err != nil {
-		panic(err)
+		t.Fatalf("couldn't initialise store: %v", err)
 	}
 
 	return s
+}
+
+func newVegaHome(t *testing.T) *paths.CustomPaths {
+	t.Helper()
+	rootPath := filepath.Join("/tmp", "vegawallet", vgrand.RandomStr(10))
+	t.Cleanup(func() {
+		if err := os.RemoveAll(rootPath); err != nil {
+			t.Fatalf("couldn't remove vega home: %v", err)
+		}
+	})
+
+	return &paths.CustomPaths{CustomHome: rootPath}
+}
+
+func rsaKeysHome(t *testing.T, vegaHome *paths.CustomPaths) string {
+	t.Helper()
+	return vegaHome.DataPathFor(paths.WalletServiceRSAKeysDataHome)
+}
+
+func publicRSAKeyFilePath(t *testing.T, vegaHome *paths.CustomPaths) string {
+	t.Helper()
+	return vegaHome.DataPathFor(paths.WalletServicePublicRSAKeyDataFile)
+}
+
+func privateRSAKeyFilePath(t *testing.T, vegaHome *paths.CustomPaths) string {
+	t.Helper()
+	return vegaHome.DataPathFor(paths.WalletServicePrivateRSAKeyDataFile)
 }

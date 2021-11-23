@@ -9,13 +9,11 @@ import (
 
 func TestImportWalletV1(t *testing.T) {
 	// given
-	home, cleanUpFn := NewTempDir(t)
-	defer cleanUpFn(t)
+	home := t.TempDir()
 
 	_, passphraseFilePath := NewPassphraseFile(t, home)
 
-	mnemonic := "swing ceiling chaos green put insane ripple desk match tip melt usual shrug turkey renew icon parade veteran lens govern path rough page render"
-	mnemonicFilePath := NewFile(t, home, "mnemonic.txt", mnemonic)
+	mnemonicFilePath := NewFile(t, home, "mnemonic.txt", testMnemonic)
 
 	walletName := vgrand.RandomStr(5)
 
@@ -84,13 +82,11 @@ func TestImportWalletV1(t *testing.T) {
 
 func TestImportWalletV2(t *testing.T) {
 	// given
-	home, cleanUpFn := NewTempDir(t)
-	defer cleanUpFn(t)
+	home := t.TempDir()
 
 	_, passphraseFilePath := NewPassphraseFile(t, home)
 
-	mnemonic := "swing ceiling chaos green put insane ripple desk match tip melt usual shrug turkey renew icon parade veteran lens govern path rough page render"
-	mnemonicFilePath := NewFile(t, home, "mnemonic.txt", mnemonic)
+	mnemonicFilePath := NewFile(t, home, "mnemonic.txt", testMnemonic)
 
 	walletName := vgrand.RandomStr(5)
 

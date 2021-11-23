@@ -50,13 +50,13 @@ func testRunServiceFlagsMissingNetworkFails(t *testing.T) {
 func testRunServiceFlagsUnsupportedLogLevelFails(t *testing.T) {
 	// given
 	f := newRunServiceFlags(t)
-	f.LogLevel = "super-critical"
+	f.LogLevel = vgrand.RandomStr(2)
 
 	// when
 	err := f.Validate()
 
 	// then
-	assert.ErrorIs(t, err, cmd.NewUnsupportedFlagValueError("super-critical"))
+	assert.ErrorIs(t, err, cmd.NewUnsupportedFlagValueError(f.LogLevel))
 }
 
 func testRunServiceFlagsNoBrowserWithoutConsoleProxyFails(t *testing.T) {

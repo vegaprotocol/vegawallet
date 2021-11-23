@@ -1,10 +1,12 @@
 package wallets_test
 
 import (
+	"fmt"
 	"testing"
 
 	commandspb "code.vegaprotocol.io/protos/vega/commands/v1"
 	walletpb "code.vegaprotocol.io/protos/vega/wallet/v1"
+	vgrand "code.vegaprotocol.io/shared/libs/rand"
 	"code.vegaprotocol.io/vegawallet/wallet"
 	"code.vegaprotocol.io/vegawallet/wallets"
 	"github.com/stretchr/testify/require"
@@ -93,8 +95,8 @@ func testHandlerCreatingWalletSucceeds(t *testing.T) {
 	defer h.ctrl.Finish()
 
 	// given
-	name := "jeremy"
-	passphrase := "Th1isisasecurep@ssphraseinnit"
+	name := vgrand.RandomStr(5)
+	passphrase := vgrand.RandomStr(5)
 
 	// when
 	mnemonic, err := h.CreateWallet(name, passphrase)
@@ -109,8 +111,8 @@ func testHandlerCreatingAlreadyExistingWalletFails(t *testing.T) {
 	defer h.ctrl.Finish()
 
 	// given
-	name := "jeremy"
-	passphrase := "Th1isisasecurep@ssphraseinnit"
+	name := vgrand.RandomStr(5)
+	passphrase := vgrand.RandomStr(5)
 
 	// when
 	mnemonic, err := h.CreateWallet(name, passphrase)
@@ -147,8 +149,8 @@ func testHandlerImportingWalletSucceeds(t *testing.T) {
 			defer h.ctrl.Finish()
 
 			// given
-			name := "jeremy"
-			passphrase := "Th1isisasecurep@ssphraseinnit"
+			name := vgrand.RandomStr(5)
+			passphrase := vgrand.RandomStr(5)
 
 			// when
 			err := h.ImportWallet(name, passphrase, TestMnemonic1, tc.version)
@@ -179,8 +181,8 @@ func testHandlerImportingWalletWithInvalidMnemonicFails(t *testing.T) {
 			defer h.ctrl.Finish()
 
 			// given
-			name := "jeremy"
-			passphrase := "Th1isisasecurep@ssphraseinnit"
+			name := vgrand.RandomStr(5)
+			passphrase := vgrand.RandomStr(5)
 
 			// when
 			err := h.ImportWallet(name, passphrase, "this is not a valid mnemonic", tc.version)
@@ -210,8 +212,8 @@ func testHandlerImportingAlreadyExistingWalletFails(t *testing.T) {
 			defer h.ctrl.Finish()
 
 			// given
-			name := "jeremy"
-			passphrase := "Th1isisasecurep@ssphraseinnit"
+			name := vgrand.RandomStr(5)
+			passphrase := vgrand.RandomStr(5)
 
 			// when
 			err := h.ImportWallet(name, passphrase, TestMnemonic1, tc.version)
@@ -233,8 +235,8 @@ func testHandlerVerifyingWalletExistenceSucceeds(t *testing.T) {
 	defer h.ctrl.Finish()
 
 	// given
-	name := "jeremy"
-	passphrase := "Th1isisasecurep@ssphraseinnit"
+	name := vgrand.RandomStr(5)
+	passphrase := vgrand.RandomStr(5)
 
 	// when
 	mnemonic, err := h.CreateWallet(name, passphrase)
@@ -255,7 +257,7 @@ func testHandlerVerifyingWalletNonExistenceSucceeds(t *testing.T) {
 	defer h.ctrl.Finish()
 
 	// given
-	name := "jeremy"
+	name := vgrand.RandomStr(5)
 
 	// when
 	exists := h.WalletExists(name)
@@ -269,8 +271,8 @@ func testHandlerRecreatingWalletWithSameNameFails(t *testing.T) {
 	defer h.ctrl.Finish()
 
 	// given
-	name := "jeremy"
-	passphrase := "Th1isisasecurep@ssphraseinnit"
+	name := vgrand.RandomStr(5)
+	passphrase := vgrand.RandomStr(5)
 
 	// when
 	mnemonic, err := h.CreateWallet(name, passphrase)
@@ -292,8 +294,8 @@ func testHandlerRecreatingWalletWithSameNameButDifferentPassphraseFails(t *testi
 	defer h.ctrl.Finish()
 
 	// given
-	name := "jeremy"
-	passphrase := "Th1isisasecurep@ssphraseinnit"
+	name := vgrand.RandomStr(5)
+	passphrase := vgrand.RandomStr(5)
 	othPassphrase := "different-passphrase"
 
 	// when
@@ -316,8 +318,8 @@ func testHandlerLoginToExistingWalletSucceeds(t *testing.T) {
 	defer h.ctrl.Finish()
 
 	// given
-	passphrase := "Th1isisasecurep@ssphraseinnit"
-	name := "jeremy"
+	passphrase := vgrand.RandomStr(5)
+	name := vgrand.RandomStr(5)
 
 	// when
 	mnemonic, err := h.CreateWallet(name, passphrase)
@@ -337,8 +339,8 @@ func testHandlerLoginToNonExistingWalletFails(t *testing.T) {
 	defer h.ctrl.Finish()
 
 	// given
-	passphrase := "Th1isisasecurep@ssphraseinnit"
-	name := "jeremy"
+	passphrase := vgrand.RandomStr(5)
+	name := vgrand.RandomStr(5)
 
 	// when
 	err := h.LoginWallet(name, passphrase)
@@ -352,8 +354,8 @@ func testHandlerLogoutLoggedInWalletSucceeds(t *testing.T) {
 	defer h.ctrl.Finish()
 
 	// given
-	passphrase := "Th1isisasecurep@ssphraseinnit"
-	name := "jeremy"
+	passphrase := vgrand.RandomStr(5)
+	name := vgrand.RandomStr(5)
 
 	// when
 	mnemonic, err := h.CreateWallet(name, passphrase)
@@ -364,7 +366,7 @@ func testHandlerLogoutLoggedInWalletSucceeds(t *testing.T) {
 
 	// when
 	assert.NotPanics(t, func() {
-		h.LogoutWallet("jeremy")
+		h.LogoutWallet(vgrand.RandomStr(5))
 	})
 }
 
@@ -374,7 +376,7 @@ func testHandlerLogoutNotLoggedInWalletSucceeds(t *testing.T) {
 
 	// when
 	assert.NotPanics(t, func() {
-		h.LogoutWallet("jeremy")
+		h.LogoutWallet(vgrand.RandomStr(5))
 	})
 }
 
@@ -383,8 +385,8 @@ func testHandlerGeneratingNewKeyPairSecurelySucceeds(t *testing.T) {
 	defer h.ctrl.Finish()
 
 	// given
-	passphrase := "Th1isisasecurep@ssphraseinnit"
-	name := "jeremy"
+	passphrase := vgrand.RandomStr(5)
+	name := vgrand.RandomStr(5)
 
 	// when
 	mnemonic, err := h.CreateWallet(name, passphrase)
@@ -409,7 +411,7 @@ func testHandlerGeneratingNewKeyPairSecurelySucceeds(t *testing.T) {
 	assert.Equal(t, key, keys[0].Key())
 	assert.False(t, keys[0].IsTainted())
 	assert.Len(t, keys[0].Meta(), 1)
-	assert.Contains(t, keys[0].Meta(), wallet.Meta{Key: "name", Value: "jeremy key 1"})
+	assert.Contains(t, keys[0].Meta(), wallet.Meta{Key: "name", Value: fmt.Sprintf("%s key 1", name)})
 }
 
 func testHandlerGeneratingNewKeyPairSecurelyWithInvalidNameFails(t *testing.T) {
@@ -417,9 +419,9 @@ func testHandlerGeneratingNewKeyPairSecurelyWithInvalidNameFails(t *testing.T) {
 	defer h.ctrl.Finish()
 
 	// given
-	passphrase := "Th1isisasecurep@ssphraseinnit"
-	name := "jeremy"
-	otherName := "bad name"
+	passphrase := vgrand.RandomStr(5)
+	name := vgrand.RandomStr(5)
+	otherName := vgrand.RandomStr(5)
 
 	// when
 	mnemonic, err := h.CreateWallet(name, passphrase)
@@ -432,7 +434,7 @@ func testHandlerGeneratingNewKeyPairSecurelyWithInvalidNameFails(t *testing.T) {
 	key, err := h.SecureGenerateKeyPair(otherName, passphrase, []wallet.Meta{})
 
 	// then
-	assert.EqualError(t, err, "couldn't get wallet bad name: wallet does not exist")
+	assert.EqualError(t, err, fmt.Sprintf("couldn't get wallet %s: wallet does not exist", otherName))
 	assert.Empty(t, key)
 }
 
@@ -441,14 +443,14 @@ func testHandlerGeneratingNewKeyPairSecurelyWithoutWalletFails(t *testing.T) {
 	defer h.ctrl.Finish()
 
 	// given
-	name := "jeremy"
-	passphrase := "Th1isisasecurep@ssphraseinnit"
+	name := vgrand.RandomStr(5)
+	passphrase := vgrand.RandomStr(5)
 
 	// when
 	key, err := h.SecureGenerateKeyPair(name, passphrase, []wallet.Meta{})
 
 	// then
-	assert.EqualError(t, err, "couldn't get wallet jeremy: wallet does not exist")
+	assert.EqualError(t, err, fmt.Sprintf("couldn't get wallet %s: wallet does not exist", name))
 	assert.Empty(t, key)
 }
 
@@ -457,8 +459,8 @@ func testHandlerGeneratingNewKeyPairSucceeds(t *testing.T) {
 	defer h.ctrl.Finish()
 
 	// given
-	passphrase := "Th1isisasecurep@ssphraseinnit"
-	name := "jeremy"
+	passphrase := vgrand.RandomStr(5)
+	name := vgrand.RandomStr(5)
 
 	// when
 	mnemonic, err := h.CreateWallet(name, passphrase)
@@ -476,7 +478,7 @@ func testHandlerGeneratingNewKeyPairSucceeds(t *testing.T) {
 	assert.NotEmpty(t, keyPair.PrivateKey())
 	assert.False(t, keyPair.IsTainted())
 	assert.Len(t, keyPair.Meta(), 1)
-	assert.Contains(t, keyPair.Meta(), wallet.Meta{Key: "name", Value: "jeremy key 1"})
+	assert.Contains(t, keyPair.Meta(), wallet.Meta{Key: "name", Value: fmt.Sprintf("%s key 1", name)})
 
 	// when
 	keys, err := h.ListPublicKeys(name)
@@ -493,8 +495,8 @@ func testHandlerGeneratingNewKeyPairWithCustomNameSucceeds(t *testing.T) {
 	defer h.ctrl.Finish()
 
 	// given
-	passphrase := "Th1isisasecurep@ssphraseinnit"
-	name := "jeremy"
+	passphrase := vgrand.RandomStr(5)
+	name := vgrand.RandomStr(5)
 	meta := []wallet.Meta{
 		{
 			Key:   "name",
@@ -529,7 +531,7 @@ func testHandlerGeneratingNewKeyPairWithCustomNameSucceeds(t *testing.T) {
 	assert.NotEmpty(t, keyPair2.PrivateKey())
 	assert.False(t, keyPair2.IsTainted())
 	assert.Len(t, keyPair2.Meta(), 1)
-	assert.Contains(t, keyPair2.Meta(), wallet.Meta{Key: "name", Value: "jeremy key 2"})
+	assert.Contains(t, keyPair2.Meta(), wallet.Meta{Key: "name", Value: fmt.Sprintf("%s key 2", name)})
 
 	// when
 	keys, err := h.ListPublicKeys(name)
@@ -548,9 +550,9 @@ func testHandlerGeneratingNewKeyPairWithInvalidNameFails(t *testing.T) {
 	defer h.ctrl.Finish()
 
 	// given
-	passphrase := "Th1isisasecurep@ssphraseinnit"
-	name := "jeremy"
-	otherName := "bad name"
+	passphrase := vgrand.RandomStr(5)
+	name := vgrand.RandomStr(5)
+	otherName := vgrand.RandomStr(5)
 
 	// when
 	mnemonic, err := h.CreateWallet(name, passphrase)
@@ -563,7 +565,7 @@ func testHandlerGeneratingNewKeyPairWithInvalidNameFails(t *testing.T) {
 	keyPair, err := h.GenerateKeyPair(otherName, passphrase, nil)
 
 	// then
-	assert.EqualError(t, err, "couldn't get wallet bad name: wallet does not exist")
+	assert.EqualError(t, err, fmt.Sprintf("couldn't get wallet %s: wallet does not exist", otherName))
 	assert.Empty(t, keyPair)
 }
 
@@ -572,14 +574,14 @@ func testHandlerGeneratingNewKeyPairWithoutWalletFails(t *testing.T) {
 	defer h.ctrl.Finish()
 
 	// given
-	name := "jeremy"
-	passphrase := "Th1isisasecurep@ssphraseinnit"
+	name := vgrand.RandomStr(5)
+	passphrase := vgrand.RandomStr(5)
 
 	// when
 	keyPair, err := h.GenerateKeyPair(name, passphrase, nil)
 
 	// then
-	assert.EqualError(t, err, "couldn't get wallet jeremy: wallet does not exist")
+	assert.EqualError(t, err, fmt.Sprintf("couldn't get wallet %s: wallet does not exist", name))
 	assert.Empty(t, keyPair)
 }
 
@@ -588,8 +590,8 @@ func testHandlerListingPublicKeysSucceeds(t *testing.T) {
 	defer h.ctrl.Finish()
 
 	// given
-	passphrase := "Th1isisasecurep@ssphraseinnit"
-	name := "jeremy"
+	passphrase := vgrand.RandomStr(5)
+	name := vgrand.RandomStr(5)
 
 	// when
 	mnemonic, err := h.CreateWallet(name, passphrase)
@@ -624,8 +626,8 @@ func testHandlerListingPublicKeysWithLoggedOutWalletFails(t *testing.T) {
 	defer h.ctrl.Finish()
 
 	// given
-	passphrase := "Th1isisasecurep@ssphraseinnit"
-	name := "jeremy"
+	passphrase := vgrand.RandomStr(5)
+	name := vgrand.RandomStr(5)
 
 	// when
 	mnemonic, err := h.CreateWallet(name, passphrase)
@@ -659,9 +661,9 @@ func testHandlerListingPublicKeysWithInvalidNameFails(t *testing.T) {
 	defer h.ctrl.Finish()
 
 	// given
-	passphrase := "Th1isisasecurep@ssphraseinnit"
-	name := "jeremy"
-	otherName := "bad name"
+	passphrase := vgrand.RandomStr(5)
+	name := vgrand.RandomStr(5)
+	otherName := vgrand.RandomStr(5)
 
 	// when
 	mnemonic, err := h.CreateWallet(name, passphrase)
@@ -683,7 +685,7 @@ func testHandlerListingPublicKeysWithoutWalletFails(t *testing.T) {
 	defer h.ctrl.Finish()
 
 	// given
-	name := "jeremy"
+	name := vgrand.RandomStr(5)
 
 	// when
 	key, err := h.ListPublicKeys(name)
@@ -698,8 +700,8 @@ func testHandlerListingKeyPairsSucceeds(t *testing.T) {
 	defer h.ctrl.Finish()
 
 	// given
-	passphrase := "Th1isisasecurep@ssphraseinnit"
-	name := "jeremy"
+	passphrase := vgrand.RandomStr(5)
+	name := vgrand.RandomStr(5)
 
 	// when
 	mnemonic, err := h.CreateWallet(name, passphrase)
@@ -735,8 +737,8 @@ func testHandlerListingKeyPairsWithLoggedOutWalletFails(t *testing.T) {
 	defer h.ctrl.Finish()
 
 	// given
-	passphrase := "Th1isisasecurep@ssphraseinnit"
-	name := "jeremy"
+	passphrase := vgrand.RandomStr(5)
+	name := vgrand.RandomStr(5)
 
 	// when
 	mnemonic, err := h.CreateWallet(name, passphrase)
@@ -770,9 +772,9 @@ func testHandlerListingKeyPairsWithInvalidNameFails(t *testing.T) {
 	defer h.ctrl.Finish()
 
 	// given
-	passphrase := "Th1isisasecurep@ssphraseinnit"
-	name := "jeremy"
-	otherName := "bad name"
+	passphrase := vgrand.RandomStr(5)
+	name := vgrand.RandomStr(5)
+	otherName := vgrand.RandomStr(5)
 
 	// when
 	mnemonic, err := h.CreateWallet(name, passphrase)
@@ -794,7 +796,7 @@ func testHandlerListingKeyPairsWithoutWalletFails(t *testing.T) {
 	defer h.ctrl.Finish()
 
 	// given
-	name := "jeremy"
+	name := vgrand.RandomStr(5)
 
 	// when
 	key, err := h.ListKeyPairs(name)
@@ -809,7 +811,7 @@ func testHandlerGettingPublicKeyWithoutWalletFails(t *testing.T) {
 	defer h.ctrl.Finish()
 
 	// given
-	name := "jeremy"
+	name := vgrand.RandomStr(5)
 
 	// when
 	key, err := h.GetPublicKey(name, name)
@@ -824,8 +826,8 @@ func testHandlerGettingPublicKeySucceeds(t *testing.T) {
 	defer h.ctrl.Finish()
 
 	// given
-	passphrase := "Th1isisasecurep@ssphraseinnit"
-	name := "jeremy"
+	passphrase := vgrand.RandomStr(5)
+	name := vgrand.RandomStr(5)
 
 	// when
 	mnemonic, err := h.CreateWallet(name, passphrase)
@@ -853,8 +855,8 @@ func testHandlerGettingPublicKeyWithLoggedOutWalletFails(t *testing.T) {
 	defer h.ctrl.Finish()
 
 	// given
-	passphrase := "Th1isisasecurep@ssphraseinnit"
-	name := "jeremy"
+	passphrase := vgrand.RandomStr(5)
+	name := vgrand.RandomStr(5)
 
 	// when
 	mnemonic, err := h.CreateWallet(name, passphrase)
@@ -887,10 +889,9 @@ func testHandlerGettingPublicKeyWithInvalidNameFails(t *testing.T) {
 	defer h.ctrl.Finish()
 
 	// given
-	passphrase := "Th1isisasecurep@ssphraseinnit"
-	name := "jeremy"
-
-	otherName := "bad name"
+	passphrase := vgrand.RandomStr(5)
+	name := vgrand.RandomStr(5)
+	otherName := vgrand.RandomStr(5)
 
 	// when
 	mnemonic, err := h.CreateWallet(name, passphrase)
@@ -919,8 +920,8 @@ func testGettingNonExistingPublicKeyFails(t *testing.T) {
 	defer h.ctrl.Finish()
 
 	// given
-	passphrase := "Th1isisasecurep@ssphraseinnit"
-	name := "jeremy"
+	passphrase := vgrand.RandomStr(5)
+	name := vgrand.RandomStr(5)
 
 	// when
 	mnemonic, err := h.CreateWallet(name, passphrase)
@@ -947,8 +948,8 @@ func testHandlerTaintingKeyPairSucceeds(t *testing.T) {
 	defer h.ctrl.Finish()
 
 	// given
-	passphrase := "Th1isisasecurep@ssphraseinnit"
-	name := "jeremy"
+	passphrase := vgrand.RandomStr(5)
+	name := vgrand.RandomStr(5)
 
 	// when
 	mnemonic, err := h.CreateWallet(name, passphrase)
@@ -985,8 +986,8 @@ func testHandlerTaintingKeyPairWithInvalidNameFails(t *testing.T) {
 	defer h.ctrl.Finish()
 
 	// given
-	passphrase := "Th1isisasecurep@ssphraseinnit"
-	name := "jeremy"
+	passphrase := vgrand.RandomStr(5)
+	name := vgrand.RandomStr(5)
 
 	otherName := "other name"
 
@@ -1024,14 +1025,14 @@ func testHandlerTaintingKeyPairWithoutWalletFails(t *testing.T) {
 	defer h.ctrl.Finish()
 
 	// given
-	passphrase := "Th1isisasecurep@ssphraseinnit"
-	name := "jeremy"
+	passphrase := vgrand.RandomStr(5)
+	name := vgrand.RandomStr(5)
 
 	// when
 	err := h.TaintKey(name, "non-existing-pub-key", passphrase)
 
 	// then
-	assert.EqualError(t, err, "couldn't get wallet jeremy: wallet does not exist")
+	assert.EqualError(t, err, fmt.Sprintf("couldn't get wallet %s: wallet does not exist", name))
 }
 
 func testHandlerTaintingKeyThatIsAlreadyTaintedFails(t *testing.T) {
@@ -1039,8 +1040,8 @@ func testHandlerTaintingKeyThatIsAlreadyTaintedFails(t *testing.T) {
 	defer h.ctrl.Finish()
 
 	// given
-	passphrase := "Th1isisasecurep@ssphraseinnit"
-	name := "jeremy"
+	passphrase := vgrand.RandomStr(5)
+	name := vgrand.RandomStr(5)
 
 	// when
 	mnemonic, err := h.CreateWallet(name, passphrase)
@@ -1083,8 +1084,8 @@ func testHandlerUpdatingKeyPairMetaSucceeds(t *testing.T) {
 	defer h.ctrl.Finish()
 
 	// given
-	passphrase := "Th1isisasecurep@ssphraseinnit"
-	name := "jeremy"
+	passphrase := vgrand.RandomStr(5)
+	name := vgrand.RandomStr(5)
 
 	meta := []wallet.Meta{{Key: "primary", Value: "yes"}}
 
@@ -1118,9 +1119,9 @@ func testHandlerUpdatingKeyPairMetaWithInvalidPassphraseFails(t *testing.T) {
 	defer h.ctrl.Finish()
 
 	// given
-	passphrase := "Th1isisasecurep@ssphraseinnit"
+	passphrase := vgrand.RandomStr(5)
 	othPassphrase := "other-passphrase"
-	name := "jeremy"
+	name := vgrand.RandomStr(5)
 
 	meta := []wallet.Meta{{Key: "primary", Value: "yes"}}
 
@@ -1151,8 +1152,8 @@ func testHandlerUpdatingKeyPairMetaWithInvalidNameFails(t *testing.T) {
 	defer h.ctrl.Finish()
 
 	// given
-	passphrase := "Th1isisasecurep@ssphraseinnit"
-	name := "jeremy"
+	passphrase := vgrand.RandomStr(5)
+	name := vgrand.RandomStr(5)
 	otherName := "other name"
 	meta := []wallet.Meta{{Key: "primary", Value: "yes"}}
 
@@ -1183,8 +1184,8 @@ func testHandlerUpdatingKeyPairMetaWithoutWalletFails(t *testing.T) {
 	defer h.ctrl.Finish()
 
 	// given
-	passphrase := "Th1isisasecurep@ssphraseinnit"
-	name := "jeremy"
+	passphrase := vgrand.RandomStr(5)
+	name := vgrand.RandomStr(5)
 	pubKey := "non-existing-public-key"
 	meta := []wallet.Meta{{Key: "primary", Value: "yes"}}
 
@@ -1200,8 +1201,8 @@ func testHandlerUpdatingKeyPairMetaWithNonExistingPublicKeyFails(t *testing.T) {
 	defer h.ctrl.Finish()
 
 	// given
-	passphrase := "Th1isisasecurep@ssphraseinnit"
-	name := "jeremy"
+	passphrase := vgrand.RandomStr(5)
+	name := vgrand.RandomStr(5)
 	pubKey := "non-existing-public-key"
 	meta := []wallet.Meta{{Key: "primary", Value: "yes"}}
 
@@ -1231,7 +1232,7 @@ func testHandlerGettingWalletPathSucceeds(t *testing.T) {
 	defer h.ctrl.Finish()
 
 	// given
-	name := "jeremy"
+	name := vgrand.RandomStr(5)
 
 	// when
 	path, err := h.GetWalletPath(name)
@@ -1246,8 +1247,8 @@ func testHandlerSigningTxSucceeds(t *testing.T) {
 	defer h.ctrl.Finish()
 
 	// given
-	passphrase := "Th1isisasecurep@ssphraseinnit"
-	name := "jeremy"
+	passphrase := vgrand.RandomStr(5)
+	name := vgrand.RandomStr(5)
 
 	// when
 	mnemonic, err := h.CreateWallet(name, passphrase)
@@ -1292,8 +1293,8 @@ func testHandlerSigningTxWithLoggedOutWalletFails(t *testing.T) {
 	defer h.ctrl.Finish()
 
 	// given
-	passphrase := "Th1isisasecurep@ssphraseinnit"
-	name := "jeremy"
+	passphrase := vgrand.RandomStr(5)
+	name := vgrand.RandomStr(5)
 
 	// when
 	mnemonic, err := h.CreateWallet(name, passphrase)
@@ -1335,8 +1336,8 @@ func testHandlerSigningTxWithTaintedKeyFails(t *testing.T) {
 	defer h.ctrl.Finish()
 
 	// given
-	passphrase := "Th1isisasecurep@ssphraseinnit"
-	name := "jeremy"
+	passphrase := vgrand.RandomStr(5)
+	name := vgrand.RandomStr(5)
 
 	// when
 	mnemonic, err := h.CreateWallet(name, passphrase)
@@ -1380,8 +1381,8 @@ func testHandlerSigningAndVerifyingMessageSucceeds(t *testing.T) {
 	defer h.ctrl.Finish()
 
 	// given
-	passphrase := "Th1isisasecurep@ssphraseinnit"
-	name := "jeremy"
+	passphrase := vgrand.RandomStr(5)
+	name := vgrand.RandomStr(5)
 
 	// when
 	mnemonic, err := h.CreateWallet(name, passphrase)
@@ -1420,8 +1421,8 @@ func testHandlerSigningMessageWithLoggedOutWalletFails(t *testing.T) {
 	defer h.ctrl.Finish()
 
 	// given
-	passphrase := "Th1isisasecurep@ssphraseinnit"
-	name := "jeremy"
+	passphrase := vgrand.RandomStr(5)
+	name := vgrand.RandomStr(5)
 
 	// when
 	mnemonic, err := h.CreateWallet(name, passphrase)
@@ -1458,8 +1459,8 @@ func testHandlerVerifyingMessageWithLoggedOutWalletSucceeds(t *testing.T) {
 	defer h.ctrl.Finish()
 
 	// given
-	passphrase := "Th1isisasecurep@ssphraseinnit"
-	name := "jeremy"
+	passphrase := vgrand.RandomStr(5)
+	name := vgrand.RandomStr(5)
 
 	// when
 	mnemonic, err := h.CreateWallet(name, passphrase)

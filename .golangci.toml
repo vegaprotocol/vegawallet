@@ -5,17 +5,12 @@ print-linter-name = true
 [linters]
 enable-all = true
 disable = [
-    # To be fixed
-    "bodyclose",
+    # To be investigate
     "cyclop",
     "dupl",
     "exhaustivestruct",
     "funlen",
-    "gochecknoglobals",
-    "gochecknoinits",
     "gocognit",
-    "goconst",
-    "gocritic",
     "nestif",
     "paralleltest",
     "revive",
@@ -34,6 +29,9 @@ disable = [
     "lll",
     # nlreturn doesn't match our code style.
     "nlreturn",
+    # Sometimes we can't just have a const variable, and we need to make it a
+    # variable instead.
+    "gochecknoglobals",
 ]
 
 [issues.exclude-rules]

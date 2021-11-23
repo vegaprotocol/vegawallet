@@ -33,14 +33,8 @@ func testHDKeyRingNewKeyRingSucceeds(t *testing.T) {
 
 func testHDKeyRingLoadingKeyRingSucceeds(t *testing.T) {
 	// given
-	kp1 := bundleHDKeyPair(1,
-		"e20fcd0aa4cc2ea7c18d55dc083d14006377295418f657ba52593eae14e3a98a",
-		"c55ae95741a0431186bb062501ad9c5a31505fc14d9fd91f08108b11fbec33d9e20fcd0aa4cc2ea7c18d55dc083d14006377295418f657ba52593eae14e3a98a",
-	)
-	kp2 := bundleHDKeyPair(2,
-		"a20fcd0aa4cc2ea7c18d55dc083d14006377295418f657ba52593eae14e3a98a",
-		"a55ae95741a0431186bb062501ad9c5a31505fc14d9fd91f08108b11fbec33d9e20fcd0aa4cc2ea7c18d55dc083d14006377295418f657ba52593eae14e3a98a",
-	)
+	kp1 := bundleHDKeyPair(t, 1, "e20fcd0aa4cc2ea7c18d55dc083d14006377295418f657ba52593eae14e3a98a", "c55ae95741a0431186bb062501ad9c5a31505fc14d9fd91f08108b11fbec33d9e20fcd0aa4cc2ea7c18d55dc083d14006377295418f657ba52593eae14e3a98a")
+	kp2 := bundleHDKeyPair(t, 2, "a20fcd0aa4cc2ea7c18d55dc083d14006377295418f657ba52593eae14e3a98a", "a55ae95741a0431186bb062501ad9c5a31505fc14d9fd91f08108b11fbec33d9e20fcd0aa4cc2ea7c18d55dc083d14006377295418f657ba52593eae14e3a98a")
 
 	// when
 	ring := wallet.LoadHDKeyRing([]wallet.HDKeyPair{*kp1, *kp2})
@@ -54,7 +48,7 @@ func testHDKeyRingLoadingKeyRingSucceeds(t *testing.T) {
 
 func testHDKeyRingAddingNewKeySucceeds(t *testing.T) {
 	// given
-	kp := generateHDKeyPair()
+	kp := generateHDKeyPair(t)
 	ring := wallet.NewHDKeyRing()
 
 	// when
@@ -68,7 +62,7 @@ func testHDKeyRingAddingNewKeySucceeds(t *testing.T) {
 
 func testHDKeyRingUpdatingExistingKeySucceeds(t *testing.T) {
 	// given
-	kp := generateHDKeyPair()
+	kp := generateHDKeyPair(t)
 	ring := wallet.NewHDKeyRing()
 
 	// when
@@ -94,14 +88,8 @@ func testHDKeyRingUpdatingExistingKeySucceeds(t *testing.T) {
 
 func testHDKeyRingGettingPublicKeysSucceeds(t *testing.T) {
 	// given
-	kp1 := bundleHDKeyPair(1,
-		"e20fcd0aa4cc2ea7c18d55dc083d14006377295418f657ba52593eae14e3a98a",
-		"c55ae95741a0431186bb062501ad9c5a31505fc14d9fd91f08108b11fbec33d9e20fcd0aa4cc2ea7c18d55dc083d14006377295418f657ba52593eae14e3a98a",
-	)
-	kp2 := bundleHDKeyPair(2,
-		"a20fcd0aa4cc2ea7c18d55dc083d14006377295418f657ba52593eae14e3a98a",
-		"a55ae95741a0431186bb062501ad9c5a31505fc14d9fd91f08108b11fbec33d9e20fcd0aa4cc2ea7c18d55dc083d14006377295418f657ba52593eae14e3a98a",
-	)
+	kp1 := bundleHDKeyPair(t, 1, "e20fcd0aa4cc2ea7c18d55dc083d14006377295418f657ba52593eae14e3a98a", "c55ae95741a0431186bb062501ad9c5a31505fc14d9fd91f08108b11fbec33d9e20fcd0aa4cc2ea7c18d55dc083d14006377295418f657ba52593eae14e3a98a")
+	kp2 := bundleHDKeyPair(t, 2, "a20fcd0aa4cc2ea7c18d55dc083d14006377295418f657ba52593eae14e3a98a", "a55ae95741a0431186bb062501ad9c5a31505fc14d9fd91f08108b11fbec33d9e20fcd0aa4cc2ea7c18d55dc083d14006377295418f657ba52593eae14e3a98a")
 	ring := wallet.NewHDKeyRing()
 
 	// setup
@@ -121,14 +109,8 @@ func testHDKeyRingGettingPublicKeysSucceeds(t *testing.T) {
 
 func testHDKeyRingGettingKeyPairsSucceeds(t *testing.T) {
 	// given
-	kp1 := bundleHDKeyPair(1,
-		"e20fcd0aa4cc2ea7c18d55dc083d14006377295418f657ba52593eae14e3a98a",
-		"c55ae95741a0431186bb062501ad9c5a31505fc14d9fd91f08108b11fbec33d9e20fcd0aa4cc2ea7c18d55dc083d14006377295418f657ba52593eae14e3a98a",
-	)
-	kp2 := bundleHDKeyPair(2,
-		"a20fcd0aa4cc2ea7c18d55dc083d14006377295418f657ba52593eae14e3a98a",
-		"a55ae95741a0431186bb062501ad9c5a31505fc14d9fd91f08108b11fbec33d9e20fcd0aa4cc2ea7c18d55dc083d14006377295418f657ba52593eae14e3a98a",
-	)
+	kp1 := bundleHDKeyPair(t, 1, "e20fcd0aa4cc2ea7c18d55dc083d14006377295418f657ba52593eae14e3a98a", "c55ae95741a0431186bb062501ad9c5a31505fc14d9fd91f08108b11fbec33d9e20fcd0aa4cc2ea7c18d55dc083d14006377295418f657ba52593eae14e3a98a")
+	kp2 := bundleHDKeyPair(t, 2, "a20fcd0aa4cc2ea7c18d55dc083d14006377295418f657ba52593eae14e3a98a", "a55ae95741a0431186bb062501ad9c5a31505fc14d9fd91f08108b11fbec33d9e20fcd0aa4cc2ea7c18d55dc083d14006377295418f657ba52593eae14e3a98a")
 	ring := wallet.NewHDKeyRing()
 
 	// setup
@@ -145,8 +127,8 @@ func testHDKeyRingGettingKeyPairsSucceeds(t *testing.T) {
 
 func testHDKeyRingFindingExistingKeyPairSucceeds(t *testing.T) {
 	// given
-	kp1 := generateHDKeyPair()
-	kp2 := generateHDKeyPair()
+	kp1 := generateHDKeyPair(t)
+	kp2 := generateHDKeyPair(t)
 	ring := wallet.NewHDKeyRing()
 
 	// setup
@@ -163,8 +145,8 @@ func testHDKeyRingFindingExistingKeyPairSucceeds(t *testing.T) {
 
 func testHDKeyRingFindingNonExistingKeyPairFails(t *testing.T) {
 	// given
-	kp1 := generateHDKeyPair()
-	kp2 := generateHDKeyPair()
+	kp1 := generateHDKeyPair(t)
+	kp2 := generateHDKeyPair(t)
 	ring := wallet.NewHDKeyRing()
 
 	// setup
@@ -181,14 +163,8 @@ func testHDKeyRingFindingNonExistingKeyPairFails(t *testing.T) {
 
 func testIncrementingNextIndexSucceeds(t *testing.T) {
 	// given
-	kp1 := bundleHDKeyPair(1,
-		"e20fcd0aa4cc2ea7c18d55dc083d14006377295418f657ba52593eae14e3a98a",
-		"c55ae95741a0431186bb062501ad9c5a31505fc14d9fd91f08108b11fbec33d9e20fcd0aa4cc2ea7c18d55dc083d14006377295418f657ba52593eae14e3a98a",
-	)
-	kp2 := bundleHDKeyPair(2,
-		"a20fcd0aa4cc2ea7c18d55dc083d14006377295418f657ba52593eae14e3a98a",
-		"a55ae95741a0431186bb062501ad9c5a31505fc14d9fd91f08108b11fbec33d9e20fcd0aa4cc2ea7c18d55dc083d14006377295418f657ba52593eae14e3a98a",
-	)
+	kp1 := bundleHDKeyPair(t, 1, "e20fcd0aa4cc2ea7c18d55dc083d14006377295418f657ba52593eae14e3a98a", "c55ae95741a0431186bb062501ad9c5a31505fc14d9fd91f08108b11fbec33d9e20fcd0aa4cc2ea7c18d55dc083d14006377295418f657ba52593eae14e3a98a")
+	kp2 := bundleHDKeyPair(t, 2, "a20fcd0aa4cc2ea7c18d55dc083d14006377295418f657ba52593eae14e3a98a", "a55ae95741a0431186bb062501ad9c5a31505fc14d9fd91f08108b11fbec33d9e20fcd0aa4cc2ea7c18d55dc083d14006377295418f657ba52593eae14e3a98a")
 	ring := wallet.NewHDKeyRing()
 
 	// setup
@@ -202,19 +178,20 @@ func testIncrementingNextIndexSucceeds(t *testing.T) {
 	assert.Equal(t, uint32(3), nextIndex)
 }
 
-func bundleHDKeyPair(index uint32, publicKey, privateKey string) *wallet.HDKeyPair {
+func bundleHDKeyPair(t *testing.T, index uint32, publicKey, privateKey string) *wallet.HDKeyPair {
+	t.Helper()
 	rawPublicKey, err := hex.DecodeString(publicKey)
 	if err != nil {
-		panic(err)
+		t.Fatalf("couldn't decode public key: %v", err)
 	}
 	rawPrivateKey, err := hex.DecodeString(privateKey)
 	if err != nil {
-		panic(err)
+		t.Fatalf("couldn't decode private key: %v", err)
 	}
 
 	kp, err := wallet.NewHDKeyPair(index, rawPublicKey, rawPrivateKey)
 	if err != nil {
-		panic(err)
+		t.Fatalf("couldn't create HD key pair: %v", err)
 	}
 
 	return kp
