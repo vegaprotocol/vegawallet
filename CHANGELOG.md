@@ -18,6 +18,7 @@
 
 ### 🐛 Fixes
 - [395](https://github.com/vegaprotocol/vegawallet/pull/395) - Fix `command send` examples
+- [401](https://github.com/vegaprotocol/vegawallet/pull/400) - Update key rotation submission command
 
 ## 0.10.0
 *2021-11-15*
