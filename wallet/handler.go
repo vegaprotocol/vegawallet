@@ -301,10 +301,9 @@ func RotateKey(store Store, req *RotateKeyRequest) (*RotateKeyResponse, error) {
 	inputData := commands.NewInputData(req.TxBlockHeight)
 	inputData.Command = &commandspb.InputData_KeyRotateSubmission{
 		KeyRotateSubmission: &commandspb.KeyRotateSubmission{
-			KeyNumber:     pubKey.Index(),
-			TargetBlock:   req.TargetBlockHeight,
-			Time:          0, // @TODO fill this
-			NewPubKeyHash: pubKey.Hash(),
+			KeyNumber:   pubKey.Index(),
+			TargetBlock: req.TargetBlockHeight,
+			NewPubKey:   pubKey.Key(),
 		},
 	}
 
