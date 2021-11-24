@@ -2,13 +2,11 @@ package wallet_test
 
 import (
 	"encoding/base64"
-	"encoding/hex"
 	"fmt"
 	"sort"
 	"testing"
 
 	commandspb "code.vegaprotocol.io/protos/vega/commands/v1"
-	vgcrypto "code.vegaprotocol.io/shared/libs/crypto"
 	vgrand "code.vegaprotocol.io/shared/libs/rand"
 	"code.vegaprotocol.io/vegawallet/wallet"
 	"code.vegaprotocol.io/vegawallet/wallet/mocks"
@@ -572,8 +570,6 @@ func testRotateKeySucceeds(t *testing.T) {
 		TargetBlockHeight: 25,
 	}
 
-	expectedNewPubHash := hex.EncodeToString(vgcrypto.Hash([]byte(req.PublicKey)))
-
 	// setup
 	store := handlerMocks(t)
 	store.EXPECT().WalletExists(req.Wallet).Times(1).Return(true)
@@ -605,7 +601,7 @@ func testRotateKeySucceeds(t *testing.T) {
 	require.Equal(t, req.TxBlockHeight, inputData.BlockHeight)
 	require.Equal(t, kp.Index(), keyRotate.KeyRotateSubmission.KeyNumber)
 	require.Equal(t, req.TargetBlockHeight, keyRotate.KeyRotateSubmission.TargetBlock)
-	require.Equal(t, expectedNewPubHash, keyRotate.KeyRotateSubmission.NewPubKeyHash)
+	require.Equal(t, req.PublicKey, keyRotate.KeyRotateSubmission.NewPubKey)
 }
 
 func testRotateWithNonExistingWalletFails(t *testing.T) {
