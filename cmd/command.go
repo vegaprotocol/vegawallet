@@ -13,7 +13,6 @@ func NewCmdCommand(w io.Writer, rf *RootFlags) *cobra.Command {
 		Long:  "Provides utilities for interacting with commands",
 	}
 
-	// create subcommands
 	cmd.AddCommand(NewCmdCommandSend(w, rf))
 	return cmd
 }

@@ -16,7 +16,6 @@ func NewCmdKey(w io.Writer, rf *RootFlags) *cobra.Command {
 		Long:  "Manage Vega wallets' keys",
 	}
 
-	// create subcommands
 	cmd.AddCommand(NewCmdAnnotateKey(w, rf))
 	cmd.AddCommand(NewCmdGenerateKey(w, rf))
 	cmd.AddCommand(NewCmdIsolateKey(w, rf))

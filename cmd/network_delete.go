@@ -85,6 +85,8 @@ func BuildCmdDeleteNetwork(w io.Writer, handler DeleteNetworkHandler, rf *RootFl
 		"Network to delete",
 	)
 
+	autoCompleteNetwork(cmd, rf.Home)
+
 	return cmd
 }
 

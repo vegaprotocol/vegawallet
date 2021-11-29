@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strconv"
 	"strings"
 
 	vgfs "code.vegaprotocol.io/shared/libs/fs"
@@ -94,6 +95,15 @@ func BuildCmdImportWallet(w io.Writer, handler ImportWalletHandler, rf *RootFlag
 		wallet.LatestVersion,
 		fmt.Sprintf("Version of the wallet to import: %v", wallet.SupportedVersions),
 	)
+
+	autoCompleteWallet(cmd, rf.Home)
+	_ = cmd.RegisterFlagCompletionFunc("version", func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
+		vs := make([]string, 0, len(wallet.SupportedVersions))
+		for i, v := range wallet.SupportedVersions {
+			vs[i] = strconv.FormatUint(uint64(v), 10) //nolint:gomnd
+		}
+		return SupportedLogLevels, cobra.ShellCompDirectiveDefault
+	})
 
 	return cmd
 }

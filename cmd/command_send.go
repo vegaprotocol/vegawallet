@@ -125,6 +125,10 @@ func BuildCmdCommandSend(w io.Writer, handler SendCommandHandler, rf *RootFlags)
 		"Number of retries when contacting the Vega node",
 	)
 
+	autoCompleteNetwork(cmd, rf.Home)
+	autoCompleteWallet(cmd, rf.Home)
+	autoCompleteLogLevel(cmd)
+
 	return cmd
 }
 

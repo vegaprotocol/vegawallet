@@ -14,6 +14,7 @@
 - [396](https://github.com/vegaprotocol/vegawallet/pull/396) - Update the "important" section of `key generate`
 - [405](https://github.com/vegaprotocol/vegawallet/pull/405) - Add command `network delete` to delete a network
 - [409](https://github.com/vegaprotocol/vegawallet/pull/409) - Return the tx hash after sending a transaction
+- [406](https://github.com/vegaprotocol/vegawallet/pull/406) - Add auto-completion to command line through `completion` sub-command
 
 ### 🔥 Removal
 - [387](https://github.com/vegaprotocol/vegawallet/pull/387) - Remove network initialisation in favor of `network import`

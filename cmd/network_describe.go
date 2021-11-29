@@ -90,6 +90,8 @@ func BuildCmdDescribeNetwork(w io.Writer, handler DescribeNetworkHandler, rf *Ro
 		"Network to describe",
 	)
 
+	autoCompleteNetwork(cmd, rf.Home)
+
 	return cmd
 }
 

@@ -100,6 +100,9 @@ func BuildCmdTxSend(w io.Writer, handler SendTxHandler, rf *RootFlags) *cobra.Co
 		"Number of retries when contacting the Vega node",
 	)
 
+	autoCompleteNetwork(cmd, rf.Home)
+	autoCompleteLogLevel(cmd)
+
 	return cmd
 }
 

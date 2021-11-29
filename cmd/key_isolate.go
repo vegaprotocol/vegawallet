@@ -95,6 +95,8 @@ func BuildCmdIsolateKey(w io.Writer, handler IsolateKeyHandler, rf *RootFlags) *
 		"Path to the file containing the wallet's passphrase",
 	)
 
+	autoCompleteWallet(cmd, rf.Home)
+
 	return cmd
 }
 
