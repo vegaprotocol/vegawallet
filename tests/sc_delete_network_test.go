@@ -59,5 +59,4 @@ func TestDeleteNetwork(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, listNetsResp2)
 	require.Equal(t, []string{}, listNetsResp2.Networks)
-
 }

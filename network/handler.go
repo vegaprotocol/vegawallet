@@ -184,7 +184,11 @@ func DeleteNetwork(store Store, req *DeleteNetworkRequest) (*DeleteNetworkRespon
 	if !exists {
 		return nil, NewNetworkDoesNotExistError(req.Name)
 	}
-	store.DeleteNetwork(req.Name)
+	err = store.DeleteNetwork(req.Name)
+	if err != nil {
+		return nil, fmt.Errorf("couldn't delete network: %w", err)
+	}
+
 	resp.Name = req.Name
 	return resp, nil
 }
