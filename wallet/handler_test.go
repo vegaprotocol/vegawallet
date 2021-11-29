@@ -2,13 +2,11 @@ package wallet_test
 
 import (
 	"encoding/base64"
-	"encoding/hex"
 	"fmt"
 	"sort"
 	"testing"
 
 	commandspb "code.vegaprotocol.io/protos/vega/commands/v1"
-	vgcrypto "code.vegaprotocol.io/shared/libs/crypto"
 	vgrand "code.vegaprotocol.io/shared/libs/rand"
 	"code.vegaprotocol.io/vegawallet/wallet"
 	"code.vegaprotocol.io/vegawallet/wallet/mocks"
@@ -553,7 +551,7 @@ func TestRotateKey(t *testing.T) {
 	t.Run("Rotate key succeeds", testRotateKeySucceeds)
 	t.Run("Rotate key with non existing wallet fails", testRotateWithNonExistingWalletFails)
 	t.Run("Rotate key with non existing public key fails", testRotateKeyWithNonExistingPublicKeyFails)
-	t.Run("Rotate key tained public key fails", testRotateKeyWithTainedPublicKeyFails)
+	t.Run("Rotate key tained public key fails", testRotateKeyWithTaintedPublicKeyFails)
 }
 
 func testRotateKeySucceeds(t *testing.T) {
@@ -571,8 +569,6 @@ func testRotateKeySucceeds(t *testing.T) {
 		TxBlockHeight:     20,
 		TargetBlockHeight: 25,
 	}
-
-	expectedNewPubHash := hex.EncodeToString(vgcrypto.Hash([]byte(req.PublicKey)))
 
 	// setup
 	store := handlerMocks(t)
@@ -605,7 +601,7 @@ func testRotateKeySucceeds(t *testing.T) {
 	require.Equal(t, req.TxBlockHeight, inputData.BlockHeight)
 	require.Equal(t, kp.Index(), keyRotate.KeyRotateSubmission.KeyNumber)
 	require.Equal(t, req.TargetBlockHeight, keyRotate.KeyRotateSubmission.TargetBlock)
-	require.Equal(t, expectedNewPubHash, keyRotate.KeyRotateSubmission.NewPubKeyHash)
+	require.Equal(t, req.PublicKey, keyRotate.KeyRotateSubmission.NewPubKey)
 }
 
 func testRotateWithNonExistingWalletFails(t *testing.T) {
@@ -656,7 +652,7 @@ func testRotateKeyWithNonExistingPublicKeyFails(t *testing.T) {
 	require.Error(t, err)
 }
 
-func testRotateKeyWithTainedPublicKeyFails(t *testing.T) {
+func testRotateKeyWithTaintedPublicKeyFails(t *testing.T) {
 	// given
 	w := importWalletWithKey(t)
 	kp := w.ListKeyPairs()[0]

@@ -18,8 +18,7 @@ func TestUntaintKeyFlags(t *testing.T) {
 }
 
 func testUntaintKeyFlagsValidFlagsSucceeds(t *testing.T) {
-	testDir, cleanUpFn := NewTempDir(t)
-	defer cleanUpFn(t)
+	testDir := t.TempDir()
 
 	// given
 	passphrase, passphraseFilePath := NewPassphraseFile(t, testDir)
@@ -48,8 +47,7 @@ func testUntaintKeyFlagsValidFlagsSucceeds(t *testing.T) {
 }
 
 func testUntaintKeyFlagsMissingWalletFails(t *testing.T) {
-	testDir, cleanUpFn := NewTempDir(t)
-	defer cleanUpFn(t)
+	testDir := t.TempDir()
 
 	// given
 	f := newUntaintKeyFlags(t, testDir)
@@ -64,8 +62,7 @@ func testUntaintKeyFlagsMissingWalletFails(t *testing.T) {
 }
 
 func testUntaintKeyFlagsMissingPubKeyFails(t *testing.T) {
-	testDir, cleanUpFn := NewTempDir(t)
-	defer cleanUpFn(t)
+	testDir := t.TempDir()
 
 	// given
 	f := newUntaintKeyFlags(t, testDir)

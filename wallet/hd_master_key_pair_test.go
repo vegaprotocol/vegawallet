@@ -17,15 +17,15 @@ func TestHDMasterKeypair(t *testing.T) {
 
 func testHDMasterKeyPairNewKeyPairSucceeds(t *testing.T) {
 	// given
-	publicKey := "e20fcd0aa4cc2ea7c18d55dc083d14006377295418f657ba52593eae14e3a98a"
+	publicKey := testPublicKey
 	rawPublicKey, err := hex.DecodeString(publicKey)
 	if err != nil {
-		panic(err)
+		t.Fatalf("couldn't decode public key: %v", err)
 	}
-	privateKey := "c55ae95741a0431186bb062501ad9c5a31505fc14d9fd91f08108b11fbec33d9e20fcd0aa4cc2ea7c18d55dc083d14006377295418f657ba52593eae14e3a98a"
+	privateKey := testPrivateKey
 	rawPrivateKey, err := hex.DecodeString(privateKey)
 	if err != nil {
-		panic(err)
+		t.Fatalf("couldn't decode private key: %v", err)
 	}
 
 	// when
@@ -42,7 +42,7 @@ func testHDMasterKeyPairNewKeyPairSucceeds(t *testing.T) {
 
 func testHDMasterKeyPairSigningTransactionSucceeds(t *testing.T) {
 	// given
-	kp := getHDMasterKeyPair(t)
+	kp := hdMasterKeyPair(t)
 	data := []byte("Paul Atreides")
 
 	// when
@@ -57,7 +57,7 @@ func testHDMasterKeyPairSigningTransactionSucceeds(t *testing.T) {
 
 func testHDMasterKeyPairSigningAnyMessageSucceeds(t *testing.T) {
 	// given
-	kp := getHDMasterKeyPair(t)
+	kp := hdMasterKeyPair(t)
 	data := []byte("Paul Atreides")
 
 	// when
@@ -68,19 +68,24 @@ func testHDMasterKeyPairSigningAnyMessageSucceeds(t *testing.T) {
 	assert.Equal(t, []byte{0x2f, 0xfd, 0x9c, 0x1a, 0x5c, 0x28, 0x0, 0x7e, 0xb5, 0xfe, 0x2f, 0xbf, 0x7b, 0xe4, 0x46, 0xcf, 0x0, 0xd6, 0xed, 0xee, 0x21, 0x31, 0xa6, 0x58, 0xf4, 0xa0, 0x42, 0x4b, 0x7f, 0xc4, 0xcd, 0x8e, 0xf6, 0xa3, 0x23, 0x7a, 0xa, 0x9d, 0x3, 0x55, 0xe8, 0xe, 0xab, 0xb2, 0xdd, 0x27, 0x16, 0x63, 0x8a, 0x5c, 0x54, 0x5a, 0x3b, 0x9a, 0x2c, 0xa4, 0xa6, 0xc5, 0xd2, 0x68, 0x98, 0x7, 0x5, 0x1}, sig)
 }
 
-func getHDMasterKeyPair(t *testing.T) *wallet.HDMasterKeyPair {
+func hdMasterKeyPair(t *testing.T) *wallet.HDMasterKeyPair {
 	t.Helper()
 
-	publicKey := "e20fcd0aa4cc2ea7c18d55dc083d14006377295418f657ba52593eae14e3a98a"
+	publicKey := testPublicKey
 	rawPublicKey, err := hex.DecodeString(publicKey)
-	assert.NoError(t, err)
-
-	privateKey := "c55ae95741a0431186bb062501ad9c5a31505fc14d9fd91f08108b11fbec33d9e20fcd0aa4cc2ea7c18d55dc083d14006377295418f657ba52593eae14e3a98a"
+	if err != nil {
+		t.Fatalf("couldn't decode public key: %v", err)
+	}
+	privateKey := testPrivateKey
 	rawPrivateKey, err := hex.DecodeString(privateKey)
-	assert.NoError(t, err)
+	if err != nil {
+		t.Fatalf("couldn't decode private key: %v", err)
+	}
 
 	kp, err := wallet.NewHDMasterKeyPair(rawPublicKey, rawPrivateKey)
-	assert.NoError(t, err)
+	if err != nil {
+		t.Fatalf("couldn't create HD master key pair: %v", err)
+	}
 
 	return kp
 }

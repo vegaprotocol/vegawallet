@@ -77,7 +77,7 @@ func testVerifyMessageFlagsMissingMessageFails(t *testing.T) {
 func testVerifyMessageFlagsMalformedMessageFails(t *testing.T) {
 	// given
 	f := newVerifyMessageFlags(t)
-	f.Message = "not-base-64"
+	f.Message = vgrand.RandomStr(5)
 
 	// when
 	req, err := f.Validate()
@@ -103,7 +103,7 @@ func testVerifyMessageFlagsMissingSignatureFails(t *testing.T) {
 func testVerifyMessageFlagsMalformedSignatureFails(t *testing.T) {
 	// given
 	f := newVerifyMessageFlags(t)
-	f.Signature = "not-base-64"
+	f.Signature = vgrand.RandomStr(5)
 
 	// when
 	req, err := f.Validate()

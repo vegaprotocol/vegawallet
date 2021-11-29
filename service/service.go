@@ -317,7 +317,7 @@ func ParseVerifyAnyRequest(r *http.Request) (*VerifyAnyRequest, commands.Errors)
 		return nil, errs
 	}
 
-	return req, errs
+	return req, nil
 }
 
 func ParseSubmitTransactionRequest(r *http.Request) (*walletpb.SubmitTransactionRequest, commands.Errors) {
@@ -426,24 +426,24 @@ func NewService(log *zap.Logger, net *network.Network, h WalletHandler, a Auth, 
 	}
 
 	s.handle(http.MethodPost, "/api/v1/auth/token", s.Login)
-	s.handle(http.MethodDelete, "/api/v1/auth/token", ExtractToken(s.Revoke))
+	s.handle(http.MethodDelete, "/api/v1/auth/token", extractToken(s.Revoke))
 
 	s.handle(http.MethodGet, "/api/v1/network", s.GetNetwork)
 
 	s.handle(http.MethodPost, "/api/v1/wallets", s.CreateWallet)
 	s.handle(http.MethodPost, "/api/v1/wallets/import", s.ImportWallet)
 
-	s.handle(http.MethodGet, "/api/v1/keys", ExtractToken(s.ListPublicKeys))
-	s.handle(http.MethodPost, "/api/v1/keys", ExtractToken(s.GenerateKeyPair))
-	s.handle(http.MethodGet, "/api/v1/keys/:keyid", ExtractToken(s.GetPublicKey))
-	s.handle(http.MethodPut, "/api/v1/keys/:keyid/taint", ExtractToken(s.TaintKey))
-	s.handle(http.MethodPut, "/api/v1/keys/:keyid/metadata", ExtractToken(s.UpdateMeta))
+	s.handle(http.MethodGet, "/api/v1/keys", extractToken(s.ListPublicKeys))
+	s.handle(http.MethodPost, "/api/v1/keys", extractToken(s.GenerateKeyPair))
+	s.handle(http.MethodGet, "/api/v1/keys/:keyid", extractToken(s.GetPublicKey))
+	s.handle(http.MethodPut, "/api/v1/keys/:keyid/taint", extractToken(s.TaintKey))
+	s.handle(http.MethodPut, "/api/v1/keys/:keyid/metadata", extractToken(s.UpdateMeta))
 
-	s.handle(http.MethodPost, "/api/v1/command", ExtractToken(s.SignTx))
-	s.handle(http.MethodPost, "/api/v1/command/sync", ExtractToken(s.SignTxSync))
-	s.handle(http.MethodPost, "/api/v1/command/commit", ExtractToken(s.SignTxCommit))
-	s.handle(http.MethodPost, "/api/v1/sign", ExtractToken(s.SignAny))
-	s.handle(http.MethodPost, "/api/v1/verify", ExtractToken(s.VerifyAny))
+	s.handle(http.MethodPost, "/api/v1/command", extractToken(s.SignTx))
+	s.handle(http.MethodPost, "/api/v1/command/sync", extractToken(s.SignTxSync))
+	s.handle(http.MethodPost, "/api/v1/command/commit", extractToken(s.SignTxCommit))
+	s.handle(http.MethodPost, "/api/v1/sign", extractToken(s.SignAny))
+	s.handle(http.MethodPost, "/api/v1/verify", s.VerifyAny)
 
 	s.handle(http.MethodGet, "/api/v1/version", s.Version)
 	s.handle(http.MethodGet, "/api/v1/status", s.Health)
@@ -686,7 +686,7 @@ func (s *Service) SignAny(t string, w http.ResponseWriter, r *http.Request, _ ht
 	s.writeSuccess(w, res)
 }
 
-func (s *Service) VerifyAny(_ string, w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (s *Service) VerifyAny(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	req, errs := ParseVerifyAnyRequest(r)
 	if !errs.Empty() {
 		s.writeBadRequest(w, errs)

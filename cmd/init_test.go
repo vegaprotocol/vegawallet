@@ -16,8 +16,7 @@ func TestInit(t *testing.T) {
 }
 
 func testInitialisingProgramSucceeds(t *testing.T) {
-	testDir, cleanUpFn := NewTempDir(t)
-	defer cleanUpFn(t)
+	testDir := t.TempDir()
 
 	// given
 	f := &cmd.InitFlags{
@@ -37,8 +36,7 @@ func testInitialisingProgramSucceeds(t *testing.T) {
 }
 
 func testForcingProgramInitialisationSucceeds(t *testing.T) {
-	testDir, cleanUpFn := NewTempDir(t)
-	defer cleanUpFn(t)
+	testDir := t.TempDir()
 
 	// given
 	f := &cmd.InitFlags{

@@ -10,12 +10,15 @@
 - [383](https://github.com/vegaprotocol/vegawallet/pull/383) - Add wallet version to `key generate` output
 - [390](https://github.com/vegaprotocol/vegawallet/pull/390) - Add new project board Github action and update linked PR action version
 - [385](https://github.com/vegaprotocol/vegawallet/pull/385) - Add command `delete` to delete a wallet
+- [398](https://github.com/vegaprotocol/vegawallet/pull/398) - More idiomatic test suite
+- [396](https://github.com/vegaprotocol/vegawallet/pull/396) - Update the "important" section of `key generate`
 
 ### 🔥 Removal
 - [387](https://github.com/vegaprotocol/vegawallet/pull/387) - Remove network initialisation in favor of `network import`
 
 ### 🐛 Fixes
 - [395](https://github.com/vegaprotocol/vegawallet/pull/395) - Fix `command send` examples
+- [401](https://github.com/vegaprotocol/vegawallet/pull/400) - Update key rotation submission command
 
 ## 0.10.0
 *2021-11-15*

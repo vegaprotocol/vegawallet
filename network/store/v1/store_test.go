@@ -1,9 +1,13 @@
 package v1_test
 
 import (
+	"os"
+	"path/filepath"
 	"testing"
 
+	vgrand "code.vegaprotocol.io/shared/libs/rand"
 	vgtest "code.vegaprotocol.io/shared/libs/test"
+	"code.vegaprotocol.io/shared/paths"
 	"code.vegaprotocol.io/vegawallet/network"
 	v1 "code.vegaprotocol.io/vegawallet/network/store/v1"
 	"github.com/stretchr/testify/assert"
@@ -58,22 +62,20 @@ func testFileStoreV1DeleteNetworkSucceeds(t *testing.T) {
 }
 
 func testNewStoreSucceeds(t *testing.T) {
-	vegaHome := newVegaHome()
-	defer vegaHome.Remove()
+	vegaHome := newVegaHome(t)
 
-	s, err := v1.InitialiseStore(vegaHome.Paths())
+	s, err := v1.InitialiseStore(vegaHome)
 
 	require.NoError(t, err)
 	assert.NotNil(t, s)
-	vgtest.AssertDirAccess(t, vegaHome.NetworksHome())
+	vgtest.AssertDirAccess(t, networksHome(t, vegaHome))
 }
 
 func testFileStoreV1SaveAlreadyExistingNetworkSucceeds(t *testing.T) {
-	vegaHome := newVegaHome()
-	defer vegaHome.Remove()
+	vegaHome := newVegaHome(t)
 
 	// given
-	s := InitialiseFromPath(vegaHome)
+	s := initialiseFromPath(t, vegaHome)
 	net := &network.Network{
 		Name: "test",
 	}
@@ -92,11 +94,10 @@ func testFileStoreV1SaveAlreadyExistingNetworkSucceeds(t *testing.T) {
 }
 
 func testFileStoreV1SaveNetworkSucceeds(t *testing.T) {
-	vegaHome := newVegaHome()
-	defer vegaHome.Remove()
+	vegaHome := newVegaHome(t)
 
 	// given
-	s := InitialiseFromPath(vegaHome)
+	s := initialiseFromPath(t, vegaHome)
 	net := &network.Network{
 		Name: "test",
 	}
@@ -106,7 +107,7 @@ func testFileStoreV1SaveNetworkSucceeds(t *testing.T) {
 
 	// then
 	require.NoError(t, err)
-	vgtest.AssertFileAccess(t, vegaHome.NetworkPath(net.Name))
+	vgtest.AssertFileAccess(t, networkPath(t, vegaHome, net.Name))
 
 	// when
 	returnedNet, err := s.GetNetwork("test")
@@ -117,11 +118,10 @@ func testFileStoreV1SaveNetworkSucceeds(t *testing.T) {
 }
 
 func testFileStoreV1SaveLegacyNetworkSucceeds(t *testing.T) {
-	vegaHome := newVegaHome()
-	defer vegaHome.Remove()
+	vegaHome := newVegaHome(t)
 
 	// given
-	s := InitialiseFromPath(vegaHome)
+	s := initialiseFromPath(t, vegaHome)
 	net := &network.Network{
 		Name: "test",
 		Nodes: network.GRPCConfig{
@@ -138,7 +138,7 @@ func testFileStoreV1SaveLegacyNetworkSucceeds(t *testing.T) {
 
 	// then
 	require.NoError(t, err)
-	vgtest.AssertFileAccess(t, vegaHome.NetworkPath(net.Name))
+	vgtest.AssertFileAccess(t, networkPath(t, vegaHome, net.Name))
 
 	// when
 	returnedNet, err := s.GetNetwork("test")
@@ -159,11 +159,10 @@ func testFileStoreV1SaveLegacyNetworkSucceeds(t *testing.T) {
 }
 
 func testFileStoreV1VerifyingNonExistingNetworkFails(t *testing.T) {
-	vegaHome := newVegaHome()
-	defer vegaHome.Remove()
+	vegaHome := newVegaHome(t)
 
 	// given
-	s := InitialiseFromPath(vegaHome)
+	s := initialiseFromPath(t, vegaHome)
 
 	// when
 	exists, err := s.NetworkExists("test")
@@ -174,11 +173,10 @@ func testFileStoreV1VerifyingNonExistingNetworkFails(t *testing.T) {
 }
 
 func testFileStoreV1VerifyingExistingNetworkSucceeds(t *testing.T) {
-	vegaHome := newVegaHome()
-	defer vegaHome.Remove()
+	vegaHome := newVegaHome(t)
 
 	// given
-	s := InitialiseFromPath(vegaHome)
+	s := initialiseFromPath(t, vegaHome)
 	net := &network.Network{
 		Name: "test",
 	}
@@ -188,7 +186,7 @@ func testFileStoreV1VerifyingExistingNetworkSucceeds(t *testing.T) {
 
 	// then
 	require.NoError(t, err)
-	vgtest.AssertFileAccess(t, vegaHome.NetworkPath(net.Name))
+	vgtest.AssertFileAccess(t, networkPath(t, vegaHome, net.Name))
 
 	// when
 	exists, err := s.NetworkExists("test")
@@ -199,11 +197,10 @@ func testFileStoreV1VerifyingExistingNetworkSucceeds(t *testing.T) {
 }
 
 func testFileStoreV1GetNonExistingNetworkFails(t *testing.T) {
-	vegaHome := newVegaHome()
-	defer vegaHome.Remove()
+	vegaHome := newVegaHome(t)
 
 	// given
-	s := InitialiseFromPath(vegaHome)
+	s := initialiseFromPath(t, vegaHome)
 
 	// when
 	keys, err := s.GetNetwork("test")
@@ -214,11 +211,10 @@ func testFileStoreV1GetNonExistingNetworkFails(t *testing.T) {
 }
 
 func testFileStoreV1GetExistingNetworkSucceeds(t *testing.T) {
-	vegaHome := newVegaHome()
-	defer vegaHome.Remove()
+	vegaHome := newVegaHome(t)
 
 	// given
-	s := InitialiseFromPath(vegaHome)
+	s := initialiseFromPath(t, vegaHome)
 	net := &network.Network{
 		Name: "test",
 	}
@@ -228,7 +224,7 @@ func testFileStoreV1GetExistingNetworkSucceeds(t *testing.T) {
 
 	// then
 	require.NoError(t, err)
-	vgtest.AssertFileAccess(t, vegaHome.NetworkPath(net.Name))
+	vgtest.AssertFileAccess(t, networkPath(t, vegaHome, net.Name))
 
 	// when
 	returnedNet, err := s.GetNetwork("test")
@@ -239,11 +235,10 @@ func testFileStoreV1GetExistingNetworkSucceeds(t *testing.T) {
 }
 
 func testFileStoreV1GetLegacyNetworkSucceeds(t *testing.T) {
-	vegaHome := newVegaHome()
-	defer vegaHome.Remove()
+	vegaHome := newVegaHome(t)
 
 	// given
-	s := InitialiseFromPath(vegaHome)
+	s := initialiseFromPath(t, vegaHome)
 	legacyNet := &network.Network{
 		Name: "test",
 		Nodes: network.GRPCConfig{
@@ -260,7 +255,7 @@ func testFileStoreV1GetLegacyNetworkSucceeds(t *testing.T) {
 
 	// then
 	require.NoError(t, err)
-	vgtest.AssertFileAccess(t, vegaHome.NetworkPath(legacyNet.Name))
+	vgtest.AssertFileAccess(t, networkPath(t, vegaHome, legacyNet.Name))
 
 	// when
 	returnedNet, err := s.GetNetwork("test")
@@ -281,39 +276,36 @@ func testFileStoreV1GetLegacyNetworkSucceeds(t *testing.T) {
 }
 
 func testFileStoreV1GetNetworkPathSucceeds(t *testing.T) {
-	vegaHome := newVegaHome()
-	defer vegaHome.Remove()
+	vegaHome := newVegaHome(t)
 
 	// given
-	s := InitialiseFromPath(vegaHome)
+	s := initialiseFromPath(t, vegaHome)
 
 	// when
 	returnedPath := s.GetNetworkPath("test")
 
 	// then
-	assert.Equal(t, vegaHome.NetworkPath("test"), returnedPath)
+	assert.Equal(t, networkPath(t, vegaHome, "test"), returnedPath)
 }
 
 func testFileStoreV1GetNetworksPathSucceeds(t *testing.T) {
-	vegaHome := newVegaHome()
-	defer vegaHome.Remove()
+	vegaHome := newVegaHome(t)
 
 	// given
-	s := InitialiseFromPath(vegaHome)
+	s := initialiseFromPath(t, vegaHome)
 
 	// when
 	returnedPath := s.GetNetworksPath()
 
 	// then
-	assert.Equal(t, vegaHome.NetworksHome(), returnedPath)
+	assert.Equal(t, networksHome(t, vegaHome), returnedPath)
 }
 
 func testFileStoreV1ListingNetworksSucceeds(t *testing.T) {
-	vegaHome := newVegaHome()
-	defer vegaHome.Remove()
+	vegaHome := newVegaHome(t)
 
 	// given
-	s := InitialiseFromPath(vegaHome)
+	s := initialiseFromPath(t, vegaHome)
 	net := &network.Network{
 		// we use "toml" as name on purpose since we want to verify it's not
 		// stripped by the ListNetwork() function.
@@ -325,7 +317,7 @@ func testFileStoreV1ListingNetworksSucceeds(t *testing.T) {
 
 	// then
 	require.NoError(t, err)
-	vgtest.AssertFileAccess(t, vegaHome.NetworkPath(net.Name))
+	vgtest.AssertFileAccess(t, networkPath(t, vegaHome, net.Name))
 
 	// when
 	nets, err := s.ListNetworks()
@@ -335,10 +327,33 @@ func testFileStoreV1ListingNetworksSucceeds(t *testing.T) {
 	assert.Equal(t, []string{"toml"}, nets)
 }
 
-func InitialiseFromPath(h vegaHome) *v1.Store {
-	s, err := v1.InitialiseStore(h.Paths())
+func initialiseFromPath(t *testing.T, vegaHome paths.Paths) *v1.Store {
+	t.Helper()
+	s, err := v1.InitialiseStore(vegaHome)
 	if err != nil {
-		panic(err)
+		t.Fatalf("couldn't initialise store: %v", err)
 	}
 	return s
+}
+
+func newVegaHome(t *testing.T) *paths.CustomPaths {
+	t.Helper()
+	rootPath := filepath.Join("/tmp", "vegawallet", vgrand.RandomStr(10))
+	t.Cleanup(func() {
+		if err := os.RemoveAll(rootPath); err != nil {
+			t.Fatalf("couldn't remove vega home: %v", err)
+		}
+	})
+
+	return &paths.CustomPaths{CustomHome: rootPath}
+}
+
+func networksHome(t *testing.T, vegaHome *paths.CustomPaths) string {
+	t.Helper()
+	return vegaHome.ConfigPathFor(paths.WalletServiceNetworksConfigHome)
+}
+
+func networkPath(t *testing.T, vegaHome *paths.CustomPaths, name string) string {
+	t.Helper()
+	return filepath.Join(networksHome(t, vegaHome), name+".toml")
 }
