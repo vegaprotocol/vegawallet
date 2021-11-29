@@ -31,11 +31,10 @@ func TestFileStoreV1(t *testing.T) {
 }
 
 func testFileStoreV1DeleteNetworkSucceeds(t *testing.T) {
-	vegaHome := newVegaHome()
-	defer vegaHome.Remove()
+	vegaHome := newVegaHome(t)
 
 	// Create a network for us to delete
-	s, err := v1.InitialiseStore(vegaHome.Paths())
+	s, err := v1.InitialiseStore(vegaHome)
 	require.NoError(t, err)
 	assert.NotNil(t, s)
 
