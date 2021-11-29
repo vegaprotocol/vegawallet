@@ -1,15 +1,13 @@
----
+name: Add issue to sprint board
 
-name: Auto Assign New Issues to Project
-
-"on":
+on:
   issues:
-    types: [opened]
+    types: [ opened ]
 
 jobs:
   assign_one_project:
     runs-on: ubuntu-latest
-    name: Add new issues to Core Current Sprint project
+    name: Add issue to Core team board
     steps:
       - uses: alex-page/github-project-automation-plus@50502d399cbb98cefe7ce1f99f93f78c6756562e
         with:

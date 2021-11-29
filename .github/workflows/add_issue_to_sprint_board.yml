@@ -1,16 +1,14 @@
----
+name: Add issue to sprint board
 
-name: Auto Assign Issue to New Project
-
-"on":
+on:
   issues:
-    types: [opened]
+    types: [ opened ]
 
 jobs:
   add_issue:
     runs-on: ubuntu-latest
     steps:
-      - name: Add Issue to New Core Project Board
+      - name: Add issue to sprint board
         env:
           GITHUB_TOKEN: ${{ secrets.GH_NEW_CARD_TO_PROJECT }}
           PROJECT_ID: ${{ secrets.CORE_PROJECT_ID }}
@@ -24,4 +22,3 @@ jobs:
                 }
               }
             }' -f project=$PROJECT_ID -f issue=$ISSUE_ID --jq '.data.addProjectNextItem.projectNextItem.id'
-
