@@ -8,9 +8,9 @@ on:
       - master
 
 jobs:
-  build:
+  changelog-checker:
     if: startsWith(github.head_ref, 'renovate/') != true
-    name: Check Actions
+    name: Run changelog-checker
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1

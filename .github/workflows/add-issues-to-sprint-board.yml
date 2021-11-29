@@ -5,7 +5,7 @@ on:
     types: [ opened ]
 
 jobs:
-  add_issue:
+  add-to-sprint-board:
     runs-on: ubuntu-latest
     steps:
       - name: Add issue to sprint board

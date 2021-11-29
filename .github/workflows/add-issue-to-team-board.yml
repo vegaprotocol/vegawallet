@@ -1,11 +1,11 @@
-name: Add issue to sprint board
+name: Add issue to team board
 
 on:
   issues:
     types: [ opened ]
 
 jobs:
-  assign_one_project:
+  add-to-team-board:
     runs-on: ubuntu-latest
     name: Add issue to Core team board
     steps:
