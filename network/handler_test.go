@@ -36,6 +36,51 @@ func TestImportNetwork(t *testing.T) {
 	t.Run("Importing existing network fails", testImportingExistingNetworkFails)
 	t.Run("Importing by overwriting existing network succeeds", testImportingByOverwritingNetworkSucceeds)
 	t.Run("Importing network with errors when saving fails", testImportingNetworkWithErrorsWhenSavingFails)
+	t.Run("Deleting a network", testDeletingNetwork)
+	t.Run("Deleting a network which doesn't exist fails", testDeletingNonExistantNetworkFails)
+}
+
+func testDeletingNonExistantNetworkFails(t *testing.T) {
+	ts := getTestConfig(t)
+
+	// given
+	net := &network.Network{
+		Name: "test",
+	}
+	ts.store.EXPECT().
+		NetworkExists("test").
+		Times(1).
+		Return(false, nil)
+
+	resp, err := network.DeleteNetwork(ts.store, &network.DeleteNetworkRequest{Name: net.Name})
+	require.EqualError(t, err, "network \"test\" doesn't exist")
+	require.Nil(t, resp)
+}
+
+func testDeletingNetwork(t *testing.T) {
+	ts := getTestConfig(t)
+
+	// given
+	net := &network.Network{
+		Name: "test",
+	}
+
+	// setup
+	ts.store.EXPECT().
+		NetworkExists("test").
+		Times(1).
+		Return(true, nil)
+	ts.store.EXPECT().
+		DeleteNetwork("test").
+		Times(1).
+		Return(nil)
+
+	// when
+	resp, err := network.DeleteNetwork(ts.store, &network.DeleteNetworkRequest{Name: net.Name})
+
+	// then
+	require.Nil(t, err)
+	require.Equal(t, network.DeleteNetworkResponse{Name: "test"}, *resp)
 }
 
 func testImportingNetworkSucceeds(t *testing.T) {

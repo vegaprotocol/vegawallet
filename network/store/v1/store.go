@@ -76,6 +76,14 @@ func (s *Store) SaveNetwork(net *network.Network) error {
 	return nil
 }
 
+func (s *Store) DeleteNetwork(name string) error {
+	path := s.GetNetworkPath(name)
+	if err := os.Remove(path); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (s *Store) nameToFilePath(network string) string {
 	return filepath.Join(s.networksHome, network+fileExt)
 }

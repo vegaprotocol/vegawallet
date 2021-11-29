@@ -23,6 +23,38 @@ func TestFileStoreV1(t *testing.T) {
 	t.Run("Getting network path succeeds", testFileStoreV1GetNetworkPathSucceeds)
 	t.Run("Getting networks path succeeds", testFileStoreV1GetNetworksPathSucceeds)
 	t.Run("Listing networks succeeds", testFileStoreV1ListingNetworksSucceeds)
+	t.Run("Deleting network succeeds", testFileStoreV1DeleteNetworkSucceeds)
+}
+
+func testFileStoreV1DeleteNetworkSucceeds(t *testing.T) {
+	vegaHome := newVegaHome()
+	defer vegaHome.Remove()
+
+	// Create a network for us to delete
+	s, err := v1.InitialiseStore(vegaHome.Paths())
+	require.NoError(t, err)
+	assert.NotNil(t, s)
+
+	net := &network.Network{
+		Name: "test",
+	}
+
+	err = s.SaveNetwork(net)
+	require.NoError(t, err)
+
+	// Check it's really there
+	returnedNet, err := s.GetNetwork("test")
+	require.NoError(t, err)
+	assert.Equal(t, net, returnedNet)
+
+	// Now delete it
+	err = s.DeleteNetwork("test")
+	require.NoError(t, err)
+
+	// Check it's no longer there
+	returnedNet, err = s.GetNetwork("test")
+	require.Error(t, err)
+	assert.Nil(t, returnedNet)
 }
 
 func testNewStoreSucceeds(t *testing.T) {

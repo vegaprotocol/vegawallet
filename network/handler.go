@@ -13,6 +13,7 @@ type Store interface {
 	SaveNetwork(*Network) error
 	ListNetworks() ([]string, error)
 	GetNetworkPath(string) string
+	DeleteNetwork(string) error
 }
 
 //go:generate go run github.com/golang/mock/mockgen -destination mocks/reader_mock.go -package mocks code.vegaprotocol.io/vegawallet/network Reader
@@ -164,4 +165,26 @@ type DescribeNetworkResponse struct {
 		URL       string `json:"url"`
 		LocalPort int    `json:"localPort"`
 	}
+}
+
+type DeleteNetworkRequest struct {
+	Name string
+}
+
+type DeleteNetworkResponse struct {
+	Name string
+}
+
+func DeleteNetwork(store Store, req *DeleteNetworkRequest) (*DeleteNetworkResponse, error) {
+	resp := &DeleteNetworkResponse{}
+	exists, err := store.NetworkExists(req.Name)
+	if err != nil {
+		return nil, fmt.Errorf("couldn't verify network existence: %w", err)
+	}
+	if !exists {
+		return nil, NewNetworkDoesNotExistError(req.Name)
+	}
+	store.DeleteNetwork(req.Name)
+	resp.Name = req.Name
+	return resp, nil
 }
