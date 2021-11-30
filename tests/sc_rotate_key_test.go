@@ -183,7 +183,7 @@ func TestRotateKeyFailsInIsolatedWallet(t *testing.T) {
 	require.ErrorIs(t, err, wallet.ErrCantRotateKeyInIsolatedWallet)
 }
 
-func TestRotateKeyFailsOnNonExitingKey(t *testing.T) {
+func TestRotateKeyFailsOnNonExitingNewPublicKey(t *testing.T) {
 	// given
 	home := t.TempDir()
 
@@ -224,7 +224,7 @@ func TestRotateKeyFailsOnNonExitingKey(t *testing.T) {
 	require.ErrorIs(t, err, wallet.ErrPubKeyDoesNotExist)
 }
 
-func TestRotateKeyFailsOnNonExitingCurrentKey(t *testing.T) {
+func TestRotateKeyFailsOnNonExitingCurrentPublicKey(t *testing.T) {
 	// given
 	home := t.TempDir()
 

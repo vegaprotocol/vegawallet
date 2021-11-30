@@ -14,7 +14,7 @@ import (
 func TestRotateKeyFlags(t *testing.T) {
 	t.Run("Valid flags succeeds", testRotateKeyFlagsValidFlagsSucceeds)
 	t.Run("Missing wallet fails", testRotateKeyFlagsMissingWalletFails)
-	t.Run("Missing new public key fails", testRotateKeyFlagsMissingPublicKeyFails)
+	t.Run("Missing new public key fails", testRotateKeyFlagsMissingNewPublicKeyFails)
 	t.Run("Missing current public key fails", testRotateKeyFlagsMissingCurrentPublicKeyFails)
 	t.Run("Missing tx height fails", testRotateKeyFlagsMissingTxBlockHeightFails)
 	t.Run("Missing target height fails", testRotateKeyFlagsMissingTargetBlockHeightFails)
@@ -36,7 +36,7 @@ func testRotateKeyFlagsValidFlagsSucceeds(t *testing.T) {
 		Wallet:            walletName,
 		PassphraseFile:    passphraseFilePath,
 		CurrentPubKey:     currentPubKey,
-		PublicKey:         pubKey,
+		NewPublicKey:      pubKey,
 		TxBlockHeight:     txBlockHeight,
 		TargetBlockHeight: targetBlockHeight,
 	}
@@ -45,7 +45,7 @@ func testRotateKeyFlagsValidFlagsSucceeds(t *testing.T) {
 		Wallet:            walletName,
 		Passphrase:        passphrase,
 		CurrentPublicKey:  currentPubKey,
-		PublicKey:         pubKey,
+		NewPublicKey:      pubKey,
 		TxBlockHeight:     txBlockHeight,
 		TargetBlockHeight: targetBlockHeight,
 	}
@@ -104,18 +104,18 @@ func testRotateKeyFlagsMissingTargetBlockHeightFails(t *testing.T) {
 	assert.Nil(t, req)
 }
 
-func testRotateKeyFlagsMissingPublicKeyFails(t *testing.T) {
+func testRotateKeyFlagsMissingNewPublicKeyFails(t *testing.T) {
 	testDir := t.TempDir()
 
 	// given
 	f := newRotateKeyFlags(t, testDir)
-	f.PublicKey = ""
+	f.NewPublicKey = ""
 
 	// when
 	req, err := f.Validate()
 
 	// then
-	assert.ErrorIs(t, err, flags.FlagMustBeSpecifiedError("pubkey"))
+	assert.ErrorIs(t, err, flags.FlagMustBeSpecifiedError("new-pubkey"))
 	assert.Nil(t, req)
 }
 
@@ -162,7 +162,7 @@ func newRotateKeyFlags(t *testing.T, testDir string) *cmd.RotateKeyFlags {
 
 	return &cmd.RotateKeyFlags{
 		Wallet:            walletName,
-		PublicKey:         pubKey,
+		NewPublicKey:      pubKey,
 		CurrentPubKey:     currentPubKey,
 		PassphraseFile:    passphraseFilePath,
 		TxBlockHeight:     txBlockHeight,

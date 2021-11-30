@@ -265,7 +265,7 @@ func DescribeKey(store Store, req *DescribeKeyRequest) (*DescribeKeyResponse, er
 type RotateKeyRequest struct {
 	Wallet            string
 	Passphrase        string
-	PublicKey         string
+	NewPublicKey      string
 	CurrentPublicKey  string
 	TxBlockHeight     uint64
 	TargetBlockHeight uint64
@@ -290,7 +290,7 @@ func RotateKey(store Store, req *RotateKeyRequest) (*RotateKeyResponse, error) {
 		return nil, err
 	}
 
-	pubKey, err := w.DescribePublicKey(req.PublicKey)
+	pubKey, err := w.DescribePublicKey(req.NewPublicKey)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't get the public key: %w", err)
 	}

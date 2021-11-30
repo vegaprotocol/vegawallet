@@ -568,7 +568,7 @@ func testRotateKeySucceeds(t *testing.T) {
 	req := &wallet.RotateKeyRequest{
 		Wallet:            w.Name(),
 		Passphrase:        "passphrase",
-		PublicKey:         newPubKey.Key(),
+		NewPublicKey:      newPubKey.Key(),
 		CurrentPublicKey:  currentPubKey.Key(),
 		TxBlockHeight:     20,
 		TargetBlockHeight: 25,
@@ -605,7 +605,7 @@ func testRotateKeySucceeds(t *testing.T) {
 	require.Equal(t, req.TxBlockHeight, inputData.BlockHeight)
 	require.Equal(t, newPubKey.Index(), keyRotate.KeyRotateSubmission.KeyNumber)
 	require.Equal(t, req.TargetBlockHeight, keyRotate.KeyRotateSubmission.TargetBlock)
-	require.Equal(t, req.PublicKey, keyRotate.KeyRotateSubmission.NewPubKey)
+	require.Equal(t, req.NewPublicKey, keyRotate.KeyRotateSubmission.NewPubKey)
 }
 
 func testRotateWithNonExistingWalletFails(t *testing.T) {
@@ -613,7 +613,7 @@ func testRotateWithNonExistingWalletFails(t *testing.T) {
 	req := &wallet.RotateKeyRequest{
 		Wallet:            vgrand.RandomStr(5),
 		Passphrase:        "passphrase",
-		PublicKey:         "nonexisting",
+		NewPublicKey:      "nonexisting",
 		TxBlockHeight:     20,
 		TargetBlockHeight: 25,
 	}
@@ -638,7 +638,7 @@ func testRotateKeyWithNonExistingNewPublicKeyFails(t *testing.T) {
 	req := &wallet.RotateKeyRequest{
 		Wallet:            w.Name(),
 		Passphrase:        "passphrase",
-		PublicKey:         "nonexisting",
+		NewPublicKey:      "nonexisting",
 		TxBlockHeight:     20,
 		TargetBlockHeight: 25,
 	}
@@ -665,7 +665,7 @@ func testRotateKeyWithNonExistingCurrentPublicKeyFails(t *testing.T) {
 	req := &wallet.RotateKeyRequest{
 		Wallet:            w.Name(),
 		Passphrase:        "passphrase",
-		PublicKey:         newPubKey.Key(),
+		NewPublicKey:      newPubKey.Key(),
 		CurrentPublicKey:  "non-existing",
 		TxBlockHeight:     20,
 		TargetBlockHeight: 25,
@@ -697,7 +697,7 @@ func testRotateKeyWithTaintedPublicKeyFails(t *testing.T) {
 	req := &wallet.RotateKeyRequest{
 		Wallet:            w.Name(),
 		Passphrase:        "passphrase",
-		PublicKey:         newPubKey.Key(),
+		NewPublicKey:      newPubKey.Key(),
 		CurrentPublicKey:  currentPubKey.Key(),
 		TxBlockHeight:     20,
 		TargetBlockHeight: 25,
