@@ -733,7 +733,7 @@ func testSigningTransactionWithFailedPropagationFails(t *testing.T) {
 	// setup
 	s.auth.EXPECT().VerifyToken(token).Times(1).Return(walletName, nil)
 	s.handler.EXPECT().SignTx(walletName, gomock.Any(), gomock.Any()).Times(1).Return(&commandspb.Transaction{}, nil)
-	s.nodeForward.EXPECT().SendTx(gomock.Any(), &commandspb.Transaction{}, api.SubmitTransactionRequest_TYPE_ASYNC).Times(1).Return(assert.AnError)
+	s.nodeForward.EXPECT().SendTx(gomock.Any(), &commandspb.Transaction{}, api.SubmitTransactionRequest_TYPE_ASYNC).Times(1).Return("", assert.AnError)
 	s.nodeForward.EXPECT().LastBlockHeight(gomock.Any()).Times(1).Return(uint64(42), nil)
 
 	// when

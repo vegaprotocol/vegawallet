@@ -270,12 +270,13 @@ func SendCommand(w io.Writer, rf *RootFlags, req *SendCommandRequest) error {
 
 	log.Info("transaction successfully signed", zap.String("signature", tx.Signature.Value))
 
-	if err = forwarder.SendTx(ctx, tx, api.SubmitTransactionRequest_TYPE_ASYNC); err != nil {
+	txHash, err := forwarder.SendTx(ctx, tx, api.SubmitTransactionRequest_TYPE_ASYNC)
+	if err != nil {
 		log.Error("couldn't send transaction", zap.Error(err))
 		return fmt.Errorf("couldn't send transaction: %w", err)
 	}
 
-	log.Info("transaction successfully sent")
+	log.Info("transaction successfully sent", zap.String("hash", txHash))
 
 	return nil
 }

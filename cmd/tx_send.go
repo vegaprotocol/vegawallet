@@ -183,7 +183,7 @@ func SendTx(w io.Writer, rf *RootFlags, req *SendTxRequest) error {
 	}
 	defer func() {
 		if err = forwarder.Stop(); err != nil {
-			log.Warn("couldn't stop the forwarder", zap.Error(err))
+			log.Warn("Couldn't stop the forwarder", zap.Error(err))
 		}
 	}()
 
@@ -195,12 +195,13 @@ func SendTx(w io.Writer, rf *RootFlags, req *SendTxRequest) error {
 	ctx, cancelFn := context.WithTimeout(context.Background(), ForwarderRequestTimeout)
 	defer cancelFn()
 
-	if err = forwarder.SendTx(ctx, req.Tx, api.SubmitTransactionRequest_TYPE_ASYNC); err != nil {
-		log.Error("couldn't send transaction", zap.Error(err))
+	txHash, err := forwarder.SendTx(ctx, req.Tx, api.SubmitTransactionRequest_TYPE_ASYNC)
+	if err != nil {
+		log.Error("Couldn't send transaction", zap.Error(err))
 		return fmt.Errorf("couldn't send transaction: %w", err)
 	}
 
-	log.Info("transaction successfully sent")
+	log.Info("transaction successfully sent", zap.String("hash", txHash))
 
 	return nil
 }
