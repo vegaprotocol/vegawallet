@@ -52,7 +52,7 @@ func TestRotateKeySucceeds(t *testing.T) {
 	// when
 	resp, err := KeyRotate(t, append(cmd,
 		"--current-pubkey", generateKeyResp1.Key.PublicKey,
-		"--pubkey", generateKeyResp2.Key.PublicKey,
+		"--new-pubkey", generateKeyResp2.Key.PublicKey,
 		"--tx-height", "20",
 		"--target-height", "25",
 	))
@@ -113,7 +113,7 @@ func TestRotateKeyFailsOnTainedPublicKey(t *testing.T) {
 	// when
 	resp, err := KeyRotate(t, append(cmd,
 		"--current-pubkey", generateKeyResp1.Key.PublicKey,
-		"--pubkey", generateKeyResp2.Key.PublicKey,
+		"--new-pubkey", generateKeyResp2.Key.PublicKey,
 		"--tx-height", "20",
 		"--target-height", "25",
 	))
@@ -172,7 +172,7 @@ func TestRotateKeyFailsInIsolatedWallet(t *testing.T) {
 		"--output", "json",
 		"--wallet", isolateKeyResp.Wallet,
 		"--passphrase-file", passphraseFilePath,
-		"--pubkey", generateKeyResp.Key.PublicKey,
+		"--new-pubkey", generateKeyResp.Key.PublicKey,
 		"--current-pubkey", "current-public-key",
 		"--tx-height", "20",
 		"--target-height", "25",
@@ -214,7 +214,7 @@ func TestRotateKeyFailsOnNonExitingNewPublicKey(t *testing.T) {
 	// when
 	resp, err := KeyRotate(t, append(cmd,
 		"--current-pubkey", "current-public-key",
-		"--pubkey", "nonexisting",
+		"--new-pubkey", "nonexisting",
 		"--tx-height", "20",
 		"--target-height", "25",
 	))
@@ -255,7 +255,7 @@ func TestRotateKeyFailsOnNonExitingCurrentPublicKey(t *testing.T) {
 	// when
 	resp, err := KeyRotate(t, append(cmd,
 		"--current-pubkey", "nonexisting",
-		"--pubkey", generateKeyResp.Key.PublicKey,
+		"--new-pubkey", generateKeyResp.Key.PublicKey,
 		"--tx-height", "20",
 		"--target-height", "25",
 	))
@@ -282,7 +282,7 @@ func TestRotateKeyFailsOnNonExitingWallet(t *testing.T) {
 
 	// when
 	resp, err := KeyRotate(t, append(cmd,
-		"--pubkey", "nonexisting",
+		"--new-pubkey", "nonexisting",
 		"--current-pubkey", "nonexisting",
 		"--tx-height", "20",
 		"--target-height", "25",
@@ -323,7 +323,7 @@ func TestRotateKeyFailsWhenTargetHeighIsLessnThanTxHeight(t *testing.T) {
 
 	// when
 	resp, err := KeyRotate(t, append(cmd,
-		"--pubkey", "nonexisting",
+		"--new-pubkey", "nonexisting",
 		"--current-pubkey", "nonexisting",
 		"--tx-height", "20",
 		"--target-height", "19",
