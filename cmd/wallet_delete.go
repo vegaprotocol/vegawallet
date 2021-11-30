@@ -74,7 +74,7 @@ func BuildCmdDeleteWallet(w io.Writer, handler DeleteWalletHandler, rf *RootFlag
 
 			switch rf.Output {
 			case flags.InteractiveOutput:
-				PrintDeleteWalletResponse(w)
+				PrintDeleteWalletResponse(w, f.Wallet)
 			case flags.JSONOutput:
 				return nil
 			}
@@ -114,8 +114,10 @@ func (f *DeleteWalletFlags) Validate() error {
 	return nil
 }
 
-func PrintDeleteWalletResponse(w io.Writer) {
+func PrintDeleteWalletResponse(w io.Writer, walletName string) {
 	p := printer.NewInteractivePrinter(w)
 
-	p.CheckMark().SuccessText("Deletion succeeded").NextSection()
+	p.CheckMark().SuccessText("Wallet ")
+	p.WarningText(walletName)
+	p.Text(" deleted")
 }
