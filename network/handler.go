@@ -171,10 +171,6 @@ type DeleteNetworkRequest struct {
 	Name string
 }
 
-type DeleteNetworkResponse struct {
-	Name string
-}
-
 func DeleteNetwork(store Store, req *DeleteNetworkRequest) error {
 	exists, err := store.NetworkExists(req.Name)
 	if err != nil {
@@ -183,8 +179,7 @@ func DeleteNetwork(store Store, req *DeleteNetworkRequest) error {
 	if !exists {
 		return NewNetworkDoesNotExistError(req.Name)
 	}
-	err = store.DeleteNetwork(req.Name)
-	if err != nil {
+	if err = store.DeleteNetwork(req.Name); err != nil {
 		return fmt.Errorf("couldn't delete network: %w", err)
 	}
 

@@ -27,6 +27,9 @@ var (
 	deleteWalletExample = cli.Examples(`
 		# Delete the specified wallet
 		vegawallet delete --wallet WALLET
+
+		# Delete the specified wallet without asking for confirmation
+		vegawallet delete --wallet WALLET --force
 	`)
 )
 
@@ -119,7 +122,5 @@ func (f *DeleteWalletFlags) Validate() error {
 func PrintDeleteWalletResponse(w io.Writer, walletName string) {
 	p := printer.NewInteractivePrinter(w)
 
-	p.CheckMark().SuccessText("Wallet ")
-	p.WarningText(walletName)
-	p.Text(" deleted")
+	p.CheckMark().SuccessText("Wallet ").WarningText(walletName).Text(" deleted").NextLine()
 }
