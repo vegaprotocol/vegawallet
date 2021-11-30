@@ -38,8 +38,21 @@ func TestRotateKeySucceeds(t *testing.T) {
 		LocatedUnder(home)
 
 	// when
+	generateKeyResp2, err := KeyGenerate(t, append(cmd,
+		"--meta", "name:key-2,role:validation",
+	))
+
+	// then
+	require.NoError(t, err)
+	AssertGenerateKey(t, generateKeyResp2).
+		WithName(walletName).
+		WithMeta(map[string]string{"name": "key-2", "role": "validation"}).
+		LocatedUnder(home)
+
+	// when
 	resp, err := KeyRotate(t, append(cmd,
-		"--pubkey", generateKeyResp1.Key.PublicKey,
+		"--current-pubkey", generateKeyResp1.Key.PublicKey,
+		"--pubkey", generateKeyResp2.Key.PublicKey,
 		"--tx-height", "20",
 		"--target-height", "25",
 	))
@@ -65,21 +78,33 @@ func TestRotateKeyFailsOnTainedPublicKey(t *testing.T) {
 	}
 
 	// when
-	generateKeyResp, err := KeyGenerate(t, append(cmd,
+	generateKeyResp1, err := KeyGenerate(t, append(cmd,
 		"--meta", "name:key-1,role:validation",
 	))
 
 	// then
 	require.NoError(t, err)
-	AssertGenerateKey(t, generateKeyResp).
+	AssertGenerateKey(t, generateKeyResp1).
 		WithWalletCreation().
 		WithName(walletName).
 		WithMeta(map[string]string{"name": "key-1", "role": "validation"}).
 		LocatedUnder(home)
 
 	// when
+	generateKeyResp2, err := KeyGenerate(t, append(cmd,
+		"--meta", "name:key-2,role:validation",
+	))
+
+	// then
+	require.NoError(t, err)
+	AssertGenerateKey(t, generateKeyResp2).
+		WithName(walletName).
+		WithMeta(map[string]string{"name": "key-2", "role": "validation"}).
+		LocatedUnder(home)
+
+	// when
 	err = KeyTaint(t, append(cmd,
-		"--pubkey", generateKeyResp.Key.PublicKey,
+		"--pubkey", generateKeyResp2.Key.PublicKey,
 	))
 
 	// then
@@ -87,7 +112,8 @@ func TestRotateKeyFailsOnTainedPublicKey(t *testing.T) {
 
 	// when
 	resp, err := KeyRotate(t, append(cmd,
-		"--pubkey", generateKeyResp.Key.PublicKey,
+		"--current-pubkey", generateKeyResp1.Key.PublicKey,
+		"--pubkey", generateKeyResp2.Key.PublicKey,
 		"--tx-height", "20",
 		"--target-height", "25",
 	))
@@ -147,6 +173,7 @@ func TestRotateKeyFailsInIsolatedWallet(t *testing.T) {
 		"--wallet", isolateKeyResp.Wallet,
 		"--passphrase-file", passphraseFilePath,
 		"--pubkey", generateKeyResp.Key.PublicKey,
+		"--current-pubkey", "current-public-key",
 		"--tx-height", "20",
 		"--target-height", "25",
 	})
@@ -186,7 +213,49 @@ func TestRotateKeyFailsOnNonExitingKey(t *testing.T) {
 
 	// when
 	resp, err := KeyRotate(t, append(cmd,
+		"--current-pubkey", "current-public-key",
 		"--pubkey", "nonexisting",
+		"--tx-height", "20",
+		"--target-height", "25",
+	))
+
+	// then
+	require.Nil(t, resp)
+	require.ErrorIs(t, err, wallet.ErrPubKeyDoesNotExist)
+}
+
+func TestRotateKeyFailsOnNonExitingCurrentKey(t *testing.T) {
+	// given
+	home := t.TempDir()
+
+	_, passphraseFilePath := NewPassphraseFile(t, home)
+
+	walletName := vgrand.RandomStr(5)
+
+	cmd := []string{
+		"--home", home,
+		"--output", "json",
+		"--wallet", walletName,
+		"--passphrase-file", passphraseFilePath,
+	}
+
+	// when
+	generateKeyResp, err := KeyGenerate(t, append(cmd,
+		"--meta", "name:key-1,role:validation",
+	))
+
+	// then
+	require.NoError(t, err)
+	AssertGenerateKey(t, generateKeyResp).
+		WithWalletCreation().
+		WithName(walletName).
+		WithMeta(map[string]string{"name": "key-1", "role": "validation"}).
+		LocatedUnder(home)
+
+	// when
+	resp, err := KeyRotate(t, append(cmd,
+		"--current-pubkey", "nonexisting",
+		"--pubkey", generateKeyResp.Key.PublicKey,
 		"--tx-height", "20",
 		"--target-height", "25",
 	))
@@ -214,6 +283,7 @@ func TestRotateKeyFailsOnNonExitingWallet(t *testing.T) {
 	// when
 	resp, err := KeyRotate(t, append(cmd,
 		"--pubkey", "nonexisting",
+		"--current-pubkey", "nonexisting",
 		"--tx-height", "20",
 		"--target-height", "25",
 	))
@@ -254,6 +324,7 @@ func TestRotateKeyFailsWhenTargetHeighIsLessnThanTxHeight(t *testing.T) {
 	// when
 	resp, err := KeyRotate(t, append(cmd,
 		"--pubkey", "nonexisting",
+		"--current-pubkey", "nonexisting",
 		"--tx-height", "20",
 		"--target-height", "19",
 	))

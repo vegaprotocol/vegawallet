@@ -266,6 +266,7 @@ type RotateKeyRequest struct {
 	Wallet            string
 	Passphrase        string
 	PublicKey         string
+	CurrentPublicKey  string
 	TxBlockHeight     uint64
 	TargetBlockHeight uint64
 }
@@ -294,16 +295,27 @@ func RotateKey(store Store, req *RotateKeyRequest) (*RotateKeyResponse, error) {
 		return nil, fmt.Errorf("couldn't get the public key: %w", err)
 	}
 
+	currentPubKey, err := w.DescribePublicKey(req.CurrentPublicKey)
+	if err != nil {
+		return nil, fmt.Errorf("couldn't get the current public key: %w", err)
+	}
+
 	if pubKey.IsTainted() {
 		return nil, ErrPubKeyIsTainted
+	}
+
+	currentPubKeyHash, err := currentPubKey.Hash()
+	if err != nil {
+		return nil, fmt.Errorf("couldn't hash the current public key: %w", err)
 	}
 
 	inputData := commands.NewInputData(req.TxBlockHeight)
 	inputData.Command = &commandspb.InputData_KeyRotateSubmission{
 		KeyRotateSubmission: &commandspb.KeyRotateSubmission{
-			KeyNumber:   pubKey.Index(),
-			TargetBlock: req.TargetBlockHeight,
-			NewPubKey:   pubKey.Key(),
+			KeyNumber:         pubKey.Index(),
+			TargetBlock:       req.TargetBlockHeight,
+			NewPubKey:         pubKey.Key(),
+			CurrentPubKeyHash: currentPubKeyHash,
 		},
 	}
 

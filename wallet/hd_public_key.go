@@ -1,7 +1,11 @@
 package wallet
 
 import (
+	"encoding/hex"
 	"encoding/json"
+	"fmt"
+
+	vgcrypto "code.vegaprotocol.io/shared/libs/crypto"
 )
 
 type HDPublicKey struct {
@@ -34,6 +38,15 @@ func (k *HDPublicKey) AlgorithmVersion() uint32 {
 
 func (k *HDPublicKey) AlgorithmName() string {
 	return k.Algorithm.Name
+}
+
+func (k *HDPublicKey) Hash() (string, error) {
+	decoded, err := hex.DecodeString(k.PublicKey)
+	if err != nil {
+		return "", fmt.Errorf("couldn't decode public key: %w", err)
+	}
+
+	return hex.EncodeToString(vgcrypto.Hash(decoded)), nil
 }
 
 func (k *HDPublicKey) MarshalJSON() ([]byte, error) {

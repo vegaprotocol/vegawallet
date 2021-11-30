@@ -41,6 +41,8 @@ type PublicKey interface {
 	Index() uint32
 	AlgorithmVersion() uint32
 	AlgorithmName() string
+	Hash() (string, error)
+
 	MarshalJSON() ([]byte, error)
 	UnmarshalJSON(data []byte) error
 }

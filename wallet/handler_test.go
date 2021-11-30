@@ -550,14 +550,17 @@ func testSignMessageWithNonExistingWalletFails(t *testing.T) {
 func TestRotateKey(t *testing.T) {
 	t.Run("Rotate key succeeds", testRotateKeySucceeds)
 	t.Run("Rotate key with non existing wallet fails", testRotateWithNonExistingWalletFails)
-	t.Run("Rotate key with non existing public key fails", testRotateKeyWithNonExistingPublicKeyFails)
+	t.Run("Rotate key with non existing new public key fails", testRotateKeyWithNonExistingNewPublicKeyFails)
+	t.Run("Rotate key with non existing current public key fails", testRotateKeyWithNonExistingCurrentPublicKeyFails)
 	t.Run("Rotate key tained public key fails", testRotateKeyWithTaintedPublicKeyFails)
 }
 
 func testRotateKeySucceeds(t *testing.T) {
 	// given
-	w := importWalletWithKey(t)
-	kp := w.ListKeyPairs()[0]
+	w := importWalletWithTwoKeys(t)
+
+	currentPubKey := w.ListPublicKeys()[0]
+	newPubKey := w.ListPublicKeys()[1]
 
 	masterKeyPair, err := w.GetMasterKeyPair()
 	require.NoError(t, err)
@@ -565,7 +568,8 @@ func testRotateKeySucceeds(t *testing.T) {
 	req := &wallet.RotateKeyRequest{
 		Wallet:            w.Name(),
 		Passphrase:        "passphrase",
-		PublicKey:         kp.PublicKey(),
+		PublicKey:         newPubKey.Key(),
+		CurrentPublicKey:  currentPubKey.Key(),
 		TxBlockHeight:     20,
 		TargetBlockHeight: 25,
 	}
@@ -599,7 +603,7 @@ func testRotateKeySucceeds(t *testing.T) {
 	require.NotNil(t, keyRotate)
 
 	require.Equal(t, req.TxBlockHeight, inputData.BlockHeight)
-	require.Equal(t, kp.Index(), keyRotate.KeyRotateSubmission.KeyNumber)
+	require.Equal(t, newPubKey.Index(), keyRotate.KeyRotateSubmission.KeyNumber)
 	require.Equal(t, req.TargetBlockHeight, keyRotate.KeyRotateSubmission.TargetBlock)
 	require.Equal(t, req.PublicKey, keyRotate.KeyRotateSubmission.NewPubKey)
 }
@@ -627,7 +631,7 @@ func testRotateWithNonExistingWalletFails(t *testing.T) {
 	assert.Nil(t, resp)
 }
 
-func testRotateKeyWithNonExistingPublicKeyFails(t *testing.T) {
+func testRotateKeyWithNonExistingNewPublicKeyFails(t *testing.T) {
 	// given
 	w := importWalletWithKey(t)
 
@@ -652,18 +656,49 @@ func testRotateKeyWithNonExistingPublicKeyFails(t *testing.T) {
 	require.Error(t, err)
 }
 
-func testRotateKeyWithTaintedPublicKeyFails(t *testing.T) {
+func testRotateKeyWithNonExistingCurrentPublicKeyFails(t *testing.T) {
 	// given
 	w := importWalletWithKey(t)
-	kp := w.ListKeyPairs()[0]
 
-	err := w.TaintKey(kp.PublicKey())
+	newPubKey := w.ListPublicKeys()[0]
+
+	req := &wallet.RotateKeyRequest{
+		Wallet:            w.Name(),
+		Passphrase:        "passphrase",
+		PublicKey:         newPubKey.Key(),
+		CurrentPublicKey:  "non-existing",
+		TxBlockHeight:     20,
+		TargetBlockHeight: 25,
+	}
+
+	// setup
+	store := handlerMocks(t)
+	store.EXPECT().WalletExists(req.Wallet).Times(1).Return(true)
+	store.EXPECT().GetWallet(req.Wallet, req.Passphrase).Times(1).Return(w, nil)
+
+	// when
+	resp, err := wallet.RotateKey(store, req)
+
+	// then
+	require.Nil(t, resp)
+	require.Error(t, err)
+}
+
+func testRotateKeyWithTaintedPublicKeyFails(t *testing.T) {
+	// given
+	w := importWalletWithTwoKeys(t)
+
+	currentPubKey := w.ListPublicKeys()[0]
+	newPubKey := w.ListPublicKeys()[1]
+
+	err := w.TaintKey(newPubKey.Key())
 	require.NoError(t, err)
 
 	req := &wallet.RotateKeyRequest{
 		Wallet:            w.Name(),
 		Passphrase:        "passphrase",
-		PublicKey:         kp.PublicKey(),
+		PublicKey:         newPubKey.Key(),
+		CurrentPublicKey:  currentPubKey.Key(),
 		TxBlockHeight:     20,
 		TargetBlockHeight: 25,
 	}
@@ -698,6 +733,16 @@ func newWalletWithKeys(t *testing.T, n int) *wallet.HDWallet {
 	return w
 }
 
+func importWalletWithTwoKeys(t *testing.T) *wallet.HDWallet {
+	t.Helper()
+	w := importWalletWithKey(t)
+	if _, err := w.GenerateKeyPair(nil); err != nil {
+		t.Fatalf("couldn't generate second key: %v", err)
+	}
+
+	return w
+}
+
 func importWalletWithKey(t *testing.T) *wallet.HDWallet {
 	t.Helper()
 	w, err := wallet.ImportHDWallet(
@@ -712,6 +757,7 @@ func importWalletWithKey(t *testing.T) *wallet.HDWallet {
 	if _, err := w.GenerateKeyPair(nil); err != nil {
 		t.Fatalf("couldn't generate key: %v", err)
 	}
+
 	return w
 }
 
