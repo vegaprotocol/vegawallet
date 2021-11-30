@@ -71,8 +71,7 @@ func BuildCmdDeleteNetwork(w io.Writer, handler DeleteNetworkHandler, rf *RootFl
 				return err
 			}
 
-			switch rf.Output {
-			case flags.InteractiveOutput:
+			if rf.Output == flags.InteractiveOutput {
 				PrintDeleteNetworkResponse(w, f.Network)
 			}
 
