@@ -17,7 +17,6 @@ func NewCmdTx(w io.Writer, rf *RootFlags) *cobra.Command {
 		Long:  "Provides utilities for interacting with transactions",
 	}
 
-	// create subcommands
 	cmd.AddCommand(NewCmdTxSend(w, rf))
 	return cmd
 }

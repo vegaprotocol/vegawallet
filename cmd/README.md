@@ -16,6 +16,22 @@ vegawallet -h
 vegawallet help
 ```
 
+## Add auto-completion to your shell
+
+To let you shell auto-complete the commands and flags, you will have to install
+vegawallet completion script generated through the following command:
+
+```sh
+vegawallet completion <SHELL>
+```
+
+The supported shells are: bash, zsh, fish and powershell.
+
+To know how to install the completion script, refer to the help section using:
+```sh
+vegawallet completion --help
+```
+
 ## Initialise the program
 
 Before using the wallet, you need to initialise it with the following command:

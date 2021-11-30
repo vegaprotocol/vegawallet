@@ -117,15 +117,21 @@ func BuildCmdRunService(w io.Writer, handler RunServiceHandler, rf *RootFlags) *
 	cmd.Flags().BoolVar(&f.StartConsole,
 		"console-proxy",
 		false,
-		"Start the Vega console proxy and open the console in the default browser")
+		"Start the Vega console proxy and open the console in the default browser",
+	)
 	cmd.Flags().BoolVar(&f.NoBrowser,
 		"no-browser",
 		false,
-		"Do not open the default browser when starting the console proxy (requires: --console-proxy)")
+		"Do not open the default browser when starting the console proxy (requires: --console-proxy)",
+	)
 	cmd.Flags().StringVar(&f.LogLevel,
 		"level",
 		"",
-		fmt.Sprintf("Set the log level: %v (default: value set by the network configuration)", SupportedLogLevels))
+		fmt.Sprintf("Set the log level: %v (default: value set by the network configuration)", SupportedLogLevels),
+	)
+
+	autoCompleteNetwork(cmd, rf.Home)
+	autoCompleteLogLevel(cmd)
 
 	return cmd
 }

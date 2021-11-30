@@ -59,7 +59,16 @@ func BuildCmdRoot(w io.Writer, vh CheckVersionHandler) *cobra.Command {
 		Example:       rootExamples,
 		SilenceUsage:  true,
 		SilenceErrors: true,
-		PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
+		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
+			// The `__complete` command is being run to build up the auto-completion
+			// file. We should skip any verification to not temper with the process.
+			// Any additional printing will end up in the auto-completion registry.
+			// The `completion` command output the completion script for a given
+			// shell, that should not be tempered with. We should skip it as well.
+			if cmd.Name() == "__complete" || cmd.Name() == "completion" {
+				return nil
+			}
+
 			if err := f.Validate(); err != nil {
 				return err
 			}
@@ -101,8 +110,14 @@ func BuildCmdRoot(w io.Writer, vh CheckVersionHandler) *cobra.Command {
 		"Do not check for new version of the Vega wallet",
 	)
 
+	_ = cmd.MarkPersistentFlagDirname("home")
+	_ = cmd.RegisterFlagCompletionFunc("output", func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
+		return flags.AvailableOutputs, cobra.ShellCompDirectiveDefault
+	})
+
 	// Root commands
 	cmd.AddCommand(NewCmdInit(w, f))
+	cmd.AddCommand(NewCmdCompletion(w))
 	cmd.AddCommand(NewCmdSignMessage(w, f))
 	cmd.AddCommand(NewCmdVerifyMessage(w, f))
 	cmd.AddCommand(NewCmdVersion(w, f))
