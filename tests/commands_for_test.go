@@ -439,6 +439,14 @@ func NetworkList(t *testing.T, args []string) (*ListNetworksResponse, error) {
 	return resp, nil
 }
 
+func NetworkDelete(t *testing.T, args []string) error {
+	t.Helper()
+	argsWithCmd := []string{"network", "delete"}
+	argsWithCmd = append(argsWithCmd, args...)
+	_, err := ExecuteCmd(t, argsWithCmd)
+	return err
+}
+
 type DescribeNetworkResponse struct {
 	Name        string `json:"name"`
 	Level       string `json:"logLevel"`

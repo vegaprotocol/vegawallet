@@ -41,7 +41,6 @@ type PublicKey interface {
 	Index() uint32
 	AlgorithmVersion() uint32
 	AlgorithmName() string
-
 	MarshalJSON() ([]byte, error)
 	UnmarshalJSON(data []byte) error
 }
@@ -51,7 +50,6 @@ type MasterKeyPair interface {
 	PrivateKey() string
 	AlgorithmVersion() uint32
 	AlgorithmName() string
-
 	SignAny(data []byte) ([]byte, error)
 	Sign(data []byte) (*Signature, error)
 }

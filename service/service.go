@@ -21,7 +21,6 @@ import (
 	"code.vegaprotocol.io/vegawallet/wallet"
 
 	"github.com/golang/protobuf/jsonpb"
-	"github.com/golang/protobuf/proto"
 	"github.com/julienschmidt/httprouter"
 	"github.com/rs/cors"
 	"go.uber.org/zap"
@@ -405,7 +404,7 @@ type Auth interface {
 // NodeForward ...
 //go:generate go run github.com/golang/mock/mockgen -destination mocks/node_forward_mock.go -package mocks code.vegaprotocol.io/vegawallet/service NodeForward
 type NodeForward interface {
-	SendTx(context.Context, *commandspb.Transaction, api.SubmitTransactionRequest_Type) error
+	SendTx(context.Context, *commandspb.Transaction, api.SubmitTransactionRequest_Type) (string, error)
 	HealthCheck(context.Context) error
 	LastBlockHeight(context.Context) (uint64, error)
 }
@@ -741,26 +740,34 @@ func (s *Service) signTx(token string, w http.ResponseWriter, r *http.Request, _
 		return
 	}
 
-	if req.Propagate {
-		if err := s.nodeForward.SendTx(r.Context(), tx, ty); err != nil {
-			if st, ok := status.FromError(err); ok {
-				var details []string
-				for _, v := range st.Details() {
-					v, ok := v.(*typespb.ErrorDetail)
-					if !ok {
-						s.writeError(w, newErrorResponse(fmt.Sprintf("couldn't cast status details to error details: %v", v)), http.StatusInternalServerError)
-					}
-					details = append(details, v.Message)
-				}
-				s.writeError(w, newErrorWithDetails(err.Error(), details), http.StatusInternalServerError)
-			} else {
-				s.writeInternalError(w, err)
-			}
-			return
-		}
+	if !req.Propagate {
+		s.writeSuccess(w, nil)
+		return
 	}
 
-	s.writeSuccessProto(w, tx, http.StatusOK)
+	txHash, err := s.nodeForward.SendTx(r.Context(), tx, ty)
+	if err != nil {
+		if st, ok := status.FromError(err); ok {
+			var details []string
+			for _, v := range st.Details() {
+				v, ok := v.(*typespb.ErrorDetail)
+				if !ok {
+					s.writeError(w, newErrorResponse(fmt.Sprintf("couldn't cast status details to error details: %v", v)), http.StatusInternalServerError)
+				}
+				details = append(details, v.Message)
+			}
+			s.writeError(w, newErrorWithDetails(err.Error(), details), http.StatusInternalServerError)
+		} else {
+			s.writeInternalError(w, err)
+		}
+		return
+	}
+
+	s.writeSuccess(w, struct {
+		TxHash string `json:"txHash"`
+	}{
+		TxHash: txHash,
+	})
 }
 
 func (s *Service) Version(w http.ResponseWriter, _ *http.Request, _ httprouter.Params) {
@@ -869,19 +876,6 @@ func (s *Service) writeSuccess(w http.ResponseWriter, data interface{}) {
 		return
 	}
 	s.log.Info(fmt.Sprintf("%d %s", http.StatusOK, http.StatusText(http.StatusOK)))
-}
-
-func (s *Service) writeSuccessProto(w http.ResponseWriter, data proto.Message, status int) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-
-	marshaller := jsonpb.Marshaler{}
-	if err := marshaller.Marshal(w, data); err != nil {
-		s.log.Error("couldn't marshal proto message", zap.Error(err))
-		s.writeInternalError(w, fmt.Errorf("couldn't marshal proto message: %w", err))
-		return
-	}
-	s.log.Info(fmt.Sprintf("%d %s", status, http.StatusText(status)))
 }
 
 func (s *Service) handle(method string, path string, handle httprouter.Handle) {

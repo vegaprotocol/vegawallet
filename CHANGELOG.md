@@ -12,6 +12,8 @@
 - [385](https://github.com/vegaprotocol/vegawallet/pull/385) - Add command `delete` to delete a wallet
 - [398](https://github.com/vegaprotocol/vegawallet/pull/398) - More idiomatic test suite
 - [396](https://github.com/vegaprotocol/vegawallet/pull/396) - Update the "important" section of `key generate`
+- [405](https://github.com/vegaprotocol/vegawallet/pull/405) - Add command `network delete` to delete a network
+- [409](https://github.com/vegaprotocol/vegawallet/pull/409) - Return the tx hash after sending a transaction
 
 ### 🔥 Removal
 - [387](https://github.com/vegaprotocol/vegawallet/pull/387) - Remove network initialisation in favor of `network import`
