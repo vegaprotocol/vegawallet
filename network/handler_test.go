@@ -52,9 +52,8 @@ func testDeletingNonExistantNetworkFails(t *testing.T) {
 		Times(1).
 		Return(false, nil)
 
-	resp, err := network.DeleteNetwork(ts.store, &network.DeleteNetworkRequest{Name: net.Name})
+	err := network.DeleteNetwork(ts.store, &network.DeleteNetworkRequest{Name: net.Name})
 	require.EqualError(t, err, "network \"test\" doesn't exist")
-	require.Nil(t, resp)
 }
 
 func testDeletingNetwork(t *testing.T) {
@@ -76,11 +75,10 @@ func testDeletingNetwork(t *testing.T) {
 		Return(nil)
 
 	// when
-	resp, err := network.DeleteNetwork(ts.store, &network.DeleteNetworkRequest{Name: net.Name})
+	err := network.DeleteNetwork(ts.store, &network.DeleteNetworkRequest{Name: net.Name})
 
 	// then
 	require.Nil(t, err)
-	require.Equal(t, network.DeleteNetworkResponse{Name: "test"}, *resp)
 }
 
 func testImportingNetworkSucceeds(t *testing.T) {

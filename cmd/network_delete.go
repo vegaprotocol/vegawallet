@@ -25,12 +25,12 @@ var (
 )
 
 func NewCmdDeleteNetwork(w io.Writer, rf *RootFlags) *cobra.Command {
-	h := func(req *network.DeleteNetworkRequest) (*network.DeleteNetworkResponse, error) {
+	h := func(req *network.DeleteNetworkRequest) error {
 		vegaPaths := paths.New(rf.Home)
 
 		netStore, err := netstore.InitialiseStore(vegaPaths)
 		if err != nil {
-			return nil, fmt.Errorf("couldn't initialise networks store: %w", err)
+			return fmt.Errorf("couldn't initialise networks store: %w", err)
 		}
 
 		return network.DeleteNetwork(netStore, req)
@@ -66,16 +66,14 @@ func BuildCmdDeleteNetwork(w io.Writer, handler DeleteNetworkHandler, rf *RootFl
 			if err != nil {
 				return err
 			}
-			resp, err := handler(req)
+			err = handler(req)
 			if err != nil {
 				return err
 			}
 
 			switch rf.Output {
 			case flags.InteractiveOutput:
-				PrintDeleteNetworkResponse(w, resp)
-			case flags.JSONOutput:
-				return printer.FprintJSON(w, resp)
+				PrintDeleteNetworkResponse(w, f.Network)
 			}
 
 			return nil
@@ -91,11 +89,11 @@ func BuildCmdDeleteNetwork(w io.Writer, handler DeleteNetworkHandler, rf *RootFl
 	return cmd
 }
 
-type DeleteNetworkHandler func(*network.DeleteNetworkRequest) (*network.DeleteNetworkResponse, error)
+type DeleteNetworkHandler func(*network.DeleteNetworkRequest) error
 
-func PrintDeleteNetworkResponse(w io.Writer, resp *network.DeleteNetworkResponse) {
+func PrintDeleteNetworkResponse(w io.Writer, networkName string) {
 	p := printer.NewInteractivePrinter(w)
 	p.NextLine().Text("Network ")
-	p.WarningText(resp.Name)
+	p.WarningText(networkName)
 	p.Text(" deleted")
 }

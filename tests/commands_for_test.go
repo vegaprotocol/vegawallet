@@ -439,23 +439,12 @@ func NetworkList(t *testing.T, args []string) (*ListNetworksResponse, error) {
 	return resp, nil
 }
 
-type DeleteNetworkResponse struct {
-	Name string `json:"name"`
-}
-
-func NetworkDelete(t *testing.T, args []string) (*DeleteNetworkResponse, error) {
+func NetworkDelete(t *testing.T, args []string) error {
 	t.Helper()
 	argsWithCmd := []string{"network", "delete"}
 	argsWithCmd = append(argsWithCmd, args...)
-	output, err := ExecuteCmd(t, argsWithCmd)
-	if err != nil {
-		return nil, err
-	}
-	resp := &DeleteNetworkResponse{}
-	if err := json.Unmarshal(output, resp); err != nil {
-		t.Fatalf("couldn't unmarshal command output: %v", err)
-	}
-	return resp, nil
+	_, err := ExecuteCmd(t, argsWithCmd)
+	return err
 }
 
 type DescribeNetworkResponse struct {

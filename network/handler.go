@@ -175,20 +175,18 @@ type DeleteNetworkResponse struct {
 	Name string
 }
 
-func DeleteNetwork(store Store, req *DeleteNetworkRequest) (*DeleteNetworkResponse, error) {
-	resp := &DeleteNetworkResponse{}
+func DeleteNetwork(store Store, req *DeleteNetworkRequest) error {
 	exists, err := store.NetworkExists(req.Name)
 	if err != nil {
-		return nil, fmt.Errorf("couldn't verify network existence: %w", err)
+		return fmt.Errorf("couldn't verify network existence: %w", err)
 	}
 	if !exists {
-		return nil, NewNetworkDoesNotExistError(req.Name)
+		return NewNetworkDoesNotExistError(req.Name)
 	}
 	err = store.DeleteNetwork(req.Name)
 	if err != nil {
-		return nil, fmt.Errorf("couldn't delete network: %w", err)
+		return fmt.Errorf("couldn't delete network: %w", err)
 	}
 
-	resp.Name = req.Name
-	return resp, nil
+	return nil
 }
