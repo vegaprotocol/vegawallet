@@ -603,7 +603,7 @@ func testRotateKeySucceeds(t *testing.T) {
 	require.NotNil(t, keyRotate)
 
 	require.Equal(t, req.TxBlockHeight, inputData.BlockHeight)
-	require.Equal(t, newPubKey.Index(), keyRotate.KeyRotateSubmission.KeyNumber)
+	require.Equal(t, newPubKey.Index(), keyRotate.KeyRotateSubmission.NewPubKeyIndex)
 	require.Equal(t, req.TargetBlockHeight, keyRotate.KeyRotateSubmission.TargetBlock)
 	require.Equal(t, req.NewPublicKey, keyRotate.KeyRotateSubmission.NewPubKey)
 }
