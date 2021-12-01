@@ -23,6 +23,7 @@
 - [395](https://github.com/vegaprotocol/vegawallet/pull/395) - Fix `command send` examples
 - [401](https://github.com/vegaprotocol/vegawallet/pull/400) - Update key rotation submission command
 - [410](https://github.com/vegaprotocol/vegawallet/pull/410) - Add current pub key hash to key rotation submission command
+- [415](https://github.com/vegaprotocol/vegawallet/pull/415) - Update to latest key rotation protos
 
 ## 0.10.0
 *2021-11-15*
