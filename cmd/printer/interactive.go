@@ -104,6 +104,16 @@ func (p *InteractivePrinter) Bold(name string) *InteractivePrinter {
 	return p
 }
 
+func (p *InteractivePrinter) DangerBold(name string) *InteractivePrinter {
+	p.printOut(termenv.String(name).Bold().Foreground(p.profile.Color("1")).String())
+	return p
+}
+
+func (p *InteractivePrinter) SuccessBold(name string) *InteractivePrinter {
+	p.printOut(termenv.String(name).Bold().Foreground(p.profile.Color("2")).String())
+	return p
+}
+
 func (p *InteractivePrinter) Underline(name string) *InteractivePrinter {
 	p.printOut(termenv.String(name).Underline().String())
 	return p
