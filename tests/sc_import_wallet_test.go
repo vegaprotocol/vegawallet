@@ -10,11 +10,8 @@ import (
 func TestImportWalletV1(t *testing.T) {
 	// given
 	home := t.TempDir()
-
 	_, passphraseFilePath := NewPassphraseFile(t, home)
-
 	mnemonicFilePath := NewFile(t, home, "mnemonic.txt", testMnemonic)
-
 	walletName := vgrand.RandomStr(5)
 
 	// when
@@ -31,6 +28,7 @@ func TestImportWalletV1(t *testing.T) {
 	require.NoError(t, err)
 	AssertImportWallet(t, importWalletResp).
 		WithName(walletName).
+		WithPublicKey("30ebce58d94ad37c4ff6a9014c955c20e12468da956163228cc7ec9b98d3a371").
 		LocatedUnder(home)
 
 	// when
@@ -58,7 +56,7 @@ func TestImportWalletV1(t *testing.T) {
 	// then
 	require.NoError(t, err)
 	require.NotNil(t, listKeysResp1)
-	require.Len(t, listKeysResp1.Keys, 0)
+	require.Len(t, listKeysResp1.Keys, 1)
 
 	// when
 	generateKeyResp, err := KeyGenerate(t, []string{
@@ -72,22 +70,29 @@ func TestImportWalletV1(t *testing.T) {
 	// then
 	require.NoError(t, err)
 	AssertGenerateKey(t, generateKeyResp).
-		WithoutWalletCreation().
-		WithName(walletName).
-		WithVersion(1).
 		WithMeta(map[string]string{"name": "key-1", "role": "validation"}).
-		WithPublicKey("30ebce58d94ad37c4ff6a9014c955c20e12468da956163228cc7ec9b98d3a371").
+		WithPublicKey("de998bab8d15a6f6b9584251ff156c2424ccdf1de8ba00e4933595773e9e00dc").
 		LocatedUnder(home)
+
+	// when
+	listKeysResp2, err := KeyList(t, []string{
+		"--home", home,
+		"--output", "json",
+		"--wallet", walletName,
+		"--passphrase-file", passphraseFilePath,
+	})
+
+	// then
+	require.NoError(t, err)
+	require.NotNil(t, listKeysResp2)
+	require.Len(t, listKeysResp2.Keys, 2)
 }
 
 func TestImportWalletV2(t *testing.T) {
 	// given
 	home := t.TempDir()
-
 	_, passphraseFilePath := NewPassphraseFile(t, home)
-
 	mnemonicFilePath := NewFile(t, home, "mnemonic.txt", testMnemonic)
-
 	walletName := vgrand.RandomStr(5)
 
 	// when
@@ -104,6 +109,7 @@ func TestImportWalletV2(t *testing.T) {
 	require.NoError(t, err)
 	AssertImportWallet(t, importWalletResp).
 		WithName(walletName).
+		WithPublicKey("b5fd9d3c4ad553cb3196303b6e6df7f484cf7f5331a572a45031239fd71ad8a0").
 		LocatedUnder(home)
 
 	// when
@@ -131,7 +137,7 @@ func TestImportWalletV2(t *testing.T) {
 	// then
 	require.NoError(t, err)
 	require.NotNil(t, listKeysResp1)
-	require.Len(t, listKeysResp1.Keys, 0)
+	require.Len(t, listKeysResp1.Keys, 1)
 
 	// when
 	generateKeyResp, err := KeyGenerate(t, []string{
@@ -145,10 +151,20 @@ func TestImportWalletV2(t *testing.T) {
 	// then
 	require.NoError(t, err)
 	AssertGenerateKey(t, generateKeyResp).
-		WithoutWalletCreation().
-		WithName(walletName).
-		WithVersion(2).
 		WithMeta(map[string]string{"name": "key-1", "role": "validation"}).
-		WithPublicKey("b5fd9d3c4ad553cb3196303b6e6df7f484cf7f5331a572a45031239fd71ad8a0").
+		WithPublicKey("988eae323a07f12363c17025c23ee58ea32ac3912398e16bb0b56969f57adc52").
 		LocatedUnder(home)
+
+	// when
+	listKeysResp2, err := KeyList(t, []string{
+		"--home", home,
+		"--output", "json",
+		"--wallet", walletName,
+		"--passphrase-file", passphraseFilePath,
+	})
+
+	// then
+	require.NoError(t, err)
+	require.NotNil(t, listKeysResp2)
+	require.Len(t, listKeysResp2.Keys, 2)
 }

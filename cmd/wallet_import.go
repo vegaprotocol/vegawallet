@@ -18,7 +18,7 @@ import (
 
 var (
 	importWalletLong = cli.LongDesc(`
-		Import a wallet using the mnemonic.
+		Import a wallet using the mnemonic and generate the first Ed25519 key pair.
 	`)
 
 	importWalletExample = cli.Examples(`
@@ -96,7 +96,6 @@ func BuildCmdImportWallet(w io.Writer, handler ImportWalletHandler, rf *RootFlag
 		fmt.Sprintf("Version of the wallet to import: %v", wallet.SupportedVersions),
 	)
 
-	autoCompleteWallet(cmd, rf.Home)
 	_ = cmd.RegisterFlagCompletionFunc("version", func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
 		vs := make([]string, 0, len(wallet.SupportedVersions))
 		for i, v := range wallet.SupportedVersions {
@@ -134,7 +133,7 @@ func (f *ImportWalletFlags) Validate() (*wallet.ImportWalletRequest, error) {
 	}
 	req.Mnemonic = strings.Trim(string(mnemonic), "\n")
 
-	passphrase, err := flags.GetPassphrase(f.PassphraseFile)
+	passphrase, err := flags.GetConfirmedPassphrase(f.PassphraseFile)
 	if err != nil {
 		return nil, err
 	}
@@ -146,11 +145,16 @@ func (f *ImportWalletFlags) Validate() (*wallet.ImportWalletRequest, error) {
 func PrintImportWalletResponse(w io.Writer, resp *wallet.ImportWalletResponse) {
 	p := printer.NewInteractivePrinter(w)
 
-	p.CheckMark().Text("Wallet ").Bold(resp.Name).Text(" has been imported at: ").SuccessText(resp.FilePath).NextLine()
+	p.CheckMark().Text("Wallet ").Bold(resp.Wallet.Name).Text(" has been imported at: ").SuccessText(resp.Wallet.FilePath).NextLine()
+	p.CheckMark().Text("First key pair has been generated for wallet ").Bold(resp.Wallet.Name).Text(" at: ").SuccessText(resp.Wallet.FilePath).NextLine()
 	p.CheckMark().SuccessText("Importing the wallet succeeded").NextSection()
 
-	p.BlueArrow().InfoText("Generate a key pair").NextLine()
-	p.Text("To generate a key pair on a given wallet, use the following command:").NextSection()
-	p.Code(fmt.Sprintf("%s key generate --wallet \"%s\"", os.Args[0], resp.Name)).NextSection()
-	p.Text("For more information, use ").Bold("--help").Text(" flag.").NextLine()
+	p.WarningText(fmt.Sprintf("%d", resp.Wallet.Version)).NextLine()
+	p.Text("First public key:").NextLine()
+	p.WarningText(resp.Key.PublicKey).NextLine()
+	p.NextSection()
+
+	p.BlueArrow().InfoText("Run the service").NextLine()
+	p.Text("Now, you can run the service. See the following command:").NextSection()
+	p.Code(fmt.Sprintf("%s service run --help", os.Args[0])).NextSection()
 }

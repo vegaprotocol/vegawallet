@@ -12,26 +12,21 @@ import (
 func TestDeleteWallet(t *testing.T) {
 	// given
 	home := t.TempDir()
-
 	_, passphraseFilePath := NewPassphraseFile(t, home)
-
 	walletName := vgrand.RandomStr(5)
 
 	// when
-	generateKeyResp, err := KeyGenerate(t, []string{
+	createWalletResp, err := WalletCreate(t, []string{
 		"--home", home,
 		"--output", "json",
 		"--wallet", walletName,
 		"--passphrase-file", passphraseFilePath,
-		"--meta", "name:key-1,role:validation",
 	})
 
 	// then
 	require.NoError(t, err)
-	AssertGenerateKey(t, generateKeyResp).
-		WithWalletCreation().
+	AssertCreateWallet(t, createWalletResp).
 		WithName(walletName).
-		WithMeta(map[string]string{"name": "key-1", "role": "validation"}).
 		LocatedUnder(home)
 
 	// when
@@ -44,7 +39,7 @@ func TestDeleteWallet(t *testing.T) {
 
 	// then
 	require.NoError(t, err)
-	assert.NoFileExists(t, generateKeyResp.Wallet.FilePath)
+	assert.NoFileExists(t, createWalletResp.Wallet.FilePath)
 }
 
 func TestDeleteNonExistingWallet(t *testing.T) {

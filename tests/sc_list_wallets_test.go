@@ -11,13 +11,11 @@ import (
 func TestListWallets(t *testing.T) {
 	// given
 	home := t.TempDir()
-
 	_, passphraseFilePath := NewPassphraseFile(t, home)
-
 	walletName1 := "a" + vgrand.RandomStr(5)
 
 	// when
-	generateKeyResp1, err := KeyGenerate(t, []string{
+	createWalletResp1, err := WalletCreate(t, []string{
 		"--home", home,
 		"--output", "json",
 		"--wallet", walletName1,
@@ -26,10 +24,8 @@ func TestListWallets(t *testing.T) {
 
 	// then
 	require.NoError(t, err)
-	AssertGenerateKey(t, generateKeyResp1).
-		WithWalletCreation().
+	AssertCreateWallet(t, createWalletResp1).
 		WithName(walletName1).
-		WithMeta(map[string]string{"name": DefaultMetaName(t, walletName1, 1)}).
 		LocatedUnder(home)
 
 	// when
@@ -42,13 +38,13 @@ func TestListWallets(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, listWalletsResp1)
 	require.Len(t, listWalletsResp1.Wallets, 1)
-	assert.Equal(t, listWalletsResp1.Wallets[0], generateKeyResp1.Wallet.Name)
+	assert.Equal(t, listWalletsResp1.Wallets[0], createWalletResp1.Wallet.Name)
 
 	// given
 	walletName2 := "b" + vgrand.RandomStr(5)
 
 	// when
-	generateKeyResp2, err := KeyGenerate(t, []string{
+	createWalletResp2, err := WalletCreate(t, []string{
 		"--home", home,
 		"--output", "json",
 		"--wallet", walletName2,
@@ -57,10 +53,8 @@ func TestListWallets(t *testing.T) {
 
 	// then
 	require.NoError(t, err)
-	AssertGenerateKey(t, generateKeyResp2).
-		WithWalletCreation().
+	AssertCreateWallet(t, createWalletResp2).
 		WithName(walletName2).
-		WithMeta(map[string]string{"name": DefaultMetaName(t, walletName2, 1)}).
 		LocatedUnder(home)
 
 	// when
@@ -73,6 +67,6 @@ func TestListWallets(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, listWalletsResp2)
 	require.Len(t, listWalletsResp2.Wallets, 2)
-	assert.Equal(t, listWalletsResp2.Wallets[0], generateKeyResp1.Wallet.Name)
-	assert.Equal(t, listWalletsResp2.Wallets[1], generateKeyResp2.Wallet.Name)
+	assert.Equal(t, listWalletsResp2.Wallets[0], createWalletResp1.Wallet.Name)
+	assert.Equal(t, listWalletsResp2.Wallets[1], createWalletResp2.Wallet.Name)
 }

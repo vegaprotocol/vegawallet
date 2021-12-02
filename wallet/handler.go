@@ -371,6 +371,61 @@ func GetWalletInfo(store Store, req *GetWalletInfoRequest) (*GetWalletInfoRespon
 	}, nil
 }
 
+type CreateWalletRequest struct {
+	Wallet     string
+	Passphrase string
+}
+
+type CreateWalletResponse struct {
+	Wallet struct {
+		Name     string `json:"name"`
+		Version  uint32 `json:"version"`
+		FilePath string `json:"filePath"`
+		Mnemonic string `json:"mnemonic,omitempty"`
+	} `json:"wallet"`
+	Key struct {
+		PublicKey string `json:"publicKey"`
+		Algorithm struct {
+			Name    string `json:"name"`
+			Version uint32 `json:"version"`
+		} `json:"algorithm"`
+		Meta []Meta `json:"meta"`
+	} `json:"key"`
+}
+
+func CreateWallet(store Store, req *CreateWalletRequest) (*CreateWalletResponse, error) {
+	resp := &CreateWalletResponse{}
+
+	if store.WalletExists(req.Wallet) {
+		return nil, ErrWalletAlreadyExists
+	}
+
+	w, mnemonic, err := NewHDWallet(req.Wallet)
+	if err != nil {
+		return nil, fmt.Errorf("couldn't create HD wallet: %w", err)
+	}
+
+	kp, err := w.GenerateKeyPair(addDefaultKeyName(w, nil))
+	if err != nil {
+		return nil, err
+	}
+
+	if err := store.SaveWallet(w, req.Passphrase); err != nil {
+		return nil, fmt.Errorf("couldn't save wallet: %w", err)
+	}
+
+	resp.Wallet.Name = req.Wallet
+	resp.Wallet.Mnemonic = mnemonic
+	resp.Wallet.Version = w.Version()
+	resp.Wallet.FilePath = store.GetWalletPath(req.Wallet)
+	resp.Key.PublicKey = kp.PublicKey()
+	resp.Key.Algorithm.Name = kp.AlgorithmName()
+	resp.Key.Algorithm.Version = kp.AlgorithmVersion()
+	resp.Key.Meta = kp.Meta()
+
+	return resp, nil
+}
+
 type ImportWalletRequest struct {
 	Wallet     string
 	Mnemonic   string
@@ -379,8 +434,19 @@ type ImportWalletRequest struct {
 }
 
 type ImportWalletResponse struct {
-	Name     string `json:"name"`
-	FilePath string `json:"filePath"`
+	Wallet struct {
+		Name     string `json:"name"`
+		Version  uint32 `json:"version"`
+		FilePath string `json:"filePath"`
+	} `json:"wallet"`
+	Key struct {
+		PublicKey string `json:"publicKey"`
+		Algorithm struct {
+			Name    string `json:"name"`
+			Version uint32 `json:"version"`
+		} `json:"algorithm"`
+		Meta []Meta `json:"meta"`
+	} `json:"key"`
 }
 
 func ImportWallet(store Store, req *ImportWalletRequest) (*ImportWalletResponse, error) {
@@ -393,14 +459,25 @@ func ImportWallet(store Store, req *ImportWalletRequest) (*ImportWalletResponse,
 		return nil, fmt.Errorf("couldn't import the wallet: %w", err)
 	}
 
-	if err := store.SaveWallet(w, req.Passphrase); err != nil {
-		return nil, fmt.Errorf("couldn't save wallet %s: %w", w.Name(), err)
+	kp, err := w.GenerateKeyPair(addDefaultKeyName(w, nil))
+	if err != nil {
+		return nil, err
 	}
 
-	return &ImportWalletResponse{
-		Name:     w.Name(),
-		FilePath: store.GetWalletPath(w.Name()),
-	}, nil
+	if err := store.SaveWallet(w, req.Passphrase); err != nil {
+		return nil, fmt.Errorf("couldn't save wallet: %w", err)
+	}
+
+	resp := &ImportWalletResponse{}
+	resp.Wallet.Name = req.Wallet
+	resp.Wallet.Version = w.Version()
+	resp.Wallet.FilePath = store.GetWalletPath(req.Wallet)
+	resp.Key.PublicKey = kp.PublicKey()
+	resp.Key.Algorithm.Name = kp.AlgorithmName()
+	resp.Key.Algorithm.Version = kp.AlgorithmVersion()
+	resp.Key.Meta = kp.Meta()
+
+	return resp, nil
 }
 
 type ListWalletsResponse struct {

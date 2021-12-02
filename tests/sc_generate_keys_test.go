@@ -7,68 +7,70 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestGenerateAndListKeys(t *testing.T) {
+func TestGenerateKey(t *testing.T) {
 	// given
 	home := t.TempDir()
-
 	_, passphraseFilePath := NewPassphraseFile(t, home)
-
 	walletName := vgrand.RandomStr(5)
 
-	cmd := []string{
+	// when
+	createWalletResp, err := WalletCreate(t, []string{
 		"--home", home,
 		"--output", "json",
 		"--wallet", walletName,
 		"--passphrase-file", passphraseFilePath,
-	}
-
-	// when
-	generateKeyResp1, err := KeyGenerate(t, append(cmd,
-		"--meta", "name:key-1,role:validation",
-	))
+	})
 
 	// then
 	require.NoError(t, err)
-	AssertGenerateKey(t, generateKeyResp1).
-		WithWalletCreation().
+	AssertCreateWallet(t, createWalletResp).
 		WithName(walletName).
-		WithVersion(2).
-		WithMeta(map[string]string{"name": "key-1", "role": "validation"}).
 		LocatedUnder(home)
 
 	// when
-	descResp, err := KeyDescribe(t, append(cmd,
-		"--pubkey", generateKeyResp1.Key.PublicKey,
-	))
+	descResp, err := KeyDescribe(t, []string{
+		"--home", home,
+		"--output", "json",
+		"--wallet", walletName,
+		"--passphrase-file", passphraseFilePath,
+		"--pubkey", createWalletResp.Key.PublicKey,
+	})
 
 	// then
 	require.NoError(t, err)
 	AssertDescribeKey(t, descResp).
-		WithMeta(map[string]string{"name": "key-1", "role": "validation"}).
+		WithMeta(map[string]string{"name": DefaultMetaName(t, walletName, 1)}).
 		WithAlgorithm("vega/ed25519", 1).
 		WithTainted(false)
 
 	// when
-	generateKeyResp2, err := KeyGenerate(t, cmd)
+	generateKeyResp, err := KeyGenerate(t, []string{
+		"--home", home,
+		"--output", "json",
+		"--wallet", walletName,
+		"--passphrase-file", passphraseFilePath,
+		"--meta", "name:key-2,role:validation",
+	})
 
 	// then
 	require.NoError(t, err)
-	AssertGenerateKey(t, generateKeyResp2).
-		WithoutWalletCreation().
-		WithName(walletName).
-		WithVersion(2).
-		WithMeta(map[string]string{"name": DefaultMetaName(t, walletName, 2)}).
+	AssertGenerateKey(t, generateKeyResp).
+		WithMeta(map[string]string{"name": "key-2", "role": "validation"}).
 		LocatedUnder(home)
 
 	// when
-	descResp, err = KeyDescribe(t, append(cmd,
-		"--pubkey", generateKeyResp2.Key.PublicKey,
-	))
+	descResp, err = KeyDescribe(t, []string{
+		"--home", home,
+		"--output", "json",
+		"--wallet", walletName,
+		"--passphrase-file", passphraseFilePath,
+		"--pubkey", generateKeyResp.Key.PublicKey,
+	})
 
 	// then
 	require.NoError(t, err)
 	AssertDescribeKey(t, descResp).
-		WithMeta(map[string]string{"name": DefaultMetaName(t, walletName, 2)}).
+		WithMeta(map[string]string{"name": "key-2", "role": "validation"}).
 		WithAlgorithm("vega/ed25519", 1).
 		WithTainted(false)
 }
