@@ -9,10 +9,9 @@ import (
 func TestDeleteNetwork(t *testing.T) {
 	// given
 	home := t.TempDir()
-
 	networkFile := NewFile(t, home, "my-network-1.toml", FakeNetwork("my-network-1"))
 
-	// when (import network)
+	// when
 	importNetworkResp, err := NetworkImport(t, []string{
 		"--home", home,
 		"--output", "json",
@@ -25,7 +24,7 @@ func TestDeleteNetwork(t *testing.T) {
 		WithName("my-network-1").
 		LocatedUnder(home)
 
-	// when (list networks)
+	// when
 	listNetsResp1, err := NetworkList(t, []string{
 		"--home", home,
 		"--output", "json",
@@ -34,9 +33,10 @@ func TestDeleteNetwork(t *testing.T) {
 	// then
 	require.NoError(t, err)
 	require.NotNil(t, listNetsResp1)
-	require.Equal(t, []string{"my-network-1"}, listNetsResp1.Networks)
+	AssertListNetwork(t, listNetsResp1).
+		WithNetworks("my-network-1")
 
-	// when (delete the network)
+	// when
 	err = NetworkDelete(t, []string{
 		"--home", home,
 		"--output", "json",
@@ -46,7 +46,7 @@ func TestDeleteNetwork(t *testing.T) {
 	// then
 	require.NoError(t, err)
 
-	// when (list networks again)
+	// when
 	listNetsResp2, err := NetworkList(t, []string{
 		"--home", home,
 		"--output", "json",
@@ -55,5 +55,6 @@ func TestDeleteNetwork(t *testing.T) {
 	// then
 	require.NoError(t, err)
 	require.NotNil(t, listNetsResp2)
-	require.Equal(t, []string{}, listNetsResp2.Networks)
+	AssertListNetwork(t, listNetsResp2).
+		WithoutNetwork()
 }

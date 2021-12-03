@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"sort"
 	"strings"
 	"testing"
 
@@ -128,21 +129,19 @@ func AssertGenerateKey(t *testing.T, resp *GenerateKeyResponse) *GenerateKeyAsse
 	}
 }
 
+// DEPRECATED.
 func (a *GenerateKeyAssertion) WithWalletCreation() *GenerateKeyAssertion {
 	assert.NotEmpty(a.t, a.resp.Wallet.Mnemonic)
 	return a
 }
 
-func (a *GenerateKeyAssertion) WithoutWalletCreation() *GenerateKeyAssertion {
-	assert.Empty(a.t, a.resp.Wallet.Mnemonic)
-	return a
-}
-
+// DEPRECATED.
 func (a *GenerateKeyAssertion) WithName(expected string) *GenerateKeyAssertion {
 	assert.Equal(a.t, expected, a.resp.Wallet.Name)
 	return a
 }
 
+// DEPRECATED.
 func (a *GenerateKeyAssertion) WithVersion(expected uint32) *GenerateKeyAssertion {
 	assert.Equal(a.t, expected, a.resp.Wallet.Version)
 	return a
@@ -439,6 +438,33 @@ func NetworkList(t *testing.T, args []string) (*ListNetworksResponse, error) {
 	return resp, nil
 }
 
+type ListNetworkAssertion struct {
+	t    *testing.T
+	resp *ListNetworksResponse
+}
+
+func AssertListNetwork(t *testing.T, resp *ListNetworksResponse) *ListNetworkAssertion {
+	t.Helper()
+
+	assert.NotNil(t, resp)
+
+	return &ListNetworkAssertion{
+		t:    t,
+		resp: resp,
+	}
+}
+
+func (a *ListNetworkAssertion) WithNetworks(networks ...string) *ListNetworkAssertion {
+	sort.Strings(networks)
+	assert.Equal(a.t, networks, a.resp.Networks)
+	return a
+}
+
+func (a *ListNetworkAssertion) WithoutNetwork() *ListNetworkAssertion {
+	assert.Empty(a.t, a.resp.Networks)
+	return a
+}
+
 func NetworkDelete(t *testing.T, args []string) error {
 	t.Helper()
 	argsWithCmd := []string{"network", "delete"}
@@ -622,9 +648,92 @@ func (a *VerifyAssertion) IsValid() *VerifyAssertion {
 	return a
 }
 
+type CreateWalletResponse struct {
+	Wallet struct {
+		Name     string `json:"name"`
+		Mnemonic string `json:"mnemonic"`
+		Version  uint32 `json:"version"`
+		FilePath string `json:"filePath"`
+	} `json:"wallet"`
+	Key struct {
+		PublicKey string `json:"publicKey"`
+		Algorithm struct {
+			Name    string `json:"name"`
+			Version uint32 `json:"version"`
+		} `json:"algorithm"`
+		Meta []struct {
+			Key   string `json:"key"`
+			Value string `json:"value"`
+		} `json:"meta"`
+	} `json:"key"`
+}
+
+func WalletCreate(t *testing.T, args []string) (*CreateWalletResponse, error) {
+	t.Helper()
+	argsWithCmd := []string{"create"}
+	argsWithCmd = append(argsWithCmd, args...)
+	output, err := ExecuteCmd(t, argsWithCmd)
+	if err != nil {
+		return nil, err
+	}
+	resp := &CreateWalletResponse{}
+	if err := json.Unmarshal(output, resp); err != nil {
+		t.Fatalf("couldn't unmarshal command output: %v", err)
+	}
+	return resp, nil
+}
+
+type CreateWalletAssertion struct {
+	t    *testing.T
+	resp *CreateWalletResponse
+}
+
+func AssertCreateWallet(t *testing.T, resp *CreateWalletResponse) *CreateWalletAssertion {
+	t.Helper()
+
+	assert.NotNil(t, resp)
+	assert.NotEmpty(t, resp.Wallet.Name)
+	assert.NotEmpty(t, resp.Wallet.Mnemonic)
+	assert.NotEmpty(t, resp.Wallet.Version)
+	assert.NotEmpty(t, resp.Wallet.FilePath)
+	assert.FileExists(t, resp.Wallet.FilePath)
+	assert.NotEmpty(t, resp.Key.PublicKey)
+	assert.Equal(t, "vega/ed25519", resp.Key.Algorithm.Name)
+	assert.Equal(t, uint32(1), resp.Key.Algorithm.Version)
+
+	return &CreateWalletAssertion{
+		t:    t,
+		resp: resp,
+	}
+}
+
+func (a *CreateWalletAssertion) WithName(expected string) *CreateWalletAssertion {
+	assert.Equal(a.t, expected, a.resp.Wallet.Name)
+	return a
+}
+
+func (a *CreateWalletAssertion) LocatedUnder(home string) *CreateWalletAssertion {
+	assert.True(a.t, strings.HasPrefix(a.resp.Wallet.FilePath, home), "wallet has not been created under home directory")
+	return a
+}
+
 type ImportWalletResponse struct {
-	Name     string `json:"name"`
-	FilePath string `json:"filePath"`
+	Wallet struct {
+		Name     string `json:"name"`
+		Version  uint32 `json:"version"`
+		FilePath string `json:"filePath"`
+	} `json:"wallet"`
+	Key struct {
+		PublicKey string `json:"publicKey"`
+		Algorithm struct {
+			Name    string `json:"name"`
+			Version uint32 `json:"version"`
+		} `json:"algorithm"`
+		Meta []struct {
+			Key   string `json:"key"`
+			Value string `json:"value"`
+		} `json:"meta"`
+	} `json:"key"`
 }
 
 func WalletImport(t *testing.T, args []string) (*ImportWalletResponse, error) {
@@ -651,9 +760,13 @@ func AssertImportWallet(t *testing.T, resp *ImportWalletResponse) *ImportWalletA
 	t.Helper()
 
 	assert.NotNil(t, resp)
-	assert.NotEmpty(t, resp.Name)
-	assert.NotEmpty(t, resp.FilePath)
-	assert.FileExists(t, resp.FilePath)
+	assert.NotEmpty(t, resp.Wallet.Name)
+	assert.NotEmpty(t, resp.Wallet.Version)
+	assert.NotEmpty(t, resp.Wallet.FilePath)
+	assert.FileExists(t, resp.Wallet.FilePath)
+	assert.NotEmpty(t, resp.Key.PublicKey)
+	assert.Equal(t, "vega/ed25519", resp.Key.Algorithm.Name)
+	assert.Equal(t, uint32(1), resp.Key.Algorithm.Version)
 
 	return &ImportWalletAssertion{
 		t:    t,
@@ -662,12 +775,17 @@ func AssertImportWallet(t *testing.T, resp *ImportWalletResponse) *ImportWalletA
 }
 
 func (a *ImportWalletAssertion) WithName(expected string) *ImportWalletAssertion {
-	assert.Equal(a.t, expected, a.resp.Name)
+	assert.Equal(a.t, expected, a.resp.Wallet.Name)
+	return a
+}
+
+func (a *ImportWalletAssertion) WithPublicKey(expected string) *ImportWalletAssertion {
+	assert.Equal(a.t, expected, a.resp.Key.PublicKey)
 	return a
 }
 
 func (a *ImportWalletAssertion) LocatedUnder(home string) *ImportWalletAssertion {
-	assert.True(a.t, strings.HasPrefix(a.resp.FilePath, home), "wallet has not been imported under home directory")
+	assert.True(a.t, strings.HasPrefix(a.resp.Wallet.FilePath, home), "wallet has not been imported under home directory")
 	return a
 }
 

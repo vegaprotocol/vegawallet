@@ -1,9 +1,6 @@
 # Vega Wallet
 
-`vegawallet` is the command line interface for running a Wallet service,
-implemented in Go. It is used to sign transactions for use
-on [Vega](#about-vega). Vega Wallet creates and manages HD wallets with ed25519
-key pairs.
+`vegawallet` is the command line interface for running a Wallet service, implemented in Go. It is used to sign transactions for use on [Vega](#about-vega). Vega Wallet creates and manages HD wallets with ed25519 key pairs.
 
 ## Documentation
 
@@ -89,7 +86,11 @@ cd vegawallet && go build
 
 #### Using the command-line
 
-See a list of commands available in the wallet [here](cmd/README.md).
+See a list of commands available using:
+
+```sh
+vegawallet --help
+```
 
 #### Using the API
 
@@ -106,11 +107,7 @@ generally.
 
 ## About Vega
 
-[Vega][vega-website] is a protocol for creating and trading derivatives on a
-fully decentralised network. The network, secured with proof-of-stake, will
-facilitate fully automated, end-to-end margin trading and execution of complex
-financial products. Anyone will be able to build decentralised markets using the
-protocol.
+[Vega][vega-website] is a protocol for creating and trading derivatives on a fully decentralised network. The network, secured with proof-of-stake, will facilitate fully automated, end-to-end margin trading and execution of complex financial products. Anyone will be able to build decentralised markets using the protocol.
 
 Read more at [https://vega.xyz][vega-website].
 

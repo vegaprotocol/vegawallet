@@ -17,6 +17,7 @@ var (
 	generateKeyLong = cli.LongDesc(`
 		Generate a new Ed25519 key pair in a given wallet.
 
+		DEPRECATED:
 		If the targeted wallet doesn't exist, it will be automatically generated.
 	`)
 
@@ -168,8 +169,9 @@ func PrintGenerateKeyResponse(w io.Writer, resp *wallet.GenerateKeyResponse) {
 
 	if walletHasBeenCreated {
 		p.RedArrow().DangerText("Important").NextLine()
-		p.Text("Write down the ").Bold("mnemonic").Text(" and the ").Bold("wallet's version").Text(", and store it somewhere safe and secure, now.").NextLine()
+		p.DangerText("Write down the ").DangerBold("mnemonic").DangerText(" and the ").DangerBold("wallet's version").DangerText(", and store it somewhere safe and secure, now.").NextLine()
 		p.DangerText("The mnemonic will not be displayed ever again, nor will you be able to retrieve it!").NextSection()
+		p.DangerText("Also, creating a wallet through this command is DEPRECATED. Please, use the `create` command.").NextSection()
 	}
 
 	p.BlueArrow().InfoText("Run the service").NextLine()

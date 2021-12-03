@@ -11,11 +11,8 @@ import (
 func TestSignMessage(t *testing.T) {
 	// given
 	home := t.TempDir()
-
 	_, passphraseFilePath := NewPassphraseFile(t, home)
-
 	mnemonicFilePath := NewFile(t, home, "mnemonic.txt", testMnemonic)
-
 	walletName := vgrand.RandomStr(5)
 
 	// when
@@ -34,25 +31,6 @@ func TestSignMessage(t *testing.T) {
 		WithName(walletName).
 		LocatedUnder(home)
 
-	// when
-	generateKeyResp, err := KeyGenerate(t, []string{
-		"--home", home,
-		"--output", "json",
-		"--wallet", walletName,
-		"--passphrase-file", passphraseFilePath,
-		"--meta", "name:key-1,role:validation",
-	})
-
-	// then
-	require.NoError(t, err)
-	AssertGenerateKey(t, generateKeyResp).
-		WithoutWalletCreation().
-		WithName(walletName).
-		WithVersion(2).
-		WithMeta(map[string]string{"name": "key-1", "role": "validation"}).
-		WithPublicKey("b5fd9d3c4ad553cb3196303b6e6df7f484cf7f5331a572a45031239fd71ad8a0").
-		LocatedUnder(home)
-
 	// given
 	message := []byte("Je ne connaîtrai pas la peur car la peur tue l'esprit.")
 	encodedMessage := base64.StdEncoding.EncodeToString(message)
@@ -62,7 +40,7 @@ func TestSignMessage(t *testing.T) {
 		"--home", home,
 		"--output", "json",
 		"--wallet", walletName,
-		"--pubkey", generateKeyResp.Key.PublicKey,
+		"--pubkey", importWalletResp.Key.PublicKey,
 		"--message", encodedMessage,
 		"--passphrase-file", passphraseFilePath,
 	})
@@ -76,7 +54,7 @@ func TestSignMessage(t *testing.T) {
 	verifyResp, err := Verify(t, []string{
 		"--home", home,
 		"--output", "json",
-		"--pubkey", generateKeyResp.Key.PublicKey,
+		"--pubkey", importWalletResp.Key.PublicKey,
 		"--message", encodedMessage,
 		"--signature", signResp.Signature,
 	})
@@ -89,11 +67,8 @@ func TestSignMessage(t *testing.T) {
 func TestSignMessageWithTaintedKey(t *testing.T) {
 	// given
 	home := t.TempDir()
-
 	_, passphraseFilePath := NewPassphraseFile(t, home)
-
 	mnemonicFilePath := NewFile(t, home, "mnemonic.txt", testMnemonic)
-
 	walletName := vgrand.RandomStr(5)
 
 	// when
@@ -110,23 +85,6 @@ func TestSignMessageWithTaintedKey(t *testing.T) {
 	require.NoError(t, err)
 	AssertImportWallet(t, importWalletResp).
 		WithName(walletName).
-		LocatedUnder(home)
-
-	// when
-	generateKeyResp, err := KeyGenerate(t, []string{
-		"--home", home,
-		"--output", "json",
-		"--wallet", walletName,
-		"--passphrase-file", passphraseFilePath,
-		"--meta", "name:key-1,role:validation",
-	})
-
-	// then
-	require.NoError(t, err)
-	AssertGenerateKey(t, generateKeyResp).
-		WithoutWalletCreation().
-		WithName(walletName).
-		WithMeta(map[string]string{"name": "key-1", "role": "validation"}).
 		WithPublicKey("b5fd9d3c4ad553cb3196303b6e6df7f484cf7f5331a572a45031239fd71ad8a0").
 		LocatedUnder(home)
 
@@ -135,7 +93,7 @@ func TestSignMessageWithTaintedKey(t *testing.T) {
 		"--home", home,
 		"--output", "json",
 		"--wallet", walletName,
-		"--pubkey", generateKeyResp.Key.PublicKey,
+		"--pubkey", importWalletResp.Key.PublicKey,
 		"--passphrase-file", passphraseFilePath,
 	})
 
@@ -151,7 +109,7 @@ func TestSignMessageWithTaintedKey(t *testing.T) {
 		"--home", home,
 		"--output", "json",
 		"--wallet", walletName,
-		"--pubkey", generateKeyResp.Key.PublicKey,
+		"--pubkey", importWalletResp.Key.PublicKey,
 		"--message", encodedMessage,
 		"--passphrase-file", passphraseFilePath,
 	})
@@ -165,7 +123,7 @@ func TestSignMessageWithTaintedKey(t *testing.T) {
 		"--home", home,
 		"--output", "json",
 		"--wallet", walletName,
-		"--pubkey", generateKeyResp.Key.PublicKey,
+		"--pubkey", importWalletResp.Key.PublicKey,
 		"--passphrase-file", passphraseFilePath,
 	})
 
@@ -177,7 +135,7 @@ func TestSignMessageWithTaintedKey(t *testing.T) {
 		"--home", home,
 		"--output", "json",
 		"--wallet", walletName,
-		"--pubkey", generateKeyResp.Key.PublicKey,
+		"--pubkey", importWalletResp.Key.PublicKey,
 		"--message", encodedMessage,
 		"--passphrase-file", passphraseFilePath,
 	})

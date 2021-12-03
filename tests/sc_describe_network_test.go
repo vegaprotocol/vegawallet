@@ -9,18 +9,14 @@ import (
 func TestDescribeNetwork(t *testing.T) {
 	// given
 	home := t.TempDir()
-
 	networkFile := NewFile(t, home, "my-network-1.toml", FakeNetwork("my-network-1"))
 
-	cmd := []string{
+	// when
+	importNetworkResp, err := NetworkImport(t, []string{
 		"--home", home,
 		"--output", "json",
-	}
-
-	// when
-	importNetworkResp, err := NetworkImport(t, append(cmd,
 		"--from-file", networkFile,
-	))
+	})
 
 	// then
 	require.NoError(t, err)
@@ -29,9 +25,11 @@ func TestDescribeNetwork(t *testing.T) {
 		LocatedUnder(home)
 
 	// when
-	describeResp, err := NetworkDescribe(t, append(cmd,
+	describeResp, err := NetworkDescribe(t, []string{
+		"--home", home,
+		"--output", "json",
 		"--network", "my-network-1",
-	))
+	})
 
 	// then
 	require.NoError(t, err)
@@ -45,9 +43,12 @@ func TestDescribeNetwork(t *testing.T) {
 		WithGraphQLConfig([]string{"https://example.com/gql/query"})
 
 	// when
-	describeResp, err = NetworkDescribe(t, append(cmd,
+	describeResp, err = NetworkDescribe(t, []string{
+		"--home", home,
+		"--output", "json",
+		"--from-file", networkFile,
 		"--network", "i-do-not-exist",
-	))
+	})
 
 	// then
 	require.Error(t, err)

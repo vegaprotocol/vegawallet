@@ -2,9 +2,13 @@
 
 ## Unreleased (0.11.0)
 
+
 ### 🚨 Breaking changes
 - [381](https://github.com/vegaprotocol/vegawallet/pull/381) - Make `send tx` and `send command` match `NOUN VERB` grammar
 - [384](https://github.com/vegaprotocol/vegawallet/pull/384) - Remove private key from key generate JSON output
+
+### 🗑️ Deprecation
+- [418](https://github.com/vegaprotocol/vegawallet/pull/418) - Wallet creation is deprecated with `key generate`, use `create` instead.
 
 ### 🛠 Improvements
 - [383](https://github.com/vegaprotocol/vegawallet/pull/383) - Add wallet version to `key generate` output
@@ -15,6 +19,8 @@
 - [405](https://github.com/vegaprotocol/vegawallet/pull/405) - Add command `network delete` to delete a network
 - [409](https://github.com/vegaprotocol/vegawallet/pull/409) - Return the tx hash after sending a transaction
 - [406](https://github.com/vegaprotocol/vegawallet/pull/406) - Add auto-completion to command line through `completion` sub-command
+- [418](https://github.com/vegaprotocol/vegawallet/pull/418) - Importing a wallet now generates the first key pair
+- [418](https://github.com/vegaprotocol/vegawallet/pull/418) - Add the `create` command to create a wallet
 
 ### 🔥 Removal
 - [387](https://github.com/vegaprotocol/vegawallet/pull/387) - Remove network initialisation in favor of `network import`
