@@ -32,3 +32,7 @@ func InitialiseService(store Store, overwrite bool) error {
 
 	return nil
 }
+
+func IsInitialised(store Store) (bool, error) {
+	return store.RSAKeysExists()
+}
