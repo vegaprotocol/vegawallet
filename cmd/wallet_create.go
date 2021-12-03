@@ -16,6 +16,10 @@ import (
 var (
 	createWalletLong = cli.LongDesc(`
 		Create a wallet and generate the first Ed25519 key pair.
+
+		You will be asked to create a passphrase. The passphrase is used to protect 
+		the file in which the keys are stored. This doesn't affect the key generation
+		process in any way.
 	`)
 
 	createWalletExample = cli.Examples(`

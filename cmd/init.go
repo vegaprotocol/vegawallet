@@ -23,10 +23,10 @@ var (
 	`)
 
 	initExample = cli.Examples(`
-		# Initialise the program
+		# Initialise the software
 		vegawallet init
 
-		# Re-initialise the program
+		# Re-initialise the software
 		vegawallet init --force
 	`)
 )
@@ -42,7 +42,7 @@ func BuildCmdInit(w io.Writer, handler InitHandler, rf *RootFlags) *cobra.Comman
 
 	cmd := &cobra.Command{
 		Use:     "init",
-		Short:   "Initialise the program",
+		Short:   "Initialise the software",
 		Long:    initLong,
 		Example: initExample,
 		RunE: func(_ *cobra.Command, _ []string) error {
@@ -65,7 +65,7 @@ func BuildCmdInit(w io.Writer, handler InitHandler, rf *RootFlags) *cobra.Comman
 	cmd.Flags().BoolVarP(&f.Force,
 		"force", "f",
 		false,
-		"Erase exiting wallet service configuration at the specified path",
+		"Overwrite exiting wallet configuration at the specified path",
 	)
 
 	return cmd

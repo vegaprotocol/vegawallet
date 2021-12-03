@@ -28,7 +28,7 @@ var (
 		# Disable colors on output using environment variable
 		NO_COLOR=1 vegawallet COMMAND
 
-		# Disable the verification of the program version
+		# Disable the verification of the software version
 		vegawallet --no-version-check COMMAND
 	`)
 )

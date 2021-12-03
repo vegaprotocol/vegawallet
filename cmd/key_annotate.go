@@ -17,8 +17,8 @@ var (
 		Add metadata to a key pair. All existing metadata is removed and replaced
 		by the specified new metadata.
 
-		The metadata is a list of key-value pairs. A key-value is colon-separated, and
-		the key-values are comma-separated.
+		The metadata is a list of key-value pairs. A key-value is colon-separated, 
+		and the key-values are comma-separated.
 
 		It is possible to give a name to a key pair, that is recognised by user
 		interfaces, by setting the metadata "name".

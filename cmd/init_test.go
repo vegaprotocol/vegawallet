@@ -11,11 +11,11 @@ import (
 )
 
 func TestInit(t *testing.T) {
-	t.Run("Initialising program succeeds", testInitialisingProgramSucceeds)
-	t.Run("Forcing program initialisation with force succeeds", testForcingProgramInitialisationSucceeds)
+	t.Run("Initialising software succeeds", testInitialisingSoftwareSucceeds)
+	t.Run("Forcing software initialisation succeeds", testForcingSoftwareInitialisationSucceeds)
 }
 
-func testInitialisingProgramSucceeds(t *testing.T) {
+func testInitialisingSoftwareSucceeds(t *testing.T) {
 	testDir := t.TempDir()
 
 	// given
@@ -35,7 +35,7 @@ func testInitialisingProgramSucceeds(t *testing.T) {
 	assert.FileExists(t, resp.RSAKeys.PublicKeyFilePath)
 }
 
-func testForcingProgramInitialisationSucceeds(t *testing.T) {
+func testForcingSoftwareInitialisationSucceeds(t *testing.T) {
 	testDir := t.TempDir()
 
 	// given

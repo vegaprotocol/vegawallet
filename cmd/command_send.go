@@ -49,7 +49,7 @@ var (
 		# Send a command with a log level set to debug
 		vegawallet command send --network NETWORK --wallet WALLET --pubkey PUBKEY --level debug COMMAND
 
-		# Send a command with a maximum of 10 retry
+		# Send a command with a maximum of 10 retries
 		vegawallet command send --network NETWORK --wallet WALLET --pubkey PUBKEY --retries 10 COMMAND
 	`)
 )

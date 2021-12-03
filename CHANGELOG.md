@@ -22,6 +22,7 @@
 - [418](https://github.com/vegaprotocol/vegawallet/pull/418) - Importing a wallet now generates the first key pair
 - [418](https://github.com/vegaprotocol/vegawallet/pull/418) - Add the `create` command to create a wallet
 - [420](https://github.com/vegaprotocol/vegawallet/pull/420) - Verify initialisation state on service run
+- [421](https://github.com/vegaprotocol/vegawallet/pull/421) - Improve help texts
 
 ### 🔥 Removal
 - [387](https://github.com/vegaprotocol/vegawallet/pull/387) - Remove network initialisation in favor of `network import`
