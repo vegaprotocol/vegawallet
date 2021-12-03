@@ -60,6 +60,8 @@ const startupT = ` # Authentication
 `
 
 var (
+	ErrProgramIsNotInitialised = errors.New("first, you need initialise the program, using the `init` command")
+
 	runServiceLong = cli.LongDesc(`
 		Start a Vega wallet service behind an HTTP server.
 
@@ -205,6 +207,12 @@ func RunService(w io.Writer, rf *RootFlags, f *RunServiceFlags) error {
 	svcStore, err := svcstore.InitialiseStore(paths.New(rf.Home))
 	if err != nil {
 		return fmt.Errorf("couldn't initialise service store: %w", err)
+	}
+
+	if isInit, err := service.IsInitialised(svcStore); err != nil {
+		return fmt.Errorf("couldn't verify service initialisation state: %w", err)
+	} else if !isInit {
+		return ErrProgramIsNotInitialised
 	}
 
 	auth, err := service.NewAuth(log.Named("auth"), svcStore, cfg.TokenExpiry.Get())
