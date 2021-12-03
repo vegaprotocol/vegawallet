@@ -20,7 +20,7 @@ var (
 		Delete the specified wallet and its keys.
 
 		Be sure to have a backup of its mnemonic, otherwise you won't be able to restore
-		it. If you lost it, you should transfer your funds, assets, order, anything attached
+		it. If you lost it, you should transfer your funds, assets, orders, and anything else attached
 		to this wallet to another wallet.
 
 		The deletion removes the file in which the wallet and its keys are stored, meaning
