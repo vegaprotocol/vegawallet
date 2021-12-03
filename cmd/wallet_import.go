@@ -19,11 +19,16 @@ import (
 var (
 	importWalletLong = cli.LongDesc(`
 		Import a wallet using the mnemonic and generate the first Ed25519 key pair.
+
+		You will be asked to create a passphrase. The passphrase is used to protect
+		the file in which the keys are stored. Hence, it can be different from the
+		original passphrase, used during the wallet creation. This doesn't affect the
+		key generation process in any way.
 	`)
 
 	importWalletExample = cli.Examples(`
 		# Import a wallet using the mnemonic
-		vegawallet import --wallet WALLET --mnemonic-file PATH_TO_MNEMONIC 
+		vegawallet import --wallet WALLET --mnemonic-file PATH_TO_MNEMONIC
 
 		# Import an older version of the wallet using the mnemonic
 		vegawallet import --wallet WALLET --mnemonic-file PATH_TO_MNEMONIC --version VERSION

@@ -13,11 +13,14 @@ import (
 
 var (
 	versionLong = cli.LongDesc(`
-		Get the version of the program.
+		Get the version of the software.
+
+		This is NOT related to the wallet version. To get information about the wallet,
+		use the "info" command.
 	`)
 
 	versionExample = cli.Examples(`
-		# Get the version of the program
+		# Get the version of the software
 		vegawallet version
 	`)
 )
@@ -31,7 +34,7 @@ func NewCmdVersion(w io.Writer, rf *RootFlags) *cobra.Command {
 func BuildCmdGetVersion(w io.Writer, handler GetVersionHandler, rf *RootFlags) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "version",
-		Short:   "Get the version of the program",
+		Short:   "Get the version of the software",
 		Long:    versionLong,
 		Example: versionExample,
 		RunE: func(_ *cobra.Command, _ []string) error {

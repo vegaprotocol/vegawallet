@@ -39,7 +39,7 @@ var (
 		# Send a transaction with a log level set to debug
 		vegawallet tx send --network NETWORK --level debug BASE64_TRANSACTION
 
-		# Send a transaction with a maximum of 10 retry
+		# Send a transaction with a maximum of 10 retries
 		vegawallet tx send --network NETWORK --retries 10 BASE64_TRANSACTION
 	`)
 )

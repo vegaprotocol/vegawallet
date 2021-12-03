@@ -17,11 +17,14 @@ var (
 	ErrForceFlagIsRequiredWithoutTTY = errors.New("--force is required without TTY")
 
 	deleteWalletLong = cli.LongDesc(`
-		Delete a given wallet.
+		Delete the specified wallet and its keys.
 
 		Be sure to have a backup of its mnemonic, otherwise you won't be able to restore
-		it. If you lost it, you should transfer anything attached to this wallet
-		to another wallet.
+		it. If you lost it, you should transfer your funds, assets, orders, and anything else attached
+		to this wallet to another wallet.
+
+		The deletion removes the file in which the wallet and its keys are stored, meaning
+		you can reuse the wallet name, without causing any conflict.
 	`)
 
 	deleteWalletExample = cli.Examples(`
@@ -53,7 +56,7 @@ func BuildCmdDeleteWallet(w io.Writer, handler DeleteWalletHandler, rf *RootFlag
 
 	cmd := &cobra.Command{
 		Use:     "delete",
-		Short:   "Delete a given wallet",
+		Short:   "Delete the specified wallet and its keys",
 		Long:    deleteWalletLong,
 		Example: deleteWalletExample,
 		RunE: func(_ *cobra.Command, _ []string) error {
