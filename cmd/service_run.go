@@ -258,56 +258,18 @@ func RunService(w io.Writer, rf *RootFlags, f *RunServiceFlags) error {
 	serviceHost := fmt.Sprintf("http://%v:%v", cfg.Host, cfg.Port)
 	if rf.Output == flags.InteractiveOutput {
 		p.CheckMark().Text("HTTP service started at: ").SuccessText(serviceHost).NextLine()
-	} else if rf.Output == "json" {
+	} else if rf.Output == flags.JSONOutput {
 		log.Info(fmt.Sprintf("HTTP service started at: %s", serviceHost))
 	}
 
 	var cs *proxy.Proxy
 	if f.WithConsole {
-		cs = proxy.NewProxy(cfg.Console.LocalPort, cfg.Console.URL, cfg.API.GRPC.Hosts[0])
-		go func() {
-			defer cancel()
-			if err := cs.Start(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-				log.Error("error while starting the console proxy", zap.Error(err))
-			}
-		}()
-
-		consoleLocalHost := fmt.Sprintf("http://127.0.0.1:%v", cfg.Console.LocalPort)
-		if rf.Output == flags.InteractiveOutput {
-			p.CheckMark().Text("Console proxy pointing to ").Bold(cfg.Console.URL).Text(" started at: ").SuccessText(consoleLocalHost).NextLine()
-		} else if rf.Output == "json" {
-			log.Info(fmt.Sprintf("console proxy pointing to %s started at: %s", cfg.Console.URL, consoleLocalHost))
-		}
-
-		if !f.NoBrowser {
-			if err := open.Run(cs.GetBrowserURL()); err != nil {
-				log.Error("unable to open the console in the default browser", zap.Error(err))
-			}
-		}
+		cs = startConsole(log, rf, !f.NoBrowser, cfg, cancel, p)
 	}
 
 	var tokenDApp *proxy.Proxy
 	if f.WithTokenDApp {
-		tokenDApp = proxy.NewProxy(cfg.TokenDApp.LocalPort, cfg.TokenDApp.URL, cfg.API.GRPC.Hosts[0])
-		go func() {
-			defer cancel()
-			if err := tokenDApp.Start(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-				log.Error("error while starting the token dApp proxy", zap.Error(err))
-			}
-		}()
-
-		tokenDAppLocalHost := fmt.Sprintf("http://127.0.0.1:%v", cfg.TokenDApp.LocalPort)
-		if rf.Output == flags.InteractiveOutput {
-			p.CheckMark().Text("token dApp proxy pointing to ").Bold(cfg.TokenDApp.URL).Text(" started at: ").SuccessText(tokenDAppLocalHost).NextLine()
-		} else if rf.Output == "json" {
-			log.Info(fmt.Sprintf("token dApp proxy pointing to %s started at: %s", cfg.TokenDApp.URL, tokenDAppLocalHost))
-		}
-
-		if !f.NoBrowser {
-			if err := open.Run(tokenDApp.GetBrowserURL()); err != nil {
-				log.Error("unable to open the console in the default browser", zap.Error(err))
-			}
-		}
+		tokenDApp = startTokenDApp(log, rf, !f.NoBrowser, cfg, cancel, p)
 	}
 
 	if rf.Output == flags.InteractiveOutput {
@@ -347,6 +309,55 @@ func RunService(w io.Writer, rf *RootFlags, f *RunServiceFlags) error {
 	}
 
 	return nil
+}
+
+func startConsole(log *zap.Logger, rf *RootFlags, openBrowser bool, cfg *network.Network, cancel context.CancelFunc, p *printer.InteractivePrinter) *proxy.Proxy {
+	cs := proxy.NewProxy(cfg.Console.LocalPort, cfg.Console.URL, cfg.API.GRPC.Hosts[0])
+	go func() {
+		defer cancel()
+		if err := cs.Start(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			log.Error("error while starting the console proxy", zap.Error(err))
+		}
+	}()
+
+	consoleLocalHost := fmt.Sprintf("http://127.0.0.1:%v", cfg.Console.LocalPort)
+	if rf.Output == flags.InteractiveOutput {
+		p.CheckMark().Text("Console proxy pointing to ").Bold(cfg.Console.URL).Text(" started at: ").SuccessText(consoleLocalHost).NextLine()
+	} else if rf.Output == "json" {
+		log.Info(fmt.Sprintf("console proxy pointing to %s started at: %s", cfg.Console.URL, consoleLocalHost))
+	}
+
+	if openBrowser {
+		if err := open.Run(cs.GetBrowserURL()); err != nil {
+			log.Error("unable to open the application in the default browser", zap.Error(err))
+		}
+	}
+
+	return cs
+}
+
+func startTokenDApp(log *zap.Logger, rf *RootFlags, openBrowser bool, cfg *network.Network, cancel context.CancelFunc, p *printer.InteractivePrinter) *proxy.Proxy {
+	tokenDApp := proxy.NewProxy(cfg.TokenDApp.LocalPort, cfg.TokenDApp.URL, cfg.API.GRPC.Hosts[0])
+	go func() {
+		defer cancel()
+		if err := tokenDApp.Start(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			log.Error("error while starting the token dApp proxy", zap.Error(err))
+		}
+	}()
+
+	tokenDAppLocalHost := fmt.Sprintf("http://127.0.0.1:%v", cfg.TokenDApp.LocalPort)
+	if rf.Output == flags.InteractiveOutput {
+		p.CheckMark().Text("token dApp proxy pointing to ").Bold(cfg.TokenDApp.URL).Text(" started at: ").SuccessText(tokenDAppLocalHost).NextLine()
+	} else if rf.Output == "json" {
+		log.Info(fmt.Sprintf("token dApp proxy pointing to %s started at: %s", cfg.TokenDApp.URL, tokenDAppLocalHost))
+	}
+
+	if openBrowser {
+		if err := open.Run(tokenDApp.GetBrowserURL()); err != nil {
+			log.Error("unable to open the token dApp in the default browser", zap.Error(err))
+		}
+	}
+	return tokenDApp
 }
 
 // waitSig will wait for a sigterm or sigint interrupt.
