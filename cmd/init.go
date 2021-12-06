@@ -113,8 +113,8 @@ func PrintInitResponse(w io.Writer, resp *InitResponse) {
 	p.CheckMark().SuccessText("Initialisation succeeded").NextSection()
 
 	p.BlueArrow().InfoText("Create a wallet").NextLine()
-	p.Text("To create a wallet, generate your first key pair using the following command:").NextSection()
-	p.Code(fmt.Sprintf("%s key generate --wallet \"YOUR_USERNAME\"", os.Args[0])).NextSection()
+	p.Text("Create a wallet, using the following command:").NextSection()
+	p.Code(fmt.Sprintf("%s create --wallet \"YOUR_USERNAME\"", os.Args[0])).NextSection()
 	p.Text("The ").Bold("--wallet").Text(" flag sets the name of your wallet and will be used to login to Vega Console.").NextSection()
 	p.Text("For more information, use ").Bold("--help").Text(" flag.").NextLine()
 }
