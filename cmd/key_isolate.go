@@ -132,5 +132,5 @@ func PrintIsolateKeyResponse(w io.Writer, resp *wallet.IsolateKeyResponse) {
 	p := printer.NewInteractivePrinter(w)
 
 	p.CheckMark().Text("Key pair has been isolated in wallet ").Bold(resp.Wallet).Text(" at: ").SuccessText(resp.FilePath).NextLine()
-	p.CheckMark().SuccessText("Key isolation succeeded").NextSection()
+	p.CheckMark().SuccessText("Key isolation succeeded").NextLine()
 }

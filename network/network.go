@@ -9,6 +9,7 @@ type Network struct {
 	Port        int
 	Host        string
 	API         APIConfig
+	TokenDApp   TokenDAppConfig
 	Console     ConsoleConfig
 
 	// TO REMOVE Once the tools use the new API.GRPC
@@ -35,6 +36,11 @@ type GraphQLConfig struct {
 }
 
 type ConsoleConfig struct {
+	URL       string
+	LocalPort int
+}
+
+type TokenDAppConfig struct {
 	URL       string
 	LocalPort int
 }

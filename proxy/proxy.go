@@ -1,4 +1,4 @@
-package console
+package proxy
 
 import (
 	"context"
@@ -9,11 +9,11 @@ import (
 	"code.vegaprotocol.io/vegawallet/version"
 )
 
-type Console struct {
+type Proxy struct {
 	server *http.Server
 }
 
-func NewConsole(port int, consoleURL, nodeURL string) *Console {
+func NewProxy(port int, consoleURL, nodeURL string) *Proxy {
 	proxy := httputil.ReverseProxy{
 		Director: func(req *http.Request) {
 			req.Header.Set("Referer", nodeURL)
@@ -34,7 +34,7 @@ func NewConsole(port int, consoleURL, nodeURL string) *Console {
 	}
 
 	addr := fmt.Sprintf("127.0.0.1:%v", port)
-	return &Console{
+	return &Proxy{
 		server: &http.Server{
 			Addr:    addr,
 			Handler: &proxy,
@@ -42,14 +42,14 @@ func NewConsole(port int, consoleURL, nodeURL string) *Console {
 	}
 }
 
-func (c *Console) Start() error {
+func (c *Proxy) Start() error {
 	return c.server.ListenAndServe()
 }
 
-func (c *Console) Stop() error {
+func (c *Proxy) Stop() error {
 	return c.server.Shutdown(context.Background())
 }
 
-func (c *Console) GetBrowserURL() string {
+func (c *Proxy) GetBrowserURL() string {
 	return fmt.Sprintf("http://%s", c.server.Addr)
 }

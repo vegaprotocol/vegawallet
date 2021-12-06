@@ -131,5 +131,5 @@ func PrintVerifyMessageResponse(w io.Writer, isValid bool) {
 
 	p.BlueArrow().InfoText("Sign a message").NextLine()
 	p.Text("To sign a message, see the following command:").NextSection()
-	p.Code(fmt.Sprintf("%s sign --help", os.Args[0])).NextSection()
+	p.Code(fmt.Sprintf("%s sign --help", os.Args[0])).NextLine()
 }

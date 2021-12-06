@@ -8,7 +8,8 @@
 - [384](https://github.com/vegaprotocol/vegawallet/pull/384) - Remove private key from key generate JSON output
 
 ### 🗑️ Deprecation
-- [418](https://github.com/vegaprotocol/vegawallet/pull/418) - Wallet creation is deprecated with `key generate`, use `create` instead.
+- [418](https://github.com/vegaprotocol/vegawallet/pull/418) - Wallet creation is deprecated with `key generate`, use `create` instead
+- [423](https://github.com/vegaprotocol/vegawallet/pull/423) - Flag `--console-proxy` is deprecated in favor of `--with-console`
 
 ### 🛠 Improvements
 - [383](https://github.com/vegaprotocol/vegawallet/pull/383) - Add wallet version to `key generate` output
@@ -23,6 +24,7 @@
 - [418](https://github.com/vegaprotocol/vegawallet/pull/418) - Add the `create` command to create a wallet
 - [420](https://github.com/vegaprotocol/vegawallet/pull/420) - Verify initialisation state on service run
 - [421](https://github.com/vegaprotocol/vegawallet/pull/421) - Improve help texts
+- [423](https://github.com/vegaprotocol/vegawallet/pull/423) - Support launching the token dApp in `service run` command
 
 ### 🔥 Removal
 - [387](https://github.com/vegaprotocol/vegawallet/pull/387) - Remove network initialisation in favor of `network import`

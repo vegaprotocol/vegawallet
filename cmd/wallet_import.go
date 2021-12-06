@@ -161,5 +161,5 @@ func PrintImportWalletResponse(w io.Writer, resp *wallet.ImportWalletResponse) {
 
 	p.BlueArrow().InfoText("Run the service").NextLine()
 	p.Text("Now, you can run the service. See the following command:").NextSection()
-	p.Code(fmt.Sprintf("%s service run --help", os.Args[0])).NextSection()
+	p.Code(fmt.Sprintf("%s service run --help", os.Args[0])).NextLine()
 }
