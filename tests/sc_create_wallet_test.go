@@ -57,7 +57,7 @@ func TestCreateWallet(t *testing.T) {
 	assert.Equal(t, listKeysResp.Keys[0].PublicKey, createWalletResp.Key.PublicKey)
 }
 
-// Deprecated usage.
+// Deprecated: key generate will not generate wallet anymore.
 func TestCreateWalletUsingKeyGenerate(t *testing.T) {
 	// given
 	home := t.TempDir()

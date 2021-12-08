@@ -9,7 +9,7 @@ import (
 	vgrand "code.vegaprotocol.io/shared/libs/rand"
 )
 
-const testMnemonic = "swing ceiling chaos green put insane ripple desk match tip melt usual shrug turkey renew icon parade veteran lens govern path rough page render"
+const testRecoveryPhrase = "swing ceiling chaos green put insane ripple desk match tip melt usual shrug turkey renew icon parade veteran lens govern path rough page render"
 
 func NewPassphraseFile(t *testing.T, path string) (string, string) {
 	t.Helper()

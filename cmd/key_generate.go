@@ -156,7 +156,7 @@ func PrintGenerateKeyResponse(w io.Writer, resp *wallet.GenerateKeyResponse) {
 	p.CheckMark().SuccessText("Generating a key pair succeeded").NextSection()
 
 	if walletHasBeenCreated {
-		p.Text("Wallet mnemonic:").NextLine()
+		p.Text("Wallet recovery phrase:").NextLine()
 		p.WarningText(resp.Wallet.Mnemonic).NextLine()
 		p.Text("Wallet version:").NextLine()
 		p.WarningText(fmt.Sprintf("%d", resp.Wallet.Version)).NextLine()
@@ -169,8 +169,8 @@ func PrintGenerateKeyResponse(w io.Writer, resp *wallet.GenerateKeyResponse) {
 
 	if walletHasBeenCreated {
 		p.RedArrow().DangerText("Important").NextLine()
-		p.DangerText("Write down the ").DangerBold("mnemonic").DangerText(" and the ").DangerBold("wallet's version").DangerText(", and store it somewhere safe and secure, now.").NextLine()
-		p.DangerText("The mnemonic will not be displayed ever again, nor will you be able to retrieve it!").NextSection()
+		p.DangerText("Write down the ").DangerBold("recovery phrase").DangerText(" and the ").DangerBold("wallet's version").DangerText(", and store it somewhere safe and secure, now.").NextLine()
+		p.DangerText("The recovery phrase will not be displayed ever again, nor will you be able to retrieve it!").NextSection()
 		p.DangerText("Also, creating a wallet through this command is DEPRECATED. Please, use the `create` command.").NextSection()
 	}
 

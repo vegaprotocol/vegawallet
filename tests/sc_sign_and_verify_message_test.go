@@ -12,7 +12,7 @@ func TestSignMessage(t *testing.T) {
 	// given
 	home := t.TempDir()
 	_, passphraseFilePath := NewPassphraseFile(t, home)
-	mnemonicFilePath := NewFile(t, home, "mnemonic.txt", testMnemonic)
+	recoveryPhraseFilePath := NewFile(t, home, "recovery-phrase.txt", testRecoveryPhrase)
 	walletName := vgrand.RandomStr(5)
 
 	// when
@@ -21,7 +21,7 @@ func TestSignMessage(t *testing.T) {
 		"--output", "json",
 		"--wallet", walletName,
 		"--passphrase-file", passphraseFilePath,
-		"--mnemonic-file", mnemonicFilePath,
+		"--recovery-phrase-file", recoveryPhraseFilePath,
 		"--version", "2",
 	})
 
@@ -68,7 +68,7 @@ func TestSignMessageWithTaintedKey(t *testing.T) {
 	// given
 	home := t.TempDir()
 	_, passphraseFilePath := NewPassphraseFile(t, home)
-	mnemonicFilePath := NewFile(t, home, "mnemonic.txt", testMnemonic)
+	recoveryPhraseFilePath := NewFile(t, home, "recovery-phrase.txt", testRecoveryPhrase)
 	walletName := vgrand.RandomStr(5)
 
 	// when
@@ -77,7 +77,7 @@ func TestSignMessageWithTaintedKey(t *testing.T) {
 		"--output", "json",
 		"--wallet", walletName,
 		"--passphrase-file", passphraseFilePath,
-		"--mnemonic-file", mnemonicFilePath,
+		"--recovery-phrase-file", recoveryPhraseFilePath,
 		"--version", "2",
 	})
 

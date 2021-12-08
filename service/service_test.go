@@ -25,7 +25,7 @@ import (
 )
 
 const (
-	testMnemonic = "swing ceiling chaos green put insane ripple desk match tip melt usual shrug turkey renew icon parade veteran lens govern path rough page render"
+	testRecoveryPhrase = "swing ceiling chaos green put insane ripple desk match tip melt usual shrug turkey renew icon parade veteran lens govern path rough page render"
 
 	testRequestTimeout = 10 * time.Second
 )
@@ -105,7 +105,7 @@ func testServiceCreateWalletOK(t *testing.T) {
 	payload := fmt.Sprintf(`{"wallet": "%s", "passphrase": "%s"}`, walletName, passphrase)
 
 	// setup
-	s.handler.EXPECT().CreateWallet(walletName, passphrase).Times(1).Return(testMnemonic, nil)
+	s.handler.EXPECT().CreateWallet(walletName, passphrase).Times(1).Return(testRecoveryPhrase, nil)
 	s.auth.EXPECT().NewSession(walletName).Times(1).Return("this is a token", nil)
 
 	// when
@@ -169,10 +169,10 @@ func testServiceImportWalletOK(t *testing.T) {
 			// given
 			walletName := vgrand.RandomStr(5)
 			passphrase := vgrand.RandomStr(5)
-			payload := fmt.Sprintf(`{"wallet": "%s", "passphrase": "%s", "mnemonic": "%s", "version": %d}`, walletName, passphrase, testMnemonic, tc.version)
+			payload := fmt.Sprintf(`{"wallet": "%s", "passphrase": "%s", "recoveryPhrase": "%s", "version": %d}`, walletName, passphrase, testRecoveryPhrase, tc.version)
 
 			// setup
-			s.handler.EXPECT().ImportWallet(walletName, passphrase, testMnemonic, tc.version).Times(1).Return(nil)
+			s.handler.EXPECT().ImportWallet(walletName, passphrase, testRecoveryPhrase, tc.version).Times(1).Return(nil)
 			s.auth.EXPECT().NewSession(walletName).Times(1).Return("this is a token", nil)
 
 			// when
@@ -191,13 +191,13 @@ func testServiceImportWalletFailInvalidRequest(t *testing.T) {
 	}{
 		{
 			name:    "misspelled wallet property",
-			payload: fmt.Sprintf(`{"wall": "jeremy", "passphrase": "oh yea?", "mnemonic": \"%s\"}`, testMnemonic),
+			payload: fmt.Sprintf(`{"wall": "jeremy", "passphrase": "oh yea?", "recoveryPhrase": \"%s\"}`, testRecoveryPhrase),
 		}, {
 			name:    "misspelled passphrase property",
-			payload: fmt.Sprintf(`{"wallet": "jeremy", "password": "oh yea?", "mnemonic": \"%s\"}`, testMnemonic),
+			payload: fmt.Sprintf(`{"wallet": "jeremy", "password": "oh yea?", "recoveryPhrase": \"%s\"}`, testRecoveryPhrase),
 		}, {
-			name:    "misspelled mnemonic property",
-			payload: fmt.Sprintf(`{"wallet": "jeremy", "passphrase": "oh yea?", "little_words": \"%s\"}`, testMnemonic),
+			name:    "misspelled recovery phrase property",
+			payload: fmt.Sprintf(`{"wallet": "jeremy", "passphrase": "oh yea?", "little_words": \"%s\"}`, testRecoveryPhrase),
 		},
 	}
 

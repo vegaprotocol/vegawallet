@@ -11,12 +11,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-const mnemonic = "swing ceiling chaos green put insane ripple desk match tip melt usual shrug turkey renew icon parade veteran lens govern path rough page render"
+const recoveryPhrase = "swing ceiling chaos green put insane ripple desk match tip melt usual shrug turkey renew icon parade veteran lens govern path rough page render"
 
 func TestImportWalletFlags(t *testing.T) {
 	t.Run("Valid flags succeeds", testImportWalletFlagsValidFlagsSucceeds)
 	t.Run("Missing wallet fails", testImportWalletFlagsMissingWalletFails)
-	t.Run("Missing mnemonic file fails", testImportWalletFlagsMissingMnemonicFileFails)
+	t.Run("Missing recovery phrase file fails", testImportWalletFlagsMissingRecoveryPhraseFileFails)
 }
 
 func testImportWalletFlagsValidFlagsSucceeds(t *testing.T) {
@@ -24,19 +24,19 @@ func testImportWalletFlagsValidFlagsSucceeds(t *testing.T) {
 
 	// given
 	passphrase, passphraseFilePath := NewPassphraseFile(t, testDir)
-	mnemonicFilePath := NewFile(t, testDir, "mnemonic.txt", mnemonic)
+	recoveryPhraseFilePath := NewFile(t, testDir, "recovery-phrase.txt", recoveryPhrase)
 	walletName := vgrand.RandomStr(10)
 
 	f := &cmd.ImportWalletFlags{
-		Wallet:         walletName,
-		MnemonicFile:   mnemonicFilePath,
-		PassphraseFile: passphraseFilePath,
+		Wallet:             walletName,
+		RecoveryPhraseFile: recoveryPhraseFilePath,
+		PassphraseFile:     passphraseFilePath,
 	}
 
 	expectedReq := &wallet.ImportWalletRequest{
-		Wallet:     walletName,
-		Mnemonic:   mnemonic,
-		Passphrase: passphrase,
+		Wallet:         walletName,
+		RecoveryPhrase: recoveryPhrase,
+		Passphrase:     passphrase,
 	}
 
 	// when
@@ -63,18 +63,18 @@ func testImportWalletFlagsMissingWalletFails(t *testing.T) {
 	assert.Nil(t, req)
 }
 
-func testImportWalletFlagsMissingMnemonicFileFails(t *testing.T) {
+func testImportWalletFlagsMissingRecoveryPhraseFileFails(t *testing.T) {
 	testDir := t.TempDir()
 
 	// given
 	f := newImportWalletFlags(t, testDir)
-	f.MnemonicFile = ""
+	f.RecoveryPhraseFile = ""
 
 	// when
 	req, err := f.Validate()
 
 	// then
-	assert.ErrorIs(t, err, flags.FlagMustBeSpecifiedError("mnemonic-file"))
+	assert.ErrorIs(t, err, flags.FlagMustBeSpecifiedError("recovery-phrase-file"))
 	assert.Nil(t, req)
 }
 
@@ -82,13 +82,13 @@ func newImportWalletFlags(t *testing.T, testDir string) *cmd.ImportWalletFlags {
 	t.Helper()
 
 	_, passphraseFilePath := NewPassphraseFile(t, testDir)
-	NewFile(t, testDir, "mnemonic.txt", mnemonic)
+	NewFile(t, testDir, "recovery-phrase.txt", recoveryPhrase)
 	walletName := vgrand.RandomStr(10)
 	pubKey := vgrand.RandomStr(20)
 
 	return &cmd.ImportWalletFlags{
-		Wallet:         walletName,
-		MnemonicFile:   pubKey,
-		PassphraseFile: passphraseFilePath,
+		Wallet:             walletName,
+		RecoveryPhraseFile: pubKey,
+		PassphraseFile:     passphraseFilePath,
 	}
 }

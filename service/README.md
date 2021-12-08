@@ -124,7 +124,7 @@ curl -s -XPOST -d 'YOUR_REQUEST' http://127.0.0.1:1789/api/v1/wallets
 
 `POST api/v1/wallets/import`
 
-Import a wallet is done using a name, a passphrase, and a mnemonic. If a wallet
+Import a wallet is done using a name, a passphrase, and a recoveryPhrase. If a wallet
 with the same name already exists, the action is aborted. The imported wallet is
 encrypted (using the passphrase) and saved to a file on the file system. A
 session and accompanying JWT is created, and the JWT is returned to the user.
@@ -137,7 +137,7 @@ session and accompanying JWT is created, and the JWT is returned to the user.
 {
   "wallet": "your_wallet_name",
   "passphrase": "super-secret",
-  "mnemonic": "my twenty four words mnemonic"
+  "recoveryPhrase": "my twenty four words recovery phrase"
 }
 ```
 

@@ -68,18 +68,21 @@ func ParseCreateWalletRequest(r *http.Request) (*CreateWalletRequest, commands.E
 }
 
 // CreateWalletResponse returns the authentication token and the auto-generated
-// mnemonic of the created wallet.
+// recovery phrase of the created wallet.
 type CreateWalletResponse struct {
+	RecoveryPhrase string `json:"recoveryPhrase"`
+	// Deprecated: Use recoveryPhrase instead.
 	Mnemonic string `json:"mnemonic"`
 	Token    string `json:"token"`
 }
 
 // ImportWalletRequest describes the request for ImportWallet.
 type ImportWalletRequest struct {
-	Wallet     string `json:"wallet"`
-	Passphrase string `json:"passphrase"`
-	Mnemonic   string `json:"mnemonic"`
-	Version    uint32 `json:"version"`
+	Wallet         string `json:"wallet"`
+	Passphrase     string `json:"passphrase"`
+	Mnemonic       string `json:"mnemonic"`
+	RecoveryPhrase string `json:"recoveryPhrase"`
+	Version        uint32 `json:"version"`
 }
 
 func ParseImportWalletRequest(r *http.Request) (*ImportWalletRequest, commands.Errors) {
@@ -98,8 +101,12 @@ func ParseImportWalletRequest(r *http.Request) (*ImportWalletRequest, commands.E
 		errs.AddForProperty("passphrase", commands.ErrIsRequired)
 	}
 
-	if len(req.Mnemonic) == 0 {
-		errs.AddForProperty("mnemonic", commands.ErrIsRequired)
+	// Support for deprecated mnemonic property.
+	if len(req.RecoveryPhrase) == 0 {
+		req.RecoveryPhrase = req.Mnemonic
+	}
+	if len(req.RecoveryPhrase) == 0 {
+		errs.AddForProperty("recoveryPhrase", commands.ErrIsRequired)
 	}
 
 	if req.Version == 0 {
@@ -380,7 +387,7 @@ type NetworkResponse struct {
 //go:generate go run github.com/golang/mock/mockgen -destination mocks/wallet_handler_mock.go -package mocks code.vegaprotocol.io/vegawallet/service WalletHandler
 type WalletHandler interface {
 	CreateWallet(name, passphrase string) (string, error)
-	ImportWallet(name, passphrase, mnemonic string, version uint32) error
+	ImportWallet(name, passphrase, recoveryPhrase string, version uint32) error
 	LoginWallet(name, passphrase string) error
 	LogoutWallet(name string)
 	SecureGenerateKeyPair(name, passphrase string, meta []wallet.Meta) (string, error)
@@ -465,7 +472,7 @@ func (s *Service) CreateWallet(w http.ResponseWriter, r *http.Request, _ httprou
 		return
 	}
 
-	mnemonic, err := s.handler.CreateWallet(req.Wallet, req.Passphrase)
+	recoveryPhrase, err := s.handler.CreateWallet(req.Wallet, req.Passphrase)
 	if err != nil {
 		s.writeBadRequestErr(w, err)
 		return
@@ -477,7 +484,11 @@ func (s *Service) CreateWallet(w http.ResponseWriter, r *http.Request, _ httprou
 		return
 	}
 
-	s.writeSuccess(w, CreateWalletResponse{Mnemonic: mnemonic, Token: token})
+	s.writeSuccess(w, CreateWalletResponse{
+		RecoveryPhrase: recoveryPhrase,
+		Mnemonic:       recoveryPhrase,
+		Token:          token,
+	})
 }
 
 func (s *Service) ImportWallet(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
@@ -487,7 +498,7 @@ func (s *Service) ImportWallet(w http.ResponseWriter, r *http.Request, _ httprou
 		return
 	}
 
-	err := s.handler.ImportWallet(req.Wallet, req.Passphrase, req.Mnemonic, req.Version)
+	err := s.handler.ImportWallet(req.Wallet, req.Passphrase, req.RecoveryPhrase, req.Version)
 	if err != nil {
 		s.writeBadRequestErr(w, err)
 		return

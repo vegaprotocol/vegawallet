@@ -11,7 +11,7 @@ func TestImportWalletV1(t *testing.T) {
 	// given
 	home := t.TempDir()
 	_, passphraseFilePath := NewPassphraseFile(t, home)
-	mnemonicFilePath := NewFile(t, home, "mnemonic.txt", testMnemonic)
+	recoveryPhraseFilePath := NewFile(t, home, "recovery-phrase.txt", testRecoveryPhrase)
 	walletName := vgrand.RandomStr(5)
 
 	// when
@@ -20,7 +20,7 @@ func TestImportWalletV1(t *testing.T) {
 		"--output", "json",
 		"--wallet", walletName,
 		"--passphrase-file", passphraseFilePath,
-		"--mnemonic-file", mnemonicFilePath,
+		"--recovery-phrase-file", recoveryPhraseFilePath,
 		"--version", "1",
 	})
 
@@ -92,7 +92,7 @@ func TestImportWalletV2(t *testing.T) {
 	// given
 	home := t.TempDir()
 	_, passphraseFilePath := NewPassphraseFile(t, home)
-	mnemonicFilePath := NewFile(t, home, "mnemonic.txt", testMnemonic)
+	recoveryPhraseFilePath := NewFile(t, home, "recovery-phrase.txt", testRecoveryPhrase)
 	walletName := vgrand.RandomStr(5)
 
 	// when
@@ -101,7 +101,7 @@ func TestImportWalletV2(t *testing.T) {
 		"--output", "json",
 		"--wallet", walletName,
 		"--passphrase-file", passphraseFilePath,
-		"--mnemonic-file", mnemonicFilePath,
+		"--recovery-phrase-file", recoveryPhraseFilePath,
 		"--version", "2",
 	})
 
