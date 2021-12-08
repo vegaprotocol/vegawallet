@@ -467,7 +467,7 @@ func TestCreateWalletSucceeds(t *testing.T) {
 	assert.NotEmpty(t, keyPair.Meta())
 	// verify response
 	assert.Equal(t, req.Wallet, resp.Wallet.Name)
-	assert.NotEmpty(t, resp.Wallet.Mnemonic)
+	assert.NotEmpty(t, resp.Wallet.RecoveryPhrase)
 	assert.Equal(t, uint32(2), resp.Wallet.Version)
 	assert.Equal(t, fakePath, resp.Wallet.FilePath)
 	assert.Equal(t, keyPair.PublicKey(), resp.Key.PublicKey)
@@ -479,10 +479,10 @@ func TestCreateWalletSucceeds(t *testing.T) {
 func TestImportWalletSucceeds(t *testing.T) {
 	// given
 	req := &wallet.ImportWalletRequest{
-		Wallet:     vgrand.RandomStr(5),
-		Mnemonic:   TestMnemonic1,
-		Version:    2,
-		Passphrase: vgrand.RandomStr(5),
+		Wallet:         vgrand.RandomStr(5),
+		RecoveryPhrase: TestRecoveryPhrase1,
+		Version:        2,
+		Passphrase:     vgrand.RandomStr(5),
 	}
 
 	// setup

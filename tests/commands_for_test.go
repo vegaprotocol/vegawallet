@@ -129,19 +129,19 @@ func AssertGenerateKey(t *testing.T, resp *GenerateKeyResponse) *GenerateKeyAsse
 	}
 }
 
-// DEPRECATED.
+// Deprecated: key generate will not generate wallet anymore.
 func (a *GenerateKeyAssertion) WithWalletCreation() *GenerateKeyAssertion {
 	assert.NotEmpty(a.t, a.resp.Wallet.Mnemonic)
 	return a
 }
 
-// DEPRECATED.
+// Deprecated: key generate will not generate wallet anymore.
 func (a *GenerateKeyAssertion) WithName(expected string) *GenerateKeyAssertion {
 	assert.Equal(a.t, expected, a.resp.Wallet.Name)
 	return a
 }
 
-// DEPRECATED.
+// Deprecated: key generate will not generate wallet anymore.
 func (a *GenerateKeyAssertion) WithVersion(expected uint32) *GenerateKeyAssertion {
 	assert.Equal(a.t, expected, a.resp.Wallet.Version)
 	return a
@@ -650,10 +650,10 @@ func (a *VerifyAssertion) IsValid() *VerifyAssertion {
 
 type CreateWalletResponse struct {
 	Wallet struct {
-		Name     string `json:"name"`
-		Mnemonic string `json:"mnemonic"`
-		Version  uint32 `json:"version"`
-		FilePath string `json:"filePath"`
+		Name           string `json:"name"`
+		RecoveryPhrase string `json:"recoveryPhrase"`
+		Version        uint32 `json:"version"`
+		FilePath       string `json:"filePath"`
 	} `json:"wallet"`
 	Key struct {
 		PublicKey string `json:"publicKey"`
@@ -693,7 +693,7 @@ func AssertCreateWallet(t *testing.T, resp *CreateWalletResponse) *CreateWalletA
 
 	assert.NotNil(t, resp)
 	assert.NotEmpty(t, resp.Wallet.Name)
-	assert.NotEmpty(t, resp.Wallet.Mnemonic)
+	assert.NotEmpty(t, resp.Wallet.RecoveryPhrase)
 	assert.NotEmpty(t, resp.Wallet.Version)
 	assert.NotEmpty(t, resp.Wallet.FilePath)
 	assert.FileExists(t, resp.Wallet.FilePath)

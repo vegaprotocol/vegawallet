@@ -116,8 +116,8 @@ func PrintCreateWalletResponse(w io.Writer, resp *wallet.CreateWalletResponse) {
 	p.CheckMark().Text("First key pair has been generated for wallet ").Bold(resp.Wallet.Name).Text(" at: ").SuccessText(resp.Wallet.FilePath).NextLine()
 	p.CheckMark().SuccessText("Creating wallet succeeded").NextSection()
 
-	p.Text("Wallet mnemonic:").NextLine()
-	p.WarningText(resp.Wallet.Mnemonic).NextLine()
+	p.Text("Wallet recovery phrase:").NextLine()
+	p.WarningText(resp.Wallet.RecoveryPhrase).NextLine()
 	p.Text("Wallet version:").NextLine()
 	p.WarningText(fmt.Sprintf("%d", resp.Wallet.Version)).NextLine()
 	p.Text("First public key:").NextLine()
@@ -125,8 +125,8 @@ func PrintCreateWalletResponse(w io.Writer, resp *wallet.CreateWalletResponse) {
 	p.NextSection()
 
 	p.RedArrow().DangerText("Important").NextLine()
-	p.Text("Write down the ").Bold("mnemonic").Text(" and the ").Bold("wallet's version").Text(", and store it somewhere safe and secure, now.").NextLine()
-	p.DangerText("The mnemonic will not be displayed ever again, nor will you be able to retrieve it!").NextSection()
+	p.Text("Write down the ").Bold("recovery phrase").Text(" and the ").Bold("wallet's version").Text(", and store it somewhere safe and secure, now.").NextLine()
+	p.DangerText("The recovery phrase will not be displayed ever again, nor will you be able to retrieve it!").NextSection()
 
 	p.BlueArrow().InfoText("Run the service").NextLine()
 	p.Text("Now, you can run the service. See the following command:").NextSection()

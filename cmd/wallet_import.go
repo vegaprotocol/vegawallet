@@ -18,7 +18,7 @@ import (
 
 var (
 	importWalletLong = cli.LongDesc(`
-		Import a wallet using the mnemonic and generate the first Ed25519 key pair.
+		Import a wallet using the recovery phrase and generate the first Ed25519 key pair.
 
 		You will be asked to create a passphrase. The passphrase is used to protect
 		the file in which the keys are stored. Hence, it can be different from the
@@ -27,11 +27,11 @@ var (
 	`)
 
 	importWalletExample = cli.Examples(`
-		# Import a wallet using the mnemonic
-		vegawallet import --wallet WALLET --mnemonic-file PATH_TO_MNEMONIC
+		# Import a wallet using the recovery phrase
+		vegawallet import --wallet WALLET --recovery-phrase-file PATH_TO_RECOVERY_PHRASE
 
-		# Import an older version of the wallet using the mnemonic
-		vegawallet import --wallet WALLET --mnemonic-file PATH_TO_MNEMONIC --version VERSION
+		# Import an older version of the wallet using the recovery phrase
+		vegawallet import --wallet WALLET --recovery-phrase-file PATH_TO_RECOVERY_PHRASE --version VERSION
 	`)
 )
 
@@ -55,7 +55,7 @@ func BuildCmdImportWallet(w io.Writer, handler ImportWalletHandler, rf *RootFlag
 
 	cmd := &cobra.Command{
 		Use:     "import",
-		Short:   "Import a wallet using the mnemonic",
+		Short:   "Import a wallet using the recovery phrase",
 		Long:    importWalletLong,
 		Example: importWalletExample,
 		RunE: func(_ *cobra.Command, _ []string) error {
@@ -90,10 +90,15 @@ func BuildCmdImportWallet(w io.Writer, handler ImportWalletHandler, rf *RootFlag
 		"",
 		"Path to the file containing the passphrase to access the wallet",
 	)
-	cmd.Flags().StringVarP(&f.MnemonicFile,
+	cmd.Flags().StringVarP(&f.RecoveryPhraseFile,
 		"mnemonic-file", "m",
 		"",
-		`Path to the file containing the mnemonic of the wallet "swing ceiling chaos..."`,
+		"Path to the file containing the recovery phrase of the wallet (DEPRECATED, use --recovery-phrase-file instead)",
+	)
+	cmd.Flags().StringVar(&f.RecoveryPhraseFile,
+		"recovery-phrase-file",
+		"",
+		"Path to the file containing the recovery phrase of the wallet",
 	)
 	cmd.Flags().Uint32Var(&f.Version,
 		"version",
@@ -113,10 +118,10 @@ func BuildCmdImportWallet(w io.Writer, handler ImportWalletHandler, rf *RootFlag
 }
 
 type ImportWalletFlags struct {
-	Wallet         string
-	PassphraseFile string
-	MnemonicFile   string
-	Version        uint32
+	Wallet             string
+	PassphraseFile     string
+	RecoveryPhraseFile string
+	Version            uint32
 }
 
 func (f *ImportWalletFlags) Validate() (*wallet.ImportWalletRequest, error) {
@@ -129,14 +134,14 @@ func (f *ImportWalletFlags) Validate() (*wallet.ImportWalletRequest, error) {
 	}
 	req.Wallet = f.Wallet
 
-	if len(f.MnemonicFile) == 0 {
-		return nil, flags.FlagMustBeSpecifiedError("mnemonic-file")
+	if len(f.RecoveryPhraseFile) == 0 {
+		return nil, flags.FlagMustBeSpecifiedError("recovery-phrase-file")
 	}
-	mnemonic, err := vgfs.ReadFile(f.MnemonicFile)
+	recoveryPhrase, err := vgfs.ReadFile(f.RecoveryPhraseFile)
 	if err != nil {
-		return nil, fmt.Errorf("couldn't read mnemonic file: %w", err)
+		return nil, fmt.Errorf("couldn't read recovery phrase file: %w", err)
 	}
-	req.Mnemonic = strings.Trim(string(mnemonic), "\n")
+	req.RecoveryPhrase = strings.Trim(string(recoveryPhrase), "\n")
 
 	passphrase, err := flags.GetConfirmedPassphrase(f.PassphraseFile)
 	if err != nil {
@@ -154,7 +159,6 @@ func PrintImportWalletResponse(w io.Writer, resp *wallet.ImportWalletResponse) {
 	p.CheckMark().Text("First key pair has been generated for wallet ").Bold(resp.Wallet.Name).Text(" at: ").SuccessText(resp.Wallet.FilePath).NextLine()
 	p.CheckMark().SuccessText("Importing the wallet succeeded").NextSection()
 
-	p.WarningText(fmt.Sprintf("%d", resp.Wallet.Version)).NextLine()
 	p.Text("First public key:").NextLine()
 	p.WarningText(resp.Key.PublicKey).NextLine()
 	p.NextSection()
