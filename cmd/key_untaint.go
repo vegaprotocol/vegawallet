@@ -129,5 +129,5 @@ func PrintUntaintKeyResponse(w io.Writer) {
 
 	p.BlueArrow().InfoText("Taint a key").NextLine()
 	p.Text("To taint a key pair, see the following command:").NextSection()
-	p.Code(fmt.Sprintf("%s key taint --help", os.Args[0])).NextSection()
+	p.Code(fmt.Sprintf("%s key taint --help", os.Args[0])).NextLine()
 }

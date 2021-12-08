@@ -36,10 +36,7 @@ func printMeta(p *printer.InteractivePrinter, meta []wallet.Meta) {
 		}
 	}
 
-	for i, m := range meta {
-		if i != 0 {
-			p.NextLine()
-		}
-		p.WarningText(fmt.Sprintf("%-*s", padding, m.Key)).Text(" | ").WarningText(m.Value)
+	for _, m := range meta {
+		p.WarningText(fmt.Sprintf("%-*s", padding, m.Key)).Text(" | ").WarningText(m.Value).NextLine()
 	}
 }

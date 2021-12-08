@@ -14,7 +14,7 @@ func TestRunServiceFlags(t *testing.T) {
 	t.Run("Valid flags succeeds", testRunServiceFlagsValidFlagsSucceeds)
 	t.Run("Missing network fails", testRunServiceFlagsMissingNetworkFails)
 	t.Run("Unsupported log level fails", testRunServiceFlagsUnsupportedLogLevelFails)
-	t.Run("No browser without console proxy fails", testRunServiceFlagsNoBrowserWithoutConsoleProxyFails)
+	t.Run("No browser without console nor token dApp fails", testRunServiceFlagsNoBrowserWithoutConsoleNorTokenDAppFails)
 }
 
 func testRunServiceFlagsValidFlagsSucceeds(t *testing.T) {
@@ -22,10 +22,11 @@ func testRunServiceFlagsValidFlagsSucceeds(t *testing.T) {
 	networkName := vgrand.RandomStr(10)
 
 	f := &cmd.RunServiceFlags{
-		Network:      networkName,
-		StartConsole: true,
-		NoBrowser:    true,
-		LogLevel:     "debug",
+		Network:       networkName,
+		WithConsole:   true,
+		WithTokenDApp: true,
+		NoBrowser:     true,
+		LogLevel:      "debug",
 	}
 
 	// when
@@ -59,17 +60,18 @@ func testRunServiceFlagsUnsupportedLogLevelFails(t *testing.T) {
 	assert.ErrorIs(t, err, cmd.NewUnsupportedFlagValueError(f.LogLevel))
 }
 
-func testRunServiceFlagsNoBrowserWithoutConsoleProxyFails(t *testing.T) {
+func testRunServiceFlagsNoBrowserWithoutConsoleNorTokenDAppFails(t *testing.T) {
 	// given
 	f := newRunServiceFlags(t)
-	f.StartConsole = false
+	f.WithConsole = false
+	f.WithTokenDApp = false
 	f.NoBrowser = true
 
 	// when
 	err := f.Validate()
 
 	// then
-	assert.ErrorIs(t, err, flags.ParentFlagMustBeSpecifiedError("no-browser", "console-proxy"))
+	assert.ErrorIs(t, err, flags.OneOfParentsFlagMustBeSpecifiedError("no-browser", "with-console", "with-token-dapp"))
 }
 
 func newRunServiceFlags(t *testing.T) *cmd.RunServiceFlags {
@@ -78,9 +80,10 @@ func newRunServiceFlags(t *testing.T) *cmd.RunServiceFlags {
 	networkName := vgrand.RandomStr(10)
 
 	return &cmd.RunServiceFlags{
-		Network:      networkName,
-		StartConsole: true,
-		NoBrowser:    true,
-		LogLevel:     "debug",
+		Network:       networkName,
+		WithConsole:   true,
+		WithTokenDApp: true,
+		NoBrowser:     true,
+		LogLevel:      "debug",
 	}
 }

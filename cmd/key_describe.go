@@ -137,5 +137,4 @@ func PrintDescribeKeyResponse(w io.Writer, resp *wallet.DescribeKeyResponse) {
 
 	p.Text("Metadata:").NextLine()
 	printMeta(p, resp.Meta)
-	p.NextSection()
 }
