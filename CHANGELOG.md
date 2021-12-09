@@ -1,19 +1,37 @@
 # Changelog
 
-## Unreleased (0.11.0)
+## Unreleased (0.12.0)
+
+### 🚨 Breaking changes
+- [](https://github.com/vegaprotocol/vegawallet/pull/) -
+
+### 🗑️  Deprecation
+- [](https://github.com/vegaprotocol/vegawallet/pull/) -
+
+### 🛠  Improvements
+- [](https://github.com/vegaprotocol/vegawallet/pull/) -
+
+### 🔥 Removal
+- [](https://github.com/vegaprotocol/vegawallet/pull/) -
+
+### 🐛 Fixes
+- [](https://github.com/vegaprotocol/vegawallet/pull/) -
+
+
+## 0.11.0
 
 ### 🚨 Breaking changes
 - [381](https://github.com/vegaprotocol/vegawallet/pull/381) - Make `send tx` and `send command` match `NOUN VERB` grammar
 - [384](https://github.com/vegaprotocol/vegawallet/pull/384) - Remove private key from key generate JSON output
 
-### 🗑️ Deprecation
+### 🗑️  Deprecation
 - [418](https://github.com/vegaprotocol/vegawallet/pull/418) - Wallet creation is deprecated with `key generate`, use `create` instead
 - [423](https://github.com/vegaprotocol/vegawallet/pull/423) - Flag `--console-proxy` is deprecated in favor of `--with-console`
 - [425](https://github.com/vegaprotocol/vegawallet/pull/425) - Flag `--mnemonic-file` is deprecated in favor of `--recovery-phrase-file`
 - [425](https://github.com/vegaprotocol/vegawallet/pull/425) - Deprecated `mnemonic` field in HTTP response for wallet creation in favor of `recoveryPhrase`
 - [425](https://github.com/vegaprotocol/vegawallet/pull/425) - Deprecated `mnemonic` field in HTTP request for wallet import in favor of `recoveryPhrase`
 
-### 🛠 Improvements
+### 🛠  Improvements
 - [383](https://github.com/vegaprotocol/vegawallet/pull/383) - Add wallet version to `key generate` output
 - [390](https://github.com/vegaprotocol/vegawallet/pull/390) - Add new project board Github action and update linked PR action version
 - [385](https://github.com/vegaprotocol/vegawallet/pull/385) - Add command `delete` to delete a wallet
