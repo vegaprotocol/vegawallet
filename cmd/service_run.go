@@ -15,11 +15,11 @@ import (
 	"code.vegaprotocol.io/vegawallet/cmd/cli"
 	"code.vegaprotocol.io/vegawallet/cmd/flags"
 	"code.vegaprotocol.io/vegawallet/cmd/printer"
-	"code.vegaprotocol.io/vegawallet/console"
 	vglog "code.vegaprotocol.io/vegawallet/libs/zap"
 	"code.vegaprotocol.io/vegawallet/network"
 	netstore "code.vegaprotocol.io/vegawallet/network/store/v1"
 	"code.vegaprotocol.io/vegawallet/node"
+	"code.vegaprotocol.io/vegawallet/proxy"
 	"code.vegaprotocol.io/vegawallet/service"
 	svcstore "code.vegaprotocol.io/vegawallet/service/store/v1"
 	"code.vegaprotocol.io/vegawallet/wallets"
@@ -60,6 +60,8 @@ const startupT = ` # Authentication
 `
 
 var (
+	ErrProgramIsNotInitialised = errors.New("first, you need initialise the program, using the `init` command")
+
 	runServiceLong = cli.LongDesc(`
 		Start a Vega wallet service behind an HTTP server.
 
@@ -73,12 +75,17 @@ var (
 		# Start the service with a log level set to debug
 		vegawallet service run --network NETWORK --level debug
 
-		# Start the service with the console proxy and open the console in the 
-		# default browser
-		vegawallet service run --network NETWORK --console-proxy
+		# Start the service and open the console in the default browser
+		vegawallet service run --network NETWORK --with-console
 
-		# Start the service with the console proxy without opening the console
-		vegawallet service run --network NETWORK --console-proxy --no-browser
+		# Start the service without opening the console
+		vegawallet service run --network NETWORK --with-console --no-browser
+
+		# Start the service and open the token dApp in the default browser
+		vegawallet service run --network NETWORK --with-token-dapp
+
+		# Start the service without opening the token dApp
+		vegawallet service run --network NETWORK --with-token-dapp --no-browser
 	`)
 )
 
@@ -114,27 +121,44 @@ func BuildCmdRunService(w io.Writer, handler RunServiceHandler, rf *RootFlags) *
 		"",
 		"Network configuration to use",
 	)
-	cmd.Flags().BoolVar(&f.StartConsole,
+	cmd.Flags().BoolVar(&f.WithConsole,
 		"console-proxy",
 		false,
-		"Start the Vega console proxy and open the console in the default browser")
+		"Start the Vega console proxy and open the console in the default browser (DEPRECATED, use --with-console, instead)",
+	)
+	cmd.Flags().BoolVar(&f.WithConsole,
+		"with-console",
+		false,
+		"Start the Vega console behind a proxy and open it in the default browser",
+	)
+	cmd.Flags().BoolVar(&f.WithTokenDApp,
+		"with-token-dapp",
+		false,
+		"Start the Vega Token dApp behind a proxy and open it in the default browser",
+	)
 	cmd.Flags().BoolVar(&f.NoBrowser,
 		"no-browser",
 		false,
-		"Do not open the default browser when starting the console proxy (requires: --console-proxy)")
+		"Do not open the default browser when starting applications",
+	)
 	cmd.Flags().StringVar(&f.LogLevel,
 		"level",
 		"",
-		fmt.Sprintf("Set the log level: %v (default: value set by the network configuration)", SupportedLogLevels))
+		fmt.Sprintf("Set the log level: %v (default: value set by the network configuration)", SupportedLogLevels),
+	)
+
+	autoCompleteNetwork(cmd, rf.Home)
+	autoCompleteLogLevel(cmd)
 
 	return cmd
 }
 
 type RunServiceFlags struct {
-	Network      string
-	StartConsole bool
-	NoBrowser    bool
-	LogLevel     string
+	Network       string
+	WithConsole   bool
+	WithTokenDApp bool
+	NoBrowser     bool
+	LogLevel      string
 }
 
 func (f *RunServiceFlags) Validate() error {
@@ -142,8 +166,8 @@ func (f *RunServiceFlags) Validate() error {
 		return flags.FlagMustBeSpecifiedError("network")
 	}
 
-	if f.NoBrowser && !f.StartConsole {
-		return flags.ParentFlagMustBeSpecifiedError("no-browser", "console-proxy")
+	if f.NoBrowser && !f.WithConsole && !f.WithTokenDApp {
+		return flags.OneOfParentsFlagMustBeSpecifiedError("no-browser", "with-console", "with-token-dapp")
 	}
 
 	if len(f.LogLevel) != 0 {
@@ -201,6 +225,12 @@ func RunService(w io.Writer, rf *RootFlags, f *RunServiceFlags) error {
 		return fmt.Errorf("couldn't initialise service store: %w", err)
 	}
 
+	if isInit, err := service.IsInitialised(svcStore); err != nil {
+		return fmt.Errorf("couldn't verify service initialisation state: %w", err)
+	} else if !isInit {
+		return ErrProgramIsNotInitialised
+	}
+
 	auth, err := service.NewAuth(log.Named("auth"), svcStore, cfg.TokenExpiry.Get())
 	if err != nil {
 		return fmt.Errorf("couldn't initialise authentication: %w", err)
@@ -220,8 +250,7 @@ func RunService(w io.Writer, rf *RootFlags, f *RunServiceFlags) error {
 
 	go func() {
 		defer cancel()
-		err := srv.Start()
-		if err != nil && !errors.Is(err, http.ErrServerClosed) {
+		if err := srv.Start(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			log.Error("error while starting HTTP server", zap.Error(err))
 		}
 	}()
@@ -229,35 +258,18 @@ func RunService(w io.Writer, rf *RootFlags, f *RunServiceFlags) error {
 	serviceHost := fmt.Sprintf("http://%v:%v", cfg.Host, cfg.Port)
 	if rf.Output == flags.InteractiveOutput {
 		p.CheckMark().Text("HTTP service started at: ").SuccessText(serviceHost).NextLine()
-	} else if rf.Output == "json" {
+	} else if rf.Output == flags.JSONOutput {
 		log.Info(fmt.Sprintf("HTTP service started at: %s", serviceHost))
 	}
 
-	var cs *console.Console
-	if f.StartConsole {
-		cs = console.NewConsole(cfg.Console.LocalPort, cfg.Console.URL, cfg.API.GRPC.Hosts[0])
-		go func() {
-			defer cancel()
-			err := cs.Start()
-			if err != nil && !errors.Is(err, http.ErrServerClosed) {
-				log.Error("error while starting the console proxy", zap.Error(err))
-			}
-		}()
+	var cs *proxy.Proxy
+	if f.WithConsole {
+		cs = startConsole(log, rf, !f.NoBrowser, cfg, cancel, p)
+	}
 
-		consoleLocalHost := fmt.Sprintf("http://127.0.0.1:%v", cfg.Console.LocalPort)
-		if rf.Output == flags.InteractiveOutput {
-			p.CheckMark().Text("Console proxy pointing to ").Bold(cfg.Console.URL).Text(" started at: ").SuccessText(consoleLocalHost).NextLine()
-		} else if rf.Output == "json" {
-			log.Info(fmt.Sprintf("console proxy pointing to %s started at: %s", cfg.Console.URL, consoleLocalHost))
-		}
-
-		if !f.NoBrowser {
-			err := open.Run(cs.GetBrowserURL())
-			if err != nil {
-				log.Error("unable to open the console in the default browser",
-					zap.Error(err))
-			}
-		}
+	var tokenDApp *proxy.Proxy
+	if f.WithTokenDApp {
+		tokenDApp = startTokenDApp(log, rf, !f.NoBrowser, cfg, cancel, p)
 	}
 
 	if rf.Output == flags.InteractiveOutput {
@@ -270,20 +282,26 @@ func RunService(w io.Writer, rf *RootFlags, f *RunServiceFlags) error {
 
 	waitSig(ctx, cancel, log)
 
-	err = srv.Stop()
-	if err != nil {
-		log.Error("error while stopping HTTP server", zap.Error(err))
-	} else {
-		log.Info("HTTP server stopped with success")
-	}
-
-	if f.StartConsole {
-		err = cs.Stop()
-		if err != nil {
+	if cs != nil {
+		if err = cs.Stop(); err != nil {
 			log.Error("error while stopping console proxy", zap.Error(err))
 		} else {
 			log.Info("console proxy stopped with success")
 		}
+	}
+
+	if tokenDApp != nil {
+		if err = tokenDApp.Stop(); err != nil {
+			log.Error("error while stopping token dApp proxy", zap.Error(err))
+		} else {
+			log.Info("token dApp proxy stopped with success")
+		}
+	}
+
+	if err = srv.Stop(); err != nil {
+		log.Error("error while stopping HTTP server", zap.Error(err))
+	} else {
+		log.Info("HTTP server stopped with success")
 	}
 
 	if rf.Output == flags.InteractiveOutput {
@@ -291,6 +309,55 @@ func RunService(w io.Writer, rf *RootFlags, f *RunServiceFlags) error {
 	}
 
 	return nil
+}
+
+func startConsole(log *zap.Logger, rf *RootFlags, openBrowser bool, cfg *network.Network, cancel context.CancelFunc, p *printer.InteractivePrinter) *proxy.Proxy {
+	cs := proxy.NewProxy(cfg.Console.LocalPort, cfg.Console.URL, cfg.API.GRPC.Hosts[0])
+	go func() {
+		defer cancel()
+		if err := cs.Start(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			log.Error("error while starting the console proxy", zap.Error(err))
+		}
+	}()
+
+	consoleLocalHost := fmt.Sprintf("http://127.0.0.1:%v", cfg.Console.LocalPort)
+	if rf.Output == flags.InteractiveOutput {
+		p.CheckMark().Text("Console proxy pointing to ").Bold(cfg.Console.URL).Text(" started at: ").SuccessText(consoleLocalHost).NextLine()
+	} else if rf.Output == "json" {
+		log.Info(fmt.Sprintf("console proxy pointing to %s started at: %s", cfg.Console.URL, consoleLocalHost))
+	}
+
+	if openBrowser {
+		if err := open.Run(cs.GetBrowserURL()); err != nil {
+			log.Error("unable to open the application in the default browser", zap.Error(err))
+		}
+	}
+
+	return cs
+}
+
+func startTokenDApp(log *zap.Logger, rf *RootFlags, openBrowser bool, cfg *network.Network, cancel context.CancelFunc, p *printer.InteractivePrinter) *proxy.Proxy {
+	tokenDApp := proxy.NewProxy(cfg.TokenDApp.LocalPort, cfg.TokenDApp.URL, cfg.API.GRPC.Hosts[0])
+	go func() {
+		defer cancel()
+		if err := tokenDApp.Start(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			log.Error("error while starting the token dApp proxy", zap.Error(err))
+		}
+	}()
+
+	tokenDAppLocalHost := fmt.Sprintf("http://127.0.0.1:%v", cfg.TokenDApp.LocalPort)
+	if rf.Output == flags.InteractiveOutput {
+		p.CheckMark().Text("token dApp proxy pointing to ").Bold(cfg.TokenDApp.URL).Text(" started at: ").SuccessText(tokenDAppLocalHost).NextLine()
+	} else if rf.Output == "json" {
+		log.Info(fmt.Sprintf("token dApp proxy pointing to %s started at: %s", cfg.TokenDApp.URL, tokenDAppLocalHost))
+	}
+
+	if openBrowser {
+		if err := open.Run(tokenDApp.GetBrowserURL()); err != nil {
+			log.Error("unable to open the token dApp in the default browser", zap.Error(err))
+		}
+	}
+	return tokenDApp
 }
 
 // waitSig will wait for a sigterm or sigint interrupt.

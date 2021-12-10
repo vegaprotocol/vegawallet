@@ -84,6 +84,8 @@ func BuildCmdDescribeKey(w io.Writer, handler DescribeKeyHandler, rf *RootFlags)
 		"Path to the file containing the wallet's passphrase",
 	)
 
+	autoCompleteWallet(cmd, rf.Home)
+
 	return cmd
 }
 
@@ -135,5 +137,4 @@ func PrintDescribeKeyResponse(w io.Writer, resp *wallet.DescribeKeyResponse) {
 
 	p.Text("Metadata:").NextLine()
 	printMeta(p, resp.Meta)
-	p.NextSection()
 }

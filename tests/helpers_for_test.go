@@ -2,7 +2,6 @@ package tests_test
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 	"testing"
 
@@ -10,20 +9,7 @@ import (
 	vgrand "code.vegaprotocol.io/shared/libs/rand"
 )
 
-func NewTempDir(t *testing.T) (string, func(t *testing.T)) {
-	t.Helper()
-	uniqueFolderName := vgrand.RandomStr(10)
-	home := filepath.Join("/tmp", "vegawallet", uniqueFolderName)
-	if err := vgfs.EnsureDir(home); err != nil {
-		t.Fatalf("couldn't create Vega home: %v", err)
-	}
-	return home, func(t *testing.T) {
-		t.Helper()
-		if err := os.RemoveAll(home); err != nil {
-			t.Fatalf("couldn't remove Vega home: %v", err)
-		}
-	}
-}
+const testRecoveryPhrase = "swing ceiling chaos green put insane ripple desk match tip melt usual shrug turkey renew icon parade veteran lens govern path rough page render"
 
 func NewPassphraseFile(t *testing.T, path string) (string, string) {
 	t.Helper()

@@ -5,11 +5,24 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"time"
 
+	"code.vegaprotocol.io/shared/paths"
 	"code.vegaprotocol.io/vegawallet/cmd/flags"
 	"code.vegaprotocol.io/vegawallet/cmd/printer"
 	vgterm "code.vegaprotocol.io/vegawallet/libs/term"
+	netstore "code.vegaprotocol.io/vegawallet/network/store/v1"
+	"code.vegaprotocol.io/vegawallet/wallet"
+	"code.vegaprotocol.io/vegawallet/wallets"
+	"github.com/spf13/cobra"
 )
+
+const (
+	DefaultForwarderRetryCount = 5
+	ForwarderRequestTimeout    = 5 * time.Second
+)
+
+var ErrNetworkDoesNotHaveGRPCHostConfigured = errors.New("network does not have gRPC hosts configured")
 
 type Error struct {
 	Err string `json:"error"`
@@ -59,5 +72,52 @@ func fprintErrorJSON(w io.Writer, err error) {
 	if jsonErr != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "couldn't format error as JSON: %v\n", jsonErr)
 		_, _ = fmt.Fprintf(os.Stderr, "original error: %v\n", err)
+	}
+}
+
+func autoCompleteWallet(cmd *cobra.Command, vegaHome string) {
+	err := cmd.RegisterFlagCompletionFunc("wallet", func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
+		s, err := wallets.InitialiseStore(vegaHome)
+		if err != nil {
+			return nil, cobra.ShellCompDirectiveDefault
+		}
+
+		ws, err := wallet.ListWallets(s)
+		if err != nil {
+			return nil, cobra.ShellCompDirectiveDefault
+		}
+		return ws.Wallets, cobra.ShellCompDirectiveDefault
+	})
+	if err != nil {
+		panic(err)
+	}
+}
+
+func autoCompleteNetwork(cmd *cobra.Command, vegaHome string) {
+	err := cmd.RegisterFlagCompletionFunc("network", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		vegaPaths := paths.New(vegaHome)
+
+		netStore, err := netstore.InitialiseStore(vegaPaths)
+		if err != nil {
+			return nil, cobra.ShellCompDirectiveDefault
+		}
+
+		nets, err := netStore.ListNetworks()
+		if err != nil {
+			return nil, cobra.ShellCompDirectiveDefault
+		}
+		return nets, cobra.ShellCompDirectiveDefault
+	})
+	if err != nil {
+		panic(err)
+	}
+}
+
+func autoCompleteLogLevel(cmd *cobra.Command) {
+	err := cmd.RegisterFlagCompletionFunc("level", func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
+		return SupportedLogLevels, cobra.ShellCompDirectiveDefault
+	})
+	if err != nil {
+		panic(err)
 	}
 }

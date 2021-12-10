@@ -41,30 +41,30 @@ var (
 
 	sendCommandExample = cli.Examples(`
 		# Send a command to a registered network
-		vegawallet send command --network NETWORK --wallet WALLET --pubkey PUBKEY COMMAND
+		vegawallet command send --network NETWORK --wallet WALLET --pubkey PUBKEY COMMAND
 
 		# Send a command to a specific Vega node address
-		vegawallet send command --node-address ADDRESS --wallet WALLET --pubkey PUBKEY COMMAND
+		vegawallet command send --node-address ADDRESS --wallet WALLET --pubkey PUBKEY COMMAND
 
 		# Send a command with a log level set to debug
-		vegawallet send command --network NETWORK --wallet WALLET --pubkey PUBKEY --level debug COMMAND
+		vegawallet command send --network NETWORK --wallet WALLET --pubkey PUBKEY --level debug COMMAND
 
-		# Send a command with a maximum of 10 retry
-		vegawallet send command --network NETWORK --wallet WALLET --pubkey PUBKEY --retries 10 COMMAND
+		# Send a command with a maximum of 10 retries
+		vegawallet command send --network NETWORK --wallet WALLET --pubkey PUBKEY --retries 10 COMMAND
 	`)
 )
 
 type SendCommandHandler func(io.Writer, *RootFlags, *SendCommandRequest) error
 
-func NewCmdSendCommand(w io.Writer, rf *RootFlags) *cobra.Command {
-	return BuildCmdSendCommand(w, SendCommand, rf)
+func NewCmdCommandSend(w io.Writer, rf *RootFlags) *cobra.Command {
+	return BuildCmdCommandSend(w, SendCommand, rf)
 }
 
-func BuildCmdSendCommand(w io.Writer, handler SendCommandHandler, rf *RootFlags) *cobra.Command {
+func BuildCmdCommandSend(w io.Writer, handler SendCommandHandler, rf *RootFlags) *cobra.Command {
 	f := &SendCommandFlags{}
 
 	cmd := &cobra.Command{
-		Use:     "command",
+		Use:     "send",
 		Short:   "Send a command to a Vega node",
 		Long:    sendCommandLong,
 		Example: sendCommandExample,
@@ -124,6 +124,10 @@ func BuildCmdSendCommand(w io.Writer, handler SendCommandHandler, rf *RootFlags)
 		DefaultForwarderRetryCount,
 		"Number of retries when contacting the Vega node",
 	)
+
+	autoCompleteNetwork(cmd, rf.Home)
+	autoCompleteWallet(cmd, rf.Home)
+	autoCompleteLogLevel(cmd)
 
 	return cmd
 }
@@ -270,12 +274,13 @@ func SendCommand(w io.Writer, rf *RootFlags, req *SendCommandRequest) error {
 
 	log.Info("transaction successfully signed", zap.String("signature", tx.Signature.Value))
 
-	if err = forwarder.SendTx(ctx, tx, api.SubmitTransactionRequest_TYPE_ASYNC); err != nil {
+	txHash, err := forwarder.SendTx(ctx, tx, api.SubmitTransactionRequest_TYPE_ASYNC)
+	if err != nil {
 		log.Error("couldn't send transaction", zap.Error(err))
 		return fmt.Errorf("couldn't send transaction: %w", err)
 	}
 
-	log.Info("transaction successfully sent")
+	log.Info("transaction successfully sent", zap.String("hash", txHash))
 
 	return nil
 }

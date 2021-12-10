@@ -1,14 +1,17 @@
 package wallet_test
 
 import (
+	"encoding/base64"
 	"fmt"
 	"sort"
 	"testing"
 
+	commandspb "code.vegaprotocol.io/protos/vega/commands/v1"
 	vgrand "code.vegaprotocol.io/shared/libs/rand"
 	"code.vegaprotocol.io/vegawallet/wallet"
 	"code.vegaprotocol.io/vegawallet/wallet/mocks"
 	"github.com/golang/mock/gomock"
+	"github.com/golang/protobuf/proto"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -71,7 +74,7 @@ func TestGenerateKey(t *testing.T) {
 func testGenerateKeyInNonExistingWalletSucceeds(t *testing.T) {
 	// given
 	req := &wallet.GenerateKeyRequest{
-		Wallet: "my-wallet",
+		Wallet: vgrand.RandomStr(5),
 		Metadata: []wallet.Meta{
 			{Key: "name", Value: "my-wallet"},
 			{Key: "role", Value: "validation"},
@@ -85,7 +88,7 @@ func testGenerateKeyInNonExistingWalletSucceeds(t *testing.T) {
 		generatedWallet = w
 		return nil
 	}
-	fakePath := "/path/to/wallets/my-wallet"
+	fakePath := fmt.Sprintf("/path/to/wallets/%s", req.Wallet)
 	store := handlerMocks(t)
 	store.EXPECT().WalletExists(req.Wallet).Times(1).Return(false)
 	store.EXPECT().GetWalletPath(req.Wallet).Times(1).Return(fakePath)
@@ -106,8 +109,7 @@ func testGenerateKeyInNonExistingWalletSucceeds(t *testing.T) {
 	assert.Equal(t, req.Wallet, resp.Wallet.Name)
 	assert.Equal(t, fakePath, resp.Wallet.FilePath)
 	assert.NotEmpty(t, resp.Wallet.Mnemonic)
-	assert.Equal(t, keyPair.PublicKey(), resp.Key.KeyPair.PublicKey)
-	assert.Equal(t, keyPair.PrivateKey(), resp.Key.KeyPair.PrivateKey)
+	assert.Equal(t, keyPair.PublicKey(), resp.Key.PublicKey)
 	assert.Equal(t, keyPair.AlgorithmName(), resp.Key.Algorithm.Name)
 	assert.Equal(t, keyPair.AlgorithmVersion(), resp.Key.Algorithm.Version)
 	assert.Equal(t, keyPair.Meta(), resp.Key.Meta)
@@ -126,7 +128,7 @@ func testGenerateKeyInExistingWalletSucceeds(t *testing.T) {
 	}
 
 	// setup
-	fakePath := "/path/to/wallets/my-wallet"
+	fakePath := fmt.Sprintf("/path/to/wallets/%s", req.Wallet)
 	store := handlerMocks(t)
 	store.EXPECT().WalletExists(req.Wallet).Times(1).Return(true)
 	store.EXPECT().GetWallet(req.Wallet, req.Passphrase).Times(1).Return(w, nil)
@@ -148,8 +150,7 @@ func testGenerateKeyInExistingWalletSucceeds(t *testing.T) {
 	assert.Equal(t, req.Wallet, resp.Wallet.Name)
 	assert.Equal(t, fakePath, resp.Wallet.FilePath)
 	assert.Empty(t, resp.Wallet.Mnemonic)
-	assert.Equal(t, keyPair.PublicKey(), resp.Key.KeyPair.PublicKey)
-	assert.Equal(t, keyPair.PrivateKey(), resp.Key.KeyPair.PrivateKey)
+	assert.Equal(t, keyPair.PublicKey(), resp.Key.PublicKey)
 	assert.Equal(t, keyPair.AlgorithmName(), resp.Key.Algorithm.Name)
 	assert.Equal(t, keyPair.AlgorithmVersion(), resp.Key.Algorithm.Version)
 	assert.Equal(t, keyPair.Meta(), resp.Key.Meta)
@@ -434,28 +435,67 @@ func testGetWalletInfoOfNonExistingWalletFails(t *testing.T) {
 	assert.Nil(t, resp)
 }
 
-func TestImportWalletSucceeds(t *testing.T) {
+func TestCreateWalletSucceeds(t *testing.T) {
 	// given
-	walletName := vgrand.RandomStr(5)
-	mnemonic := "swing ceiling chaos green put insane ripple desk match tip melt usual shrug turkey renew icon parade veteran lens govern path rough page render"
-
-	req := &wallet.ImportWalletRequest{
-		Wallet:     walletName,
-		Mnemonic:   mnemonic,
-		Version:    2,
-		Passphrase: "passphrase",
-	}
-
-	expectedResp := &wallet.ImportWalletResponse{
-		Name:     walletName,
-		FilePath: vgrand.RandomStr(5),
+	req := &wallet.CreateWalletRequest{
+		Wallet:     vgrand.RandomStr(5),
+		Passphrase: vgrand.RandomStr(5),
 	}
 
 	// setup
+	var createdWallet wallet.Wallet
+	captureWallet := func(w wallet.Wallet, passphrase string) error {
+		createdWallet = w
+		return nil
+	}
+	fakePath := fmt.Sprintf("/path/to/wallets/%s", req.Wallet)
 	store := handlerMocks(t)
 	store.EXPECT().WalletExists(req.Wallet).Times(1).Return(false)
-	store.EXPECT().SaveWallet(gomock.Any(), req.Passphrase).Times(1).Return(nil)
-	store.EXPECT().GetWalletPath(req.Wallet).Times(1).Return(expectedResp.FilePath)
+	store.EXPECT().GetWalletPath(req.Wallet).Times(1).Return(fakePath)
+	store.EXPECT().SaveWallet(gomock.Any(), req.Passphrase).Times(1).DoAndReturn(captureWallet)
+
+	// when
+	resp, err := wallet.CreateWallet(store, req)
+
+	// then
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	// verify generated wallet
+	assert.Equal(t, req.Wallet, createdWallet.Name())
+	assert.Len(t, createdWallet.ListKeyPairs(), 1)
+	keyPair := createdWallet.ListKeyPairs()[0]
+	assert.NotEmpty(t, keyPair.Meta())
+	// verify response
+	assert.Equal(t, req.Wallet, resp.Wallet.Name)
+	assert.NotEmpty(t, resp.Wallet.RecoveryPhrase)
+	assert.Equal(t, uint32(2), resp.Wallet.Version)
+	assert.Equal(t, fakePath, resp.Wallet.FilePath)
+	assert.Equal(t, keyPair.PublicKey(), resp.Key.PublicKey)
+	assert.Equal(t, keyPair.AlgorithmName(), resp.Key.Algorithm.Name)
+	assert.Equal(t, keyPair.AlgorithmVersion(), resp.Key.Algorithm.Version)
+	assert.Equal(t, keyPair.Meta(), resp.Key.Meta)
+}
+
+func TestImportWalletSucceeds(t *testing.T) {
+	// given
+	req := &wallet.ImportWalletRequest{
+		Wallet:         vgrand.RandomStr(5),
+		RecoveryPhrase: TestRecoveryPhrase1,
+		Version:        2,
+		Passphrase:     vgrand.RandomStr(5),
+	}
+
+	// setup
+	var importedWallet wallet.Wallet
+	captureWallet := func(w wallet.Wallet, passphrase string) error {
+		importedWallet = w
+		return nil
+	}
+	fakePath := fmt.Sprintf("/path/to/wallets/%s", req.Wallet)
+	store := handlerMocks(t)
+	store.EXPECT().WalletExists(req.Wallet).Times(1).Return(false)
+	store.EXPECT().GetWalletPath(req.Wallet).Times(1).Return(fakePath)
+	store.EXPECT().SaveWallet(gomock.Any(), req.Passphrase).Times(1).DoAndReturn(captureWallet)
 
 	// when
 	resp, err := wallet.ImportWallet(store, req)
@@ -463,7 +503,18 @@ func TestImportWalletSucceeds(t *testing.T) {
 	// then
 	require.NoError(t, err)
 	require.NotNil(t, resp)
-	assert.Equal(t, expectedResp, resp)
+	// verify generated wallet
+	assert.Equal(t, req.Wallet, importedWallet.Name())
+	assert.Len(t, importedWallet.ListKeyPairs(), 1)
+	keyPair := importedWallet.ListKeyPairs()[0]
+	assert.NotEmpty(t, keyPair.Meta())
+	// verify response
+	assert.Equal(t, req.Wallet, resp.Wallet.Name)
+	assert.Equal(t, fakePath, resp.Wallet.FilePath)
+	assert.Equal(t, keyPair.PublicKey(), resp.Key.PublicKey)
+	assert.Equal(t, keyPair.AlgorithmName(), resp.Key.Algorithm.Name)
+	assert.Equal(t, keyPair.AlgorithmVersion(), resp.Key.Algorithm.Version)
+	assert.Equal(t, keyPair.Meta(), resp.Key.Meta)
 }
 
 func TestListWalletsSucceeds(t *testing.T) {
@@ -546,6 +597,175 @@ func testSignMessageWithNonExistingWalletFails(t *testing.T) {
 	assert.Nil(t, resp)
 }
 
+func TestRotateKey(t *testing.T) {
+	t.Run("Rotate key succeeds", testRotateKeySucceeds)
+	t.Run("Rotate key with non existing wallet fails", testRotateWithNonExistingWalletFails)
+	t.Run("Rotate key with non existing new public key fails", testRotateKeyWithNonExistingNewPublicKeyFails)
+	t.Run("Rotate key with non existing current public key fails", testRotateKeyWithNonExistingCurrentPublicKeyFails)
+	t.Run("Rotate key tained public key fails", testRotateKeyWithTaintedPublicKeyFails)
+}
+
+func testRotateKeySucceeds(t *testing.T) {
+	// given
+	w := importWalletWithTwoKeys(t)
+
+	currentPubKey := w.ListPublicKeys()[0]
+	newPubKey := w.ListPublicKeys()[1]
+
+	masterKeyPair, err := w.GetMasterKeyPair()
+	require.NoError(t, err)
+
+	req := &wallet.RotateKeyRequest{
+		Wallet:            w.Name(),
+		Passphrase:        "passphrase",
+		NewPublicKey:      newPubKey.Key(),
+		CurrentPublicKey:  currentPubKey.Key(),
+		TxBlockHeight:     20,
+		TargetBlockHeight: 25,
+	}
+
+	// setup
+	store := handlerMocks(t)
+	store.EXPECT().WalletExists(req.Wallet).Times(1).Return(true)
+	store.EXPECT().GetWallet(req.Wallet, req.Passphrase).Times(1).Return(w, nil)
+
+	// when
+	resp, err := wallet.RotateKey(store, req)
+
+	// then
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	require.Equal(t, masterKeyPair.PublicKey(), resp.MasterPublicKey)
+
+	transactionRaw, err := base64.StdEncoding.DecodeString(resp.Base64Transaction)
+	require.NoError(t, err)
+
+	transaction := &commandspb.Transaction{}
+	err = proto.Unmarshal(transactionRaw, transaction)
+	require.NoError(t, err)
+
+	inputData := &commandspb.InputData{}
+	err = proto.Unmarshal(transaction.InputData, inputData)
+	require.NoError(t, err)
+
+	keyRotate, ok := inputData.Command.(*commandspb.InputData_KeyRotateSubmission)
+	require.True(t, ok)
+	require.NotNil(t, keyRotate)
+
+	require.Equal(t, req.TxBlockHeight, inputData.BlockHeight)
+	require.Equal(t, newPubKey.Index(), keyRotate.KeyRotateSubmission.NewPubKeyIndex)
+	require.Equal(t, req.TargetBlockHeight, keyRotate.KeyRotateSubmission.TargetBlock)
+	require.Equal(t, req.NewPublicKey, keyRotate.KeyRotateSubmission.NewPubKey)
+}
+
+func testRotateWithNonExistingWalletFails(t *testing.T) {
+	// given
+	req := &wallet.RotateKeyRequest{
+		Wallet:            vgrand.RandomStr(5),
+		Passphrase:        "passphrase",
+		NewPublicKey:      "nonexisting",
+		TxBlockHeight:     20,
+		TargetBlockHeight: 25,
+	}
+
+	// setup
+	store := handlerMocks(t)
+	store.EXPECT().WalletExists(req.Wallet).Times(1).Return(false)
+	store.EXPECT().GetWallet(req.Wallet, req.Passphrase).Times(0)
+
+	// when
+	resp, err := wallet.RotateKey(store, req)
+
+	// then
+	require.Error(t, err)
+	assert.Nil(t, resp)
+}
+
+func testRotateKeyWithNonExistingNewPublicKeyFails(t *testing.T) {
+	// given
+	w := importWalletWithKey(t)
+
+	req := &wallet.RotateKeyRequest{
+		Wallet:            w.Name(),
+		Passphrase:        "passphrase",
+		NewPublicKey:      "nonexisting",
+		TxBlockHeight:     20,
+		TargetBlockHeight: 25,
+	}
+
+	// setup
+	store := handlerMocks(t)
+	store.EXPECT().WalletExists(req.Wallet).Times(1).Return(true)
+	store.EXPECT().GetWallet(req.Wallet, req.Passphrase).Times(1).Return(w, nil)
+
+	// when
+	resp, err := wallet.RotateKey(store, req)
+
+	// then
+	require.Nil(t, resp)
+	require.Error(t, err)
+}
+
+func testRotateKeyWithNonExistingCurrentPublicKeyFails(t *testing.T) {
+	// given
+	w := importWalletWithKey(t)
+
+	newPubKey := w.ListPublicKeys()[0]
+
+	req := &wallet.RotateKeyRequest{
+		Wallet:            w.Name(),
+		Passphrase:        "passphrase",
+		NewPublicKey:      newPubKey.Key(),
+		CurrentPublicKey:  "non-existing",
+		TxBlockHeight:     20,
+		TargetBlockHeight: 25,
+	}
+
+	// setup
+	store := handlerMocks(t)
+	store.EXPECT().WalletExists(req.Wallet).Times(1).Return(true)
+	store.EXPECT().GetWallet(req.Wallet, req.Passphrase).Times(1).Return(w, nil)
+
+	// when
+	resp, err := wallet.RotateKey(store, req)
+
+	// then
+	require.Nil(t, resp)
+	require.Error(t, err)
+}
+
+func testRotateKeyWithTaintedPublicKeyFails(t *testing.T) {
+	// given
+	w := importWalletWithTwoKeys(t)
+
+	currentPubKey := w.ListPublicKeys()[0]
+	newPubKey := w.ListPublicKeys()[1]
+
+	err := w.TaintKey(newPubKey.Key())
+	require.NoError(t, err)
+
+	req := &wallet.RotateKeyRequest{
+		Wallet:            w.Name(),
+		Passphrase:        "passphrase",
+		NewPublicKey:      newPubKey.Key(),
+		CurrentPublicKey:  currentPubKey.Key(),
+		TxBlockHeight:     20,
+		TargetBlockHeight: 25,
+	}
+
+	// setup
+	store := handlerMocks(t)
+	store.EXPECT().WalletExists(req.Wallet).Times(1).Return(true)
+	store.EXPECT().GetWallet(req.Wallet, req.Passphrase).Times(1).Return(w, nil)
+
+	// when
+	resp, err := wallet.RotateKey(store, req)
+
+	// then
+	require.Nil(t, resp)
+	require.ErrorIs(t, err, wallet.ErrPubKeyIsTainted)
+}
+
 func newWalletWithKey(t *testing.T) *wallet.HDWallet {
 	t.Helper()
 	return newWalletWithKeys(t, 1)
@@ -563,6 +783,16 @@ func newWalletWithKeys(t *testing.T, n int) *wallet.HDWallet {
 	return w
 }
 
+func importWalletWithTwoKeys(t *testing.T) *wallet.HDWallet {
+	t.Helper()
+	w := importWalletWithKey(t)
+	if _, err := w.GenerateKeyPair(nil); err != nil {
+		t.Fatalf("couldn't generate second key: %v", err)
+	}
+
+	return w
+}
+
 func importWalletWithKey(t *testing.T) *wallet.HDWallet {
 	t.Helper()
 	w, err := wallet.ImportHDWallet(
@@ -577,6 +807,7 @@ func importWalletWithKey(t *testing.T) *wallet.HDWallet {
 	if _, err := w.GenerateKeyPair(nil); err != nil {
 		t.Fatalf("couldn't generate key: %v", err)
 	}
+
 	return w
 }
 

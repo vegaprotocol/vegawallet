@@ -1,7 +1,6 @@
 package tests_test
 
 import (
-	"sort"
 	"testing"
 
 	vgrand "code.vegaprotocol.io/shared/libs/rand"
@@ -10,9 +9,7 @@ import (
 
 func TestImportNetwork(t *testing.T) {
 	// given
-	home, cleanUpFn := NewTempDir(t)
-	defer cleanUpFn(t)
-
+	home := t.TempDir()
 	networkFile1 := NewFile(t, home, "my-network-1.toml", FakeNetwork("my-network-1"))
 
 	// when
@@ -36,8 +33,8 @@ func TestImportNetwork(t *testing.T) {
 
 	// then
 	require.NoError(t, err)
-	require.NotNil(t, listNetsResp1)
-	require.Equal(t, []string{"my-network-1"}, listNetsResp1.Networks)
+	AssertListNetwork(t, listNetsResp1).
+		WithNetworks("my-network-1")
 
 	// given
 	networkFile2 := NewFile(t, home, "my-network-2.toml", FakeNetwork("my-network-2"))
@@ -63,15 +60,13 @@ func TestImportNetwork(t *testing.T) {
 
 	// then
 	require.NoError(t, err)
-	require.NotNil(t, listNetsResp2)
-	require.Equal(t, []string{"my-network-1", "my-network-2"}, listNetsResp2.Networks)
+	AssertListNetwork(t, listNetsResp2).
+		WithNetworks("my-network-1", "my-network-2")
 }
 
 func TestForceImportNetwork(t *testing.T) {
 	// given
-	home, cleanUpFn := NewTempDir(t)
-	defer cleanUpFn(t)
-
+	home := t.TempDir()
 	networkFile := NewFile(t, home, "my-network.toml", FakeNetwork("my-network"))
 
 	// when
@@ -120,15 +115,13 @@ func TestForceImportNetwork(t *testing.T) {
 
 	// then
 	require.NoError(t, err)
-	require.NotNil(t, listNetsResp)
-	require.Equal(t, []string{"my-network"}, listNetsResp.Networks)
+	AssertListNetwork(t, listNetsResp).
+		WithNetworks("my-network")
 }
 
 func TestImportNetworkWithNewName(t *testing.T) {
 	// given
-	home, cleanUpFn := NewTempDir(t)
-	defer cleanUpFn(t)
-
+	home := t.TempDir()
 	networkFile := NewFile(t, home, "my-network.toml", FakeNetwork("my-network"))
 
 	// when
@@ -152,8 +145,8 @@ func TestImportNetworkWithNewName(t *testing.T) {
 
 	// then
 	require.NoError(t, err)
-	require.NotNil(t, listNetsResp1)
-	require.Equal(t, []string{"my-network"}, listNetsResp1.Networks)
+	AssertListNetwork(t, listNetsResp1).
+		WithNetworks("my-network")
 
 	// given
 	networkName := vgrand.RandomStr(5)
@@ -180,8 +173,6 @@ func TestImportNetworkWithNewName(t *testing.T) {
 
 	// then
 	require.NoError(t, err)
-	require.NotNil(t, listNetsResp2)
-	expectedNets := []string{"my-network", networkName}
-	sort.Strings(expectedNets)
-	require.Equal(t, expectedNets, listNetsResp2.Networks)
+	AssertListNetwork(t, listNetsResp2).
+		WithNetworks("my-network", networkName)
 }

@@ -12,15 +12,12 @@ import (
 
 func TestRenameWallet(t *testing.T) {
 	// given
-	home, cleanUpFn := NewTempDir(t)
-	defer cleanUpFn(t)
-
+	home := t.TempDir()
 	_, passphraseFilePath := NewPassphraseFile(t, home)
-
 	walletName := vgrand.RandomStr(5)
 
 	// when
-	generateKeyResp, err := KeyGenerate(t, []string{
+	createWalletResp, err := WalletCreate(t, []string{
 		"--home", home,
 		"--output", "json",
 		"--wallet", walletName,
@@ -29,18 +26,17 @@ func TestRenameWallet(t *testing.T) {
 
 	// then
 	require.NoError(t, err)
-	AssertGenerateKey(t, generateKeyResp).
-		WithWalletCreation().
+	AssertCreateWallet(t, createWalletResp).
 		WithName(walletName).
 		LocatedUnder(home)
 
 	// given
 	newWalletName := vgrand.RandomStr(5)
-	currentDir := filepath.Dir(generateKeyResp.Wallet.FilePath)
+	currentDir := filepath.Dir(createWalletResp.Wallet.FilePath)
 	newPath := filepath.Join(currentDir, newWalletName)
 
 	// when
-	err = os.Rename(generateKeyResp.Wallet.FilePath, newPath)
+	err = os.Rename(createWalletResp.Wallet.FilePath, newPath)
 
 	// then
 	require.NoError(t, err)
@@ -57,5 +53,5 @@ func TestRenameWallet(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, listKeysResp)
 	require.Len(t, listKeysResp.Keys, 1)
-	assert.Equal(t, listKeysResp.Keys[0].PublicKey, generateKeyResp.Key.KeyPair.PublicKey)
+	assert.Equal(t, listKeysResp.Keys[0].PublicKey, createWalletResp.Key.PublicKey)
 }

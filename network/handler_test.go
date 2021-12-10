@@ -31,96 +31,54 @@ func getTestConfig(t *testing.T) *testConfig {
 	}
 }
 
-func TestInitialiseNetwork(t *testing.T) {
-	t.Run("Initialising network succeeds", testInitialisingNetworkSucceeds)
-	t.Run("Initialising network with error fails", testInitialisingNetworkWithErrorFails)
-	t.Run("Initialising network with existing network fails", testInitialisingNetworkWithExistingNetworkFails)
-	t.Run("Initialising by overwriting network succeeds", testInitialisingByOverwritingNetworkSucceeds)
-}
-
-func testInitialisingNetworkSucceeds(t *testing.T) {
-	ts := getTestConfig(t)
-
-	// setup
-	ts.store.EXPECT().
-		NetworkExists("fairground").
-		Times(1).
-		Return(false, nil)
-	ts.store.EXPECT().
-		SaveNetwork(gomock.Any()).
-		Times(1).
-		Return(nil)
-
-	// when
-	err := network.InitialiseNetworks(ts.store, false)
-
-	// then
-	require.NoError(t, err)
-}
-
-func testInitialisingNetworkWithErrorFails(t *testing.T) {
-	ts := getTestConfig(t)
-
-	// setup
-	ts.store.EXPECT().
-		NetworkExists("fairground").
-		Times(1).
-		Return(false, nil)
-	ts.store.EXPECT().
-		SaveNetwork(gomock.Any()).
-		Times(1).
-		Return(errSomethingWentWrong)
-
-	// when
-	err := network.InitialiseNetworks(ts.store, false)
-
-	// then
-	require.EqualError(t, err, "couldn't save network configuration: something went wrong")
-}
-
-func testInitialisingNetworkWithExistingNetworkFails(t *testing.T) {
-	ts := getTestConfig(t)
-
-	// setup
-	ts.store.EXPECT().
-		NetworkExists("fairground").
-		Times(1).
-		Return(true, nil)
-	ts.store.EXPECT().
-		SaveNetwork(gomock.Any()).
-		Times(0)
-
-	// when
-	err := network.InitialiseNetworks(ts.store, false)
-
-	// then
-	require.Error(t, err)
-}
-
-func testInitialisingByOverwritingNetworkSucceeds(t *testing.T) {
-	ts := getTestConfig(t)
-
-	// setup
-	ts.store.EXPECT().
-		NetworkExists("fairground").
-		Times(0)
-	ts.store.EXPECT().
-		SaveNetwork(gomock.Any()).
-		Times(1).
-		Return(nil)
-
-	// when
-	err := network.InitialiseNetworks(ts.store, true)
-
-	// then
-	require.NoError(t, err)
-}
-
 func TestImportNetwork(t *testing.T) {
 	t.Run("Importing network succeeds", testImportingNetworkSucceeds)
 	t.Run("Importing existing network fails", testImportingExistingNetworkFails)
 	t.Run("Importing by overwriting existing network succeeds", testImportingByOverwritingNetworkSucceeds)
 	t.Run("Importing network with errors when saving fails", testImportingNetworkWithErrorsWhenSavingFails)
+	t.Run("Deleting a network", testDeletingNetwork)
+	t.Run("Deleting a network which doesn't exist fails", testDeletingNonExistantNetworkFails)
+}
+
+func testDeletingNonExistantNetworkFails(t *testing.T) {
+	ts := getTestConfig(t)
+
+	// given
+	net := &network.Network{
+		Name: "test",
+	}
+	ts.store.EXPECT().
+		NetworkExists("test").
+		Times(1).
+		Return(false, nil)
+
+	err := network.DeleteNetwork(ts.store, &network.DeleteNetworkRequest{Name: net.Name})
+	require.EqualError(t, err, "network \"test\" doesn't exist")
+}
+
+func testDeletingNetwork(t *testing.T) {
+	ts := getTestConfig(t)
+
+	// given
+	net := &network.Network{
+		Name: "test",
+	}
+
+	// setup
+	ts.store.EXPECT().
+		NetworkExists("test").
+		Times(1).
+		Return(true, nil)
+	ts.store.EXPECT().
+		DeleteNetwork("test").
+		Times(1).
+		Return(nil)
+
+	// when
+	err := network.DeleteNetwork(ts.store, &network.DeleteNetworkRequest{Name: net.Name})
+
+	// then
+	require.Nil(t, err)
 }
 
 func testImportingNetworkSucceeds(t *testing.T) {

@@ -31,9 +31,7 @@ func BuildPassphraseGetterWithOps(passphraseFile string) PassphraseGetterWithOps
 		}
 	}
 
-	return func(withConfirmation bool) (string, error) {
-		return ReadPassphraseInputWithOpts(withConfirmation)
-	}
+	return ReadPassphraseInputWithOpts
 }
 
 func GetPassphrase(passphraseFile string) (string, error) {
@@ -42,6 +40,14 @@ func GetPassphrase(passphraseFile string) (string, error) {
 	}
 
 	return ReadPassphraseInput()
+}
+
+func GetConfirmedPassphrase(passphraseFile string) (string, error) {
+	if len(passphraseFile) != 0 {
+		return ReadPassphraseFile(passphraseFile)
+	}
+
+	return ReadConfirmedPassphraseInput()
 }
 
 func ReadPassphraseFile(passphraseFilePath string) (string, error) {

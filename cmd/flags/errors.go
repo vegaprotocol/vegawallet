@@ -25,6 +25,12 @@ func FlagMustBeSpecifiedError(name string) error {
 	}
 }
 
+func FlagRequireLessThanFlagError(less, greater string) error {
+	return FlagError{
+		message: fmt.Sprintf("--%s flag must be greater than --%s", greater, less),
+	}
+}
+
 func ArgMustBeSpecifiedError(name string) error {
 	return FlagError{
 		message: fmt.Sprintf("%s argument must be specified", name),
@@ -55,9 +61,24 @@ func UnsupportedFlagValueError(name string, unsupported interface{}, supported [
 	}
 }
 
-func ParentFlagMustBeSpecifiedError(name string, parent string) error {
+func OneOfParentsFlagMustBeSpecifiedError(name string, parents ...string) error {
+	var resultFmt string
+	if len(parents) > 1 {
+		fmtFlags := make([]string, len(parents))
+		for i, pf := range parents {
+			fmtFlags[i] = fmt.Sprintf("--%s", pf)
+		}
+		flagsFmt := strings.Join([]string{
+			strings.Join(parents[0:len(fmtFlags)-1], ", "),
+			parents[len(fmtFlags)-1],
+		}, " or ")
+		resultFmt = fmt.Sprintf("%s flags", flagsFmt)
+	} else {
+		resultFmt = fmt.Sprintf("--%s flag", parents[0])
+	}
+
 	return FlagError{
-		message: fmt.Sprintf("--%s flag requires --%s flag to be set", name, parent),
+		message: fmt.Sprintf("--%s flag requires %s to be set", name, resultFmt),
 	}
 }
 

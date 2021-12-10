@@ -32,6 +32,7 @@ func NewForwarder(log *zap.Logger, nodeConfigs network.GRPCConfig) (*Forwarder, 
 	for _, v := range nodeConfigs.Hosts {
 		conn, err := grpc.Dial(v, grpc.WithInsecure())
 		if err != nil {
+			log.Debug("Couldn't dial gRPC host", zap.String("address", v))
 			return nil, err
 		}
 		conns = append(conns, conn)
@@ -48,12 +49,13 @@ func NewForwarder(log *zap.Logger, nodeConfigs network.GRPCConfig) (*Forwarder, 
 
 func (n *Forwarder) Stop() error {
 	for i, v := range n.nodeCfgs.Hosts {
-		n.log.Info("closing gRPC client", zap.String("address", v))
+		n.log.Debug("Closing gRPC client", zap.String("address", v))
 		if err := n.conns[i].Close(); err != nil {
-			n.log.Warn("couldn't close gRPC client", zap.Error(err))
+			n.log.Warn("Couldn't close gRPC client", zap.Error(err))
 			return err
 		}
 	}
+	n.log.Info("gRPC clients successfully closed")
 	return nil
 }
 
@@ -66,7 +68,7 @@ func (n *Forwarder) HealthCheck(ctx context.Context) error {
 			if err != nil {
 				return err
 			}
-			n.log.Debug("response from GetVegaTime", zap.Int64("timestamp", resp.Timestamp))
+			n.log.Debug("Response from GetVegaTime", zap.Int64("timestamp", resp.Timestamp))
 			return nil
 		},
 		backoff.WithMaxRetries(backoff.NewExponentialBackOff(), n.nodeCfgs.Retries),
@@ -81,7 +83,7 @@ func (n *Forwarder) LastBlockHeight(ctx context.Context) (uint64, error) {
 			clt := n.nextClt()
 			resp, err := clt.LastBlockHeight(ctx, &req)
 			if err != nil {
-				n.log.Debug("couldn't get last block", zap.Error(err))
+				n.log.Debug("Couldn't get last block", zap.Error(err))
 				return err
 			}
 			height = resp.Height
@@ -91,9 +93,9 @@ func (n *Forwarder) LastBlockHeight(ctx context.Context) (uint64, error) {
 	)
 
 	if err != nil {
-		n.log.Error("couldn't get last block", zap.Error(err))
+		n.log.Error("Couldn't get last block", zap.Error(err))
 	} else {
-		n.log.Debug("last block when sending transaction",
+		n.log.Debug("Last block when sending transaction",
 			zap.Time("request.time", time.Now()),
 			zap.Uint64("block.height", height),
 		)
@@ -102,29 +104,39 @@ func (n *Forwarder) LastBlockHeight(ctx context.Context) (uint64, error) {
 	return height, err
 }
 
-func (n *Forwarder) SendTx(ctx context.Context, tx *commandspb.Transaction, ty api.SubmitTransactionRequest_Type) error {
+func (n *Forwarder) SendTx(ctx context.Context, tx *commandspb.Transaction, ty api.SubmitTransactionRequest_Type) (string, error) {
 	req := api.SubmitTransactionRequest{
 		Tx:   tx,
 		Type: ty,
 	}
-	return backoff.Retry(
+	var resp *api.SubmitTransactionResponse
+	err := backoff.Retry(
 		func() error {
 			clt := n.nextClt()
-			resp, err := clt.SubmitTransaction(ctx, &req)
+			r, err := clt.SubmitTransaction(ctx, &req)
 			if err != nil {
-				n.log.Error("failed to send transaction", zap.Error(err))
+				n.log.Error("Couldn't send transaction", zap.Error(err))
 				return err
 			}
-			n.log.Debug("response from SubmitTransactionV2", zap.Bool("success", resp.Success))
+			n.log.Debug("Response from SubmitTransaction",
+				zap.Bool("success", r.Success),
+				zap.String("hash", r.TxHash),
+			)
+			resp = r
 			return nil
 		},
 		backoff.WithMaxRetries(backoff.NewExponentialBackOff(), n.nodeCfgs.Retries),
 	)
+	if err != nil {
+		return "", err
+	}
+	return resp.TxHash, nil
 }
 
 func (n *Forwarder) nextClt() api.CoreServiceClient {
 	i := atomic.AddUint64(&n.next, 1)
-	n.log.Info("sending transaction to Vega node",
-		zap.String("host", n.nodeCfgs.Hosts[(int(i)-1)%len(n.clts)]))
+	n.log.Info("Sending transaction to Vega node",
+		zap.String("host", n.nodeCfgs.Hosts[(int(i)-1)%len(n.clts)]),
+	)
 	return n.clts[(int(i)-1)%len(n.clts)]
 }

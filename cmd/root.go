@@ -28,7 +28,7 @@ var (
 		# Disable colors on output using environment variable
 		NO_COLOR=1 vegawallet COMMAND
 
-		# Disable the verification of the program version
+		# Disable the verification of the software version
 		vegawallet --no-version-check COMMAND
 	`)
 )
@@ -59,7 +59,16 @@ func BuildCmdRoot(w io.Writer, vh CheckVersionHandler) *cobra.Command {
 		Example:       rootExamples,
 		SilenceUsage:  true,
 		SilenceErrors: true,
-		PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
+		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
+			// The `__complete` command is being run to build up the auto-completion
+			// file. We should skip any verification to not temper with the process.
+			// Any additional printing will end up in the auto-completion registry.
+			// The `completion` command output the completion script for a given
+			// shell, that should not be tempered with. We should skip it as well.
+			if cmd.Name() == "__complete" || cmd.Name() == "completion" {
+				return nil
+			}
+
 			if err := f.Validate(); err != nil {
 				return err
 			}
@@ -101,21 +110,29 @@ func BuildCmdRoot(w io.Writer, vh CheckVersionHandler) *cobra.Command {
 		"Do not check for new version of the Vega wallet",
 	)
 
+	_ = cmd.MarkPersistentFlagDirname("home")
+	_ = cmd.RegisterFlagCompletionFunc("output", func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
+		return flags.AvailableOutputs, cobra.ShellCompDirectiveDefault
+	})
+
 	// Root commands
-	cmd.AddCommand(NewCmdCommand(w, f))
 	cmd.AddCommand(NewCmdInit(w, f))
+	cmd.AddCommand(NewCmdCompletion(w))
 	cmd.AddCommand(NewCmdSignMessage(w, f))
 	cmd.AddCommand(NewCmdVerifyMessage(w, f))
 	cmd.AddCommand(NewCmdVersion(w, f))
 
 	// Sub-commands
+	cmd.AddCommand(NewCmdCommand(w, f))
 	cmd.AddCommand(NewCmdKey(w, f))
 	cmd.AddCommand(NewCmdNetwork(w, f))
-	cmd.AddCommand(NewCmdSend(w, f))
 	cmd.AddCommand(NewCmdService(w, f))
+	cmd.AddCommand(NewCmdTx(w, f))
 
 	// Wallet commands
 	// We don't have a wrapper sub-command for wallet commands.
+	cmd.AddCommand(NewCmdCreateWallet(w, f))
+	cmd.AddCommand(NewCmdDeleteWallet(w, f))
 	cmd.AddCommand(NewCmdGetInfoWallet(w, f))
 	cmd.AddCommand(NewCmdImportWallet(w, f))
 	cmd.AddCommand(NewCmdListWallets(w, f))

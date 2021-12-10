@@ -13,7 +13,6 @@ func NewCmdService(w io.Writer, rf *RootFlags) *cobra.Command {
 		Long:  "Manage the Vega wallet's service",
 	}
 
-	// create subcommands
 	cmd.AddCommand(NewCmdRunService(w, rf))
 	return cmd
 }

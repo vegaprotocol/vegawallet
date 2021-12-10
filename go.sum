@@ -10,8 +10,10 @@ cloud.google.com/go/datastore v1.0.0/go.mod h1:LXYbyblFSglQ5pkeyhO+Qmw7ukd3C+pD7
 cloud.google.com/go/firestore v1.1.0/go.mod h1:ulACoGHTpvq5r8rxGJ4ddJZBZqakUQqClKRT5SZwBmk=
 cloud.google.com/go/pubsub v1.0.1/go.mod h1:R0Gpsv3s54REJCy4fxDixWD93lHJMoZTyQ2kNxGRt3I=
 cloud.google.com/go/storage v1.0.0/go.mod h1:IhtSnM/ZTZV8YYJWCY8RULGVqBDmpoyjwiyrjsg+URw=
-code.vegaprotocol.io/protos v0.45.2-0.20211026143814-fd1dc62fd4e8 h1:+TW9DW+OBW/IEHEYk2Q7F8t7VSXQ5Y8qLdS+iLjOzfY=
-code.vegaprotocol.io/protos v0.45.2-0.20211026143814-fd1dc62fd4e8/go.mod h1:NORK22Evpwn0GoetL7H6/oVUzGcfjAJEJTzw+zTkSyE=
+code.vegaprotocol.io/protos v0.46.1-0.20211201150331-b536716fea70 h1:zqWTK+nnd1HK7oCCXIK/H3uoyync4R1flKX+A5XKsmQ=
+code.vegaprotocol.io/protos v0.46.1-0.20211201150331-b536716fea70/go.mod h1:NORK22Evpwn0GoetL7H6/oVUzGcfjAJEJTzw+zTkSyE=
+code.vegaprotocol.io/protos v0.47.0 h1:gFx/dc9gwwcVmEHca481fhJEkSabhfZTuOfmNUZ+7hs=
+code.vegaprotocol.io/protos v0.47.0/go.mod h1:NORK22Evpwn0GoetL7H6/oVUzGcfjAJEJTzw+zTkSyE=
 code.vegaprotocol.io/shared v0.0.0-20211015074835-9ed837d93090 h1:SF7ZRvZ/JASJNEQigbuUwk1rQuugLy6gqbOFs8D8VXI=
 code.vegaprotocol.io/shared v0.0.0-20211015074835-9ed837d93090/go.mod h1:dmahiiphuDJvjXXDvQvo22tFPx7yk9wW8z1glU/JgHE=
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=

@@ -1,29 +1,81 @@
 # Changelog
 
-## Unreleased (0.11.0)
+## Unreleased (0.12.0)
 
+### 🚨 Breaking changes
+- [](https://github.com/vegaprotocol/vegawallet/pull/) -
+
+### 🗑️  Deprecation
+- [](https://github.com/vegaprotocol/vegawallet/pull/) -
+
+### 🛠  Improvements
+- [](https://github.com/vegaprotocol/vegawallet/pull/) -
+
+### 🔥 Removal
+- [](https://github.com/vegaprotocol/vegawallet/pull/) -
+
+### 🐛 Fixes
+- [](https://github.com/vegaprotocol/vegawallet/pull/) -
+
+
+## 0.11.0
+
+### 🚨 Breaking changes
+- [381](https://github.com/vegaprotocol/vegawallet/pull/381) - Make `send tx` and `send command` match `NOUN VERB` grammar
+- [384](https://github.com/vegaprotocol/vegawallet/pull/384) - Remove private key from key generate JSON output
+
+### 🗑️  Deprecation
+- [418](https://github.com/vegaprotocol/vegawallet/pull/418) - Wallet creation is deprecated with `key generate`, use `create` instead
+- [423](https://github.com/vegaprotocol/vegawallet/pull/423) - Flag `--console-proxy` is deprecated in favor of `--with-console`
+- [425](https://github.com/vegaprotocol/vegawallet/pull/425) - Flag `--mnemonic-file` is deprecated in favor of `--recovery-phrase-file`
+- [425](https://github.com/vegaprotocol/vegawallet/pull/425) - Deprecated `mnemonic` field in HTTP response for wallet creation in favor of `recoveryPhrase`
+- [425](https://github.com/vegaprotocol/vegawallet/pull/425) - Deprecated `mnemonic` field in HTTP request for wallet import in favor of `recoveryPhrase`
+
+### 🛠  Improvements
+- [383](https://github.com/vegaprotocol/vegawallet/pull/383) - Add wallet version to `key generate` output
+- [390](https://github.com/vegaprotocol/vegawallet/pull/390) - Add new project board Github action and update linked PR action version
+- [385](https://github.com/vegaprotocol/vegawallet/pull/385) - Add command `delete` to delete a wallet
+- [398](https://github.com/vegaprotocol/vegawallet/pull/398) - More idiomatic test suite
+- [396](https://github.com/vegaprotocol/vegawallet/pull/396) - Update the "important" section of `key generate`
+- [405](https://github.com/vegaprotocol/vegawallet/pull/405) - Add command `network delete` to delete a network
+- [409](https://github.com/vegaprotocol/vegawallet/pull/409) - Return the tx hash after sending a transaction
+- [406](https://github.com/vegaprotocol/vegawallet/pull/406) - Add auto-completion to command line through `completion` sub-command
+- [418](https://github.com/vegaprotocol/vegawallet/pull/418) - Importing a wallet now generates the first key pair
+- [418](https://github.com/vegaprotocol/vegawallet/pull/418) - Add the `create` command to create a wallet
+- [420](https://github.com/vegaprotocol/vegawallet/pull/420) - Verify initialisation state on service run
+- [421](https://github.com/vegaprotocol/vegawallet/pull/421) - Improve help texts
+- [423](https://github.com/vegaprotocol/vegawallet/pull/423) - Support launching the token dApp in `service run` command
+
+### 🔥 Removal
+- [387](https://github.com/vegaprotocol/vegawallet/pull/387) - Remove network initialisation in favor of `network import`
+
+### 🐛 Fixes
+- [395](https://github.com/vegaprotocol/vegawallet/pull/395) - Fix `command send` examples
+- [401](https://github.com/vegaprotocol/vegawallet/pull/400) - Update key rotation submission command
+- [410](https://github.com/vegaprotocol/vegawallet/pull/410) - Add current pub key hash to key rotation submission command
+- [415](https://github.com/vegaprotocol/vegawallet/pull/415) - Update to latest key rotation protos
 
 ## 0.10.0
 *2021-11-15*
 
-### Breaking changes
+### 🚨 Breaking changes
 - [300](https://github.com/vegaprotocol/vegawallet/pull/300) - Move from semi-colon to comma separated metadata on `key annotate` and `key generate`
 - [300](https://github.com/vegaprotocol/vegawallet/pull/300) - Trim the `key list` output to only output name and public key
 - [358](https://github.com/vegaprotocol/vegawallet/pull/358) - Rename "human" output to "interactive"
 
-### Deprecation
+### 🗑️ Deprecation
 - [368](https://github.com/vegaprotocol/vegawallet/pull/368) - Deprecate `command` subcommand in favor of `send command`
 
-### Improvements
+### 🛠 Improvements
 - [300](https://github.com/vegaprotocol/vegawallet/pull/300) - Internal restructuring of CLI building blocks to improve testability
 - [359](https://github.com/vegaprotocol/vegawallet/pull/359) - Add `key describe` subcommand to allow querying of key information
 - [364](https://github.com/vegaprotocol/vegawallet/pull/364) - Add changelog checker Github action
 - [361](https://github.com/vegaprotocol/vegawallet/pull/361) - Add `network describe` subcommand to allow querying of network information
 - [366](https://github.com/vegaprotocol/vegawallet/pull/366) - Update the changelog checker action to run when required only
 - [368](https://github.com/vegaprotocol/vegawallet/pull/368) - Add `send tx` subcommand to send raw transaction
+- [367](https://github.com/vegaprotocol/vegawallet/pull/367) - Add `key rotate` subcommand to generate key rotation transaction payload
 
-
-### Fixes
+### 🐛 Fixes
 - [356](https://github.com/vegaprotocol/vegawallet/pull/356) - Ensure the interactive printer is listening to color management env vars (`NO_COLOR` and `CLICOLOR`)
 - [357](https://github.com/vegaprotocol/vegawallet/pull/357) - Warn without failing when no connection on version verification
 - [360](https://github.com/vegaprotocol/vegawallet/pull/360) - Attempt to enable ANSI colors in Windows terminal
@@ -33,13 +85,13 @@
 ## 0.9.2
 *2021-10-27*
 
-### Improvements
+### 🛠 Improvements
 - [319](https://github.com/vegaprotocol/vegawallet/pull/319) - Enable more golanci lints
 - [325](https://github.com/vegaprotocol/vegawallet/pull/325) - Importing a wallet via API default to version 2
 - [322](https://github.com/vegaprotocol/vegawallet/pull/322) - Build artifact for mac M1
 
 
-### Fixes
+### 🐛 Fixes
 - [323](https://github.com/vegaprotocol/vegawallet/pull/323) - Fix wallets with version 0
 - [308](https://github.com/vegaprotocol/vegawallet/pull/308) - Fix command subcommand
 - [330](https://github.com/vegaprotocol/vegawallet/pull/330) - Fix output for list keys command
@@ -48,7 +100,7 @@
 ## 0.9.1
 *2021-10-23*
 
-### Fixes
+### 🐛 Fixes
 - [313](https://github.com/vegaprotocol/go-wallet/pull/313) - Fix release github action
 
 
@@ -63,7 +115,7 @@
 * In the network configuration the `Nodes` configuration in now named `API.GRPC`.
 
 
-### Improvements
+### 🛠 Improvements
 - [310](https://github.com/vegaprotocol/go-wallet/pull/310) - Rename repository to vegawallet
 - [306](https://github.com/vegaprotocol/go-wallet/pull/301) - Implement hd wallet v2 (new derivation path)
 - [301](https://github.com/vegaprotocol/go-wallet/pull/301) - Remove download endpoint
@@ -143,7 +195,7 @@
 - [122](https://github.com/vegaprotocol/go-wallet/pull/122) - Create `pr_verify_linked_issue.yml`
 
 
-### Fixes
+### 🐛 Fixes
 - [297](https://github.com/vegaprotocol/go-wallet/pull/297) - Fix command help
 - [290](https://github.com/vegaprotocol/go-wallet/pull/290) - Fix key generate example #290
 - [285](https://github.com/vegaprotocol/go-wallet/pull/285) - Fix commit hash
@@ -158,7 +210,7 @@
 ## 0.8.0
 *2021-07-06*
 
-### Improvements
+### 🛠 Improvements
 - [105](https://github.com/vegaprotocol/go-wallet/pull/105) - Update `new_issues_to_sprint_project_board.yml`
 - [106](https://github.com/vegaprotocol/go-wallet/pull/106) - Port TxV2 to wallet
 - [109](https://github.com/vegaprotocol/go-wallet/pull/109) - Rework storage layer
@@ -171,14 +223,14 @@
 ## 0.7.0
 *2021-06-11*
 
-### Improvements
+### 🛠 Improvements
 - [96](https://github.com/vegaprotocol/go-wallet/pull/96) - Replace localhost with IP address
 - [98](https://github.com/vegaprotocol/go-wallet/pull/98) - Add `new_issues_to_sprint_project_board.yml`
 - [99](https://github.com/vegaprotocol/go-wallet/pull/99) - Add blockHeight
 - [101](https://github.com/vegaprotocol/go-wallet/pull/101) - Log and return better errors from the nodes
 - [103](https://github.com/vegaprotocol/go-wallet/pull/103) - Release `v0.7.0`
 
-### Fixes
+### 🐛 Fixes
 - [92](https://github.com/vegaprotocol/go-wallet/pull/92) - Fix file name in readme text
 
 
@@ -194,26 +246,26 @@
 ## 0.6.7
 *2021-05-15*
 
-### Improvements
+### 🛠 Improvements
 - [87](https://github.com/vegaprotocol/go-wallet/pull/87) - Release `v0.6.7` update vega API version
 
 
 ## 0.6.6
 *2021-04-23*
 
-### Improvements
+### 🛠 Improvements
 - [83](https://github.com/vegaprotocol/go-wallet/pull/83) - Check go-wallet newer version when runnig commands
 - [86](https://github.com/vegaprotocol/go-wallet/pull/86) - Release `v0.6.6` update vega API version
 
 
-### Fixes
+### 🐛 Fixes
 - [82](https://github.com/vegaprotocol/go-wallet/pull/82) - Make the healthcheck more useful and fix some of the endpoint docs printed at startup
 
 
 ## 0.6.5
 *2021-04-08*
 
-### Improvements
+### 🛠 Improvements
 - [72](https://github.com/vegaprotocol/go-wallet/pull/72) - Add endpoint to sign abitrary data
 - [74](https://github.com/vegaprotocol/go-wallet/pull/74) - Add arbitray signing
 - [80](https://github.com/vegaprotocol/go-wallet/pull/80) - Release `v0.6.5` update the vega API version
@@ -222,21 +274,21 @@
 ## 0.6.4
 *2021-03-17*
 
-### Improvements
+### 🛠 Improvements
 - [71](https://github.com/vegaprotocol/go-wallet/pull/71) - Release `v0.6.4` update vega API version
 
 
 ## 0.6.3
 *2021-03-16*
 
-### Improvements
+### 🛠 Improvements
 - [70](https://github.com/vegaprotocol/go-wallet/pull/70) - Rename api-clients to api
 
 
 ## 0.6.2
 *2021-02-18*
 
-### Improvements
+### 🛠 Improvements
 - [68](https://github.com/vegaprotocol/go-wallet/pull/68) - Add default meta
 - [69](https://github.com/vegaprotocol/go-wallet/pull/69) - Release develop to master
 
@@ -244,20 +296,20 @@
 ## 0.6.1
 *2021-02-17*
 
-### Improvements
+### 🛠 Improvements
 - [64](https://github.com/vegaprotocol/go-wallet/pull/64) - Use `syscall.Stdin` for for read password
 - [65](https://github.com/vegaprotocol/go-wallet/pull/65) - Updates for Windows instructions
 - [66](https://github.com/vegaprotocol/go-wallet/pull/66) - Release patch version `v0.6.1`
 
 
-### Fixes
+### 🐛 Fixes
 - [63](https://github.com/vegaprotocol/go-wallet/pull/63) - Fix windows command
 
 
 ## 0.6.0
 *2021-02-15*
 
-### Improvements
+### 🛠 Improvements
 - [61](https://github.com/vegaprotocol/go-wallet/pull/61) - Update the api to use the new protobugs
 - [62](https://github.com/vegaprotocol/go-wallet/pull/62) - Release `v0.6.0`
 
@@ -265,7 +317,7 @@
 ## 0.5.2
 *2020-12-17*
 
-### Improvements
+### 🛠 Improvements
 - [54](https://github.com/vegaprotocol/go-wallet/pull/54) - Add user friendly at startup of the wallet
 - [55](https://github.com/vegaprotocol/go-wallet/pull/55) - Update master with last develop changes
 
@@ -273,7 +325,7 @@
 ## 0.5.1
 *2020-12-11*
 
-### Improvements
+### 🛠 Improvements
 - [52](https://github.com/vegaprotocol/go-wallet/pull/52) - Implement round robin over all the network nodes when node forwarding
 - [53](https://github.com/vegaprotocol/go-wallet/pull/53) - Update master with last develop
 
@@ -281,7 +333,7 @@
 ## 0.5.0
 *2020-12-10*
 
-### Improvements
+### 🛠 Improvements
 - [26](https://github.com/vegaprotocol/go-wallet/pull/26) - Add custom headers
 - [43](https://github.com/vegaprotocol/go-wallet/pull/43) - Update readme - tidy up, combine
 - [45](https://github.com/vegaprotocol/go-wallet/pull/45) - Add subheadings
@@ -293,7 +345,7 @@
 ## 0.4.3
 *2020-11-20*
 
-### Improvements
+### 🛠 Improvements
 - [39](https://github.com/vegaprotocol/go-wallet/pull/39) - Change users default home dir for windows
 - [40](https://github.com/vegaprotocol/go-wallet/pull/40) - Release develop to master
 
@@ -301,7 +353,7 @@
 ## 0.4.2
 *2020-11-20*
 
-### Improvements
+### 🛠 Improvements
 - [36](https://github.com/vegaprotocol/go-wallet/pull/36) - Use 7zip to build release
 - [37](https://github.com/vegaprotocol/go-wallet/pull/37) - Release develop into master
 
@@ -309,17 +361,17 @@
  ## 0.4.1
 *2020-11-20*
 
-### Improvements
+### 🛠 Improvements
 - [35](https://github.com/vegaprotocol/go-wallet/pull/35) - Release develop to master
 
-### Fixes
+### 🐛 Fixes
 - [34](https://github.com/vegaprotocol/go-wallet/pull/34) - Windows fixes
 
 
 ## 0.4.0
 *2020-11-20*
 
-### Improvements
+### 🛠 Improvements
 - [21](https://github.com/vegaprotocol/go-wallet/pull/21) - Small README updates
 - [24](https://github.com/vegaprotocol/go-wallet/pull/24) - Update the wallet with last vega changes
 - [25](https://github.com/vegaprotocol/go-wallet/pull/25) - Remove native window
@@ -327,7 +379,7 @@
 - [30](https://github.com/vegaprotocol/go-wallet/pull/30) - Release develop to master
 
 
-### Fixes
+### 🐛 Fixes
 - [27](https://github.com/vegaprotocol/go-wallet/pull/27) - Fix version setup in CI release
 - [29](https://github.com/vegaprotocol/go-wallet/pull/29) - Fixes for windows release
 
@@ -335,7 +387,7 @@
 ## 0.3.1
 *2020-11-16*
 
-### Improvements
+### 🛠 Improvements
 - [19](https://github.com/vegaprotocol/go-wallet/pull/19) - cmdline quality of life improvements
 - [20](https://github.com/vegaprotocol/go-wallet/pull/20) - Release develop to master
 
@@ -343,7 +395,7 @@
 ## 0.3.0
 *2020-11-16*
 
-### Improvements
+### 🛠 Improvements
 - [16](https://github.com/vegaprotocol/go-wallet/pull/16) - Generate RSA key default
 - [17](https://github.com/vegaprotocol/go-wallet/pull/17) - Start work on native browser UI and try to build release
 - [18](https://github.com/vegaprotocol/go-wallet/pull/18) - Release develop code to master
@@ -352,7 +404,7 @@
 ## 0.2.0
 *2020-11-14*
 
-### Improvements
+### 🛠 Improvements
 - [13](https://github.com/vegaprotocol/go-wallet/pull/13) - Update standalone wallet with last vega changes
 - [14](https://github.com/vegaprotocol/go-wallet/pull/14) - Add an http server proxy to the console and start it with a flag
 - [15](https://github.com/vegaprotocol/go-wallet/pull/15) - Release `v0.2.0`
@@ -361,7 +413,7 @@
 ## 0.1.0
 *2020-05-11*
 
-### Improvements
+### 🛠 Improvements
 - [5](https://github.com/vegaprotocol/go-wallet/pull/5) - WIP release on tag
 - [4](https://github.com/vegaprotocol/go-wallet/pull/4) - Create go yaml workflow
 - [3](https://github.com/vegaprotocol/go-wallet/pull/3) - Add version to the vega wallet cmdline

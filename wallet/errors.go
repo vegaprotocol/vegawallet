@@ -7,7 +7,9 @@ import (
 
 var (
 	ErrIsolatedWalletCantGenerateKeyPairs = errors.New("isolated wallet can't generate key pairs")
-	ErrInvalidMnemonic                    = errors.New("mnemonic is not valid")
+	ErrIsolatedWalletDoesNotHaveMasterKey = errors.New("isolated wallet doesn't have a master key")
+	ErrCantRotateKeyInIsolatedWallet      = errors.New("isolated wallet can't rotate key")
+	ErrInvalidRecoveryPhrase              = errors.New("recovery phrase is not valid")
 	ErrPubKeyAlreadyTainted               = errors.New("public key is already tainted")
 	ErrPubKeyIsTainted                    = errors.New("public key is tainted")
 	ErrPubKeyNotTainted                   = errors.New("public key is not tainted")

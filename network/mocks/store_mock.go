@@ -33,6 +33,20 @@ func (m *MockStore) EXPECT() *MockStoreMockRecorder {
 	return m.recorder
 }
 
+// DeleteNetwork mocks base method
+func (m *MockStore) DeleteNetwork(arg0 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteNetwork", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteNetwork indicates an expected call of DeleteNetwork
+func (mr *MockStoreMockRecorder) DeleteNetwork(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteNetwork", reflect.TypeOf((*MockStore)(nil).DeleteNetwork), arg0)
+}
+
 // GetNetwork mocks base method
 func (m *MockStore) GetNetwork(arg0 string) (*network.Network, error) {
 	m.ctrl.T.Helper()

@@ -87,6 +87,8 @@ func BuildCmdTaintKey(w io.Writer, handler TaintKeyHandler, rf *RootFlags) *cobr
 		"Path to the file containing the wallet's passphrase",
 	)
 
+	autoCompleteWallet(cmd, rf.Home)
+
 	return cmd
 }
 
@@ -128,5 +130,5 @@ func PrintTaintKeyResponse(w io.Writer) {
 
 	p.BlueArrow().InfoText("Untaint a key").NextLine()
 	p.Text("You may have tainted a key pair by mistake. If you want to untaint it, see the following command:").NextSection()
-	p.Code(fmt.Sprintf("%s key untaint --help", os.Args[0])).NextSection()
+	p.Code(fmt.Sprintf("%s key untaint --help", os.Args[0])).NextLine()
 }

@@ -26,35 +26,35 @@ var (
 		Send a transaction to a Vega node via the gRPC API. The command can be sent to 
 		any node of a registered network or to a specific node address.
 
-		The transaction is base64-encoded.
+		The transaction should be base64-encoded.
 	`)
 
 	sendTxExample = cli.Examples(`
-		# Send a command to a registered network
-		vegawallet send tx --network NETWORK BASE64_TRANSACTION
+		# Send a transaction to a registered network
+		vegawallet tx send --network NETWORK BASE64_TRANSACTION
 
-		# Send a command to a specific Vega node address
-		vegawallet send tx --node-address ADDRESS BASE64_TRANSACTION
+		# Send a transaction to a specific Vega node address
+		vegawallet tx send --node-address ADDRESS BASE64_TRANSACTION
 
-		# Send a command with a log level set to debug
-		vegawallet send tx --network NETWORK --level debug BASE64_TRANSACTION
+		# Send a transaction with a log level set to debug
+		vegawallet tx send --network NETWORK --level debug BASE64_TRANSACTION
 
-		# Send a command with a maximum of 10 retry
-		vegawallet send tx --network NETWORK --retries 10 BASE64_TRANSACTION
+		# Send a transaction with a maximum of 10 retries
+		vegawallet tx send --network NETWORK --retries 10 BASE64_TRANSACTION
 	`)
 )
 
 type SendTxHandler func(io.Writer, *RootFlags, *SendTxRequest) error
 
-func NewCmdSendTx(w io.Writer, rf *RootFlags) *cobra.Command {
-	return BuildCmdSendTx(w, SendTx, rf)
+func NewCmdTxSend(w io.Writer, rf *RootFlags) *cobra.Command {
+	return BuildCmdTxSend(w, SendTx, rf)
 }
 
-func BuildCmdSendTx(w io.Writer, handler SendTxHandler, rf *RootFlags) *cobra.Command {
+func BuildCmdTxSend(w io.Writer, handler SendTxHandler, rf *RootFlags) *cobra.Command {
 	f := &SendTxFlags{}
 
 	cmd := &cobra.Command{
-		Use:     "command",
+		Use:     "send",
 		Short:   "Send a transaction to a Vega node",
 		Long:    sendTxLong,
 		Example: sendTxExample,
@@ -99,6 +99,9 @@ func BuildCmdSendTx(w io.Writer, handler SendTxHandler, rf *RootFlags) *cobra.Co
 		DefaultForwarderRetryCount,
 		"Number of retries when contacting the Vega node",
 	)
+
+	autoCompleteNetwork(cmd, rf.Home)
+	autoCompleteLogLevel(cmd)
 
 	return cmd
 }
@@ -183,7 +186,7 @@ func SendTx(w io.Writer, rf *RootFlags, req *SendTxRequest) error {
 	}
 	defer func() {
 		if err = forwarder.Stop(); err != nil {
-			log.Warn("couldn't stop the forwarder", zap.Error(err))
+			log.Warn("Couldn't stop the forwarder", zap.Error(err))
 		}
 	}()
 
@@ -195,12 +198,13 @@ func SendTx(w io.Writer, rf *RootFlags, req *SendTxRequest) error {
 	ctx, cancelFn := context.WithTimeout(context.Background(), ForwarderRequestTimeout)
 	defer cancelFn()
 
-	if err = forwarder.SendTx(ctx, req.Tx, api.SubmitTransactionRequest_TYPE_ASYNC); err != nil {
-		log.Error("couldn't send transaction", zap.Error(err))
+	txHash, err := forwarder.SendTx(ctx, req.Tx, api.SubmitTransactionRequest_TYPE_ASYNC)
+	if err != nil {
+		log.Error("Couldn't send transaction", zap.Error(err))
 		return fmt.Errorf("couldn't send transaction: %w", err)
 	}
 
-	log.Info("transaction successfully sent")
+	log.Info("transaction successfully sent", zap.String("hash", txHash))
 
 	return nil
 }

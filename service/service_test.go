@@ -1,37 +1,34 @@
 package service_test
 
 import (
-	"bytes"
+	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
+	"time"
 
 	api "code.vegaprotocol.io/protos/vega/api/v1"
 	commandspb "code.vegaprotocol.io/protos/vega/commands/v1"
+	vgrand "code.vegaprotocol.io/shared/libs/rand"
 	"code.vegaprotocol.io/vegawallet/crypto"
 	"code.vegaprotocol.io/vegawallet/network"
 	"code.vegaprotocol.io/vegawallet/service"
 	"code.vegaprotocol.io/vegawallet/service/mocks"
 	"code.vegaprotocol.io/vegawallet/wallet"
-	"github.com/stretchr/testify/require"
-
 	"github.com/golang/mock/gomock"
-	"github.com/julienschmidt/httprouter"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap"
 )
 
-// this tests in general ensure request / response contracts are not broken for the service
-
 const (
-	TestMnemonic = "swing ceiling chaos green put insane ripple desk match tip melt usual shrug turkey renew icon parade veteran lens govern path rough page render"
-)
+	testRecoveryPhrase = "swing ceiling chaos green put insane ripple desk match tip melt usual shrug turkey renew icon parade veteran lens govern path rough page render"
 
-var errSomethingWentWrong = errors.New("something went wrong")
+	testRequestTimeout = 10 * time.Second
+)
 
 type testService struct {
 	*service.Service
@@ -87,53 +84,65 @@ func TestService(t *testing.T) {
 	t.Run("Signing transaction succeeds", testSigningTransactionSucceeds)
 	t.Run("Signing transaction with propagation succeeds", testSigningTransactionWithPropagationSucceeds)
 	t.Run("Signing transaction with failed propagation fails", testSigningTransactionWithFailedPropagationFails)
-	t.Run("Failed signing of transaction fails", testFailedSigningTransactionFails)
-	t.Run("Signing transaction with invalid payload fails", testSigningTransactionWithInvalidPayloadFails)
-	t.Run("Signing transaction without pub-key fails", testSigningTransactionWithoutPubKeyFails)
-	t.Run("Signing transaction without command fails", testSigningTransactionWithoutCommandFails)
+	t.Run("Failed signing of transaction fails", testFailedTransactionSigningFails)
+	t.Run("Signing transaction with invalid request fails", testSigningTransactionWithInvalidRequestFails)
 	t.Run("Signing anything succeeds", testSigningAnythingSucceeds)
+	t.Run("Signing anything with invalid request fails", testSigningAnyDataWithInvalidRequestFails)
 	t.Run("Verifying anything succeeds", testVerifyingAnythingSucceeds)
 	t.Run("Failed verification fails", testVerifyingAnythingFails)
+	t.Run("Verifying anything with invalid request fails", testVerifyingAnyDataWithInvalidRequestFails)
 }
 
 func testServiceCreateWalletOK(t *testing.T) {
 	s := getTestService(t)
-	defer s.ctrl.Finish()
+	t.Cleanup(func() {
+		s.ctrl.Finish()
+	})
 
-	s.handler.EXPECT().CreateWallet("jeremy", "oh yea?").Times(1).Return(TestMnemonic, nil)
-	s.auth.EXPECT().NewSession("jeremy").Times(1).Return("this is a token", nil)
+	// given
+	walletName := vgrand.RandomStr(5)
+	passphrase := vgrand.RandomStr(5)
+	payload := fmt.Sprintf(`{"wallet": "%s", "passphrase": "%s"}`, walletName, passphrase)
 
-	payload := `{"wallet": "jeremy", "passphrase": "oh yea?"}`
-	r := httptest.NewRequest("POST", "scheme://host/path", bytes.NewBufferString(payload))
-	w := httptest.NewRecorder()
+	// setup
+	s.handler.EXPECT().CreateWallet(walletName, passphrase).Times(1).Return(testRecoveryPhrase, nil)
+	s.auth.EXPECT().NewSession(walletName).Times(1).Return("this is a token", nil)
 
-	s.CreateWallet(w, r, nil)
+	// when
+	statusCode, _ := serveHTTP(t, s, createWalletRequest(t, payload))
 
-	resp := w.Result()
-	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	// then
+	assert.Equal(t, http.StatusOK, statusCode)
 }
 
 func testServiceCreateWalletFailInvalidRequest(t *testing.T) {
-	s := getTestService(t)
-	defer s.ctrl.Finish()
+	tcs := []struct {
+		name    string
+		payload string
+	}{
+		{
+			name:    "misspelled wallet property",
+			payload: `{"wall": "jeremy", "passphrase": "oh yea?"}`,
+		}, {
+			name:    "misspelled passphrase property",
+			payload: `{"wallet": "jeremy", "passrase": "oh yea?"}`,
+		},
+	}
 
-	payload := `{"wall": "jeremy", "passphrase": "oh yea?"}`
-	r := httptest.NewRequest("POST", "scheme://host/path", bytes.NewBufferString(payload))
-	w := httptest.NewRecorder()
+	for _, tc := range tcs {
+		t.Run(tc.name, func(tt *testing.T) {
+			s := getTestService(tt)
+			tt.Cleanup(func() {
+				s.ctrl.Finish()
+			})
 
-	s.CreateWallet(w, r, nil)
+			// when
+			statusCode, _ := serveHTTP(tt, s, createWalletRequest(tt, tc.payload))
 
-	resp := w.Result()
-	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
-
-	payload = `{"wallet": "jeremy", "passrase": "oh yea?"}`
-	r = httptest.NewRequest("POST", "scheme://host/path", bytes.NewBufferString(payload))
-	w = httptest.NewRecorder()
-
-	s.CreateWallet(w, r, nil)
-
-	resp = w.Result()
-	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+			// then
+			assert.Equal(tt, http.StatusBadRequest, statusCode)
+		})
+	}
 }
 
 func testServiceImportWalletOK(t *testing.T) {
@@ -152,152 +161,180 @@ func testServiceImportWalletOK(t *testing.T) {
 
 	for _, tc := range tcs {
 		t.Run(tc.name, func(tt *testing.T) {
-			s := getTestService(t)
-			defer s.ctrl.Finish()
+			s := getTestService(tt)
+			tt.Cleanup(func() {
+				s.ctrl.Finish()
+			})
 
-			s.handler.EXPECT().ImportWallet("jeremy", "oh yea?", TestMnemonic, tc.version).Times(1).Return(nil)
-			s.auth.EXPECT().NewSession("jeremy").Times(1).Return("this is a token", nil)
+			// given
+			walletName := vgrand.RandomStr(5)
+			passphrase := vgrand.RandomStr(5)
+			payload := fmt.Sprintf(`{"wallet": "%s", "passphrase": "%s", "recoveryPhrase": "%s", "version": %d}`, walletName, passphrase, testRecoveryPhrase, tc.version)
 
-			payload := fmt.Sprintf(`{"wallet": "jeremy", "passphrase": "oh yea?", "mnemonic": "%s", "version": %d}`, TestMnemonic, tc.version)
-			r := httptest.NewRequest("POST", "scheme://host/path", bytes.NewBufferString(payload))
-			w := httptest.NewRecorder()
+			// setup
+			s.handler.EXPECT().ImportWallet(walletName, passphrase, testRecoveryPhrase, tc.version).Times(1).Return(nil)
+			s.auth.EXPECT().NewSession(walletName).Times(1).Return("this is a token", nil)
 
-			s.ImportWallet(w, r, nil)
+			// when
+			statusCode, _ := serveHTTP(tt, s, importWalletRequest(tt, payload))
 
-			resp := w.Result()
-			assert.Equal(t, http.StatusOK, resp.StatusCode)
+			// then
+			assert.Equal(tt, http.StatusOK, statusCode)
 		})
 	}
 }
 
 func testServiceImportWalletFailInvalidRequest(t *testing.T) {
-	s := getTestService(t)
-	defer s.ctrl.Finish()
+	tcs := []struct {
+		name    string
+		payload string
+	}{
+		{
+			name:    "misspelled wallet property",
+			payload: fmt.Sprintf(`{"wall": "jeremy", "passphrase": "oh yea?", "recoveryPhrase": \"%s\"}`, testRecoveryPhrase),
+		}, {
+			name:    "misspelled passphrase property",
+			payload: fmt.Sprintf(`{"wallet": "jeremy", "password": "oh yea?", "recoveryPhrase": \"%s\"}`, testRecoveryPhrase),
+		}, {
+			name:    "misspelled recovery phrase property",
+			payload: fmt.Sprintf(`{"wallet": "jeremy", "passphrase": "oh yea?", "little_words": \"%s\"}`, testRecoveryPhrase),
+		},
+	}
 
-	payload := fmt.Sprintf(`{"wall": "jeremy", "passphrase": "oh yea?", "mnemonic": \"%s\"}`, TestMnemonic)
-	r := httptest.NewRequest("POST", "scheme://host/path", bytes.NewBufferString(payload))
-	w := httptest.NewRecorder()
+	for _, tc := range tcs {
+		t.Run(tc.name, func(tt *testing.T) {
+			s := getTestService(tt)
+			tt.Cleanup(func() {
+				s.ctrl.Finish()
+			})
 
-	s.CreateWallet(w, r, nil)
+			// when
+			statusCode, _ := serveHTTP(tt, s, importWalletRequest(tt, tc.payload))
 
-	resp := w.Result()
-	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
-
-	payload = fmt.Sprintf(`{"wallet": "jeremy", "password": "oh yea?", "mnemonic": \"%s\"}`, TestMnemonic)
-	r = httptest.NewRequest("POST", "scheme://host/path", bytes.NewBufferString(payload))
-	w = httptest.NewRecorder()
-
-	s.ImportWallet(w, r, nil)
-
-	resp = w.Result()
-	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
-
-	payload = fmt.Sprintf(`{"wallet": "jeremy", "passphrase": "oh yea?", "little_words": \"%s\"}`, TestMnemonic)
-	r = httptest.NewRequest("POST", "scheme://host/path", bytes.NewBufferString(payload))
-	w = httptest.NewRecorder()
-
-	s.CreateWallet(w, r, nil)
-
-	resp = w.Result()
-	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+			// then
+			assert.Equal(tt, http.StatusBadRequest, statusCode)
+		})
+	}
 }
 
 func testServiceLoginWalletOK(t *testing.T) {
 	s := getTestService(t)
-	defer s.ctrl.Finish()
+	t.Cleanup(func() {
+		s.ctrl.Finish()
+	})
 
-	s.handler.EXPECT().LoginWallet(gomock.Any(), gomock.Any()).Times(1).Return(nil)
-	s.auth.EXPECT().NewSession("jeremy").Times(1).Return("this is a token", nil)
+	// given
+	walletName := vgrand.RandomStr(5)
+	passphrase := vgrand.RandomStr(5)
+	payload := fmt.Sprintf(`{"wallet": "%s", "passphrase": "%s"}`, walletName, passphrase)
 
-	payload := `{"wallet": "jeremy", "passphrase": "oh yea?"}`
-	r := httptest.NewRequest("POST", "scheme://host/path", bytes.NewBufferString(payload))
-	w := httptest.NewRecorder()
+	// setup
+	s.handler.EXPECT().LoginWallet(walletName, passphrase).Times(1).Return(nil)
+	s.auth.EXPECT().NewSession(walletName).Times(1).Return("this is a token", nil)
 
-	s.Login(w, r, nil)
+	// when
+	statusCode, _ := serveHTTP(t, s, loginRequest(t, payload))
 
-	resp := w.Result()
-	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	// then
+	assert.Equal(t, http.StatusOK, statusCode)
 }
 
 func testServiceLoginWalletFailInvalidRequest(t *testing.T) {
-	s := getTestService(t)
-	defer s.ctrl.Finish()
+	tcs := []struct {
+		name    string
+		payload string
+	}{
+		{
+			name:    "misspelled wallet property",
+			payload: `{"wall": "jeremy", "passphrase": "oh yea?"}`,
+		}, {
+			name:    "misspelled passphrase property",
+			payload: `{"wallet": "jeremy", "passrase": "oh yea?"}`,
+		},
+	}
 
-	payload := `{"wall": "jeremy", "passphrase": "oh yea?"}`
-	r := httptest.NewRequest("POST", "scheme://host/path", bytes.NewBufferString(payload))
-	w := httptest.NewRecorder()
+	for _, tc := range tcs {
+		t.Run(tc.name, func(tt *testing.T) {
+			s := getTestService(tt)
+			t.Cleanup(func() {
+				s.ctrl.Finish()
+			})
 
-	s.handler.EXPECT().LoginWallet(gomock.Any(), gomock.Any()).Times(0)
-	s.auth.EXPECT().NewSession(gomock.Any()).Times(0)
+			// setup
+			s.handler.EXPECT().LoginWallet(gomock.Any(), gomock.Any()).Times(0)
+			s.auth.EXPECT().NewSession(gomock.Any()).Times(0)
 
-	s.Login(w, r, nil)
+			// when
+			statusCode, _ := serveHTTP(tt, s, loginRequest(tt, tc.payload))
 
-	resp := w.Result()
-	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
-
-	payload = `{"wallet": "jeremy", "passrase": "oh yea?"}`
-	r = httptest.NewRequest("POST", "scheme://host/path", bytes.NewBufferString(payload))
-	w = httptest.NewRecorder()
-
-	s.handler.EXPECT().LoginWallet(gomock.Any(), gomock.Any()).Times(0)
-	s.auth.EXPECT().NewSession(gomock.Any()).Times(0)
-
-	s.Login(w, r, nil)
-
-	resp = w.Result()
-	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+			// then
+			assert.Equal(tt, http.StatusBadRequest, statusCode)
+		})
+	}
 }
 
 func testServiceRevokeTokenOK(t *testing.T) {
 	s := getTestService(t)
-	defer s.ctrl.Finish()
+	t.Cleanup(func() {
+		s.ctrl.Finish()
+	})
 
-	s.auth.EXPECT().Revoke(gomock.Any()).Times(1).Return("jeremy", nil)
-	s.handler.EXPECT().LogoutWallet("jeremy").Times(1)
+	// given
+	walletName := vgrand.RandomStr(5)
+	token := vgrand.RandomStr(5)
+	headers := authHeaders(t, token)
 
-	r := httptest.NewRequest("POST", "scheme://host/path", nil)
-	r.Header.Add("Authorization", "Bearer eyXXzA")
+	// setup
+	s.auth.EXPECT().Revoke(token).Times(1).Return(walletName, nil)
+	s.handler.EXPECT().LogoutWallet(walletName).Times(1)
 
-	w := httptest.NewRecorder()
+	// when
+	statusCode, _ := serveHTTP(t, s, logoutRequest(t, headers))
 
-	service.ExtractToken(s.Revoke)(w, r, nil)
-
-	resp := w.Result()
-	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	// then
+	assert.Equal(t, http.StatusOK, statusCode)
 }
 
 func testServiceRevokeTokenFailInvalidRequest(t *testing.T) {
-	s := getTestService(t)
-	defer s.ctrl.Finish()
+	tcs := []struct {
+		name    string
+		headers map[string]string
+	}{
+		{
+			name:    "no header",
+			headers: map[string]string{},
+		}, {
+			name:    "no token",
+			headers: authHeaders(t, ""),
+		},
+	}
 
-	// invalid token
-	r := httptest.NewRequest("POST", "scheme://host/path", nil)
-	r.Header.Add("Authorization", "Bearer")
+	for _, tc := range tcs {
+		t.Run(tc.name, func(tt *testing.T) {
+			s := getTestService(t)
+			tt.Cleanup(func() {
+				s.ctrl.Finish()
+			})
 
-	w := httptest.NewRecorder()
+			// when
+			statusCode, _ := serveHTTP(tt, s, logoutRequest(t, tc.headers))
 
-	service.ExtractToken(s.Revoke)(w, r, nil)
-
-	resp := w.Result()
-	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
-
-	// no token
-	r = httptest.NewRequest("POST", "scheme://host/path", nil)
-	w = httptest.NewRecorder()
-
-	service.ExtractToken(s.Revoke)(w, r, nil)
-
-	resp = w.Result()
-	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+			// then
+			assert.Equal(tt, http.StatusBadRequest, statusCode)
+		})
+	}
 }
 
 func testServiceGenKeypairOK(t *testing.T) {
 	s := getTestService(t)
-	defer s.ctrl.Finish()
+	t.Cleanup(func() {
+		s.ctrl.Finish()
+	})
 
+	// given
 	ed25519 := crypto.NewEd25519()
 	key := &wallet.HDPublicKey{
-		PublicKey: "0xdeadbeef",
+		PublicKey: vgrand.RandomStr(5),
 		Algorithm: wallet.Algorithm{
 			Name:    ed25519.Name(),
 			Version: ed25519.Version(),
@@ -305,110 +342,122 @@ func testServiceGenKeypairOK(t *testing.T) {
 		Tainted:  false,
 		MetaList: nil,
 	}
+	walletName := vgrand.RandomStr(5)
+	passphrase := vgrand.RandomStr(5)
+	token := vgrand.RandomStr(5)
+	headers := authHeaders(t, token)
+	payload := fmt.Sprintf(`{"passphrase": "%s"}`, passphrase)
 
-	s.auth.EXPECT().VerifyToken("eyXXzA").Times(1).Return("jeremy", nil)
-	s.handler.EXPECT().SecureGenerateKeyPair("jeremy", "oh yea?", gomock.Len(0)).Times(1).Return("0xdeadbeef", nil)
-	s.handler.EXPECT().GetPublicKey("jeremy", "0xdeadbeef").Times(1).Return(key, nil)
+	// setup
+	s.auth.EXPECT().VerifyToken(token).Times(1).Return(walletName, nil)
+	s.handler.EXPECT().SecureGenerateKeyPair(walletName, passphrase, gomock.Len(0)).Times(1).Return(key.PublicKey, nil)
+	s.handler.EXPECT().GetPublicKey(walletName, key.PublicKey).Times(1).Return(key, nil)
 
-	payload := `{"passphrase": "oh yea?"}`
-	r := httptest.NewRequest("POST", "scheme://host/path", bytes.NewBufferString(payload))
-	r.Header.Add("Authorization", "Bearer eyXXzA")
+	// when
+	statusCode, _ := serveHTTP(t, s, generateKeyRequest(t, payload, headers))
 
-	w := httptest.NewRecorder()
-
-	service.ExtractToken(s.GenerateKeyPair)(w, r, nil)
-
-	resp := w.Result()
-	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	// then
+	assert.Equal(t, http.StatusOK, statusCode)
 }
 
 func testServiceGenKeypairFailInvalidRequest(t *testing.T) {
-	s := getTestService(t)
-	defer s.ctrl.Finish()
+	tcs := []struct {
+		name    string
+		headers map[string]string
+		payload string
+	}{
+		{
+			name:    "no header",
+			headers: map[string]string{},
+			payload: `{"passphrase": "oh yea?"}`,
+		}, {
+			name:    "no token",
+			headers: authHeaders(t, ""),
+			payload: `{"passphrase": "oh yea?"}`,
+		}, {
+			name:    "invalid request",
+			headers: authHeaders(t, vgrand.RandomStr(5)),
+		},
+	}
 
-	// invalid token
-	r := httptest.NewRequest("POST", "scheme://host/path", nil)
-	r.Header.Add("Authorization", "Bearer")
+	for _, tc := range tcs {
+		t.Run(tc.name, func(tt *testing.T) {
+			s := getTestService(tt)
+			tt.Cleanup(func() {
+				s.ctrl.Finish()
+			})
 
-	w := httptest.NewRecorder()
+			// when
+			statusCode, _ := serveHTTP(tt, s, generateKeyRequest(t, tc.payload, tc.headers))
 
-	service.ExtractToken(s.GenerateKeyPair)(w, r, nil)
-
-	resp := w.Result()
-	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
-
-	// no token
-	r = httptest.NewRequest("POST", "scheme://host/path", nil)
-	w = httptest.NewRecorder()
-
-	service.ExtractToken(s.GenerateKeyPair)(w, r, nil)
-
-	resp = w.Result()
-	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
-
-	// token but no payload
-	r = httptest.NewRequest("POST", "scheme://host/path", nil)
-	w = httptest.NewRecorder()
-	r.Header.Add("Authorization", "Bearer eyXXzA")
-
-	service.ExtractToken(s.GenerateKeyPair)(w, r, nil)
-
-	resp = w.Result()
-	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+			// then
+			assert.Equal(tt, http.StatusBadRequest, statusCode)
+		})
+	}
 }
 
 func testServiceListPublicKeysOK(t *testing.T) {
 	s := getTestService(t)
-	defer s.ctrl.Finish()
+	t.Cleanup(func() {
+		s.ctrl.Finish()
+	})
 
-	s.auth.EXPECT().VerifyToken("eyXXzA").Times(1).Return("jeremy", nil)
-	s.handler.EXPECT().ListPublicKeys("jeremy").Times(1).
-		Return([]wallet.PublicKey{}, nil)
+	// given
+	walletName := vgrand.RandomStr(5)
+	token := vgrand.RandomStr(5)
+	headers := authHeaders(t, token)
 
-	r := httptest.NewRequest("GET", "scheme://host/path", nil)
-	r.Header.Add("Authorization", "Bearer eyXXzA")
+	// setup
+	s.auth.EXPECT().VerifyToken(token).Times(1).Return(walletName, nil)
+	s.handler.EXPECT().ListPublicKeys(walletName).Times(1).Return([]wallet.PublicKey{}, nil)
 
-	w := httptest.NewRecorder()
+	// when
+	statusCode, _ := serveHTTP(t, s, listKeysRequest(t, headers))
 
-	service.ExtractToken(s.ListPublicKeys)(w, r, nil)
-
-	resp := w.Result()
-	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	// then
+	assert.Equal(t, http.StatusOK, statusCode)
 }
 
 func testServiceListPublicKeysFailInvalidRequest(t *testing.T) {
-	s := getTestService(t)
-	defer s.ctrl.Finish()
+	tcs := []struct {
+		name    string
+		headers map[string]string
+	}{
+		{
+			name:    "no header",
+			headers: map[string]string{},
+		}, {
+			name:    "no token",
+			headers: authHeaders(t, ""),
+		},
+	}
 
-	// invalid token
-	r := httptest.NewRequest("POST", "scheme://host/path", nil)
-	r.Header.Add("Authorization", "Bearer")
+	for _, tc := range tcs {
+		t.Run(tc.name, func(tt *testing.T) {
+			s := getTestService(tt)
+			tt.Cleanup(func() {
+				s.ctrl.Finish()
+			})
 
-	w := httptest.NewRecorder()
+			// when
+			statusCode, _ := serveHTTP(tt, s, listKeysRequest(t, tc.headers))
 
-	service.ExtractToken(s.ListPublicKeys)(w, r, nil)
-
-	resp := w.Result()
-	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
-
-	// no token
-	r = httptest.NewRequest("POST", "scheme://host/path", nil)
-	w = httptest.NewRecorder()
-
-	service.ExtractToken(s.ListPublicKeys)(w, r, nil)
-
-	resp = w.Result()
-	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+			// then
+			assert.Equal(tt, http.StatusBadRequest, statusCode)
+		})
+	}
 }
 
 func testServiceGetPublicKeyOK(t *testing.T) {
 	s := getTestService(t)
 	defer s.ctrl.Finish()
 
-	s.auth.EXPECT().VerifyToken("eyXXzA").Times(1).Return("jeremy", nil)
+	// given
+	walletName := vgrand.RandomStr(5)
+	token := vgrand.RandomStr(5)
 	hdPubKey := &wallet.HDPublicKey{
 		Idx:       1,
-		PublicKey: "0xdeadbeef",
+		PublicKey: vgrand.RandomStr(5),
 		Algorithm: wallet.Algorithm{
 			Name:    "some/algo",
 			Version: 1,
@@ -416,211 +465,213 @@ func testServiceGetPublicKeyOK(t *testing.T) {
 		Tainted:  false,
 		MetaList: []wallet.Meta{{Key: "a", Value: "b"}},
 	}
-	s.handler.EXPECT().GetPublicKey(gomock.Any(), gomock.Any()).Times(1).
-		Return(hdPubKey, nil)
+	headers := authHeaders(t, token)
 
-	r := httptest.NewRequest("GET", "scheme://host/path", nil)
-	r.Header.Add("Authorization", "Bearer eyXXzA")
+	// setup
+	s.auth.EXPECT().VerifyToken(token).Times(1).Return(walletName, nil)
+	s.handler.EXPECT().GetPublicKey(walletName, hdPubKey.PublicKey).Times(1).Return(hdPubKey, nil)
 
-	w := httptest.NewRecorder()
+	// when
+	statusCode, _ := serveHTTP(t, s, getKeyRequest(t, hdPubKey.PublicKey, headers))
 
-	service.ExtractToken(s.GetPublicKey)(w, r, httprouter.Params{{Key: "keyid", Value: "apubkey"}})
-
-	resp := w.Result()
-	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	// then
+	assert.Equal(t, http.StatusOK, statusCode)
 }
 
 func testServiceGetPublicKeyFailInvalidRequest(t *testing.T) {
-	s := getTestService(t)
-	defer s.ctrl.Finish()
+	tcs := []struct {
+		name    string
+		headers map[string]string
+	}{
+		{
+			name:    "no header",
+			headers: map[string]string{},
+		}, {
+			name:    "no token",
+			headers: authHeaders(t, ""),
+		},
+	}
 
-	// invalid token
-	r := httptest.NewRequest("POST", "scheme://host/path", nil)
-	r.Header.Add("Authorization", "Bearer")
+	for _, tc := range tcs {
+		t.Run(tc.name, func(tt *testing.T) {
+			s := getTestService(tt)
+			tt.Cleanup(func() {
+				s.ctrl.Finish()
+			})
 
-	w := httptest.NewRecorder()
+			// when
+			statusCode, _ := serveHTTP(t, s, getKeyRequest(t, vgrand.RandomStr(5), tc.headers))
 
-	service.ExtractToken(s.GetPublicKey)(w, r, nil)
-
-	resp := w.Result()
-	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
-
-	// no token
-	r = httptest.NewRequest("POST", "scheme://host/path", nil)
-	w = httptest.NewRecorder()
-
-	service.ExtractToken(s.GetPublicKey)(w, r, nil)
-
-	resp = w.Result()
-	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+			// then
+			assert.Equal(tt, http.StatusBadRequest, statusCode)
+		})
+	}
 }
 
 func testServiceGetPublicKeyFailKeyNotFound(t *testing.T) {
 	s := getTestService(t)
 	defer s.ctrl.Finish()
 
-	s.auth.EXPECT().VerifyToken("eyXXzA").Times(1).Return("jeremy", nil)
-	s.handler.EXPECT().GetPublicKey(gomock.Any(), gomock.Any()).Times(1).
-		Return(nil, wallet.ErrPubKeyDoesNotExist)
+	// given
+	walletName := vgrand.RandomStr(5)
+	pubKey := vgrand.RandomStr(5)
+	token := vgrand.RandomStr(5)
+	headers := authHeaders(t, token)
 
-	r := httptest.NewRequest("GET", "scheme://host/path", nil)
-	r.Header.Add("Authorization", "Bearer eyXXzA")
+	// setup
+	s.auth.EXPECT().VerifyToken(token).Times(1).Return(walletName, nil)
+	s.handler.EXPECT().GetPublicKey(walletName, pubKey).Times(1).Return(nil, wallet.ErrPubKeyDoesNotExist)
 
-	w := httptest.NewRecorder()
+	// when
+	statusCode, _ := serveHTTP(t, s, getKeyRequest(t, pubKey, headers))
 
-	service.ExtractToken(s.GetPublicKey)(w, r, httprouter.Params{{Key: "keyid", Value: "apubkey"}})
-
-	resp := w.Result()
-	assert.Equal(t, http.StatusNotFound, resp.StatusCode)
+	// then
+	assert.Equal(t, http.StatusNotFound, statusCode)
 }
 
 func testServiceGetPublicKeyFailMiscError(t *testing.T) {
 	s := getTestService(t)
 	defer s.ctrl.Finish()
 
-	s.auth.EXPECT().VerifyToken("eyXXzA").Times(1).Return("jeremy", nil)
-	s.handler.EXPECT().GetPublicKey(gomock.Any(), gomock.Any()).Times(1).
-		Return(nil, errSomethingWentWrong)
+	// given
+	walletName := vgrand.RandomStr(5)
+	pubKey := vgrand.RandomStr(5)
+	token := vgrand.RandomStr(5)
+	headers := authHeaders(t, token)
 
-	r := httptest.NewRequest("GET", "scheme://host/path", nil)
-	r.Header.Add("Authorization", "Bearer eyXXzA")
+	// setup
+	s.auth.EXPECT().VerifyToken(token).Times(1).Return(walletName, nil)
+	s.handler.EXPECT().GetPublicKey(walletName, pubKey).Times(1).Return(nil, assert.AnError)
 
-	w := httptest.NewRecorder()
+	// when
+	statusCode, _ := serveHTTP(t, s, getKeyRequest(t, pubKey, headers))
 
-	service.ExtractToken(s.GetPublicKey)(w, r, httprouter.Params{{Key: "keyid", Value: "apubkey"}})
-
-	resp := w.Result()
-	assert.Equal(t, http.StatusInternalServerError, resp.StatusCode)
+	// then
+	assert.Equal(t, http.StatusInternalServerError, statusCode)
 }
 
 func testServiceTaintOK(t *testing.T) {
 	s := getTestService(t)
 	defer s.ctrl.Finish()
 
-	s.auth.EXPECT().VerifyToken("eyXXzA").Times(1).Return("jeremy", nil)
-	s.handler.EXPECT().TaintKey(gomock.Any(), gomock.Any(), gomock.Any()).
-		Times(1).Return(nil)
-	payload := `{"passphrase": "some data"}`
-	r := httptest.NewRequest("POST", "scheme://host/path", bytes.NewBufferString(payload))
-	r.Header.Set("Authorization", "Bearer eyXXzA")
+	// given
+	walletName := vgrand.RandomStr(5)
+	pubKey := vgrand.RandomStr(5)
+	token := vgrand.RandomStr(5)
+	passphrase := vgrand.RandomStr(5)
+	headers := authHeaders(t, token)
+	payload := fmt.Sprintf(`{"passphrase": "%s"}`, passphrase)
 
-	w := httptest.NewRecorder()
+	// setup
+	s.auth.EXPECT().VerifyToken(token).Times(1).Return(walletName, nil)
+	s.handler.EXPECT().TaintKey(walletName, pubKey, passphrase).Times(1).Return(nil)
 
-	service.ExtractToken(s.TaintKey)(w, r, httprouter.Params{{Key: "keyid", Value: "asdasasdasd"}})
+	// when
+	statusCode, _ := serveHTTP(t, s, taintKeyRequest(t, pubKey, payload, headers))
 
-	resp := w.Result()
-	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	// then
+	assert.Equal(t, http.StatusOK, statusCode)
 }
 
 func testServiceTaintFailInvalidRequest(t *testing.T) {
-	s := getTestService(t)
-	defer s.ctrl.Finish()
+	tcs := []struct {
+		name    string
+		headers map[string]string
+		payload string
+	}{
+		{
+			name:    "no header",
+			headers: map[string]string{},
+			payload: `{"passphrase": "some data"}`,
+		}, {
+			name:    "no token",
+			headers: authHeaders(t, ""),
+			payload: `{"passphrase": "some data"}`,
+		}, {
+			name:    "misspelled passphrase property",
+			headers: authHeaders(t, vgrand.RandomStr(5)),
+			payload: `{"passhp": "some data"}`,
+		},
+	}
 
-	// invalid token
-	r := httptest.NewRequest("POST", "scheme://host/path", nil)
-	r.Header.Set("Authorization", "Bearer")
+	for _, tc := range tcs {
+		t.Run(tc.name, func(tt *testing.T) {
+			s := getTestService(tt)
+			tt.Cleanup(func() {
+				s.ctrl.Finish()
+			})
 
-	w := httptest.NewRecorder()
+			// when
+			statusCode, _ := serveHTTP(tt, s, taintKeyRequest(tt, vgrand.RandomStr(5), tc.payload, tc.headers))
 
-	service.ExtractToken(s.TaintKey)(w, r, nil)
-
-	resp := w.Result()
-	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
-
-	// no token
-	r = httptest.NewRequest("POST", "scheme://host/path", nil)
-	w = httptest.NewRecorder()
-
-	service.ExtractToken(s.TaintKey)(w, r, nil)
-
-	resp = w.Result()
-	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
-
-	// token but invalid payload
-	payload := `{"passhp": "some data", "pubKey": "asdasasdasd"}`
-	r = httptest.NewRequest("POST", "scheme://host/path", bytes.NewBufferString(payload))
-	w = httptest.NewRecorder()
-	r.Header.Set("Authorization", "Bearer eyXXzA")
-
-	service.ExtractToken(s.TaintKey)(w, r, nil)
-
-	resp = w.Result()
-	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
-
-	payload = `{"passphrase": "some data", "puey": "asdasasdasd"}`
-	r = httptest.NewRequest("POST", "scheme://host/path", bytes.NewBufferString(payload))
-	w = httptest.NewRecorder()
-	r.Header.Set("Authorization", "Bearer eyXXzA")
-
-	service.ExtractToken(s.TaintKey)(w, r, nil)
-
-	resp = w.Result()
-	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+			// then
+			assert.Equal(tt, http.StatusBadRequest, statusCode)
+		})
+	}
 }
 
 func testServiceUpdateMetaOK(t *testing.T) {
 	s := getTestService(t)
 	defer s.ctrl.Finish()
 
-	s.auth.EXPECT().VerifyToken("eyXXzA").Times(1).Return("jeremy", nil)
-	s.handler.EXPECT().UpdateMeta(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-		Times(1).Return(nil)
-	payload := `{"passphrase": "some data", "meta": [{"key":"ok", "value":"primary"}]}`
-	r := httptest.NewRequest("POST", "scheme://host/path", bytes.NewBufferString(payload))
-	r.Header.Set("Authorization", "Bearer eyXXzA")
+	// when
+	walletName := vgrand.RandomStr(5)
+	pubKey := vgrand.RandomStr(5)
+	token := vgrand.RandomStr(5)
+	passphrase := vgrand.RandomStr(5)
+	metaRole := vgrand.RandomStr(5)
+	headers := authHeaders(t, token)
+	payload := fmt.Sprintf(`{"passphrase": "%s", "meta": [{"key":"role", "value":"%s"}]}`, passphrase, metaRole)
 
-	w := httptest.NewRecorder()
+	// setup
+	s.auth.EXPECT().VerifyToken(token).Times(1).Return(walletName, nil)
+	s.handler.EXPECT().UpdateMeta(walletName, pubKey, passphrase, []wallet.Meta{{
+		Key:   "role",
+		Value: metaRole,
+	}}).Times(1).Return(nil)
 
-	service.ExtractToken(s.UpdateMeta)(w, r, httprouter.Params{{Key: "keyid", Value: "asdasasdasd"}})
+	// when
+	statusCode, _ := serveHTTP(t, s, annotateKeyRequest(t, pubKey, payload, headers))
 
-	resp := w.Result()
-	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	// then
+	assert.Equal(t, http.StatusOK, statusCode)
 }
 
 func testServiceUpdateMetaFailInvalidRequest(t *testing.T) {
-	s := getTestService(t)
-	defer s.ctrl.Finish()
+	tcs := []struct {
+		name    string
+		headers map[string]string
+		payload string
+	}{
+		{
+			name:    "no header",
+			headers: map[string]string{},
+			payload: `{"passphrase": "some data", "meta": [{"key": "role", "value": "signing"}]}`,
+		}, {
+			name:    "no token",
+			headers: authHeaders(t, ""),
+			payload: `{"passphrase": "some data", "meta": [{"key": "role", "value": "signing"}]}`,
+		}, {
+			name:    "misspelled passphrase property",
+			headers: authHeaders(t, vgrand.RandomStr(5)),
+			payload: `{"pssphrse": "some data", "meta": [{"key": "role", "value": "signing"}]}`,
+		},
+	}
 
-	// invalid token
-	r := httptest.NewRequest("POST", "scheme://host/path", nil)
-	r.Header.Set("Authorization", "Bearer")
+	for _, tc := range tcs {
+		t.Run(tc.name, func(tt *testing.T) {
+			s := getTestService(tt)
+			tt.Cleanup(func() {
+				s.ctrl.Finish()
+			})
 
-	w := httptest.NewRecorder()
+			// when
+			statusCode, _ := serveHTTP(tt, s, annotateKeyRequest(tt, vgrand.RandomStr(5), tc.payload, tc.headers))
 
-	service.ExtractToken(s.UpdateMeta)(w, r, nil)
-
-	resp := w.Result()
-	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
-
-	// no token
-	r = httptest.NewRequest("POST", "scheme://host/path", nil)
-	w = httptest.NewRecorder()
-
-	service.ExtractToken(s.UpdateMeta)(w, r, nil)
-
-	resp = w.Result()
-	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
-
-	// token but invalid payload
-	payload := `{"passhp": "some data", "pubKey": "asdasasdasd"}`
-	r = httptest.NewRequest("POST", "scheme://host/path", bytes.NewBufferString(payload))
-	w = httptest.NewRecorder()
-	r.Header.Set("Authorization", "Bearer eyXXzA")
-
-	service.ExtractToken(s.UpdateMeta)(w, r, nil)
-
-	resp = w.Result()
-	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
-
-	payload = `{"passphrase": "some data", "puey": "asdasasdasd"}`
-	r = httptest.NewRequest("POST", "scheme://host/path", bytes.NewBufferString(payload))
-	w = httptest.NewRecorder()
-	r.Header.Set("Authorization", "Bearer eyXXzA")
-
-	service.ExtractToken(s.UpdateMeta)(w, r, nil)
-
-	resp = w.Result()
-	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+			// then
+			assert.Equal(tt, http.StatusBadRequest, statusCode)
+		})
+	}
 }
 
 func testSigningTransactionSucceeds(t *testing.T) {
@@ -628,33 +679,22 @@ func testSigningTransactionSucceeds(t *testing.T) {
 	defer s.ctrl.Finish()
 
 	// given
-	token := "eyXXzA"
-	name := "jeremy"
-	payload := `{"pubKey": "0xCAFEDUDE", "orderCancellation": {}}`
-	request := newAuthenticatedRequest(payload)
-	response := httptest.NewRecorder()
+	walletName := vgrand.RandomStr(5)
+	token := vgrand.RandomStr(5)
+	headers := authHeaders(t, token)
+	payload := fmt.Sprintf(`{"pubKey": "%s", "orderCancellation": {}}`, vgrand.RandomStr(5))
 
 	// setup
-	s.auth.EXPECT().
-		VerifyToken(token).
-		Times(1).
-		Return(name, nil)
-	s.handler.EXPECT().
-		SignTx(name, gomock.Any(), gomock.Any()).
-		Times(1).
-		Return(&commandspb.Transaction{}, nil)
-	s.nodeForward.EXPECT().
-		SendTx(gomock.Any(), &commandspb.Transaction{}, api.SubmitTransactionRequest_TYPE_ASYNC).
-		Times(0)
-	s.nodeForward.EXPECT().LastBlockHeight(gomock.Any()).
-		Times(1).Return(uint64(42), nil)
+	s.auth.EXPECT().VerifyToken(token).Times(1).Return(walletName, nil)
+	s.handler.EXPECT().SignTx(walletName, gomock.Any(), gomock.Any()).Times(1).Return(&commandspb.Transaction{}, nil)
+	s.nodeForward.EXPECT().SendTx(gomock.Any(), &commandspb.Transaction{}, api.SubmitTransactionRequest_TYPE_ASYNC).Times(0)
+	s.nodeForward.EXPECT().LastBlockHeight(gomock.Any()).Times(1).Return(uint64(42), nil)
 
 	// when
-	s.SignTxSync(token, response, request, nil)
+	statusCode, _ := serveHTTP(t, s, signTxRequest(t, payload, headers))
 
 	// then
-	result := response.Result()
-	assert.Equal(t, http.StatusOK, result.StatusCode)
+	assert.Equal(t, http.StatusOK, statusCode)
 }
 
 func testSigningTransactionWithPropagationSucceeds(t *testing.T) {
@@ -662,34 +702,22 @@ func testSigningTransactionWithPropagationSucceeds(t *testing.T) {
 	defer s.ctrl.Finish()
 
 	// given
-	token := "eyXXzA"
-	name := "jeremy"
-	payload := `{"propagate": true, "pubKey": "0xCAFEDUDE", "orderCancellation": {}}`
-	request := newAuthenticatedRequest(payload)
-	response := httptest.NewRecorder()
+	walletName := vgrand.RandomStr(5)
+	token := vgrand.RandomStr(5)
+	headers := authHeaders(t, token)
+	payload := fmt.Sprintf(`{"propagate": true, "pubKey": "%s", "orderCancellation": {}}`, vgrand.RandomStr(5))
 
 	// setup
-	s.auth.EXPECT().
-		VerifyToken(token).
-		Times(1).
-		Return(name, nil)
-	s.handler.EXPECT().
-		SignTx(name, gomock.Any(), gomock.Any()).
-		Times(1).
-		Return(&commandspb.Transaction{}, nil)
-	s.nodeForward.EXPECT().
-		SendTx(gomock.Any(), &commandspb.Transaction{}, api.SubmitTransactionRequest_TYPE_SYNC).
-		Times(1).
-		Return(nil)
-	s.nodeForward.EXPECT().LastBlockHeight(gomock.Any()).
-		Times(1).Return(uint64(42), nil)
+	s.auth.EXPECT().VerifyToken(token).Times(1).Return(walletName, nil)
+	s.handler.EXPECT().SignTx(walletName, gomock.Any(), gomock.Any()).Times(1).Return(&commandspb.Transaction{}, nil)
+	s.nodeForward.EXPECT().SendTx(gomock.Any(), &commandspb.Transaction{}, api.SubmitTransactionRequest_TYPE_ASYNC).Times(1)
+	s.nodeForward.EXPECT().LastBlockHeight(gomock.Any()).Times(1).Return(uint64(42), nil)
 
 	// when
-	s.SignTxSync(token, response, request, nil)
+	statusCode, _ := serveHTTP(t, s, signTxRequest(t, payload, headers))
 
 	// then
-	result := response.Result()
-	assert.Equal(t, http.StatusOK, result.StatusCode)
+	assert.Equal(t, http.StatusOK, statusCode)
 }
 
 func testSigningTransactionWithFailedPropagationFails(t *testing.T) {
@@ -697,158 +725,176 @@ func testSigningTransactionWithFailedPropagationFails(t *testing.T) {
 	defer s.ctrl.Finish()
 
 	// given
-	token := "eyXXzA"
-	name := "jeremy"
-	payload := `{"propagate": true, "pubKey": "0xCAFEDUDE", "orderCancellation": {}}`
-	request := newAuthenticatedRequest(payload)
-	response := httptest.NewRecorder()
+	walletName := vgrand.RandomStr(5)
+	token := vgrand.RandomStr(5)
+	headers := authHeaders(t, token)
+	payload := fmt.Sprintf(`{"propagate": true, "pubKey": "%s", "orderCancellation": {}}`, vgrand.RandomStr(5))
 
 	// setup
-	s.auth.EXPECT().
-		VerifyToken(token).
-		Times(1).
-		Return(name, nil)
-	s.handler.EXPECT().
-		SignTx(name, gomock.Any(), gomock.Any()).
-		Times(1).
-		Return(&commandspb.Transaction{}, nil)
-	s.nodeForward.EXPECT().
-		SendTx(gomock.Any(), &commandspb.Transaction{}, api.SubmitTransactionRequest_TYPE_SYNC).
-		Times(1).
-		Return(errSomethingWentWrong)
-	s.nodeForward.EXPECT().LastBlockHeight(gomock.Any()).
-		Times(1).Return(uint64(42), nil)
+	s.auth.EXPECT().VerifyToken(token).Times(1).Return(walletName, nil)
+	s.handler.EXPECT().SignTx(walletName, gomock.Any(), gomock.Any()).Times(1).Return(&commandspb.Transaction{}, nil)
+	s.nodeForward.EXPECT().SendTx(gomock.Any(), &commandspb.Transaction{}, api.SubmitTransactionRequest_TYPE_ASYNC).Times(1).Return("", assert.AnError)
+	s.nodeForward.EXPECT().LastBlockHeight(gomock.Any()).Times(1).Return(uint64(42), nil)
 
 	// when
-	s.SignTxSync(token, response, request, nil)
+	statusCode, _ := serveHTTP(t, s, signTxRequest(t, payload, headers))
 
 	// then
-	result := response.Result()
-	assert.Equal(t, http.StatusInternalServerError, result.StatusCode)
+	assert.Equal(t, http.StatusInternalServerError, statusCode)
 }
 
-func testFailedSigningTransactionFails(t *testing.T) {
+func testFailedTransactionSigningFails(t *testing.T) {
 	s := getTestService(t)
 	defer s.ctrl.Finish()
 
 	// given
-	token := "eyXXzA"
-	name := "jeremy"
-	payload := `{"pubKey": "0xCAFEDUDE", "orderCancellation": {}}`
-	request := newAuthenticatedRequest(payload)
-	response := httptest.NewRecorder()
+	walletName := vgrand.RandomStr(5)
+	token := vgrand.RandomStr(5)
+	headers := authHeaders(t, token)
+	payload := fmt.Sprintf(`{"propagate": true, "pubKey": "%s", "orderCancellation": {}}`, vgrand.RandomStr(5))
 
 	// setup
-	s.auth.EXPECT().
-		VerifyToken(token).
-		Times(1).
-		Return(name, nil)
-	s.handler.EXPECT().
-		SignTx(name, gomock.Any(), gomock.Any()).
-		Times(1).
-		Return(nil, errSomethingWentWrong)
-	s.nodeForward.EXPECT().LastBlockHeight(gomock.Any()).
-		Times(1).Return(uint64(42), nil)
+	s.auth.EXPECT().VerifyToken(token).Times(1).Return(walletName, nil)
+	s.handler.EXPECT().SignTx(walletName, gomock.Any(), gomock.Any()).Times(1).Return(nil, assert.AnError)
+	s.nodeForward.EXPECT().SendTx(gomock.Any(), &commandspb.Transaction{}, api.SubmitTransactionRequest_TYPE_ASYNC).Times(0)
+	s.nodeForward.EXPECT().LastBlockHeight(gomock.Any()).Times(1).Return(uint64(42), nil)
 
 	// when
-	s.SignTxSync(token, response, request, nil)
+	statusCode, _ := serveHTTP(t, s, signTxRequest(t, payload, headers))
 
 	// then
-	result := response.Result()
-	assert.Equal(t, http.StatusInternalServerError, result.StatusCode)
+	assert.Equal(t, http.StatusInternalServerError, statusCode)
 }
 
-func testSigningTransactionWithInvalidPayloadFails(t *testing.T) {
-	s := getTestService(t)
-	defer s.ctrl.Finish()
+func testSigningTransactionWithInvalidRequestFails(t *testing.T) {
+	tcs := []struct {
+		name    string
+		headers map[string]string
+		payload string
+	}{
+		{
+			name:    "no header",
+			headers: map[string]string{},
+			payload: `{"propagate": true, "pubKey": "0xCAFEDUDE", "orderCancellation": {}}`,
+		}, {
+			name:    "no token",
+			headers: authHeaders(t, ""),
+			payload: `{"propagate": true, "pubKey": "0xCAFEDUDE", "orderCancellation": {}}`,
+		}, {
+			name:    "misspelled pubKey property",
+			headers: authHeaders(t, vgrand.RandomStr(5)),
+			payload: `{"propagate": true, "puey": "0xCAFEDUDE", "orderCancellation": {}}`,
+		}, {
+			name:    "without command",
+			headers: authHeaders(t, vgrand.RandomStr(5)),
+			payload: `{"propagate": true, "pubKey": "0xCAFEDUDE", "robMoney": {}}`,
+		}, {
+			name:    "with unknown command",
+			headers: authHeaders(t, vgrand.RandomStr(5)),
+			payload: `{"propagate": true, "pubKey": "0xCAFEDUDE"}`,
+		},
+	}
 
-	// given
-	token := "eyXXzA"
-	payload := `{"badKey": "0xCAFEDUDE"}`
-	request := newAuthenticatedRequest(payload)
-	response := httptest.NewRecorder()
+	for _, tc := range tcs {
+		t.Run(tc.name, func(tt *testing.T) {
+			s := getTestService(tt)
+			tt.Cleanup(func() {
+				s.ctrl.Finish()
+			})
 
-	// when
-	s.SignTxSync(token, response, request, nil)
+			// when
+			statusCode, _ := serveHTTP(tt, s, signTxRequest(tt, tc.payload, tc.headers))
 
-	// then
-	result := response.Result()
-	assert.Equal(t, http.StatusBadRequest, result.StatusCode)
-}
-
-func testSigningTransactionWithoutPubKeyFails(t *testing.T) {
-	s := getTestService(t)
-	defer s.ctrl.Finish()
-
-	// given
-	token := "0xDEADBEEF"
-	payload := `{"orderSubmission": {}}`
-	response := httptest.NewRecorder()
-	request := newAuthenticatedRequest(payload)
-
-	// when
-	s.SignTxSync(token, response, request, nil)
-
-	// then
-	result := response.Result()
-	require.Equal(t, http.StatusBadRequest, result.StatusCode)
-}
-
-func testSigningTransactionWithoutCommandFails(t *testing.T) {
-	s := getTestService(t)
-	defer s.ctrl.Finish()
-
-	// given
-	token := "0xDEADBEEF"
-	payload := `{"pubKey": "0xCAFEDUDE"}`
-	response := httptest.NewRecorder()
-	request := newAuthenticatedRequest(payload)
-
-	// when
-	s.SignTxSync(token, response, request, nil)
-
-	// then
-	result := response.Result()
-	require.Equal(t, http.StatusBadRequest, result.StatusCode)
+			// then
+			assert.Equal(tt, http.StatusBadRequest, statusCode)
+		})
+	}
 }
 
 func testSigningAnythingSucceeds(t *testing.T) {
 	s := getTestService(t)
 	defer s.ctrl.Finish()
 
-	s.auth.EXPECT().VerifyToken("eyXXzA").Times(1).Return("jeremy", nil)
-	s.handler.EXPECT().SignAny("jeremy", []byte("spice of dune"), "asdasasdasd").
-		Times(1).Return([]byte("some sig"), nil)
-	payload := `{"inputData": "c3BpY2Ugb2YgZHVuZQ==", "pubKey": "asdasasdasd"}`
-	r := httptest.NewRequest("POST", "scheme://host/path", bytes.NewBufferString(payload))
-	r.Header.Set("Authorization", "Bearer eyXXzA")
+	// given
+	walletName := vgrand.RandomStr(5)
+	pubKey := vgrand.RandomStr(5)
+	token := vgrand.RandomStr(5)
+	headers := authHeaders(t, token)
+	payload := fmt.Sprintf(`{"inputData": "c3BpY2Ugb2YgZHVuZQ==", "pubKey": "%s"}`, pubKey)
 
-	w := httptest.NewRecorder()
+	// setup
+	s.auth.EXPECT().VerifyToken(token).Times(1).Return(walletName, nil)
+	s.handler.EXPECT().SignAny(walletName, []byte("spice of dune"), pubKey).Times(1).Return([]byte("some sig"), nil)
 
-	service.ExtractToken(s.SignAny)(w, r, nil)
+	// when
+	statusCode, _ := serveHTTP(t, s, signAnyRequest(t, payload, headers))
 
-	resp := w.Result()
-	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	// then
+	assert.Equal(t, http.StatusOK, statusCode)
+}
+
+func testSigningAnyDataWithInvalidRequestFails(t *testing.T) {
+	tcs := []struct {
+		name    string
+		headers map[string]string
+		payload string
+	}{
+		{
+			name:    "no header",
+			headers: map[string]string{},
+			payload: `{"inputData": "c3BpY2Ugb2YgZHVuZQ==", "pubKey": "asdasasdasd"}`,
+		}, {
+			name:    "no token",
+			headers: authHeaders(t, ""),
+			payload: `{"inputData": "c3BpY2Ugb2YgZHVuZQ==", "pubKey": "asdasasdasd"}`,
+		}, {
+			name:    "misspelled pubKey property",
+			headers: authHeaders(t, vgrand.RandomStr(5)),
+			payload: `{"inputData": "c3BpY2Ugb2YgZHVuZQ==", "puey": "asdasasdasd"}`,
+		}, {
+			name:    "misspelled inputData property",
+			headers: authHeaders(t, vgrand.RandomStr(5)),
+			payload: `{"data": "c3BpY2Ugb2YgZHVuZQ==", "pubKey": "asdasasdasd"}`,
+		},
+	}
+
+	for _, tc := range tcs {
+		t.Run(tc.name, func(tt *testing.T) {
+			s := getTestService(tt)
+			tt.Cleanup(func() {
+				s.ctrl.Finish()
+			})
+
+			// when
+			statusCode, _ := serveHTTP(tt, s, signAnyRequest(tt, tc.payload, tc.headers))
+
+			// then
+			assert.Equal(tt, http.StatusBadRequest, statusCode)
+		})
+	}
 }
 
 func testVerifyingAnythingSucceeds(t *testing.T) {
 	s := getTestService(t)
 	defer s.ctrl.Finish()
 
-	s.handler.EXPECT().VerifyAny([]byte("spice of dune"), []byte("Sietch Tabr"), "asdasasdasd").
-		Times(1).Return(true, nil)
-	payload := `{"inputData": "c3BpY2Ugb2YgZHVuZQ==", "pubKey": "asdasasdasd", "signature": "U2lldGNoIFRhYnI="}`
-	r := httptest.NewRequest("POST", "scheme://host/path", bytes.NewBufferString(payload))
-	r.Header.Set("Authorization", "Bearer eyXXzA")
+	// given
+	pubKey := vgrand.RandomStr(5)
+	payload := fmt.Sprintf(`{"inputData": "c3BpY2Ugb2YgZHVuZQ==", "pubKey": "%s", "signature": "U2lldGNoIFRhYnI="}`, pubKey)
 
-	w := httptest.NewRecorder()
+	// setup
+	s.handler.EXPECT().VerifyAny([]byte("spice of dune"), []byte("Sietch Tabr"), pubKey).Times(1).Return(true, nil)
 
-	service.ExtractToken(s.VerifyAny)(w, r, nil)
+	// when
+	statusCode, body := serveHTTP(t, s, verifyAnyRequest(t, payload))
 
-	httpResponse := w.Result()
-	resp := service.VerifyAnyResponse{}
-	assert.Equal(t, http.StatusOK, httpResponse.StatusCode)
-	unmarshalResponse(httpResponse, &resp)
+	// then
+	assert.Equal(t, http.StatusOK, statusCode)
+
+	resp := &service.VerifyAnyResponse{}
+	if err := json.Unmarshal(body, resp); err != nil {
+		t.Fatalf("couldn't unmarshal responde: %v", err)
+	}
 	assert.True(t, resp.Valid)
 }
 
@@ -856,37 +902,158 @@ func testVerifyingAnythingFails(t *testing.T) {
 	s := getTestService(t)
 	defer s.ctrl.Finish()
 
-	s.handler.EXPECT().VerifyAny([]byte("spice of dune"), []byte("Sietch Tabr"), "asdasasdasd").
-		Times(1).Return(false, nil)
-	payload := `{"inputData":"c3BpY2Ugb2YgZHVuZQ==", "pubKey": "asdasasdasd", "signature": "U2lldGNoIFRhYnI="}`
-	r := httptest.NewRequest("POST", "scheme://host/path", bytes.NewBufferString(payload))
-	r.Header.Set("Authorization", "Bearer eyXXzA")
+	// given
+	pubKey := vgrand.RandomStr(5)
+	payload := fmt.Sprintf(`{"inputData": "c3BpY2Ugb2YgZHVuZQ==", "pubKey": "%s", "signature": "U2lldGNoIFRhYnI="}`, pubKey)
 
-	w := httptest.NewRecorder()
+	// setup
+	s.handler.EXPECT().VerifyAny([]byte("spice of dune"), []byte("Sietch Tabr"), pubKey).Times(1).Return(false, nil)
 
-	service.ExtractToken(s.VerifyAny)(w, r, nil)
+	// when
+	statusCode, body := serveHTTP(t, s, verifyAnyRequest(t, payload))
 
-	httpResponse := w.Result()
-	resp := service.VerifyAnyResponse{}
-	assert.Equal(t, http.StatusOK, httpResponse.StatusCode)
-	unmarshalResponse(httpResponse, &resp)
+	// then
+	assert.Equal(t, http.StatusOK, statusCode)
+
+	resp := &service.VerifyAnyResponse{}
+	if err := json.Unmarshal(body, resp); err != nil {
+		t.Fatalf("couldn't unmarshal responde: %v", err)
+	}
 	assert.False(t, resp.Valid)
 }
 
-func newAuthenticatedRequest(payload string) *http.Request {
-	r := httptest.NewRequest("POST", "scheme://host/path", bytes.NewBufferString(payload))
-	r.Header.Set("Authorization", "Bearer eyXXzA")
-	return r
+func testVerifyingAnyDataWithInvalidRequestFails(t *testing.T) {
+	tcs := []struct {
+		name    string
+		payload string
+	}{
+		{
+			name:    "misspelled pubKey property",
+			payload: `{"inputData": "c3BpY2Ugb2YgZHVuZQ==", "puey": "asdasasdasd", "signature": "U2lldGNoIFRhYnI="}`,
+		}, {
+			name:    "misspelled inputData property",
+			payload: `{"data": "c3BpY2Ugb2YgZHVuZQ==", "pubKey": "asdasasdasd", "signature": "U2lldGNoIFRhYnI="}`,
+		}, {
+			name:    "misspelled signature property",
+			payload: `{"inputData": "c3BpY2Ugb2YgZHVuZQ==", "pubKey": "asdasasdasd", "sign": "U2lldGNoIFRhYnI="}`,
+		},
+	}
+
+	for _, tc := range tcs {
+		t.Run(tc.name, func(tt *testing.T) {
+			s := getTestService(tt)
+			tt.Cleanup(func() {
+				s.ctrl.Finish()
+			})
+
+			// when
+			statusCode, _ := serveHTTP(tt, s, verifyAnyRequest(tt, tc.payload))
+
+			// then
+			assert.Equal(tt, http.StatusBadRequest, statusCode)
+		})
+	}
 }
 
-func unmarshalResponse(r *http.Response, into interface{}) {
-	defer r.Body.Close()
-	body, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		panic(err)
+func loginRequest(t *testing.T, payload string) *http.Request {
+	t.Helper()
+	return buildRequest(t, http.MethodPost, "/api/v1/auth/token", payload, nil)
+}
+
+func logoutRequest(t *testing.T, headers map[string]string) *http.Request {
+	t.Helper()
+	return buildRequest(t, http.MethodDelete, "/api/v1/auth/token", "", headers)
+}
+
+func createWalletRequest(t *testing.T, payload string) *http.Request {
+	t.Helper()
+	return buildRequest(t, http.MethodPost, "/api/v1/wallets", payload, nil)
+}
+
+func importWalletRequest(t *testing.T, payload string) *http.Request {
+	t.Helper()
+	return buildRequest(t, http.MethodPost, "/api/v1/wallets/import", payload, nil)
+}
+
+func generateKeyRequest(t *testing.T, payload string, headers map[string]string) *http.Request {
+	t.Helper()
+	return buildRequest(t, http.MethodPost, "/api/v1/keys", payload, headers)
+}
+
+func listKeysRequest(t *testing.T, headers map[string]string) *http.Request {
+	t.Helper()
+	return buildRequest(t, http.MethodGet, "/api/v1/keys", "", headers)
+}
+
+func getKeyRequest(t *testing.T, keyID string, headers map[string]string) *http.Request {
+	t.Helper()
+	return buildRequest(t, http.MethodGet, fmt.Sprintf("/api/v1/keys/%s", keyID), "", headers)
+}
+
+func taintKeyRequest(t *testing.T, id, payload string, headers map[string]string) *http.Request {
+	t.Helper()
+	return buildRequest(t, http.MethodPut, fmt.Sprintf("/api/v1/keys/%s/taint", id), payload, headers)
+}
+
+func annotateKeyRequest(t *testing.T, id, payload string, headers map[string]string) *http.Request {
+	t.Helper()
+	return buildRequest(t, http.MethodPut, fmt.Sprintf("/api/v1/keys/%s/metadata", id), payload, headers)
+}
+
+func signTxRequest(t *testing.T, payload string, headers map[string]string) *http.Request {
+	t.Helper()
+	return buildRequest(t, http.MethodPost, "/api/v1/command", payload, headers)
+}
+
+func signAnyRequest(t *testing.T, payload string, headers map[string]string) *http.Request {
+	t.Helper()
+	return buildRequest(t, http.MethodPost, "/api/v1/sign", payload, headers)
+}
+
+func verifyAnyRequest(t *testing.T, payload string) *http.Request {
+	t.Helper()
+	return buildRequest(t, http.MethodPost, "/api/v1/verify", payload, nil)
+}
+
+func authHeaders(t *testing.T, token string) map[string]string {
+	t.Helper()
+	return map[string]string{
+		"Authorization": fmt.Sprintf("Bearer %s", token),
 	}
-	err = json.Unmarshal(body, into)
-	if err != nil {
-		panic(err)
+}
+
+func buildRequest(t *testing.T, method, path, payload string, headers map[string]string) *http.Request {
+	t.Helper()
+
+	ctx, cancelFn := context.WithTimeout(context.Background(), testRequestTimeout)
+	t.Cleanup(func() {
+		cancelFn()
+	})
+
+	req, _ := http.NewRequestWithContext(ctx, method, path, strings.NewReader(payload))
+	for k, v := range headers {
+		req.Header.Set(k, v)
 	}
+	return req
+}
+
+func serveHTTP(t *testing.T, s *testService, req *http.Request) (int, []byte) {
+	t.Helper()
+	w := httptest.NewRecorder()
+
+	s.ServeHTTP(w, req)
+
+	resp := w.Result() // nolint:bodyclose
+	defer func() {
+		if err := w.Result().Body.Close(); err != nil {
+			t.Fatalf("couldn't close response body: %v", err)
+		}
+	}()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatalf("couldn't read body: %v", err)
+	}
+
+	return resp.StatusCode, body
 }

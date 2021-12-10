@@ -1,10 +1,8 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
 	"io"
-	"time"
 
 	"code.vegaprotocol.io/shared/paths"
 	"code.vegaprotocol.io/vegawallet/network"
@@ -12,23 +10,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const (
-	DefaultForwarderRetryCount = 5
-	ForwarderRequestTimeout    = 5 * time.Second
-)
-
-var ErrNetworkDoesNotHaveGRPCHostConfigured = errors.New("network does not have gRPC hosts configured")
-
-func NewCmdSend(w io.Writer, rf *RootFlags) *cobra.Command {
+func NewCmdTx(w io.Writer, rf *RootFlags) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "send",
-		Short: "Send data to the Vega network",
-		Long:  "Send data to the Vega network",
+		Use:   "tx",
+		Short: "Provides utilities for interacting with transactions",
+		Long:  "Provides utilities for interacting with transactions",
 	}
 
-	// create subcommands
-	cmd.AddCommand(NewCmdSendCommand(w, rf))
-	cmd.AddCommand(NewCmdSendTx(w, rf))
+	cmd.AddCommand(NewCmdTxSend(w, rf))
 	return cmd
 }
 

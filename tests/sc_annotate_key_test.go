@@ -9,46 +9,45 @@ import (
 
 func TestAnnotateKey(t *testing.T) {
 	// given
-	home, cleanUpFn := NewTempDir(t)
-	defer cleanUpFn(t)
-
+	home := t.TempDir()
 	_, passphraseFilePath := NewPassphraseFile(t, home)
-
 	walletName := vgrand.RandomStr(5)
 
-	cmd := []string{
+	// when
+	createWalletResp, err := WalletCreate(t, []string{
 		"--home", home,
 		"--output", "json",
 		"--wallet", walletName,
 		"--passphrase-file", passphraseFilePath,
-	}
-
-	// when
-	generateKeyResp, err := KeyGenerate(t, append(cmd,
-		"--meta", "name:key-1,role:validation",
-	))
+	})
 
 	// then
 	require.NoError(t, err)
-	AssertGenerateKey(t, generateKeyResp).
-		WithWalletCreation().
+	AssertCreateWallet(t, createWalletResp).
 		WithName(walletName).
-		WithMeta(map[string]string{"name": "key-1", "role": "validation"}).
 		LocatedUnder(home)
 
 	// when
-	err = KeyAnnotate(t, append(cmd,
-		"--pubkey", generateKeyResp.Key.KeyPair.PublicKey,
+	err = KeyAnnotate(t, []string{
+		"--home", home,
+		"--output", "json",
+		"--wallet", walletName,
+		"--passphrase-file", passphraseFilePath,
+		"--pubkey", createWalletResp.Key.PublicKey,
 		"--meta", "name:prefer-this-name",
-	))
+	})
 
 	// then
 	require.NoError(t, err)
 
 	// when
-	descResp, err := KeyDescribe(t, append(cmd,
-		"--pubkey", generateKeyResp.Key.KeyPair.PublicKey,
-	))
+	descResp, err := KeyDescribe(t, []string{
+		"--home", home,
+		"--output", "json",
+		"--wallet", walletName,
+		"--passphrase-file", passphraseFilePath,
+		"--pubkey", createWalletResp.Key.PublicKey,
+	})
 
 	// then
 	require.NoError(t, err)
@@ -56,18 +55,26 @@ func TestAnnotateKey(t *testing.T) {
 		WithMeta(map[string]string{"name": "prefer-this-name"})
 
 	// when
-	err = KeyAnnotate(t, append(cmd,
-		"--pubkey", generateKeyResp.Key.KeyPair.PublicKey,
+	err = KeyAnnotate(t, []string{
+		"--home", home,
+		"--output", "json",
+		"--wallet", walletName,
+		"--passphrase-file", passphraseFilePath,
+		"--pubkey", createWalletResp.Key.PublicKey,
 		"--clear",
-	))
+	})
 
 	// then
 	require.NoError(t, err)
 
 	// when
-	descResp, err = KeyDescribe(t, append(cmd,
-		"--pubkey", generateKeyResp.Key.KeyPair.PublicKey,
-	))
+	descResp, err = KeyDescribe(t, []string{
+		"--home", home,
+		"--output", "json",
+		"--wallet", walletName,
+		"--passphrase-file", passphraseFilePath,
+		"--pubkey", createWalletResp.Key.PublicKey,
+	})
 
 	// then
 	require.NoError(t, err)
@@ -75,18 +82,26 @@ func TestAnnotateKey(t *testing.T) {
 		WithMeta(map[string]string{})
 
 	// when
-	err = KeyAnnotate(t, append(cmd,
-		"--pubkey", generateKeyResp.Key.KeyPair.PublicKey,
+	err = KeyAnnotate(t, []string{
+		"--home", home,
+		"--output", "json",
+		"--wallet", walletName,
+		"--passphrase-file", passphraseFilePath,
+		"--pubkey", createWalletResp.Key.PublicKey,
 		"--meta", "name:key-1,role:validation",
-	))
+	})
 
 	// then
 	require.NoError(t, err)
 
 	// when
-	descResp, err = KeyDescribe(t, append(cmd,
-		"--pubkey", generateKeyResp.Key.KeyPair.PublicKey,
-	))
+	descResp, err = KeyDescribe(t, []string{
+		"--home", home,
+		"--output", "json",
+		"--wallet", walletName,
+		"--passphrase-file", passphraseFilePath,
+		"--pubkey", createWalletResp.Key.PublicKey,
+	})
 
 	// then
 	require.NoError(t, err)

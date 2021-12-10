@@ -13,9 +13,9 @@ func NewCmdNetwork(w io.Writer, rf *RootFlags) *cobra.Command {
 		Long:  "Manage networks",
 	}
 
-	// create subcommands
 	cmd.AddCommand(NewCmdListNetworks(w, rf))
 	cmd.AddCommand(NewCmdImportNetwork(w, rf))
 	cmd.AddCommand(NewCmdDescribeNetwork(w, rf))
+	cmd.AddCommand(NewCmdDeleteNetwork(w, rf))
 	return cmd
 }

@@ -11,13 +11,12 @@ import (
 )
 
 func TestInit(t *testing.T) {
-	t.Run("Initialising program succeeds", testInitialisingProgramSucceeds)
-	t.Run("Forcing program initialisation with force succeeds", testForcingProgramInitialisationSucceeds)
+	t.Run("Initialising software succeeds", testInitialisingSoftwareSucceeds)
+	t.Run("Forcing software initialisation succeeds", testForcingSoftwareInitialisationSucceeds)
 }
 
-func testInitialisingProgramSucceeds(t *testing.T) {
-	testDir, cleanUpFn := NewTempDir(t)
-	defer cleanUpFn(t)
+func testInitialisingSoftwareSucceeds(t *testing.T) {
+	testDir := t.TempDir()
 
 	// given
 	f := &cmd.InitFlags{
@@ -30,17 +29,14 @@ func testInitialisingProgramSucceeds(t *testing.T) {
 	// then
 	require.NoError(t, err)
 	require.NotNil(t, resp)
-	assert.True(t, strings.HasPrefix(resp.NetworksHome, testDir))
-	assert.DirExists(t, resp.NetworksHome)
 	assert.True(t, strings.HasPrefix(resp.RSAKeys.PublicKeyFilePath, testDir))
 	assert.FileExists(t, resp.RSAKeys.PublicKeyFilePath)
 	assert.True(t, strings.HasPrefix(resp.RSAKeys.PublicKeyFilePath, testDir))
 	assert.FileExists(t, resp.RSAKeys.PublicKeyFilePath)
 }
 
-func testForcingProgramInitialisationSucceeds(t *testing.T) {
-	testDir, cleanUpFn := NewTempDir(t)
-	defer cleanUpFn(t)
+func testForcingSoftwareInitialisationSucceeds(t *testing.T) {
+	testDir := t.TempDir()
 
 	// given
 	f := &cmd.InitFlags{
@@ -74,8 +70,6 @@ func testForcingProgramInitialisationSucceeds(t *testing.T) {
 	// then
 	require.NoError(t, err)
 	require.NotNil(t, resp)
-	assert.True(t, strings.HasPrefix(resp.NetworksHome, testDir))
-	assert.DirExists(t, resp.NetworksHome)
 	assert.True(t, strings.HasPrefix(resp.RSAKeys.PublicKeyFilePath, testDir))
 	assert.FileExists(t, resp.RSAKeys.PublicKeyFilePath)
 	assert.True(t, strings.HasPrefix(resp.RSAKeys.PublicKeyFilePath, testDir))

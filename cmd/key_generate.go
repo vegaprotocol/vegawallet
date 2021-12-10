@@ -17,6 +17,7 @@ var (
 	generateKeyLong = cli.LongDesc(`
 		Generate a new Ed25519 key pair in a given wallet.
 
+		DEPRECATED:
 		If the targeted wallet doesn't exist, it will be automatically generated.
 	`)
 
@@ -115,6 +116,8 @@ func BuildCmdGenerateKey(w io.Writer, handler GenerateKeyHandler, rf *RootFlags)
 		`Metadata to add to the generated key-pair: "my-key1:my-value1,my-key2:my-value2"`,
 	)
 
+	autoCompleteWallet(cmd, rf.Home)
+
 	return cmd
 }
 
@@ -153,24 +156,25 @@ func PrintGenerateKeyResponse(w io.Writer, resp *wallet.GenerateKeyResponse) {
 	p.CheckMark().SuccessText("Generating a key pair succeeded").NextSection()
 
 	if walletHasBeenCreated {
-		p.Text("Wallet mnemonic:").NextLine()
+		p.Text("Wallet recovery phrase:").NextLine()
 		p.WarningText(resp.Wallet.Mnemonic).NextLine()
+		p.Text("Wallet version:").NextLine()
+		p.WarningText(fmt.Sprintf("%d", resp.Wallet.Version)).NextLine()
 	}
 	p.Text("Public key:").NextLine()
-	p.WarningText(resp.Key.KeyPair.PublicKey).NextLine()
+	p.WarningText(resp.Key.PublicKey).NextLine()
 	p.Text("Metadata:").NextLine()
 	printMeta(p, resp.Key.Meta)
 	p.NextSection()
 
-	p.RedArrow().DangerText("Important").NextLine()
 	if walletHasBeenCreated {
-		p.DangerText("1. ").Text("Write down the mnemonic and store it somewhere safe and secure, now, as it will ").Underline("not").Text(" be displayed ever again!").NextLine()
-		p.DangerText("2. ").Text("Do not share the mnemonic nor the private key.").NextSection()
-	} else {
-		p.Text("Do not share the private key.").NextSection()
+		p.RedArrow().DangerText("Important").NextLine()
+		p.DangerText("Write down the ").DangerBold("recovery phrase").DangerText(" and the ").DangerBold("wallet's version").DangerText(", and store it somewhere safe and secure, now.").NextLine()
+		p.DangerText("The recovery phrase will not be displayed ever again, nor will you be able to retrieve it!").NextSection()
+		p.DangerText("Also, creating a wallet through this command is DEPRECATED. Please, use the `create` command.").NextSection()
 	}
 
 	p.BlueArrow().InfoText("Run the service").NextLine()
 	p.Text("Now, you can run the service. See the following command:").NextSection()
-	p.Code(fmt.Sprintf("%s service run --help", os.Args[0])).NextSection()
+	p.Code(fmt.Sprintf("%s service run --help", os.Args[0])).NextLine()
 }

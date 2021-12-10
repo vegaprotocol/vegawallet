@@ -9,62 +9,69 @@ import (
 
 func TestTaintKeys(t *testing.T) {
 	// given
-	home, cleanUpFn := NewTempDir(t)
-	defer cleanUpFn(t)
-
+	home := t.TempDir()
 	_, passphraseFilePath := NewPassphraseFile(t, home)
-
 	walletName := vgrand.RandomStr(5)
 
-	cmd := []string{
+	// when
+	createWalletResp, err := WalletCreate(t, []string{
 		"--home", home,
 		"--output", "json",
 		"--wallet", walletName,
 		"--passphrase-file", passphraseFilePath,
-	}
-
-	// when
-	generateKeyResp1, err := KeyGenerate(t, append(cmd,
-		"--meta", "name:key-1,role:validation",
-	))
+	})
 
 	// then
 	require.NoError(t, err)
-	AssertGenerateKey(t, generateKeyResp1).
-		WithWalletCreation().
+	AssertCreateWallet(t, createWalletResp).
 		WithName(walletName).
-		WithMeta(map[string]string{"name": "key-1", "role": "validation"}).
 		LocatedUnder(home)
 
 	// when
-	err = KeyTaint(t, append(cmd,
-		"--pubkey", generateKeyResp1.Key.KeyPair.PublicKey,
-	))
+	err = KeyTaint(t, []string{
+		"--home", home,
+		"--output", "json",
+		"--wallet", walletName,
+		"--passphrase-file", passphraseFilePath,
+		"--pubkey", createWalletResp.Key.PublicKey,
+	})
 
 	// then
 	require.NoError(t, err)
 
 	// when
-	descResp, err := KeyDescribe(t, append(cmd,
-		"--pubkey", generateKeyResp1.Key.KeyPair.PublicKey,
-	))
+	descResp, err := KeyDescribe(t, []string{
+		"--home", home,
+		"--output", "json",
+		"--wallet", walletName,
+		"--passphrase-file", passphraseFilePath,
+		"--pubkey", createWalletResp.Key.PublicKey,
+	})
 
 	// then
 	require.NoError(t, err)
 	AssertDescribeKey(t, descResp).WithTainted(true)
 
 	// when
-	err = KeyUntaint(t, append(cmd,
-		"--pubkey", generateKeyResp1.Key.KeyPair.PublicKey,
-	))
+	err = KeyUntaint(t, []string{
+		"--home", home,
+		"--output", "json",
+		"--wallet", walletName,
+		"--passphrase-file", passphraseFilePath,
+		"--pubkey", createWalletResp.Key.PublicKey,
+	})
 
 	// then
 	require.NoError(t, err)
 
 	// when
-	descResp, err = KeyDescribe(t, append(cmd,
-		"--pubkey", generateKeyResp1.Key.KeyPair.PublicKey,
-	))
+	descResp, err = KeyDescribe(t, []string{
+		"--home", home,
+		"--output", "json",
+		"--wallet", walletName,
+		"--passphrase-file", passphraseFilePath,
+		"--pubkey", createWalletResp.Key.PublicKey,
+	})
 
 	// then
 	require.NoError(t, err)

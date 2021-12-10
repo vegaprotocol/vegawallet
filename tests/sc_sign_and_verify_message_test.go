@@ -10,14 +10,9 @@ import (
 
 func TestSignMessage(t *testing.T) {
 	// given
-	home, cleanUpFn := NewTempDir(t)
-	defer cleanUpFn(t)
-
+	home := t.TempDir()
 	_, passphraseFilePath := NewPassphraseFile(t, home)
-
-	mnemonic := "swing ceiling chaos green put insane ripple desk match tip melt usual shrug turkey renew icon parade veteran lens govern path rough page render"
-	mnemonicFilePath := NewFile(t, home, "mnemonic.txt", mnemonic)
-
+	recoveryPhraseFilePath := NewFile(t, home, "recovery-phrase.txt", testRecoveryPhrase)
 	walletName := vgrand.RandomStr(5)
 
 	// when
@@ -26,7 +21,7 @@ func TestSignMessage(t *testing.T) {
 		"--output", "json",
 		"--wallet", walletName,
 		"--passphrase-file", passphraseFilePath,
-		"--mnemonic-file", mnemonicFilePath,
+		"--recovery-phrase-file", recoveryPhraseFilePath,
 		"--version", "2",
 	})
 
@@ -34,25 +29,6 @@ func TestSignMessage(t *testing.T) {
 	require.NoError(t, err)
 	AssertImportWallet(t, importWalletResp).
 		WithName(walletName).
-		LocatedUnder(home)
-
-	// when
-	generateKeyResp, err := KeyGenerate(t, []string{
-		"--home", home,
-		"--output", "json",
-		"--wallet", walletName,
-		"--passphrase-file", passphraseFilePath,
-		"--meta", "name:key-1,role:validation",
-	})
-
-	// then
-	require.NoError(t, err)
-	AssertGenerateKey(t, generateKeyResp).
-		WithoutWalletCreation().
-		WithName(walletName).
-		WithMeta(map[string]string{"name": "key-1", "role": "validation"}).
-		WithPublicKey("b5fd9d3c4ad553cb3196303b6e6df7f484cf7f5331a572a45031239fd71ad8a0").
-		WithPrivateKey("0bfdfb4a04e22d7252a4f24eb9d0f35a82efdc244cb0876d919361e61f6f56a2b5fd9d3c4ad553cb3196303b6e6df7f484cf7f5331a572a45031239fd71ad8a0").
 		LocatedUnder(home)
 
 	// given
@@ -64,7 +40,7 @@ func TestSignMessage(t *testing.T) {
 		"--home", home,
 		"--output", "json",
 		"--wallet", walletName,
-		"--pubkey", generateKeyResp.Key.KeyPair.PublicKey,
+		"--pubkey", importWalletResp.Key.PublicKey,
 		"--message", encodedMessage,
 		"--passphrase-file", passphraseFilePath,
 	})
@@ -78,7 +54,7 @@ func TestSignMessage(t *testing.T) {
 	verifyResp, err := Verify(t, []string{
 		"--home", home,
 		"--output", "json",
-		"--pubkey", generateKeyResp.Key.KeyPair.PublicKey,
+		"--pubkey", importWalletResp.Key.PublicKey,
 		"--message", encodedMessage,
 		"--signature", signResp.Signature,
 	})
@@ -90,14 +66,9 @@ func TestSignMessage(t *testing.T) {
 
 func TestSignMessageWithTaintedKey(t *testing.T) {
 	// given
-	home, cleanUpFn := NewTempDir(t)
-	defer cleanUpFn(t)
-
+	home := t.TempDir()
 	_, passphraseFilePath := NewPassphraseFile(t, home)
-
-	mnemonic := "swing ceiling chaos green put insane ripple desk match tip melt usual shrug turkey renew icon parade veteran lens govern path rough page render"
-	mnemonicFilePath := NewFile(t, home, "mnemonic.txt", mnemonic)
-
+	recoveryPhraseFilePath := NewFile(t, home, "recovery-phrase.txt", testRecoveryPhrase)
 	walletName := vgrand.RandomStr(5)
 
 	// when
@@ -106,7 +77,7 @@ func TestSignMessageWithTaintedKey(t *testing.T) {
 		"--output", "json",
 		"--wallet", walletName,
 		"--passphrase-file", passphraseFilePath,
-		"--mnemonic-file", mnemonicFilePath,
+		"--recovery-phrase-file", recoveryPhraseFilePath,
 		"--version", "2",
 	})
 
@@ -114,25 +85,7 @@ func TestSignMessageWithTaintedKey(t *testing.T) {
 	require.NoError(t, err)
 	AssertImportWallet(t, importWalletResp).
 		WithName(walletName).
-		LocatedUnder(home)
-
-	// when
-	generateKeyResp, err := KeyGenerate(t, []string{
-		"--home", home,
-		"--output", "json",
-		"--wallet", walletName,
-		"--passphrase-file", passphraseFilePath,
-		"--meta", "name:key-1,role:validation",
-	})
-
-	// then
-	require.NoError(t, err)
-	AssertGenerateKey(t, generateKeyResp).
-		WithoutWalletCreation().
-		WithName(walletName).
-		WithMeta(map[string]string{"name": "key-1", "role": "validation"}).
 		WithPublicKey("b5fd9d3c4ad553cb3196303b6e6df7f484cf7f5331a572a45031239fd71ad8a0").
-		WithPrivateKey("0bfdfb4a04e22d7252a4f24eb9d0f35a82efdc244cb0876d919361e61f6f56a2b5fd9d3c4ad553cb3196303b6e6df7f484cf7f5331a572a45031239fd71ad8a0").
 		LocatedUnder(home)
 
 	// when
@@ -140,7 +93,7 @@ func TestSignMessageWithTaintedKey(t *testing.T) {
 		"--home", home,
 		"--output", "json",
 		"--wallet", walletName,
-		"--pubkey", generateKeyResp.Key.KeyPair.PublicKey,
+		"--pubkey", importWalletResp.Key.PublicKey,
 		"--passphrase-file", passphraseFilePath,
 	})
 
@@ -156,7 +109,7 @@ func TestSignMessageWithTaintedKey(t *testing.T) {
 		"--home", home,
 		"--output", "json",
 		"--wallet", walletName,
-		"--pubkey", generateKeyResp.Key.KeyPair.PublicKey,
+		"--pubkey", importWalletResp.Key.PublicKey,
 		"--message", encodedMessage,
 		"--passphrase-file", passphraseFilePath,
 	})
@@ -170,7 +123,7 @@ func TestSignMessageWithTaintedKey(t *testing.T) {
 		"--home", home,
 		"--output", "json",
 		"--wallet", walletName,
-		"--pubkey", generateKeyResp.Key.KeyPair.PublicKey,
+		"--pubkey", importWalletResp.Key.PublicKey,
 		"--passphrase-file", passphraseFilePath,
 	})
 
@@ -182,7 +135,7 @@ func TestSignMessageWithTaintedKey(t *testing.T) {
 		"--home", home,
 		"--output", "json",
 		"--wallet", walletName,
-		"--pubkey", generateKeyResp.Key.KeyPair.PublicKey,
+		"--pubkey", importWalletResp.Key.PublicKey,
 		"--message", encodedMessage,
 		"--passphrase-file", passphraseFilePath,
 	})

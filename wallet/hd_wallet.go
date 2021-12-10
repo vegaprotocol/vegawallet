@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	// MaxEntropyByteSize is the entropy bytes size used for mnemonic
+	// MaxEntropyByteSize is the entropy bytes size used for recovery phrase
 	// generation.
 	MaxEntropyByteSize = 256
 	// MagicIndex is the registered HD wallet index for Vega's wallets.
@@ -33,36 +33,36 @@ type HDWallet struct {
 	id   string
 }
 
-// NewHDWallet creates a wallet with auto-generated mnemonic. This is useful to
-// create a brand-new wallet, without having to take care of the mnemonic
-// generation.
-// The generated mnemonic is returned alongside the created wallet.
+// NewHDWallet creates a wallet with auto-generated recovery phrase. This is
+// useful to create a brand-new wallet, without having to take care of the
+// recovery phrase generation.
+// The generated recovery phrase is returned alongside the created wallet.
 func NewHDWallet(name string) (*HDWallet, string, error) {
-	mnemonic, err := NewMnemonic()
+	recoveryPhrase, err := NewRecoveryPhrase()
 	if err != nil {
 		return nil, "", err
 	}
 
-	w, err := ImportHDWallet(name, mnemonic, LatestVersion)
+	w, err := ImportHDWallet(name, recoveryPhrase, LatestVersion)
 	if err != nil {
 		return nil, "", err
 	}
 
-	return w, mnemonic, err
+	return w, recoveryPhrase, err
 }
 
-// ImportHDWallet creates a wallet based on the mnemonic in input. This is
-// useful import or retrieve a wallet.
-func ImportHDWallet(name, mnemonic string, version uint32) (*HDWallet, error) {
-	if !bip39.IsMnemonicValid(mnemonic) {
-		return nil, ErrInvalidMnemonic
+// ImportHDWallet creates a wallet based on the recovery phrase in input. This
+// is useful import or retrieve a wallet.
+func ImportHDWallet(name, recoveryPhrase string, version uint32) (*HDWallet, error) {
+	if !bip39.IsMnemonicValid(recoveryPhrase) {
+		return nil, ErrInvalidRecoveryPhrase
 	}
 
 	if !IsVersionSupported(version) {
 		return nil, NewUnsupportedWalletVersionError(version)
 	}
 
-	walletNode, err := deriveWalletNodeFromMnemonic(mnemonic)
+	walletNode, err := deriveWalletNodeFromRecoveryPhrase(recoveryPhrase)
 	if err != nil {
 		return nil, err
 	}
@@ -108,7 +108,22 @@ func (w *HDWallet) DescribeKeyPair(pubKey string) (KeyPair, error) {
 	return &keyPair, nil
 }
 
-// DescribePublicKey returns all the information associated with a public key,
+// GetMasterKeyPair returns all the information associated to a master key pair.
+func (w *HDWallet) GetMasterKeyPair() (MasterKeyPair, error) {
+	if w.IsIsolated() {
+		return nil, ErrIsolatedWalletDoesNotHaveMasterKey
+	}
+
+	pubKey, priKey := w.node.Keypair()
+	keyPair, err := NewHDMasterKeyPair(pubKey, priKey)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get master key pair: %w", err)
+	}
+
+	return keyPair, nil
+}
+
+// DescribePublicKey returns all the information associated to a public key,
 // except the private key.
 func (w *HDWallet) DescribePublicKey(pubKey string) (PublicKey, error) {
 	keyPair, ok := w.keyRing.FindPair(pubKey)
@@ -336,21 +351,21 @@ func (w *HDWallet) deriveKeyNodeV2(nextIndex uint32) (*slip10.Node, error) {
 	return keyNode, nil
 }
 
-// NewMnemonic generates a mnemonic with an entropy of 256 bits.
-func NewMnemonic() (string, error) {
+// NewRecoveryPhrase generates a recovery phrase with an entropy of 256 bits.
+func NewRecoveryPhrase() (string, error) {
 	entropy, err := bip39.NewEntropy(MaxEntropyByteSize)
 	if err != nil {
 		return "", fmt.Errorf("couldn't create new wallet: %w", err)
 	}
-	mnemonic, err := bip39.NewMnemonic(entropy)
+	recoveryPhrase, err := bip39.NewMnemonic(entropy)
 	if err != nil {
-		return "", fmt.Errorf("couldn't create new wallet: %w", err)
+		return "", fmt.Errorf("couldn't create recovery phrase: %w", err)
 	}
-	return mnemonic, nil
+	return recoveryPhrase, nil
 }
 
-func deriveWalletNodeFromMnemonic(mnemonic string) (*slip10.Node, error) {
-	seed := bip39.NewSeed(mnemonic, "")
+func deriveWalletNodeFromRecoveryPhrase(recoveryPhrase string) (*slip10.Node, error) {
+	seed := bip39.NewSeed(recoveryPhrase, "")
 	masterNode, err := slip10.NewMasterNode(seed)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't create master node: %w", err)

@@ -16,7 +16,6 @@ func NewCmdKey(w io.Writer, rf *RootFlags) *cobra.Command {
 		Long:  "Manage Vega wallets' keys",
 	}
 
-	// create subcommands
 	cmd.AddCommand(NewCmdAnnotateKey(w, rf))
 	cmd.AddCommand(NewCmdGenerateKey(w, rf))
 	cmd.AddCommand(NewCmdIsolateKey(w, rf))
@@ -24,6 +23,7 @@ func NewCmdKey(w io.Writer, rf *RootFlags) *cobra.Command {
 	cmd.AddCommand(NewCmdDescribeKey(w, rf))
 	cmd.AddCommand(NewCmdTaintKey(w, rf))
 	cmd.AddCommand(NewCmdUntaintKey(w, rf))
+	cmd.AddCommand(NewCmdRotateKey(w, rf))
 	return cmd
 }
 
@@ -36,10 +36,7 @@ func printMeta(p *printer.InteractivePrinter, meta []wallet.Meta) {
 		}
 	}
 
-	for i, m := range meta {
-		if i != 0 {
-			p.NextLine()
-		}
-		p.WarningText(fmt.Sprintf("%-*s", padding, m.Key)).Text(" | ").WarningText(m.Value)
+	for _, m := range meta {
+		p.WarningText(fmt.Sprintf("%-*s", padding, m.Key)).Text(" | ").WarningText(m.Value).NextLine()
 	}
 }

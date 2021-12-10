@@ -21,7 +21,6 @@ import (
 	"code.vegaprotocol.io/vegawallet/wallet"
 
 	"github.com/golang/protobuf/jsonpb"
-	"github.com/golang/protobuf/proto"
 	"github.com/julienschmidt/httprouter"
 	"github.com/rs/cors"
 	"go.uber.org/zap"
@@ -69,18 +68,21 @@ func ParseCreateWalletRequest(r *http.Request) (*CreateWalletRequest, commands.E
 }
 
 // CreateWalletResponse returns the authentication token and the auto-generated
-// mnemonic of the created wallet.
+// recovery phrase of the created wallet.
 type CreateWalletResponse struct {
+	RecoveryPhrase string `json:"recoveryPhrase"`
+	// Deprecated: Use recoveryPhrase instead.
 	Mnemonic string `json:"mnemonic"`
 	Token    string `json:"token"`
 }
 
 // ImportWalletRequest describes the request for ImportWallet.
 type ImportWalletRequest struct {
-	Wallet     string `json:"wallet"`
-	Passphrase string `json:"passphrase"`
-	Mnemonic   string `json:"mnemonic"`
-	Version    uint32 `json:"version"`
+	Wallet         string `json:"wallet"`
+	Passphrase     string `json:"passphrase"`
+	Mnemonic       string `json:"mnemonic"`
+	RecoveryPhrase string `json:"recoveryPhrase"`
+	Version        uint32 `json:"version"`
 }
 
 func ParseImportWalletRequest(r *http.Request) (*ImportWalletRequest, commands.Errors) {
@@ -99,8 +101,12 @@ func ParseImportWalletRequest(r *http.Request) (*ImportWalletRequest, commands.E
 		errs.AddForProperty("passphrase", commands.ErrIsRequired)
 	}
 
-	if len(req.Mnemonic) == 0 {
-		errs.AddForProperty("mnemonic", commands.ErrIsRequired)
+	// Support for deprecated mnemonic property.
+	if len(req.RecoveryPhrase) == 0 {
+		req.RecoveryPhrase = req.Mnemonic
+	}
+	if len(req.RecoveryPhrase) == 0 {
+		errs.AddForProperty("recoveryPhrase", commands.ErrIsRequired)
 	}
 
 	if req.Version == 0 {
@@ -317,7 +323,7 @@ func ParseVerifyAnyRequest(r *http.Request) (*VerifyAnyRequest, commands.Errors)
 		return nil, errs
 	}
 
-	return req, errs
+	return req, nil
 }
 
 func ParseSubmitTransactionRequest(r *http.Request) (*walletpb.SubmitTransactionRequest, commands.Errors) {
@@ -381,7 +387,7 @@ type NetworkResponse struct {
 //go:generate go run github.com/golang/mock/mockgen -destination mocks/wallet_handler_mock.go -package mocks code.vegaprotocol.io/vegawallet/service WalletHandler
 type WalletHandler interface {
 	CreateWallet(name, passphrase string) (string, error)
-	ImportWallet(name, passphrase, mnemonic string, version uint32) error
+	ImportWallet(name, passphrase, recoveryPhrase string, version uint32) error
 	LoginWallet(name, passphrase string) error
 	LogoutWallet(name string)
 	SecureGenerateKeyPair(name, passphrase string, meta []wallet.Meta) (string, error)
@@ -405,7 +411,7 @@ type Auth interface {
 // NodeForward ...
 //go:generate go run github.com/golang/mock/mockgen -destination mocks/node_forward_mock.go -package mocks code.vegaprotocol.io/vegawallet/service NodeForward
 type NodeForward interface {
-	SendTx(context.Context, *commandspb.Transaction, api.SubmitTransactionRequest_Type) error
+	SendTx(context.Context, *commandspb.Transaction, api.SubmitTransactionRequest_Type) (string, error)
 	HealthCheck(context.Context) error
 	LastBlockHeight(context.Context) (uint64, error)
 }
@@ -426,24 +432,24 @@ func NewService(log *zap.Logger, net *network.Network, h WalletHandler, a Auth, 
 	}
 
 	s.handle(http.MethodPost, "/api/v1/auth/token", s.Login)
-	s.handle(http.MethodDelete, "/api/v1/auth/token", ExtractToken(s.Revoke))
+	s.handle(http.MethodDelete, "/api/v1/auth/token", extractToken(s.Revoke))
 
 	s.handle(http.MethodGet, "/api/v1/network", s.GetNetwork)
 
 	s.handle(http.MethodPost, "/api/v1/wallets", s.CreateWallet)
 	s.handle(http.MethodPost, "/api/v1/wallets/import", s.ImportWallet)
 
-	s.handle(http.MethodGet, "/api/v1/keys", ExtractToken(s.ListPublicKeys))
-	s.handle(http.MethodPost, "/api/v1/keys", ExtractToken(s.GenerateKeyPair))
-	s.handle(http.MethodGet, "/api/v1/keys/:keyid", ExtractToken(s.GetPublicKey))
-	s.handle(http.MethodPut, "/api/v1/keys/:keyid/taint", ExtractToken(s.TaintKey))
-	s.handle(http.MethodPut, "/api/v1/keys/:keyid/metadata", ExtractToken(s.UpdateMeta))
+	s.handle(http.MethodGet, "/api/v1/keys", extractToken(s.ListPublicKeys))
+	s.handle(http.MethodPost, "/api/v1/keys", extractToken(s.GenerateKeyPair))
+	s.handle(http.MethodGet, "/api/v1/keys/:keyid", extractToken(s.GetPublicKey))
+	s.handle(http.MethodPut, "/api/v1/keys/:keyid/taint", extractToken(s.TaintKey))
+	s.handle(http.MethodPut, "/api/v1/keys/:keyid/metadata", extractToken(s.UpdateMeta))
 
-	s.handle(http.MethodPost, "/api/v1/command", ExtractToken(s.SignTx))
-	s.handle(http.MethodPost, "/api/v1/command/sync", ExtractToken(s.SignTxSync))
-	s.handle(http.MethodPost, "/api/v1/command/commit", ExtractToken(s.SignTxCommit))
-	s.handle(http.MethodPost, "/api/v1/sign", ExtractToken(s.SignAny))
-	s.handle(http.MethodPost, "/api/v1/verify", ExtractToken(s.VerifyAny))
+	s.handle(http.MethodPost, "/api/v1/command", extractToken(s.SignTx))
+	s.handle(http.MethodPost, "/api/v1/command/sync", extractToken(s.SignTxSync))
+	s.handle(http.MethodPost, "/api/v1/command/commit", extractToken(s.SignTxCommit))
+	s.handle(http.MethodPost, "/api/v1/sign", extractToken(s.SignAny))
+	s.handle(http.MethodPost, "/api/v1/verify", s.VerifyAny)
 
 	s.handle(http.MethodGet, "/api/v1/version", s.Version)
 	s.handle(http.MethodGet, "/api/v1/status", s.Health)
@@ -466,7 +472,7 @@ func (s *Service) CreateWallet(w http.ResponseWriter, r *http.Request, _ httprou
 		return
 	}
 
-	mnemonic, err := s.handler.CreateWallet(req.Wallet, req.Passphrase)
+	recoveryPhrase, err := s.handler.CreateWallet(req.Wallet, req.Passphrase)
 	if err != nil {
 		s.writeBadRequestErr(w, err)
 		return
@@ -478,7 +484,11 @@ func (s *Service) CreateWallet(w http.ResponseWriter, r *http.Request, _ httprou
 		return
 	}
 
-	s.writeSuccess(w, CreateWalletResponse{Mnemonic: mnemonic, Token: token})
+	s.writeSuccess(w, CreateWalletResponse{
+		RecoveryPhrase: recoveryPhrase,
+		Mnemonic:       recoveryPhrase,
+		Token:          token,
+	})
 }
 
 func (s *Service) ImportWallet(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
@@ -488,7 +498,7 @@ func (s *Service) ImportWallet(w http.ResponseWriter, r *http.Request, _ httprou
 		return
 	}
 
-	err := s.handler.ImportWallet(req.Wallet, req.Passphrase, req.Mnemonic, req.Version)
+	err := s.handler.ImportWallet(req.Wallet, req.Passphrase, req.RecoveryPhrase, req.Version)
 	if err != nil {
 		s.writeBadRequestErr(w, err)
 		return
@@ -686,7 +696,7 @@ func (s *Service) SignAny(t string, w http.ResponseWriter, r *http.Request, _ ht
 	s.writeSuccess(w, res)
 }
 
-func (s *Service) VerifyAny(_ string, w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (s *Service) VerifyAny(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	req, errs := ParseVerifyAnyRequest(r)
 	if !errs.Empty() {
 		s.writeBadRequest(w, errs)
@@ -741,26 +751,34 @@ func (s *Service) signTx(token string, w http.ResponseWriter, r *http.Request, _
 		return
 	}
 
-	if req.Propagate {
-		if err := s.nodeForward.SendTx(r.Context(), tx, ty); err != nil {
-			if st, ok := status.FromError(err); ok {
-				var details []string
-				for _, v := range st.Details() {
-					v, ok := v.(*typespb.ErrorDetail)
-					if !ok {
-						s.writeError(w, newErrorResponse(fmt.Sprintf("couldn't cast status details to error details: %v", v)), http.StatusInternalServerError)
-					}
-					details = append(details, v.Message)
-				}
-				s.writeError(w, newErrorWithDetails(err.Error(), details), http.StatusInternalServerError)
-			} else {
-				s.writeInternalError(w, err)
-			}
-			return
-		}
+	if !req.Propagate {
+		s.writeSuccess(w, nil)
+		return
 	}
 
-	s.writeSuccessProto(w, tx, http.StatusOK)
+	txHash, err := s.nodeForward.SendTx(r.Context(), tx, ty)
+	if err != nil {
+		if st, ok := status.FromError(err); ok {
+			var details []string
+			for _, v := range st.Details() {
+				v, ok := v.(*typespb.ErrorDetail)
+				if !ok {
+					s.writeError(w, newErrorResponse(fmt.Sprintf("couldn't cast status details to error details: %v", v)), http.StatusInternalServerError)
+				}
+				details = append(details, v.Message)
+			}
+			s.writeError(w, newErrorWithDetails(err.Error(), details), http.StatusInternalServerError)
+		} else {
+			s.writeInternalError(w, err)
+		}
+		return
+	}
+
+	s.writeSuccess(w, struct {
+		TxHash string `json:"txHash"`
+	}{
+		TxHash: txHash,
+	})
 }
 
 func (s *Service) Version(w http.ResponseWriter, _ *http.Request, _ httprouter.Params) {
@@ -869,19 +887,6 @@ func (s *Service) writeSuccess(w http.ResponseWriter, data interface{}) {
 		return
 	}
 	s.log.Info(fmt.Sprintf("%d %s", http.StatusOK, http.StatusText(http.StatusOK)))
-}
-
-func (s *Service) writeSuccessProto(w http.ResponseWriter, data proto.Message, status int) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-
-	marshaller := jsonpb.Marshaler{}
-	if err := marshaller.Marshal(w, data); err != nil {
-		s.log.Error("couldn't marshal proto message", zap.Error(err))
-		s.writeInternalError(w, fmt.Errorf("couldn't marshal proto message: %w", err))
-		return
-	}
-	s.log.Info(fmt.Sprintf("%d %s", status, http.StatusText(status)))
 }
 
 func (s *Service) handle(method string, path string, handle httprouter.Handle) {
