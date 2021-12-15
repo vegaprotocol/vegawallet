@@ -12,7 +12,7 @@
 - [](https://github.com/vegaprotocol/vegawallet/pull/) -
 
 ### 🔥 Removal
-- [](https://github.com/vegaprotocol/vegawallet/pull/) -
+- [435](https://github.com/vegaprotocol/vegawallet/pull/435)  Support signing commands offline with `command sign`
 
 ### 🐛 Fixes
 - [](https://github.com/vegaprotocol/vegawallet/pull/) -

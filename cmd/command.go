@@ -14,5 +14,6 @@ func NewCmdCommand(w io.Writer, rf *RootFlags) *cobra.Command {
 	}
 
 	cmd.AddCommand(NewCmdCommandSend(w, rf))
+	cmd.AddCommand(NewCmdCommandSign(w, rf))
 	return cmd
 }

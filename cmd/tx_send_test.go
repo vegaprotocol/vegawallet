@@ -131,7 +131,7 @@ func testSendTxFlagsMissingTxFails(t *testing.T) {
 func testSendTxFlagsMalformedTxFails(t *testing.T) {
 	// given
 	f := newSendTxFlags(t)
-	f.RawTx = `<request>Not gonna support that</request>`
+	f.RawTx = vgrand.RandomStr(5)
 
 	// when
 	req, err := f.Validate()

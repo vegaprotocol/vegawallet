@@ -567,11 +567,47 @@ func (d *DescribeNetworkAssertion) WithRESTConfig(hosts []string) *DescribeNetwo
 	return d
 }
 
+type SignCommandResponse struct {
+	Transaction string `json:"base64Transaction"`
+}
+
+func SignCommand(t *testing.T, args []string) (*SignCommandResponse, error) {
+	t.Helper()
+	argsWithCmd := []string{"command", "sign"}
+	argsWithCmd = append(argsWithCmd, args...)
+	output, err := ExecuteCmd(t, argsWithCmd)
+	if err != nil {
+		return nil, err
+	}
+	resp := &SignCommandResponse{}
+	if err := json.Unmarshal(output, resp); err != nil {
+		t.Fatalf("couldn't unmarshal command output: %v", err)
+	}
+	return resp, nil
+}
+
+type SignCommandAssertion struct {
+	t    *testing.T
+	resp *SignCommandResponse
+}
+
+func AssertSignCommand(t *testing.T, resp *SignCommandResponse) *SignCommandAssertion {
+	t.Helper()
+
+	assert.NotNil(t, resp)
+	assert.NotEmpty(t, resp.Transaction)
+
+	return &SignCommandAssertion{
+		t:    t,
+		resp: resp,
+	}
+}
+
 type SignMessageResponse struct {
 	Signature string `json:"signature"`
 }
 
-func Sign(t *testing.T, args []string) (*SignMessageResponse, error) {
+func SignMessage(t *testing.T, args []string) (*SignMessageResponse, error) {
 	t.Helper()
 	argsWithCmd := []string{"sign"}
 	argsWithCmd = append(argsWithCmd, args...)
@@ -586,24 +622,24 @@ func Sign(t *testing.T, args []string) (*SignMessageResponse, error) {
 	return resp, nil
 }
 
-type SignAssertion struct {
+type SignMessageAssertion struct {
 	t    *testing.T
 	resp *SignMessageResponse
 }
 
-func AssertSign(t *testing.T, resp *SignMessageResponse) *SignAssertion {
+func AssertSignMessage(t *testing.T, resp *SignMessageResponse) *SignMessageAssertion {
 	t.Helper()
 
 	assert.NotNil(t, resp)
 	assert.NotEmpty(t, resp.Signature)
 
-	return &SignAssertion{
+	return &SignMessageAssertion{
 		t:    t,
 		resp: resp,
 	}
 }
 
-func (a *SignAssertion) WithSignature(expected string) *SignAssertion {
+func (a *SignMessageAssertion) WithSignature(expected string) *SignMessageAssertion {
 	assert.Equal(a.t, expected, a.resp.Signature)
 	return a
 }
@@ -612,7 +648,7 @@ type VerifyMessageResponse struct {
 	IsValid bool `json:"isValid"`
 }
 
-func Verify(t *testing.T, args []string) (*VerifyMessageResponse, error) {
+func VerifyMessage(t *testing.T, args []string) (*VerifyMessageResponse, error) {
 	t.Helper()
 	argsWithCmd := []string{"verify"}
 	argsWithCmd = append(argsWithCmd, args...)
@@ -632,7 +668,7 @@ type VerifyAssertion struct {
 	resp *VerifyMessageResponse
 }
 
-func AssertVerify(t *testing.T, resp *VerifyMessageResponse) *VerifyAssertion {
+func AssertVerifyMessage(t *testing.T, resp *VerifyMessageResponse) *VerifyAssertion {
 	t.Helper()
 
 	assert.NotNil(t, resp)

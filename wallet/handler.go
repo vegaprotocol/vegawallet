@@ -7,6 +7,8 @@ import (
 
 	"code.vegaprotocol.io/protos/commands"
 	commandspb "code.vegaprotocol.io/protos/vega/commands/v1"
+	walletpb "code.vegaprotocol.io/protos/vega/wallet/v1"
+	wcommands "code.vegaprotocol.io/vegawallet/commands"
 	"github.com/golang/protobuf/proto"
 )
 
@@ -497,6 +499,52 @@ func ListWallets(store Store) (*ListWalletsResponse, error) {
 	resp.Wallets = append(resp.Wallets, ws...)
 
 	return resp, nil
+}
+
+type SignCommandRequest struct {
+	Wallet        string
+	Passphrase    string
+	TxBlockHeight uint64
+	Request       *walletpb.SubmitTransactionRequest
+}
+
+type SignCommandResponse struct {
+	Base64Transaction string `json:"base64Transaction"`
+}
+
+func SignCommand(store Store, req *SignCommandRequest) (*SignCommandResponse, error) {
+	w, err := getWallet(store, req.Wallet, req.Passphrase)
+	if err != nil {
+		return nil, err
+	}
+
+	data, err := wcommands.ToMarshaledInputData(req.Request, req.TxBlockHeight)
+	if err != nil {
+		return nil, fmt.Errorf("couldn't marshal input data: %w", err)
+	}
+
+	pubKey := req.Request.GetPubKey()
+	signature, err := w.SignTx(pubKey, data)
+	if err != nil {
+		return nil, fmt.Errorf("couldn't sign transaction: %w", err)
+	}
+
+	protoSignature := &commandspb.Signature{
+		Value:   signature.Value,
+		Algo:    signature.Algo,
+		Version: signature.Version,
+	}
+
+	tx := commands.NewTransaction(pubKey, data, protoSignature)
+
+	rawTx, err := proto.Marshal(tx)
+	if err != nil {
+		return nil, fmt.Errorf("couldn't marshal transaction: %w", err)
+	}
+
+	return &SignCommandResponse{
+		Base64Transaction: base64.StdEncoding.EncodeToString(rawTx),
+	}, nil
 }
 
 type SignMessageRequest struct {
