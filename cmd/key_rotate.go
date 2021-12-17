@@ -160,7 +160,7 @@ func (f *RotateKeyFlags) Validate() (*wallet.RotateKeyRequest, error) {
 func PrintRotateKeyResponse(w io.Writer, req *wallet.RotateKeyResponse) {
 	p := printer.NewInteractivePrinter(w)
 	p.CheckMark().SuccessText("Key rotation succeeded").NextSection()
-	p.Text("Base64 encoded transaction:").NextLine()
+	p.Text("Transaction (base64-encoded):").NextLine()
 	p.Text(req.Base64Transaction).NextLine()
 	p.Text("Master public key used:").NextLine()
 	p.Text(req.MasterPublicKey).NextLine()

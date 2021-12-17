@@ -2,7 +2,11 @@ name: Verify PR has a linked issue
 
 on:
   pull_request:
-    types: [ edited, synchronize, opened, reopened ]
+    types:
+      - edited
+      - synchronize
+      - opened
+      - reopened
   check_run:
 
 jobs:

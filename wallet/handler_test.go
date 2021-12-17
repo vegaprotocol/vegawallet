@@ -6,7 +6,9 @@ import (
 	"sort"
 	"testing"
 
+	"code.vegaprotocol.io/protos/vega"
 	commandspb "code.vegaprotocol.io/protos/vega/commands/v1"
+	walletpb "code.vegaprotocol.io/protos/vega/wallet/v1"
 	vgrand "code.vegaprotocol.io/shared/libs/rand"
 	"code.vegaprotocol.io/vegawallet/wallet"
 	"code.vegaprotocol.io/vegawallet/wallet/mocks"
@@ -539,6 +541,75 @@ func TestListWalletsSucceeds(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, resp)
 	assert.Equal(t, expectedResp, resp)
+}
+
+func TestSignCommand(t *testing.T) {
+	t.Run("Sign message succeeds", testSignCommandSucceeds)
+	t.Run("Sign message of non-existing wallet fails", testSignCommandWithNonExistingWalletFails)
+}
+
+func testSignCommandSucceeds(t *testing.T) {
+	// given
+	w := importWalletWithKey(t)
+	kp := w.ListKeyPairs()[0]
+
+	req := &wallet.SignCommandRequest{
+		Wallet: w.Name(),
+		Request: &walletpb.SubmitTransactionRequest{
+			PubKey:    kp.PublicKey(),
+			Propagate: false,
+			Command: &walletpb.SubmitTransactionRequest_VoteSubmission{
+				VoteSubmission: &commandspb.VoteSubmission{
+					ProposalId: vgrand.RandomStr(5),
+					Value:      vega.Vote_VALUE_YES,
+				},
+			},
+		},
+		Passphrase: "passphrase",
+	}
+
+	// setup
+	store := handlerMocks(t)
+	store.EXPECT().WalletExists(req.Wallet).Times(1).Return(true)
+	store.EXPECT().GetWallet(req.Wallet, req.Passphrase).Times(1).Return(w, nil)
+
+	// when
+	resp, err := wallet.SignCommand(store, req)
+
+	// then
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	assert.NotEmpty(t, resp.Base64Transaction)
+}
+
+func testSignCommandWithNonExistingWalletFails(t *testing.T) {
+	// given
+	req := &wallet.SignCommandRequest{
+		Wallet: vgrand.RandomStr(5),
+		Request: &walletpb.SubmitTransactionRequest{
+			PubKey:    vgrand.RandomStr(5),
+			Propagate: false,
+			Command: &walletpb.SubmitTransactionRequest_VoteSubmission{
+				VoteSubmission: &commandspb.VoteSubmission{
+					ProposalId: vgrand.RandomStr(5),
+					Value:      vega.Vote_VALUE_YES,
+				},
+			},
+		},
+		Passphrase: "passphrase",
+	}
+
+	// setup
+	store := handlerMocks(t)
+	store.EXPECT().WalletExists(req.Wallet).Times(1).Return(false)
+	store.EXPECT().GetWallet(req.Wallet, req.Passphrase).Times(0)
+
+	// when
+	resp, err := wallet.SignCommand(store, req)
+
+	// then
+	require.Error(t, err)
+	assert.Nil(t, resp)
 }
 
 func TestSignMessage(t *testing.T) {

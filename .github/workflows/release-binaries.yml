@@ -12,7 +12,9 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        arch: [ amd64, arm64 ]
+        arch:
+          - amd64
+          - arm64
     env:
       GOARCH: ${{ matrix.arch }}
       CGO_ENABLED: 0
@@ -61,7 +63,9 @@ jobs:
     runs-on: macos-latest
     strategy:
       matrix:
-        arch: [ amd64, arm64 ]
+        arch:
+          - amd64
+          - arm64
     env:
       GOARCH: ${{ matrix.arch }}
       CGO_ENABLED: 0
@@ -133,7 +137,9 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        arch: [ amd64, arm64 ]
+        arch:
+          - amd64
+          - arm64
     env:
       GOARCH: ${{ matrix.arch }}
       CGO_ENABLED: 0

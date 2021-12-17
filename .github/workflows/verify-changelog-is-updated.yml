@@ -2,10 +2,10 @@ name: Verify CHANGELOG is updated
 
 on:
   pull_request:
-    types: [ review_requested, ready_for_review ]
     branches:
-      - develop
       - master
+      - develop
+  check_run:
 
 jobs:
   changelog-checker:
