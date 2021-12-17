@@ -2,7 +2,8 @@ name: Add issue to team board
 
 on:
   issues:
-    types: [ opened ]
+    types:
+      - opened
 
 jobs:
   add-to-team-board:

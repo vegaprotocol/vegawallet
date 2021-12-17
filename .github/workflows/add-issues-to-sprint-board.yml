@@ -2,7 +2,8 @@ name: Add issue to sprint board
 
 on:
   issues:
-    types: [ opened ]
+    types:
+      - opened
 
 jobs:
   add-to-sprint-board:
