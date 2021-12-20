@@ -53,8 +53,7 @@ func TestListKeys(t *testing.T) {
 	// then
 	require.NoError(t, err)
 	AssertGenerateKey(t, generateKeyResp).
-		WithMeta(map[string]string{"name": DefaultMetaName(t, walletName, 2)}).
-		LocatedUnder(home)
+		WithMeta(map[string]string{"name": DefaultMetaName(t, walletName, 2)})
 
 	// when
 	listKeysResp2, err := KeyList(t, []string{
@@ -69,5 +68,5 @@ func TestListKeys(t *testing.T) {
 	require.NotNil(t, listKeysResp2)
 	require.Len(t, listKeysResp2.Keys, 2)
 	assert.Equal(t, listKeysResp2.Keys[0].PublicKey, createWalletResp.Key.PublicKey)
-	assert.Equal(t, listKeysResp2.Keys[1].PublicKey, generateKeyResp.Key.PublicKey)
+	assert.Equal(t, listKeysResp2.Keys[1].PublicKey, generateKeyResp.PublicKey)
 }

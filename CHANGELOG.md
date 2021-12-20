@@ -3,7 +3,12 @@
 ## Unreleased (0.12.0)
 
 ### 🚨 Breaking changes
-- [](https://github.com/vegaprotocol/vegawallet/pull/) -
+- [446](https://github.com/vegaprotocol/vegawallet/pull/446) - Wallet creation with `key generate` has been removed in favor of `create` command
+- [446](https://github.com/vegaprotocol/vegawallet/pull/446) - Flag `--console-proxy` has been removed in favor of `--with-console`
+- [446](https://github.com/vegaprotocol/vegawallet/pull/446) - Flag `--mnemonic-file` has been removed in favor of `--recovery-phrase-file`
+- [446](https://github.com/vegaprotocol/vegawallet/pull/446) - Field `mnemonic` in HTTP response for wallet creation has been removed in favor of `recoveryPhrase`
+- [446](https://github.com/vegaprotocol/vegawallet/pull/446) - Field `mnemonic` in HTTP request for wallet import has been removed in favor of `recoveryPhrase`
+- [446](https://github.com/vegaprotocol/vegawallet/pull/446) - The key printed on the JSON output for the `key generate` command is now at the root of the response, just like the output of the `key describe` command.
 
 ### 🗑️  Deprecation
 - [](https://github.com/vegaprotocol/vegawallet/pull/) -

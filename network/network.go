@@ -11,9 +11,6 @@ type Network struct {
 	API         APIConfig
 	TokenDApp   TokenDAppConfig
 	Console     ConsoleConfig
-
-	// TO REMOVE Once the tools use the new API.GRPC
-	Nodes GRPCConfig
 }
 
 type APIConfig struct {
