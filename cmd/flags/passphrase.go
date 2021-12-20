@@ -15,7 +15,7 @@ var (
 	ErrPassphraseRequiredWithoutTTY = errors.New("passphrase flag is required without TTY")
 	ErrPassphraseDoNotMatch         = errors.New("passphrases do not match")
 	ErrPassphraseMustBeSpecified    = errors.New("passphrase must be specified")
-	ErrMsysPasswordInput            = errors.New("password input is not supported on msys. use --passphrase-file or a standard windows terminal.")
+	ErrMsysPasswordInput            = errors.New("password input is not supported on msys (use --passphrase-file or a standard windows terminal)")
 )
 
 type PassphraseGetterWithOps func(bool) (string, error)
