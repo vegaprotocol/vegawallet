@@ -18,6 +18,7 @@
 - [453](https://github.com/vegaprotocol/vegawallet/pull/453) - Added support for new liquidity provision commands
 - [456](https://github.com/vegaprotocol/vegawallet/pull/456) - Update protos to support non-negative string pegged orders offset
 - [463](https://github.com/vegaprotocol/vegawallet/pull/463) - Improve the `vegawallet version` command output to ensure users doesn't mistake the software version with their wallet version
+- [443](https://github.com/vegaprotocol/vegawallet/pull/443) - Notarization of MacOS binaries
 
 ### 🔥 Removal
 - [446](https://github.com/vegaprotocol/vegawallet/pull/446) - Wallet creation with `key generate` has been removed in favor of `create` command
