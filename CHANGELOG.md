@@ -10,6 +10,7 @@
 
 ### 🛠  Improvements
 - [427](https://github.com/vegaprotocol/vegawallet/pull/427) - Sign MacOS binaries
+- [444](https://github.com/vegaprotocol/vegawallet/pull/444) - Fail gracefully when trying to get password input on msys
 
 ### 🔥 Removal
 - [435](https://github.com/vegaprotocol/vegawallet/pull/435) - Support signing commands offline with `command sign`

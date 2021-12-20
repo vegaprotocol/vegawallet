@@ -15,6 +15,7 @@ var (
 	ErrPassphraseRequiredWithoutTTY = errors.New("passphrase flag is required without TTY")
 	ErrPassphraseDoNotMatch         = errors.New("passphrases do not match")
 	ErrPassphraseMustBeSpecified    = errors.New("passphrase must be specified")
+	ErrMsysPasswordInput            = errors.New("password input is not supported on msys (use --passphrase-file or a standard windows terminal)")
 )
 
 type PassphraseGetterWithOps func(bool) (string, error)
@@ -102,7 +103,15 @@ func ReadPassphraseInputWithOpts(withConfirmation bool) (string, error) {
 	return passphrase, nil
 }
 
+func runningInMsys() bool {
+	ms := os.Getenv("MSYSTEM")
+	return ms != ""
+}
+
 func promptForPassphrase(msg ...string) (string, error) {
+	if runningInMsys() {
+		return "", ErrMsysPasswordInput
+	}
 	fmt.Print(msg[0]) //nolint:forbidigo
 	password, err := term.ReadPassword(int(os.Stdin.Fd()))
 	if err != nil {
