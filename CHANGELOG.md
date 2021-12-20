@@ -10,6 +10,7 @@
 
 ### 🛠  Improvements
 - [427](https://github.com/vegaprotocol/vegawallet/pull/427) - Sign MacOS binaries
+- [444](https://github.com/vegaprotocol/vegawallet/pull/444) - Fail gracefully when trying to get password input on msys
 
 ### 🔥 Removal
 - [435](https://github.com/vegaprotocol/vegawallet/pull/435) - Support signing commands offline with `command sign`
@@ -46,7 +47,6 @@
 - [421](https://github.com/vegaprotocol/vegawallet/pull/421) - Improve help texts
 - [423](https://github.com/vegaprotocol/vegawallet/pull/423) - Support launching the token dApp in `service run` command
 - [427](https://github.com/vegaprotocol/vegawallet/pull/427) - Sign MacOS binaries
-- [444](https://github.com/vegaprotocol/vegawallet/pull/444) - Fail gracefully when trying to get password input on msys
 
 ### 🔥 Removal
 - [387](https://github.com/vegaprotocol/vegawallet/pull/387) - Remove network initialisation in favor of `network import`
