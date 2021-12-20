@@ -46,7 +46,6 @@
 - [420](https://github.com/vegaprotocol/vegawallet/pull/420) - Verify initialisation state on service run
 - [421](https://github.com/vegaprotocol/vegawallet/pull/421) - Improve help texts
 - [423](https://github.com/vegaprotocol/vegawallet/pull/423) - Support launching the token dApp in `service run` command
-- [427](https://github.com/vegaprotocol/vegawallet/pull/427) - Sign MacOS binaries
 
 ### 🔥 Removal
 - [387](https://github.com/vegaprotocol/vegawallet/pull/387) - Remove network initialisation in favor of `network import`
