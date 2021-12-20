@@ -19,7 +19,7 @@ func DoYouConfirm() (bool, error) {
 	}
 	fmt.Println() //nolint:forbidigo
 
-	answer = strings.ToLower(strings.Trim(answer, " \n\t"))
+	answer = strings.ToLower(strings.Trim(answer, " \r\n\t"))
 
 	switch answer {
 	case "yes", "y":
