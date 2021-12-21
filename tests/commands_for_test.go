@@ -384,6 +384,46 @@ func (a *ImportNetworkAssertion) LocatedUnder(home string) *ImportNetworkAsserti
 	return a
 }
 
+type LocateNetworksResponse struct {
+	Path string `json:"path"`
+}
+
+func NetworkLocate(t *testing.T, args []string) (*LocateNetworksResponse, error) {
+	t.Helper()
+	argsWithCmd := []string{"network", "locate"}
+	argsWithCmd = append(argsWithCmd, args...)
+	output, err := ExecuteCmd(t, argsWithCmd)
+	if err != nil {
+		return nil, err
+	}
+	resp := &LocateNetworksResponse{}
+	if err := json.Unmarshal(output, resp); err != nil {
+		t.Fatalf("couldn't unmarshal command output: %v", err)
+	}
+	return resp, nil
+}
+
+type LocateNetworkAssertion struct {
+	t    *testing.T
+	resp *LocateNetworksResponse
+}
+
+func AssertLocateNetwork(t *testing.T, resp *LocateNetworksResponse) *LocateNetworkAssertion {
+	t.Helper()
+
+	assert.NotNil(t, resp)
+
+	return &LocateNetworkAssertion{
+		t:    t,
+		resp: resp,
+	}
+}
+
+func (a *LocateNetworkAssertion) LocatedUnder(p string) *LocateNetworkAssertion {
+	assert.True(a.t, strings.HasPrefix(a.resp.Path, p), "path returned doesn't start with home path")
+	return a
+}
+
 type ListNetworksResponse struct {
 	Networks []string `json:"networks"`
 }

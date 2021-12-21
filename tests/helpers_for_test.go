@@ -61,3 +61,7 @@ URL = "console.example.com"
 LocalPort = 1847
 `, name)
 }
+
+func RandomPath() string {
+	return filepath.Join(vgrand.RandomStr(5), vgrand.RandomStr(5))
+}
