@@ -4,7 +4,7 @@ on:
   push:
     # Sequence of patterns matched against refs/tags
     tags:
-      - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
+      - "v*" # Push events to matching v*, i.e. v1.0, v20.15.10
 
 jobs:
   release-linux:
@@ -169,8 +169,14 @@ jobs:
               -X code.vegaprotocol.io/vegawallet/version.VersionHash=$hash `
             "
 
-      - name: "[TODO] Sign binary"
-        run: echo "TODO"
+      - name: "Sign binary"
+        uses: Dana-Prajea/code-sign-action@98c79121b376beab8d6a9484f445089db4461bca
+        with:
+          certificate: ${{ secrets.WINDOWS_CERTIFICATE }}
+          password: ${{ secrets.WINDOWS_CERTIFICATE_PASS }}
+          certificatesha1: ${{ secrets.WINDOWS_CERTIFICATE_HASH }}
+          folder: "build"
+          timestampUrl: "http://timestamp.comodoca.com/authenticode"
 
       - name: Bundle binary in archive
         uses: thedoctor0/zip-release@master
