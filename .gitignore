@@ -3,6 +3,7 @@ vegawallet
 
 # Golang
 vendor/
+build/
 
 # MacOS
 .DS_Store

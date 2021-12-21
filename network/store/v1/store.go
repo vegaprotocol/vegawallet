@@ -64,12 +64,10 @@ func (s *Store) GetNetwork(name string) (*network.Network, error) {
 	if name != net.Name {
 		return nil, NewDifferentNetworkNamesError(name, net.Name)
 	}
-	migrateNetwork(net)
 	return net, nil
 }
 
 func (s *Store) SaveNetwork(net *network.Network) error {
-	migrateNetwork(net)
 	if err := paths.WriteStructuredFile(s.nameToFilePath(net.Name), net); err != nil {
 		return fmt.Errorf("couldn't write network configuration file: %w", err)
 	}
@@ -87,15 +85,4 @@ func (s *Store) nameToFilePath(network string) string {
 
 func (s *Store) fileNameToName(fileName string) string {
 	return fileName[:len(fileName)-len(fileExt)]
-}
-
-// migrateNetwork ensures the legacy configuration is migrated to the new
-// one.
-// TO REMOVE Once the tools use the new API.GRPC.
-func migrateNetwork(net *network.Network) {
-	if len(net.Nodes.Hosts) > 0 && len(net.API.GRPC.Hosts) == 0 {
-		net.API.GRPC = net.Nodes
-	}
-	// void this legacy property to avoid confusion
-	net.Nodes = network.GRPCConfig{}
 }

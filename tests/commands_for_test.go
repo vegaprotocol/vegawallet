@@ -72,23 +72,15 @@ func KeyAnnotate(t *testing.T, args []string) error {
 }
 
 type GenerateKeyResponse struct {
-	Wallet struct {
-		Name     string `json:"name"`
-		Version  uint32 `json:"version"`
-		FilePath string `json:"filePath"`
-		Mnemonic string `json:"mnemonic,omitempty"`
-	} `json:"wallet"`
-	Key struct {
-		PublicKey string `json:"publicKey"`
-		Algorithm struct {
-			Name    string `json:"name"`
-			Version uint32 `json:"version"`
-		} `json:"algorithm"`
-		Meta []struct {
-			Key   string `json:"key"`
-			Value string `json:"value"`
-		} `json:"meta"`
-	} `json:"key"`
+	PublicKey string `json:"publicKey"`
+	Algorithm struct {
+		Name    string `json:"name"`
+		Version uint32 `json:"version"`
+	} `json:"algorithm"`
+	Meta []struct {
+		Key   string `json:"key"`
+		Value string `json:"value"`
+	} `json:"meta"`
 }
 
 func KeyGenerate(t *testing.T, args []string) (*GenerateKeyResponse, error) {
@@ -115,13 +107,9 @@ func AssertGenerateKey(t *testing.T, resp *GenerateKeyResponse) *GenerateKeyAsse
 	t.Helper()
 
 	assert.NotNil(t, resp)
-	assert.NotEmpty(t, resp.Wallet.Name)
-	assert.NotEmpty(t, resp.Wallet.Version)
-	assert.NotEmpty(t, resp.Wallet.FilePath)
-	assert.FileExists(t, resp.Wallet.FilePath)
-	assert.NotEmpty(t, resp.Key.PublicKey)
-	assert.Equal(t, "vega/ed25519", resp.Key.Algorithm.Name)
-	assert.Equal(t, uint32(1), resp.Key.Algorithm.Version)
+	assert.NotEmpty(t, resp.PublicKey)
+	assert.Equal(t, "vega/ed25519", resp.Algorithm.Name)
+	assert.Equal(t, uint32(1), resp.Algorithm.Version)
 
 	return &GenerateKeyAssertion{
 		t:    t,
@@ -129,27 +117,9 @@ func AssertGenerateKey(t *testing.T, resp *GenerateKeyResponse) *GenerateKeyAsse
 	}
 }
 
-// Deprecated: key generate will not generate wallet anymore.
-func (a *GenerateKeyAssertion) WithWalletCreation() *GenerateKeyAssertion {
-	assert.NotEmpty(a.t, a.resp.Wallet.Mnemonic)
-	return a
-}
-
-// Deprecated: key generate will not generate wallet anymore.
-func (a *GenerateKeyAssertion) WithName(expected string) *GenerateKeyAssertion {
-	assert.Equal(a.t, expected, a.resp.Wallet.Name)
-	return a
-}
-
-// Deprecated: key generate will not generate wallet anymore.
-func (a *GenerateKeyAssertion) WithVersion(expected uint32) *GenerateKeyAssertion {
-	assert.Equal(a.t, expected, a.resp.Wallet.Version)
-	return a
-}
-
 func (a *GenerateKeyAssertion) WithMeta(expected map[string]string) *GenerateKeyAssertion {
 	meta := map[string]string{}
-	for _, m := range a.resp.Key.Meta {
+	for _, m := range a.resp.Meta {
 		meta[m.Key] = m.Value
 	}
 	assert.Equal(a.t, expected, meta)
@@ -157,12 +127,7 @@ func (a *GenerateKeyAssertion) WithMeta(expected map[string]string) *GenerateKey
 }
 
 func (a *GenerateKeyAssertion) WithPublicKey(expected string) *GenerateKeyAssertion {
-	assert.Equal(a.t, expected, a.resp.Key.PublicKey)
-	return a
-}
-
-func (a *GenerateKeyAssertion) LocatedUnder(home string) *GenerateKeyAssertion {
-	assert.True(a.t, strings.HasPrefix(a.resp.Wallet.FilePath, home), "wallet has not been generated under home directory")
+	assert.Equal(a.t, expected, a.resp.PublicKey)
 	return a
 }
 

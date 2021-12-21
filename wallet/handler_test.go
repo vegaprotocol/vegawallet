@@ -69,11 +69,11 @@ func testAnnotatingKeySucceeds(t *testing.T) {
 }
 
 func TestGenerateKey(t *testing.T) {
-	t.Run("Generating keys in non-existing wallet succeeds", testGenerateKeyInNonExistingWalletSucceeds)
+	t.Run("Generating keys in non-existing wallet fails", testGenerateKeyInNonExistingWalletFails)
 	t.Run("Generating keys in existing wallet succeeds", testGenerateKeyInExistingWalletSucceeds)
 }
 
-func testGenerateKeyInNonExistingWalletSucceeds(t *testing.T) {
+func testGenerateKeyInNonExistingWalletFails(t *testing.T) {
 	// given
 	req := &wallet.GenerateKeyRequest{
 		Wallet: vgrand.RandomStr(5),
@@ -85,36 +85,17 @@ func testGenerateKeyInNonExistingWalletSucceeds(t *testing.T) {
 	}
 
 	// setup
-	var generatedWallet wallet.Wallet
-	captureWallet := func(w wallet.Wallet, passphrase string) error {
-		generatedWallet = w
-		return nil
-	}
-	fakePath := fmt.Sprintf("/path/to/wallets/%s", req.Wallet)
 	store := handlerMocks(t)
 	store.EXPECT().WalletExists(req.Wallet).Times(1).Return(false)
-	store.EXPECT().GetWalletPath(req.Wallet).Times(1).Return(fakePath)
-	store.EXPECT().SaveWallet(gomock.Any(), req.Passphrase).Times(1).DoAndReturn(captureWallet)
+	store.EXPECT().GetWalletPath(req.Wallet).Times(0)
+	store.EXPECT().SaveWallet(gomock.Any(), req.Passphrase).Times(0)
 
 	// when
 	resp, err := wallet.GenerateKey(store, req)
 
 	// then
-	require.NoError(t, err)
-	require.NotNil(t, resp)
-	// verify generated wallet
-	assert.Equal(t, req.Wallet, generatedWallet.Name())
-	assert.Len(t, generatedWallet.ListKeyPairs(), 1)
-	keyPair := generatedWallet.ListKeyPairs()[0]
-	assert.Equal(t, req.Metadata, keyPair.Meta())
-	// verify response
-	assert.Equal(t, req.Wallet, resp.Wallet.Name)
-	assert.Equal(t, fakePath, resp.Wallet.FilePath)
-	assert.NotEmpty(t, resp.Wallet.Mnemonic)
-	assert.Equal(t, keyPair.PublicKey(), resp.Key.PublicKey)
-	assert.Equal(t, keyPair.AlgorithmName(), resp.Key.Algorithm.Name)
-	assert.Equal(t, keyPair.AlgorithmVersion(), resp.Key.Algorithm.Version)
-	assert.Equal(t, keyPair.Meta(), resp.Key.Meta)
+	require.ErrorIs(t, err, wallet.ErrWalletDoesNotExists)
+	require.Nil(t, resp)
 }
 
 func testGenerateKeyInExistingWalletSucceeds(t *testing.T) {
@@ -149,13 +130,10 @@ func testGenerateKeyInExistingWalletSucceeds(t *testing.T) {
 	keyPair := w.ListKeyPairs()[0]
 	assert.Equal(t, req.Metadata, keyPair.Meta())
 	// verify response
-	assert.Equal(t, req.Wallet, resp.Wallet.Name)
-	assert.Equal(t, fakePath, resp.Wallet.FilePath)
-	assert.Empty(t, resp.Wallet.Mnemonic)
-	assert.Equal(t, keyPair.PublicKey(), resp.Key.PublicKey)
-	assert.Equal(t, keyPair.AlgorithmName(), resp.Key.Algorithm.Name)
-	assert.Equal(t, keyPair.AlgorithmVersion(), resp.Key.Algorithm.Version)
-	assert.Equal(t, keyPair.Meta(), resp.Key.Meta)
+	assert.Equal(t, keyPair.PublicKey(), resp.PublicKey)
+	assert.Equal(t, keyPair.AlgorithmName(), resp.Algorithm.Name)
+	assert.Equal(t, keyPair.AlgorithmVersion(), resp.Algorithm.Version)
+	assert.Equal(t, keyPair.Meta(), resp.Meta)
 }
 
 func TestTaintKey(t *testing.T) {

@@ -55,8 +55,7 @@ func TestGenerateKey(t *testing.T) {
 	// then
 	require.NoError(t, err)
 	AssertGenerateKey(t, generateKeyResp).
-		WithMeta(map[string]string{"name": "key-2", "role": "validation"}).
-		LocatedUnder(home)
+		WithMeta(map[string]string{"name": "key-2", "role": "validation"})
 
 	// when
 	descResp, err = KeyDescribe(t, []string{
@@ -64,7 +63,7 @@ func TestGenerateKey(t *testing.T) {
 		"--output", "json",
 		"--wallet", walletName,
 		"--passphrase-file", passphraseFilePath,
-		"--pubkey", generateKeyResp.Key.PublicKey,
+		"--pubkey", generateKeyResp.PublicKey,
 	})
 
 	// then

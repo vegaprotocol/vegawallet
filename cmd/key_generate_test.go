@@ -19,11 +19,13 @@ func TestGenerateKeyFlags(t *testing.T) {
 
 func testGenerateKeyFlagsValidFlagsSucceeds(t *testing.T) {
 	// given
+	testDir := t.TempDir()
 	walletName := vgrand.RandomStr(10)
+	passphrase, passphraseFilePath := NewPassphraseFile(t, testDir)
 
 	f := &cmd.GenerateKeyFlags{
 		Wallet:         walletName,
-		PassphraseFile: "/some/fake/path",
+		PassphraseFile: passphraseFilePath,
 		RawMetadata:    []string{"name:my-wallet", "role:validation"},
 	}
 
@@ -33,8 +35,7 @@ func testGenerateKeyFlagsValidFlagsSucceeds(t *testing.T) {
 			{Key: "name", Value: "my-wallet"},
 			{Key: "role", Value: "validation"},
 		},
-		// This is expected as it's not set during flags validation
-		Passphrase: "",
+		Passphrase: passphrase,
 	}
 
 	// when
@@ -74,9 +75,11 @@ func testGenerateKeyFlagsInvalidMetadataFails(t *testing.T) {
 
 func newGenerateKeyFlags(t *testing.T) *cmd.GenerateKeyFlags {
 	t.Helper()
+	testDir := t.TempDir()
+	_, passphraseFilePath := NewPassphraseFile(t, testDir)
 	return &cmd.GenerateKeyFlags{
-		Wallet:         vgrand.RandomStr(10),
-		PassphraseFile: "/some/fake/path",
+		Wallet:         vgrand.RandomStr(5),
+		PassphraseFile: passphraseFilePath,
 		RawMetadata:    []string{"name:my-wallet", "role:validation"},
 	}
 }

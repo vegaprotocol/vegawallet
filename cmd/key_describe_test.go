@@ -20,8 +20,6 @@ func TestDescribeKeyFlags(t *testing.T) {
 func testKeyDescribeValidFlagsSucceeds(t *testing.T) {
 	// given
 	testDir := t.TempDir()
-
-	// given
 	passphrase, passphraseFilePath := NewPassphraseFile(t, testDir)
 	walletName := vgrand.RandomStr(10)
 	pubKey := vgrand.RandomStr(10)

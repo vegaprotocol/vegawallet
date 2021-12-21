@@ -71,16 +71,13 @@ func ParseCreateWalletRequest(r *http.Request) (*CreateWalletRequest, commands.E
 // recovery phrase of the created wallet.
 type CreateWalletResponse struct {
 	RecoveryPhrase string `json:"recoveryPhrase"`
-	// Deprecated: Use recoveryPhrase instead.
-	Mnemonic string `json:"mnemonic"`
-	Token    string `json:"token"`
+	Token          string `json:"token"`
 }
 
 // ImportWalletRequest describes the request for ImportWallet.
 type ImportWalletRequest struct {
 	Wallet         string `json:"wallet"`
 	Passphrase     string `json:"passphrase"`
-	Mnemonic       string `json:"mnemonic"`
 	RecoveryPhrase string `json:"recoveryPhrase"`
 	Version        uint32 `json:"version"`
 }
@@ -101,10 +98,6 @@ func ParseImportWalletRequest(r *http.Request) (*ImportWalletRequest, commands.E
 		errs.AddForProperty("passphrase", commands.ErrIsRequired)
 	}
 
-	// Support for deprecated mnemonic property.
-	if len(req.RecoveryPhrase) == 0 {
-		req.RecoveryPhrase = req.Mnemonic
-	}
 	if len(req.RecoveryPhrase) == 0 {
 		errs.AddForProperty("recoveryPhrase", commands.ErrIsRequired)
 	}
@@ -486,7 +479,6 @@ func (s *Service) CreateWallet(w http.ResponseWriter, r *http.Request, _ httprou
 
 	s.writeSuccess(w, CreateWalletResponse{
 		RecoveryPhrase: recoveryPhrase,
-		Mnemonic:       recoveryPhrase,
 		Token:          token,
 	})
 }

@@ -122,11 +122,6 @@ func BuildCmdRunService(w io.Writer, handler RunServiceHandler, rf *RootFlags) *
 		"Network configuration to use",
 	)
 	cmd.Flags().BoolVar(&f.WithConsole,
-		"console-proxy",
-		false,
-		"Start the Vega console proxy and open the console in the default browser (DEPRECATED, use --with-console, instead)",
-	)
-	cmd.Flags().BoolVar(&f.WithConsole,
 		"with-console",
 		false,
 		"Start the Vega console behind a proxy and open it in the default browser",
