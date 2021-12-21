@@ -16,6 +16,7 @@ func NewCmdNetwork(w io.Writer, rf *RootFlags) *cobra.Command {
 	cmd.AddCommand(NewCmdListNetworks(w, rf))
 	cmd.AddCommand(NewCmdImportNetwork(w, rf))
 	cmd.AddCommand(NewCmdDescribeNetwork(w, rf))
+	cmd.AddCommand(NewCmdLocateNetworks(w, rf))
 	cmd.AddCommand(NewCmdDeleteNetwork(w, rf))
 	return cmd
 }
