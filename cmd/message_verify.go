@@ -22,7 +22,7 @@ var (
 
 	verifyMessageExample = cli.Examples(`
 		# Verify the signature of a message
-		vegawallet verify --message MESSAGE --signature SIGNATURE --pubkey PUBKEY
+		vegawallet message verify --message MESSAGE --signature SIGNATURE --pubkey PUBKEY
 	`)
 )
 

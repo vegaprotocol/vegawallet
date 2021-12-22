@@ -9,6 +9,7 @@
 - [446](https://github.com/vegaprotocol/vegawallet/pull/446) - Field `mnemonic` in HTTP response for wallet creation has been removed in favor of `recoveryPhrase`
 - [446](https://github.com/vegaprotocol/vegawallet/pull/446) - Field `mnemonic` in HTTP request for wallet import has been removed in favor of `recoveryPhrase`
 - [446](https://github.com/vegaprotocol/vegawallet/pull/446) - The key printed on the JSON output for the `key generate` command is now at the root of the response, just like the output of the `key describe` command.
+- [450](https://github.com/vegaprotocol/vegawallet/pull/450) - Move `sign` and `verify` commands to a a `message` subcommand, e.g. `message sign` and `message verify`
 
 ### 🗑️  Deprecation
 - [](https://github.com/vegaprotocol/vegawallet/pull/) -
