@@ -22,8 +22,6 @@ const (
 	ForwarderRequestTimeout    = 5 * time.Second
 )
 
-var ErrNetworkDoesNotHaveGRPCHostConfigured = errors.New("network does not have gRPC hosts configured")
-
 type Error struct {
 	Err string `json:"error"`
 }

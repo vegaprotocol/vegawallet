@@ -31,8 +31,8 @@ func getHostsFromNetwork(rf *RootFlags, networkName string) ([]string, error) {
 		return nil, err
 	}
 
-	if len(net.API.GRPC.Hosts) == 0 {
-		return nil, ErrNetworkDoesNotHaveGRPCHostConfigured
+	if err := net.EnsureCanConnectGRPCNode(); err != nil {
+		return nil, err
 	}
 
 	return net.API.GRPC.Hosts, nil

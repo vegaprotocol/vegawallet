@@ -17,6 +17,7 @@
 - [427](https://github.com/vegaprotocol/vegawallet/pull/427) - Sign MacOS binaries
 - [444](https://github.com/vegaprotocol/vegawallet/pull/444) - Fail gracefully when trying to get password input on msys
 - [448](https://github.com/vegaprotocol/vegawallet/pull/448) - Add command `network locate` to locate the folder in which network configuration files are stored.
+- [451](https://github.com/vegaprotocol/vegawallet/pull/451) - Verify network configuration prior exploitation to raise user-friendly errors.
 
 ### 🔥 Removal
 - [435](https://github.com/vegaprotocol/vegawallet/pull/435) - Support signing commands offline with `command sign`
