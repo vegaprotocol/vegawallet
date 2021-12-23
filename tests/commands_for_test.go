@@ -614,7 +614,7 @@ type SignMessageResponse struct {
 
 func SignMessage(t *testing.T, args []string) (*SignMessageResponse, error) {
 	t.Helper()
-	argsWithCmd := []string{"sign"}
+	argsWithCmd := []string{"message", "sign"}
 	argsWithCmd = append(argsWithCmd, args...)
 	output, err := ExecuteCmd(t, argsWithCmd)
 	if err != nil {
@@ -655,7 +655,7 @@ type VerifyMessageResponse struct {
 
 func VerifyMessage(t *testing.T, args []string) (*VerifyMessageResponse, error) {
 	t.Helper()
-	argsWithCmd := []string{"verify"}
+	argsWithCmd := []string{"message", "verify"}
 	argsWithCmd = append(argsWithCmd, args...)
 	output, err := ExecuteCmd(t, argsWithCmd)
 	if err != nil {
