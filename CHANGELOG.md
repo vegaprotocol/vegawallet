@@ -23,7 +23,7 @@
 
 ### 🐛 Fixes
 - [440](https://github.com/vegaprotocol/vegawallet/pull/440) - Fix confirmation prompt on windows
-
+- [449](https://github.com/vegaprotocol/vegawallet/pull/449) - Don't use unicode glyphs on windows
 
 ## 0.11.0
 
