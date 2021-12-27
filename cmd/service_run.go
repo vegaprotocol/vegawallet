@@ -202,6 +202,10 @@ func RunService(w io.Writer, rf *RootFlags, f *RunServiceFlags) error {
 		return fmt.Errorf("couldn't initialise network store: %w", err)
 	}
 
+	if err := verifyNetworkConfig(cfg, f); err != nil {
+		return err
+	}
+
 	logLevel := cfg.Level.String()
 	if len(f.LogLevel) != 0 {
 		logLevel = f.LogLevel
@@ -256,15 +260,36 @@ func RunService(w io.Writer, rf *RootFlags, f *RunServiceFlags) error {
 	} else if rf.Output == flags.JSONOutput {
 		log.Info(fmt.Sprintf("HTTP service started at: %s", serviceHost))
 	}
+	defer func() {
+		if err = srv.Stop(); err != nil {
+			log.Error("error while stopping HTTP server", zap.Error(err))
+		} else {
+			log.Info("HTTP server stopped with success")
+		}
+	}()
 
 	var cs *proxy.Proxy
 	if f.WithConsole {
 		cs = startConsole(log, rf, !f.NoBrowser, cfg, cancel, p)
+		defer func() {
+			if err = cs.Stop(); err != nil {
+				log.Error("error while stopping console proxy", zap.Error(err))
+			} else {
+				log.Info("console proxy stopped with success")
+			}
+		}()
 	}
 
 	var tokenDApp *proxy.Proxy
 	if f.WithTokenDApp {
 		tokenDApp = startTokenDApp(log, rf, !f.NoBrowser, cfg, cancel, p)
+		defer func() {
+			if err = tokenDApp.Stop(); err != nil {
+				log.Error("error while stopping token dApp proxy", zap.Error(err))
+			} else {
+				log.Info("token dApp proxy stopped with success")
+			}
+		}()
 	}
 
 	if rf.Output == flags.InteractiveOutput {
@@ -277,32 +302,23 @@ func RunService(w io.Writer, rf *RootFlags, f *RunServiceFlags) error {
 
 	waitSig(ctx, cancel, log)
 
-	if cs != nil {
-		if err = cs.Stop(); err != nil {
-			log.Error("error while stopping console proxy", zap.Error(err))
-		} else {
-			log.Info("console proxy stopped with success")
+	return nil
+}
+
+func verifyNetworkConfig(cfg *network.Network, f *RunServiceFlags) error {
+	if err := cfg.EnsureCanConnectGRPCNode(); err != nil {
+		return err
+	}
+	if f.WithConsole {
+		if err := cfg.EnsureCanConnectConsole(); err != nil {
+			return err
 		}
 	}
-
-	if tokenDApp != nil {
-		if err = tokenDApp.Stop(); err != nil {
-			log.Error("error while stopping token dApp proxy", zap.Error(err))
-		} else {
-			log.Info("token dApp proxy stopped with success")
+	if f.WithTokenDApp {
+		if err := cfg.EnsureCanConnectTokenDApp(); err != nil {
+			return err
 		}
 	}
-
-	if err = srv.Stop(); err != nil {
-		log.Error("error while stopping HTTP server", zap.Error(err))
-	} else {
-		log.Info("HTTP server stopped with success")
-	}
-
-	if rf.Output == flags.InteractiveOutput {
-		p.CheckMark().SuccessText("Service stopped").NextLine()
-	}
-
 	return nil
 }
 
