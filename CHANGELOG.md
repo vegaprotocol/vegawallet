@@ -15,6 +15,7 @@
 - [448](https://github.com/vegaprotocol/vegawallet/pull/448) - Add command `network locate` to locate the folder in which network configuration files are stored.
 - [451](https://github.com/vegaprotocol/vegawallet/pull/451) - Verify network configuration prior exploitation to raise user-friendly errors.
 - [435](https://github.com/vegaprotocol/vegawallet/pull/435) - Support signing commands offline with `command sign`
+- [453](https://github.com/vegaprotocol/vegawallet/pull/453) - Added support for new liquidity provision commands
 
 ### 🔥 Removal
 - [446](https://github.com/vegaprotocol/vegawallet/pull/446) - Wallet creation with `key generate` has been removed in favor of `create` command

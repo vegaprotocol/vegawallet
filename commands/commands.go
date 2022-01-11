@@ -51,6 +51,10 @@ func CheckSubmitTransactionRequest(req *walletpb.SubmitTransactionRequest) comma
 		cmdErr = commands.CheckUndelegateSubmission(cmd.UndelegateSubmission)
 	case *walletpb.SubmitTransactionRequest_DelegateSubmission:
 		cmdErr = commands.CheckDelegateSubmission(cmd.DelegateSubmission)
+	case *walletpb.SubmitTransactionRequest_LiquidityProvisionCancellation:
+		cmdErr = commands.CheckLiquidityProvisionCancellation(cmd.LiquidityProvisionCancellation)
+	case *walletpb.SubmitTransactionRequest_LiquidityProvisionAmendment:
+		cmdErr = commands.CheckLiquidityProvisionAmendment(cmd.LiquidityProvisionAmendment)
 	default:
 		errs.AddForProperty("input_data.command", commands.ErrIsNotSupported)
 	}
@@ -125,6 +129,14 @@ func wrapRequestCommandIntoInputData(data *commandspb.InputData, req *walletpb.S
 	case *walletpb.SubmitTransactionRequest_UndelegateSubmission:
 		data.Command = &commandspb.InputData_UndelegateSubmission{
 			UndelegateSubmission: req.GetUndelegateSubmission(),
+		}
+	case *walletpb.SubmitTransactionRequest_LiquidityProvisionCancellation:
+		data.Command = &commandspb.InputData_LiquidityProvisionCancellation{
+			LiquidityProvisionCancellation: req.GetLiquidityProvisionCancellation(),
+		}
+	case *walletpb.SubmitTransactionRequest_LiquidityProvisionAmendment:
+		data.Command = &commandspb.InputData_LiquidityProvisionAmendment{
+			LiquidityProvisionAmendment: req.GetLiquidityProvisionAmendment(),
 		}
 	default:
 		panic(fmt.Sprintf("command %v is not supported", cmd))
