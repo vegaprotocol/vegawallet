@@ -28,6 +28,7 @@
 - [440](https://github.com/vegaprotocol/vegawallet/pull/440) - Fix confirmation prompt on windows
 - [449](https://github.com/vegaprotocol/vegawallet/pull/449) - Don't use unicode glyphs on windows
 - [444](https://github.com/vegaprotocol/vegawallet/pull/444) - Fail gracefully when trying to get password input on msys
+- [455](https://github.com/vegaprotocol/vegawallet/pull/455) - New Liquidity Provisioning commands removed requirement for Id field
 
 ## 0.11.0
 
