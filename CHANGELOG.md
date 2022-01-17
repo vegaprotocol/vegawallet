@@ -16,6 +16,7 @@
 - [451](https://github.com/vegaprotocol/vegawallet/pull/451) - Verify network configuration prior exploitation to raise user-friendly errors.
 - [435](https://github.com/vegaprotocol/vegawallet/pull/435) - Support signing commands offline with `command sign`
 - [453](https://github.com/vegaprotocol/vegawallet/pull/453) - Added support for new liquidity provision commands
+- [456](https://github.com/vegaprotocol/vegawallet/pull/456) - Update protos to support non-negative string pegged orders offset
 
 ### 🔥 Removal
 - [446](https://github.com/vegaprotocol/vegawallet/pull/446) - Wallet creation with `key generate` has been removed in favor of `create` command
