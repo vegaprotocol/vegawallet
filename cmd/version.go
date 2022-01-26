@@ -1,7 +1,9 @@
 package cmd
 
 import (
+	"fmt"
 	"io"
+	"os"
 
 	"code.vegaprotocol.io/vegawallet/cmd/cli"
 	"code.vegaprotocol.io/vegawallet/cmd/flags"
@@ -57,6 +59,11 @@ func BuildCmdGetVersion(w io.Writer, handler GetVersionHandler, rf *RootFlags) *
 func PrintGetVersionResponse(w io.Writer, resp *version.GetVersionResponse) {
 	p := printer.NewInteractivePrinter(w)
 
-	p.Text("Version:").NextLine().WarningText(resp.Version).NextSection()
+	p.Text("Software version:").NextLine().WarningText(resp.Version).NextSection()
 	p.Text("Git hash:").NextLine().WarningText(resp.GitHash).NextSection()
+
+	p.RedArrow().DangerText("Important").NextLine()
+	p.Text("This command does NOT give you your wallet version.").NextLine()
+	p.Text("To get this information, see the following command:").NextSection()
+	p.Code(fmt.Sprintf("%s info --help", os.Args[0])).NextLine()
 }
