@@ -8,10 +8,10 @@ import (
 
 	api "code.vegaprotocol.io/protos/vega/api/v1"
 	commandspb "code.vegaprotocol.io/protos/vega/commands/v1"
+	vglog "code.vegaprotocol.io/shared/libs/zap"
 	"code.vegaprotocol.io/vegawallet/cmd/cli"
 	"code.vegaprotocol.io/vegawallet/cmd/flags"
 	"code.vegaprotocol.io/vegawallet/cmd/printer"
-	vglog "code.vegaprotocol.io/vegawallet/libs/zap"
 	"code.vegaprotocol.io/vegawallet/network"
 	"code.vegaprotocol.io/vegawallet/node"
 	"github.com/golang/protobuf/proto"

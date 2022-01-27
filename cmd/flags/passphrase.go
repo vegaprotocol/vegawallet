@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	vgfs "code.vegaprotocol.io/shared/libs/fs"
-	vgterm "code.vegaprotocol.io/vegawallet/libs/term"
+	vgterm "code.vegaprotocol.io/shared/libs/term"
 	"golang.org/x/term"
 )
 

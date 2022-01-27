@@ -11,11 +11,11 @@ import (
 	"syscall"
 	"text/template"
 
+	vglog "code.vegaprotocol.io/shared/libs/zap"
 	"code.vegaprotocol.io/shared/paths"
 	"code.vegaprotocol.io/vegawallet/cmd/cli"
 	"code.vegaprotocol.io/vegawallet/cmd/flags"
 	"code.vegaprotocol.io/vegawallet/cmd/printer"
-	vglog "code.vegaprotocol.io/vegawallet/libs/zap"
 	"code.vegaprotocol.io/vegawallet/network"
 	netstore "code.vegaprotocol.io/vegawallet/network/store/v1"
 	"code.vegaprotocol.io/vegawallet/node"

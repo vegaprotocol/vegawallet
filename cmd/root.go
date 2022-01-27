@@ -11,6 +11,8 @@ import (
 	"code.vegaprotocol.io/vegawallet/cmd/flags"
 	"code.vegaprotocol.io/vegawallet/cmd/printer"
 	"code.vegaprotocol.io/vegawallet/version"
+
+	vgversion "code.vegaprotocol.io/shared/libs/version"
 	"github.com/blang/semver/v4"
 	"github.com/spf13/cobra"
 )
@@ -39,7 +41,7 @@ func NewCmdRoot(w io.Writer) *cobra.Command {
 	vh := func() (*semver.Version, error) {
 		ctx, cancel := context.WithTimeout(context.Background(), requestTimeout)
 		defer cancel()
-		v, err := version.Check(version.BuildReleasesRequestFromGithub(ctx), version.Version)
+		v, err := version.Check(vgversion.BuildGithubReleasesRequestFrom(ctx, version.ReleasesAPI), version.Version)
 		if err != nil {
 			return nil, fmt.Errorf("couldn't check latest releases: %w", err)
 		}
@@ -87,7 +89,7 @@ func BuildCmdRoot(w io.Writer, vh CheckVersionHandler) *cobra.Command {
 
 				if v != nil {
 					p.Text("Version ").SuccessText(v.String()).Text(" is available. Your current version is ").DangerText(version.Version).Text(".").NextLine()
-					p.Text("Download the latest version at: ").Underline(version.GetReleaseURL(v)).NextSection()
+					p.Text("Download the latest version at: ").Underline(vgversion.GetGithubReleaseURL(version.ReleasesAPI, v)).NextSection()
 				}
 			}
 			return nil
