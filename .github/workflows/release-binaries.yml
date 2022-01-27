@@ -16,6 +16,7 @@ jobs:
           - amd64
           - arm64
     env:
+      GOOS: linux
       GOARCH: ${{ matrix.arch }}
       CGO_ENABLED: 0
     steps:
@@ -67,6 +68,7 @@ jobs:
           - amd64
           - arm64
     env:
+      GOOS: darwin
       GOARCH: ${{ matrix.arch }}
       CGO_ENABLED: 0
     steps:
@@ -99,6 +101,7 @@ jobs:
       - name: Import DeveloperID Certificate
         uses: apple-actions/import-codesign-certs@v1
         with:
+          keychain: vega
           create-keychain: true
           p12-file-base64: ${{ secrets.MACOS_CERTIFICATE }}
           p12-password: ${{ secrets.MACOS_CERTIFICATE_PASS }}
@@ -125,6 +128,21 @@ jobs:
           directory: build
           filename: vegawallet-${{ env.GOOS }}-${{ env.GOARCH }}.zip
 
+      - name: Store notarization credentials
+        run: |
+          xcrun notarytool store-credentials vega \
+            --apple-id "${{ secrets.MACOS_NOTARIZATION_APPLE_ID }}" \
+            --team-id "${{ secrets.MACOS_NOTARIZATION_TEAM_ID }}" \
+            --password "${{ secrets.MACOS_NOTARIZATION_PASS }}"
+
+      - name: Notarize app
+        run: |
+          xcrun notarytool submit ./build/vegawallet-${{ env.GOOS }}-${{ env.GOARCH }}.zip \
+            --keychain-profile vega \
+            --output-format json \
+            --timeout "90m" \
+            --wait
+
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
@@ -141,6 +159,7 @@ jobs:
           - amd64
           - arm64
     env:
+      GOOS: windows
       GOARCH: ${{ matrix.arch }}
       CGO_ENABLED: 0
     steps:
