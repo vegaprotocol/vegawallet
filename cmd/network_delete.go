@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"io"
 
+	vgterm "code.vegaprotocol.io/shared/libs/term"
 	"code.vegaprotocol.io/shared/paths"
 	"code.vegaprotocol.io/vegawallet/cmd/cli"
 	"code.vegaprotocol.io/vegawallet/cmd/flags"
 	"code.vegaprotocol.io/vegawallet/cmd/printer"
-	vgterm "code.vegaprotocol.io/vegawallet/libs/term"
 	"code.vegaprotocol.io/vegawallet/network"
 	netstore "code.vegaprotocol.io/vegawallet/network/store/v1"
 	"github.com/spf13/cobra"
