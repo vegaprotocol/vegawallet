@@ -89,7 +89,7 @@ func BuildCmdRoot(w io.Writer, vh CheckVersionHandler) *cobra.Command {
 
 				if v != nil {
 					p.Text("Version ").SuccessText(v.String()).Text(" is available. Your current version is ").DangerText(version.Version).Text(".").NextLine()
-					p.Text("Download the latest version at: ").Underline(vgversion.GetGithubReleaseURL(version.ReleasesAPI, v)).NextSection()
+					p.Text("Download the latest version at: ").Underline(vgversion.GetGithubReleaseURL(version.ReleasesURL, v)).NextSection()
 				}
 			}
 			return nil
