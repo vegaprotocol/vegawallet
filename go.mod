@@ -4,7 +4,7 @@ go 1.17
 
 require (
 	code.vegaprotocol.io/protos v0.47.1-0.20220128102417-182c89e00442
-	code.vegaprotocol.io/shared v0.0.0-20220127162227-dbe0bfac4efa
+	code.vegaprotocol.io/shared v0.0.0-20220128163854-7eab67fa60d2
 	github.com/blang/semver/v4 v4.0.0
 	github.com/cenkalti/backoff/v4 v4.0.2
 	github.com/dgrijalva/jwt-go/v4 v4.0.0-preview1
@@ -26,6 +26,7 @@ require (
 )
 
 require (
+	github.com/BurntSushi/toml v1.0.0 // indirect
 	github.com/adrg/xdg v0.3.3 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0 // indirect
@@ -36,7 +37,6 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
-	github.com/zannen/toml v0.3.2 // indirect
 	go.uber.org/atomic v1.7.0 // indirect
 	go.uber.org/multierr v1.6.0 // indirect
 	golang.org/x/crypto v0.0.0-20210817164053-32db794688a5 // indirect
