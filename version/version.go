@@ -8,6 +8,7 @@ import (
 
 const (
 	ReleasesAPI        = "https://api.github.com/repos/vegaprotocol/vegawallet/releases"
+	ReleasesURL        = "https://github.com/vegaprotocol/vegawallet/releases"
 	defaultVersionHash = "unknown"
 	defaultVersion     = "v0.12.0+dev"
 )
