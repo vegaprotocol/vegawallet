@@ -10,14 +10,14 @@ cloud.google.com/go/datastore v1.0.0/go.mod h1:LXYbyblFSglQ5pkeyhO+Qmw7ukd3C+pD7
 cloud.google.com/go/firestore v1.1.0/go.mod h1:ulACoGHTpvq5r8rxGJ4ddJZBZqakUQqClKRT5SZwBmk=
 cloud.google.com/go/pubsub v1.0.1/go.mod h1:R0Gpsv3s54REJCy4fxDixWD93lHJMoZTyQ2kNxGRt3I=
 cloud.google.com/go/storage v1.0.0/go.mod h1:IhtSnM/ZTZV8YYJWCY8RULGVqBDmpoyjwiyrjsg+URw=
-code.vegaprotocol.io/protos v0.47.1-0.20220127103033-82bb68d654eb h1:P78Y9OnURVweFaErPyQXmbQDHsgGaI0ZImFVPuH3Tek=
-code.vegaprotocol.io/protos v0.47.1-0.20220127103033-82bb68d654eb/go.mod h1:KqJcg62sUHV0qEhlZIZojEypzk3V1ZE3tBS+wdqjddU=
 code.vegaprotocol.io/protos v0.47.1-0.20220128102417-182c89e00442 h1:0jBV7Ltp2SpUzmO1u1JStgVoF1vbuBvIkd7pVg9cqdM=
 code.vegaprotocol.io/protos v0.47.1-0.20220128102417-182c89e00442/go.mod h1:KqJcg62sUHV0qEhlZIZojEypzk3V1ZE3tBS+wdqjddU=
-code.vegaprotocol.io/shared v0.0.0-20220127162227-dbe0bfac4efa h1:9w5f5T/ufidwfEf58qIlgBalpoIwza4MZM24JG9P9dU=
-code.vegaprotocol.io/shared v0.0.0-20220127162227-dbe0bfac4efa/go.mod h1:TIOZeN20FcXwKSdQAgHfUQOwGoK82MihSwetxgdKIMA=
+code.vegaprotocol.io/shared v0.0.0-20220128163854-7eab67fa60d2 h1:GKg+68ulAI0UPhru2FgGE+qGuqoTQbnNDF31LU8e+jA=
+code.vegaprotocol.io/shared v0.0.0-20220128163854-7eab67fa60d2/go.mod h1:pNHKwqRDkotUN0s6jErl7Eb2EpZa2HAf03lyPMTCUT0=
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
+github.com/BurntSushi/toml v1.0.0 h1:dtDWrepsVPfW9H/4y7dDgFc2MBUSeJhlaDtK13CxFlU=
+github.com/BurntSushi/toml v1.0.0/go.mod h1:CxXYINrC8qIiEnFrOxCa7Jy5BFHlXnUU2pbicEuybxQ=
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
 github.com/ChainSafe/go-schnorrkel v0.0.0-20200405005733-88cbf1b4c40d/go.mod h1:URdX5+vg25ts3aCh8H5IFZybJYKWhJHYMTnf+ULtoC4=
 github.com/DataDog/zstd v1.4.1/go.mod h1:1jcaCB/ufaK+sKp1NBhlGmpz41jOoPQ35bpF36t7BBo=
@@ -472,8 +472,6 @@ github.com/xordataexchange/crypt v0.0.3-0.20170626215501-b2862e3d0a77/go.mod h1:
 github.com/yuin/goldmark v1.1.27/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.2.1/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.3.5/go.mod h1:mwnBkeHKe2W/ZEtQ+71ViKU8L12m81fl3OWwC1Zlc8k=
-github.com/zannen/toml v0.3.2 h1:IYPp4GVtabUyQpzSU6xP1VDyKR3Ico3qhNP2VxCkl2Y=
-github.com/zannen/toml v0.3.2/go.mod h1:17qwsU2a1aZpHAu+nMR+zAzGupaxRIaCvxBhvCp5YGk=
 go.etcd.io/bbolt v1.3.2/go.mod h1:IbVyRI1SCnLcuJnV2u8VeU0CEYM7e686BmAb1XKL+uU=
 go.etcd.io/bbolt v1.3.3/go.mod h1:IbVyRI1SCnLcuJnV2u8VeU0CEYM7e686BmAb1XKL+uU=
 go.etcd.io/bbolt v1.3.5/go.mod h1:G5EMThwa9y8QZGBClrRx5EY+Yw9kAhnjy3bSjsnlVTQ=
