@@ -1,6 +1,24 @@
 # Changelog
 
-## Unreleased (0.12.0)
+## Unreleased (0.13.0)
+
+### 🚨 Breaking changes
+- [](https://github.com/vegaprotocol/vegawallet/pull/) -
+
+### 🗑️  Deprecation
+- [](https://github.com/vegaprotocol/vegawallet/pull/) -
+
+### 🛠  Improvements
+- [](https://github.com/vegaprotocol/vegawallet/pull/) -
+
+### 🔥 Removal
+- [](https://github.com/vegaprotocol/vegawallet/pull/) -
+
+### 🐛 Fixes
+- [](https://github.com/vegaprotocol/vegawallet/pull/) -
+
+
+## 0.12.0
 
 ### 🚨 Breaking changes
 - [446](https://github.com/vegaprotocol/vegawallet/pull/446) - The key printed on the JSON output for the `key generate` command is now at the root of the response, just like the output of the `key describe` command.
