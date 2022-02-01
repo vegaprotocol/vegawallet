@@ -3,7 +3,7 @@ module code.vegaprotocol.io/vegawallet
 go 1.17
 
 require (
-	code.vegaprotocol.io/protos v0.47.1-0.20220128102417-182c89e00442
+	code.vegaprotocol.io/protos v0.47.1-0.20220201101547-dc3d56a2200c
 	code.vegaprotocol.io/shared v0.0.0-20220128163854-7eab67fa60d2
 	github.com/blang/semver/v4 v4.0.0
 	github.com/cenkalti/backoff/v4 v4.0.2
