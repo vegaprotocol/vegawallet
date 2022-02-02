@@ -7,7 +7,53 @@ on:
       - "v*" # Push events to matching v*, i.e. v1.0, v20.15.10
 
 jobs:
+  check-version:
+    name: Verify hard-coded version
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+
+      - name: Verify hard-coded version matches the tag
+        run: |
+          # Filter the content version/version.go to find the `defaultVersion`
+          # constant with its line number. It should look like this:
+          #     13: defaultVersion = v0.12.0+dev
+          #     ^ the line number in version/version.go
+          #         ^ the constant
+          #                          ^ the hard-coded version
+          version_info=$(grep -n "defaultVersion\s*=" version/version.go | xargs)
+
+          echo "Found info: ${version_info}"
+
+          # Extract the version from the version_info found.
+          #   - awk '{print $4}'
+          #       get the 4th segment in the version_info output, the hard-coded
+          #       version.
+          #   - xargs
+          #       trim the output of spaces and quotes.
+          version=$(echo $version_info | awk '{print $4}' | xargs )
+
+          echo "Found version: ${version}"
+
+          # Get the line at which the version is set in version.go
+          #   - awk '{print $1}'
+          #       get the 1st segment in the version_info output, the line number.
+          #   - cut -d: -f1
+          #       get rid of the colon (`:`)
+          line=$(echo $version_info | awk '{print $1}' | cut -d: -f1)
+
+          echo "Found line: ${line}"
+          
+          if [ "$version" = "${{github.ref_name}}" ]; then
+            echo "The hard-coded version matches the tag."
+          else
+            echo "::error file=version/version.go,line=$line::The hard-coded version \"$version\" does not match the tag \"${{github.ref_name}}\". Please, update the hard-coded version."
+            exit 1
+          fi
+
   release-linux:
+    needs: check-version
     name: Release on Linux ${{ matrix.arch }}
     runs-on: ubuntu-latest
     strategy:
@@ -41,7 +87,6 @@ jobs:
           hash=$(echo ${{ github.sha }} | cut -b1-8)
           go build -o build/vegawallet \
             -ldflags "\
-              -X code.vegaprotocol.io/vegawallet/version.Version=${{ github.ref_name }} \
               -X code.vegaprotocol.io/vegawallet/version.VersionHash=$hash
             "
 
@@ -60,6 +105,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   release-macos:
+    needs: check-version
     name: Release on MacOS ${{ matrix.arch }}
     runs-on: macos-latest
     strategy:
@@ -151,6 +197,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   release-windows:
+    needs: check-version
     name: Release on Windows ${{ matrix.arch }}
     runs-on: windows-latest
     strategy:
