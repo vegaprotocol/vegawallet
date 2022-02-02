@@ -14,6 +14,10 @@ code.vegaprotocol.io/protos v0.47.1-0.20220128102417-182c89e00442 h1:0jBV7Ltp2Sp
 code.vegaprotocol.io/protos v0.47.1-0.20220128102417-182c89e00442/go.mod h1:KqJcg62sUHV0qEhlZIZojEypzk3V1ZE3tBS+wdqjddU=
 code.vegaprotocol.io/shared v0.0.0-20220128163854-7eab67fa60d2 h1:GKg+68ulAI0UPhru2FgGE+qGuqoTQbnNDF31LU8e+jA=
 code.vegaprotocol.io/shared v0.0.0-20220128163854-7eab67fa60d2/go.mod h1:pNHKwqRDkotUN0s6jErl7Eb2EpZa2HAf03lyPMTCUT0=
+code.vegaprotocol.io/shared v0.0.0-20220202144944-ab85fdc4d546 h1:R2f7lxYmQ7mkc7L6wcNpe0gN/zBsCDRERK3yMPjFFfM=
+code.vegaprotocol.io/shared v0.0.0-20220202144944-ab85fdc4d546/go.mod h1:pNHKwqRDkotUN0s6jErl7Eb2EpZa2HAf03lyPMTCUT0=
+code.vegaprotocol.io/shared v0.0.0-20220202150846-b6aba31dcdb0 h1:vDjKTd508FwIwoSdZBEvtEfmBeaYdodgLM96v253zKI=
+code.vegaprotocol.io/shared v0.0.0-20220202150846-b6aba31dcdb0/go.mod h1:pNHKwqRDkotUN0s6jErl7Eb2EpZa2HAf03lyPMTCUT0=
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/BurntSushi/toml v1.0.0 h1:dtDWrepsVPfW9H/4y7dDgFc2MBUSeJhlaDtK13CxFlU=
