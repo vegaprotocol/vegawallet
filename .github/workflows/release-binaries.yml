@@ -146,6 +146,7 @@ jobs:
           p12-password: ${{ secrets.MACOS_CERTIFICATE_PASS }}
 
       - name: Sign binary
+        working-directory: build
         # --timestamp
         #     During signing, requests that a timestamp authority server be contacted to authenticate the time of
         #     signing.
@@ -155,10 +156,11 @@ jobs:
         # --options runtime
         #     On macOS versions >= 10.14.0, opts signed processes into a hardened runtime environment which includes
         #     runtime code signing enforcement, library validation, hard, kill, and debugging restrictions.
-        run: codesign --verbose --sign "${{ secrets.MACOS_CERTIFICATE_IDENTITY_ID }}" --timestamp --options runtime --deep --force ./build/vegawallet
+        run: codesign --verbose --sign "${{ secrets.MACOS_CERTIFICATE_IDENTITY_ID }}" --timestamp --options runtime --deep --force vegawallet
 
       - name: Verify signature
-        run: codesign --verbose --verify --strict --deep ./build/vegawallet
+        working-directory: build
+        run: codesign --verbose --verify --strict --deep vegawallet
 
       - name: Bundle binary in archive
         uses: thedoctor0/zip-release@master
@@ -175,8 +177,9 @@ jobs:
             --password "${{ secrets.MACOS_NOTARIZATION_PASS }}"
 
       - name: Notarize app
+        working-directory: build
         run: |
-          xcrun notarytool submit ./build/vegawallet-${{ env.GOOS }}-${{ env.GOARCH }}.zip \
+          xcrun notarytool submit vegawallet-${{ env.GOOS }}-${{ env.GOARCH }}.zip \
             --keychain-profile vega \
             --output-format json \
             --timeout "90m" \
