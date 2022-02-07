@@ -85,10 +85,7 @@ jobs:
       - name: Build binary
         run: |
           hash=$(echo ${{ github.sha }} | cut -b1-8)
-          go build -o build/vegawallet \
-            -ldflags "\
-              -X code.vegaprotocol.io/vegawallet/version.VersionHash=$hash
-            "
+          go build -o build/vegawallet -ldflags "-X code.vegaprotocol.io/vegawallet/version.VersionHash=$hash"
 
       - name: Bundle binary in archive
         uses: thedoctor0/zip-release@master
@@ -138,11 +135,7 @@ jobs:
       - name: Build binary
         run: |
           hash=$(echo ${{ github.sha }} | cut -b1-8)
-          go build -o build/vegawallet \
-            -ldflags "\
-              -X code.vegaprotocol.io/vegawallet/version.Version=${{ github.ref_name }} \
-              -X code.vegaprotocol.io/vegawallet/version.VersionHash=$hash
-            "
+          go build -o build/vegawallet -ldflags "-X code.vegaprotocol.io/vegawallet/version.VersionHash=$hash"
 
       - name: Import DeveloperID Certificate
         uses: apple-actions/import-codesign-certs@v1
@@ -229,11 +222,7 @@ jobs:
       - name: Build binary
         run: |
           $hash= "${{ github.sha }}".substring(0,8)
-          go build -o build/vegawallet.exe `
-            -ldflags " `
-              -X code.vegaprotocol.io/vegawallet/version.Version=${{ github.ref_name }} `
-              -X code.vegaprotocol.io/vegawallet/version.VersionHash=$hash `
-            "
+          go build -o build/vegawallet.exe -ldflags "-X code.vegaprotocol.io/vegawallet/version.VersionHash=$hash"
 
       - name: "Sign binary"
         uses: Dana-Prajea/code-sign-action@98c79121b376beab8d6a9484f445089db4461bca
