@@ -85,10 +85,7 @@ jobs:
       - name: Build binary
         run: |
           hash=$(echo ${{ github.sha }} | cut -b1-8)
-          go build -o build/vegawallet \
-            -ldflags "\
-              -X code.vegaprotocol.io/vegawallet/version.VersionHash=$hash
-            "
+          go build -o build/vegawallet -ldflags "-X code.vegaprotocol.io/vegawallet/version.VersionHash=$hash"
 
       - name: Bundle binary in archive
         uses: thedoctor0/zip-release@master
@@ -138,11 +135,7 @@ jobs:
       - name: Build binary
         run: |
           hash=$(echo ${{ github.sha }} | cut -b1-8)
-          go build -o build/vegawallet \
-            -ldflags "\
-              -X code.vegaprotocol.io/vegawallet/version.Version=${{ github.ref_name }} \
-              -X code.vegaprotocol.io/vegawallet/version.VersionHash=$hash
-            "
+          go build -o build/vegawallet -ldflags "-X code.vegaprotocol.io/vegawallet/version.VersionHash=$hash"
 
       - name: Import DeveloperID Certificate
         uses: apple-actions/import-codesign-certs@v1
@@ -153,6 +146,7 @@ jobs:
           p12-password: ${{ secrets.MACOS_CERTIFICATE_PASS }}
 
       - name: Sign binary
+        working-directory: build
         # --timestamp
         #     During signing, requests that a timestamp authority server be contacted to authenticate the time of
         #     signing.
@@ -162,10 +156,11 @@ jobs:
         # --options runtime
         #     On macOS versions >= 10.14.0, opts signed processes into a hardened runtime environment which includes
         #     runtime code signing enforcement, library validation, hard, kill, and debugging restrictions.
-        run: codesign --verbose --sign "${{ secrets.MACOS_CERTIFICATE_IDENTITY_ID }}" --timestamp --options runtime --deep --force ./build/vegawallet
+        run: codesign --verbose --sign "${{ secrets.MACOS_CERTIFICATE_IDENTITY_ID }}" --timestamp --options runtime --deep --force vegawallet
 
       - name: Verify signature
-        run: codesign --verbose --verify --strict --deep ./build/vegawallet
+        working-directory: build
+        run: codesign --verbose --verify --strict --deep vegawallet
 
       - name: Bundle binary in archive
         uses: thedoctor0/zip-release@master
@@ -182,8 +177,9 @@ jobs:
             --password "${{ secrets.MACOS_NOTARIZATION_PASS }}"
 
       - name: Notarize app
+        working-directory: build
         run: |
-          xcrun notarytool submit ./build/vegawallet-${{ env.GOOS }}-${{ env.GOARCH }}.zip \
+          xcrun notarytool submit vegawallet-${{ env.GOOS }}-${{ env.GOARCH }}.zip \
             --keychain-profile vega \
             --output-format json \
             --timeout "90m" \
@@ -229,11 +225,7 @@ jobs:
       - name: Build binary
         run: |
           $hash= "${{ github.sha }}".substring(0,8)
-          go build -o build/vegawallet.exe `
-            -ldflags " `
-              -X code.vegaprotocol.io/vegawallet/version.Version=${{ github.ref_name }} `
-              -X code.vegaprotocol.io/vegawallet/version.VersionHash=$hash `
-            "
+          go build -o build/vegawallet.exe -ldflags "-X code.vegaprotocol.io/vegawallet/version.VersionHash=$hash"
 
       - name: "Sign binary"
         uses: Dana-Prajea/code-sign-action@98c79121b376beab8d6a9484f445089db4461bca
@@ -242,7 +234,7 @@ jobs:
           password: ${{ secrets.WINDOWS_CERTIFICATE_PASS }}
           certificatesha1: ${{ secrets.WINDOWS_CERTIFICATE_HASH }}
           folder: "build"
-          timestampUrl: "http://timestamp.comodoca.com/authenticode"
+          timestampUrl: "http://timestamp.sectigo.com"
 
       - name: Bundle binary in archive
         uses: thedoctor0/zip-release@master
