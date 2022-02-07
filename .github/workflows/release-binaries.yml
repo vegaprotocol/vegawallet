@@ -234,7 +234,7 @@ jobs:
           password: ${{ secrets.WINDOWS_CERTIFICATE_PASS }}
           certificatesha1: ${{ secrets.WINDOWS_CERTIFICATE_HASH }}
           folder: "build"
-          timestampUrl: "http://timestamp.comodoca.com/authenticode"
+          timestampUrl: "http://timestamp.sectigo.com"
 
       - name: Bundle binary in archive
         uses: thedoctor0/zip-release@master
