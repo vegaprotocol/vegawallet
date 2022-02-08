@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased (0.12.0)
+## Unreleased (0.13.0)
 
 ### 🚨 Breaking changes
 - [](https://github.com/vegaprotocol/vegawallet/pull/) -
@@ -17,6 +17,40 @@
 ### 🐛 Fixes
 - [](https://github.com/vegaprotocol/vegawallet/pull/) -
 
+
+## 0.12.0
+
+### 🚨 Breaking changes
+- [446](https://github.com/vegaprotocol/vegawallet/pull/446) - The key printed on the JSON output for the `key generate` command is now at the root of the response, just like the output of the `key describe` command.
+- [450](https://github.com/vegaprotocol/vegawallet/pull/450) - Move `sign` and `verify` commands to a a `message` subcommand, e.g. `message sign` and `message verify`
+
+### 🗑️  Deprecation
+- [](https://github.com/vegaprotocol/vegawallet/pull/) -
+
+### 🛠  Improvements
+- [427](https://github.com/vegaprotocol/vegawallet/pull/427) - Sign MacOS binaries
+- [447](https://github.com/vegaprotocol/vegawallet/pull/447) - Sign Windows binaries
+- [448](https://github.com/vegaprotocol/vegawallet/pull/448) - Add command `network locate` to locate the folder in which network configuration files are stored.
+- [451](https://github.com/vegaprotocol/vegawallet/pull/451) - Verify network configuration prior exploitation to raise user-friendly errors.
+- [435](https://github.com/vegaprotocol/vegawallet/pull/435) - Support signing commands offline with `command sign`
+- [453](https://github.com/vegaprotocol/vegawallet/pull/453) - Added support for new liquidity provision commands
+- [456](https://github.com/vegaprotocol/vegawallet/pull/456) - Update protos to support non-negative string pegged orders offset
+- [463](https://github.com/vegaprotocol/vegawallet/pull/463) - Improve the `vegawallet version` command output to ensure users doesn't mistake the software version with their wallet version
+- [443](https://github.com/vegaprotocol/vegawallet/pull/443) - Notarization of MacOS binaries
+- [469](https://github.com/vegaprotocol/vegawallet/pull/469) - Support time-triggered trading termination from built-in oracle
+
+### 🔥 Removal
+- [446](https://github.com/vegaprotocol/vegawallet/pull/446) - Wallet creation with `key generate` has been removed in favor of `create` command
+- [446](https://github.com/vegaprotocol/vegawallet/pull/446) - Flag `--console-proxy` has been removed in favor of `--with-console`
+- [446](https://github.com/vegaprotocol/vegawallet/pull/446) - Flag `--mnemonic-file` has been removed in favor of `--recovery-phrase-file`
+- [446](https://github.com/vegaprotocol/vegawallet/pull/446) - Field `mnemonic` in HTTP response for wallet creation has been removed in favor of `recoveryPhrase`
+- [446](https://github.com/vegaprotocol/vegawallet/pull/446) - Field `mnemonic` in HTTP request for wallet import has been removed in favor of `recoveryPhrase`
+
+### 🐛 Fixes
+- [440](https://github.com/vegaprotocol/vegawallet/pull/440) - Fix confirmation prompt on windows
+- [449](https://github.com/vegaprotocol/vegawallet/pull/449) - Don't use unicode glyphs on windows
+- [444](https://github.com/vegaprotocol/vegawallet/pull/444) - Fail gracefully when trying to get password input on msys
+- [455](https://github.com/vegaprotocol/vegawallet/pull/455) - New Liquidity Provisioning commands removed requirement for Id field
 
 ## 0.11.0
 

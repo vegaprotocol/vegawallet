@@ -41,8 +41,7 @@ func TestRotateKeySucceeds(t *testing.T) {
 	// then
 	require.NoError(t, err)
 	AssertGenerateKey(t, generateKeyResp).
-		WithMeta(map[string]string{"name": "key-2", "role": "validation"}).
-		LocatedUnder(home)
+		WithMeta(map[string]string{"name": "key-2", "role": "validation"})
 
 	// when
 	resp, err := KeyRotate(t, []string{
@@ -51,7 +50,7 @@ func TestRotateKeySucceeds(t *testing.T) {
 		"--wallet", walletName,
 		"--passphrase-file", passphraseFilePath,
 		"--current-pubkey", createWalletResp.Key.PublicKey,
-		"--new-pubkey", generateKeyResp.Key.PublicKey,
+		"--new-pubkey", generateKeyResp.PublicKey,
 		"--tx-height", "20",
 		"--target-height", "25",
 	})
@@ -93,8 +92,7 @@ func TestRotateKeyFailsOnTaintedPublicKey(t *testing.T) {
 	// then
 	require.NoError(t, err)
 	AssertGenerateKey(t, generateKeyResp).
-		WithMeta(map[string]string{"name": "key-2", "role": "validation"}).
-		LocatedUnder(home)
+		WithMeta(map[string]string{"name": "key-2", "role": "validation"})
 
 	// when
 	err = KeyTaint(t, []string{
@@ -102,7 +100,7 @@ func TestRotateKeyFailsOnTaintedPublicKey(t *testing.T) {
 		"--output", "json",
 		"--wallet", walletName,
 		"--passphrase-file", passphraseFilePath,
-		"--pubkey", generateKeyResp.Key.PublicKey,
+		"--pubkey", generateKeyResp.PublicKey,
 	})
 
 	// then
@@ -115,7 +113,7 @@ func TestRotateKeyFailsOnTaintedPublicKey(t *testing.T) {
 		"--wallet", walletName,
 		"--passphrase-file", passphraseFilePath,
 		"--current-pubkey", createWalletResp.Key.PublicKey,
-		"--new-pubkey", generateKeyResp.Key.PublicKey,
+		"--new-pubkey", generateKeyResp.PublicKey,
 		"--tx-height", "20",
 		"--target-height", "25",
 	})

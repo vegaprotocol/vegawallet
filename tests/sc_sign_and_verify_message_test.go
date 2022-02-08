@@ -36,7 +36,7 @@ func TestSignMessage(t *testing.T) {
 	encodedMessage := base64.StdEncoding.EncodeToString(message)
 
 	// when
-	signResp, err := Sign(t, []string{
+	signResp, err := SignMessage(t, []string{
 		"--home", home,
 		"--output", "json",
 		"--wallet", walletName,
@@ -47,11 +47,11 @@ func TestSignMessage(t *testing.T) {
 
 	// then
 	require.NoError(t, err)
-	AssertSign(t, signResp).
+	AssertSignMessage(t, signResp).
 		WithSignature("StH82RHxjQ3yTeaSN25b6sJwAyLiq1CDvPWf0X4KIf/WTIjkunkWKn1Gq9ntCoGBfBZIyNfpPtGx0TSZsSrbCA==")
 
 	// when
-	verifyResp, err := Verify(t, []string{
+	verifyResp, err := VerifyMessage(t, []string{
 		"--home", home,
 		"--output", "json",
 		"--pubkey", importWalletResp.Key.PublicKey,
@@ -61,7 +61,7 @@ func TestSignMessage(t *testing.T) {
 
 	// then
 	require.NoError(t, err)
-	AssertVerify(t, verifyResp).IsValid()
+	AssertVerifyMessage(t, verifyResp).IsValid()
 }
 
 func TestSignMessageWithTaintedKey(t *testing.T) {
@@ -105,7 +105,7 @@ func TestSignMessageWithTaintedKey(t *testing.T) {
 	encodedMessage := base64.StdEncoding.EncodeToString(message)
 
 	// when
-	signResp, err := Sign(t, []string{
+	signResp, err := SignMessage(t, []string{
 		"--home", home,
 		"--output", "json",
 		"--wallet", walletName,
@@ -131,7 +131,7 @@ func TestSignMessageWithTaintedKey(t *testing.T) {
 	require.NoError(t, err)
 
 	// when
-	signResp, err = Sign(t, []string{
+	signResp, err = SignMessage(t, []string{
 		"--home", home,
 		"--output", "json",
 		"--wallet", walletName,
@@ -142,6 +142,6 @@ func TestSignMessageWithTaintedKey(t *testing.T) {
 
 	// then
 	require.NoError(t, err)
-	AssertSign(t, signResp).
+	AssertSignMessage(t, signResp).
 		WithSignature("StH82RHxjQ3yTeaSN25b6sJwAyLiq1CDvPWf0X4KIf/WTIjkunkWKn1Gq9ntCoGBfBZIyNfpPtGx0TSZsSrbCA==")
 }

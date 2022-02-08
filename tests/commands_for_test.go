@@ -72,23 +72,15 @@ func KeyAnnotate(t *testing.T, args []string) error {
 }
 
 type GenerateKeyResponse struct {
-	Wallet struct {
-		Name     string `json:"name"`
-		Version  uint32 `json:"version"`
-		FilePath string `json:"filePath"`
-		Mnemonic string `json:"mnemonic,omitempty"`
-	} `json:"wallet"`
-	Key struct {
-		PublicKey string `json:"publicKey"`
-		Algorithm struct {
-			Name    string `json:"name"`
-			Version uint32 `json:"version"`
-		} `json:"algorithm"`
-		Meta []struct {
-			Key   string `json:"key"`
-			Value string `json:"value"`
-		} `json:"meta"`
-	} `json:"key"`
+	PublicKey string `json:"publicKey"`
+	Algorithm struct {
+		Name    string `json:"name"`
+		Version uint32 `json:"version"`
+	} `json:"algorithm"`
+	Meta []struct {
+		Key   string `json:"key"`
+		Value string `json:"value"`
+	} `json:"meta"`
 }
 
 func KeyGenerate(t *testing.T, args []string) (*GenerateKeyResponse, error) {
@@ -115,13 +107,9 @@ func AssertGenerateKey(t *testing.T, resp *GenerateKeyResponse) *GenerateKeyAsse
 	t.Helper()
 
 	assert.NotNil(t, resp)
-	assert.NotEmpty(t, resp.Wallet.Name)
-	assert.NotEmpty(t, resp.Wallet.Version)
-	assert.NotEmpty(t, resp.Wallet.FilePath)
-	assert.FileExists(t, resp.Wallet.FilePath)
-	assert.NotEmpty(t, resp.Key.PublicKey)
-	assert.Equal(t, "vega/ed25519", resp.Key.Algorithm.Name)
-	assert.Equal(t, uint32(1), resp.Key.Algorithm.Version)
+	assert.NotEmpty(t, resp.PublicKey)
+	assert.Equal(t, "vega/ed25519", resp.Algorithm.Name)
+	assert.Equal(t, uint32(1), resp.Algorithm.Version)
 
 	return &GenerateKeyAssertion{
 		t:    t,
@@ -129,27 +117,9 @@ func AssertGenerateKey(t *testing.T, resp *GenerateKeyResponse) *GenerateKeyAsse
 	}
 }
 
-// Deprecated: key generate will not generate wallet anymore.
-func (a *GenerateKeyAssertion) WithWalletCreation() *GenerateKeyAssertion {
-	assert.NotEmpty(a.t, a.resp.Wallet.Mnemonic)
-	return a
-}
-
-// Deprecated: key generate will not generate wallet anymore.
-func (a *GenerateKeyAssertion) WithName(expected string) *GenerateKeyAssertion {
-	assert.Equal(a.t, expected, a.resp.Wallet.Name)
-	return a
-}
-
-// Deprecated: key generate will not generate wallet anymore.
-func (a *GenerateKeyAssertion) WithVersion(expected uint32) *GenerateKeyAssertion {
-	assert.Equal(a.t, expected, a.resp.Wallet.Version)
-	return a
-}
-
 func (a *GenerateKeyAssertion) WithMeta(expected map[string]string) *GenerateKeyAssertion {
 	meta := map[string]string{}
-	for _, m := range a.resp.Key.Meta {
+	for _, m := range a.resp.Meta {
 		meta[m.Key] = m.Value
 	}
 	assert.Equal(a.t, expected, meta)
@@ -157,12 +127,7 @@ func (a *GenerateKeyAssertion) WithMeta(expected map[string]string) *GenerateKey
 }
 
 func (a *GenerateKeyAssertion) WithPublicKey(expected string) *GenerateKeyAssertion {
-	assert.Equal(a.t, expected, a.resp.Key.PublicKey)
-	return a
-}
-
-func (a *GenerateKeyAssertion) LocatedUnder(home string) *GenerateKeyAssertion {
-	assert.True(a.t, strings.HasPrefix(a.resp.Wallet.FilePath, home), "wallet has not been generated under home directory")
+	assert.Equal(a.t, expected, a.resp.PublicKey)
 	return a
 }
 
@@ -419,6 +384,46 @@ func (a *ImportNetworkAssertion) LocatedUnder(home string) *ImportNetworkAsserti
 	return a
 }
 
+type LocateNetworksResponse struct {
+	Path string `json:"path"`
+}
+
+func NetworkLocate(t *testing.T, args []string) (*LocateNetworksResponse, error) {
+	t.Helper()
+	argsWithCmd := []string{"network", "locate"}
+	argsWithCmd = append(argsWithCmd, args...)
+	output, err := ExecuteCmd(t, argsWithCmd)
+	if err != nil {
+		return nil, err
+	}
+	resp := &LocateNetworksResponse{}
+	if err := json.Unmarshal(output, resp); err != nil {
+		t.Fatalf("couldn't unmarshal command output: %v", err)
+	}
+	return resp, nil
+}
+
+type LocateNetworkAssertion struct {
+	t    *testing.T
+	resp *LocateNetworksResponse
+}
+
+func AssertLocateNetwork(t *testing.T, resp *LocateNetworksResponse) *LocateNetworkAssertion {
+	t.Helper()
+
+	assert.NotNil(t, resp)
+
+	return &LocateNetworkAssertion{
+		t:    t,
+		resp: resp,
+	}
+}
+
+func (a *LocateNetworkAssertion) LocatedUnder(p string) *LocateNetworkAssertion {
+	assert.True(a.t, strings.HasPrefix(a.resp.Path, p), "path returned doesn't start with home path")
+	return a
+}
+
 type ListNetworksResponse struct {
 	Networks []string `json:"networks"`
 }
@@ -567,13 +572,49 @@ func (d *DescribeNetworkAssertion) WithRESTConfig(hosts []string) *DescribeNetwo
 	return d
 }
 
+type SignCommandResponse struct {
+	Transaction string `json:"base64Transaction"`
+}
+
+func SignCommand(t *testing.T, args []string) (*SignCommandResponse, error) {
+	t.Helper()
+	argsWithCmd := []string{"command", "sign"}
+	argsWithCmd = append(argsWithCmd, args...)
+	output, err := ExecuteCmd(t, argsWithCmd)
+	if err != nil {
+		return nil, err
+	}
+	resp := &SignCommandResponse{}
+	if err := json.Unmarshal(output, resp); err != nil {
+		t.Fatalf("couldn't unmarshal command output: %v", err)
+	}
+	return resp, nil
+}
+
+type SignCommandAssertion struct {
+	t    *testing.T
+	resp *SignCommandResponse
+}
+
+func AssertSignCommand(t *testing.T, resp *SignCommandResponse) *SignCommandAssertion {
+	t.Helper()
+
+	assert.NotNil(t, resp)
+	assert.NotEmpty(t, resp.Transaction)
+
+	return &SignCommandAssertion{
+		t:    t,
+		resp: resp,
+	}
+}
+
 type SignMessageResponse struct {
 	Signature string `json:"signature"`
 }
 
-func Sign(t *testing.T, args []string) (*SignMessageResponse, error) {
+func SignMessage(t *testing.T, args []string) (*SignMessageResponse, error) {
 	t.Helper()
-	argsWithCmd := []string{"sign"}
+	argsWithCmd := []string{"message", "sign"}
 	argsWithCmd = append(argsWithCmd, args...)
 	output, err := ExecuteCmd(t, argsWithCmd)
 	if err != nil {
@@ -586,24 +627,24 @@ func Sign(t *testing.T, args []string) (*SignMessageResponse, error) {
 	return resp, nil
 }
 
-type SignAssertion struct {
+type SignMessageAssertion struct {
 	t    *testing.T
 	resp *SignMessageResponse
 }
 
-func AssertSign(t *testing.T, resp *SignMessageResponse) *SignAssertion {
+func AssertSignMessage(t *testing.T, resp *SignMessageResponse) *SignMessageAssertion {
 	t.Helper()
 
 	assert.NotNil(t, resp)
 	assert.NotEmpty(t, resp.Signature)
 
-	return &SignAssertion{
+	return &SignMessageAssertion{
 		t:    t,
 		resp: resp,
 	}
 }
 
-func (a *SignAssertion) WithSignature(expected string) *SignAssertion {
+func (a *SignMessageAssertion) WithSignature(expected string) *SignMessageAssertion {
 	assert.Equal(a.t, expected, a.resp.Signature)
 	return a
 }
@@ -612,9 +653,9 @@ type VerifyMessageResponse struct {
 	IsValid bool `json:"isValid"`
 }
 
-func Verify(t *testing.T, args []string) (*VerifyMessageResponse, error) {
+func VerifyMessage(t *testing.T, args []string) (*VerifyMessageResponse, error) {
 	t.Helper()
-	argsWithCmd := []string{"verify"}
+	argsWithCmd := []string{"message", "verify"}
 	argsWithCmd = append(argsWithCmd, args...)
 	output, err := ExecuteCmd(t, argsWithCmd)
 	if err != nil {
@@ -632,7 +673,7 @@ type VerifyAssertion struct {
 	resp *VerifyMessageResponse
 }
 
-func AssertVerify(t *testing.T, resp *VerifyMessageResponse) *VerifyAssertion {
+func AssertVerifyMessage(t *testing.T, resp *VerifyMessageResponse) *VerifyAssertion {
 	t.Helper()
 
 	assert.NotNil(t, resp)

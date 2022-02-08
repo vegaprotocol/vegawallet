@@ -3,6 +3,7 @@ package printer
 import (
 	"fmt"
 	"io"
+	"runtime"
 
 	"github.com/muesli/termenv"
 )
@@ -16,9 +17,7 @@ type InteractivePrinter struct {
 	arrow     termenv.Style
 }
 
-func NewInteractivePrinter(w io.Writer) *InteractivePrinter {
-	enableLegacyWindowsANSI()
-	profile := termenv.EnvColorProfile()
+func fancyPrinter(w io.Writer, profile termenv.Profile) *InteractivePrinter {
 	return &InteractivePrinter{
 		writer:    w,
 		profile:   profile,
@@ -27,6 +26,26 @@ func NewInteractivePrinter(w io.Writer) *InteractivePrinter {
 		crossMark: termenv.String("✗ ").Foreground(profile.Color("1")).String(),
 		arrow:     termenv.String("➜ ").Foreground(profile.Color("2")),
 	}
+}
+
+func ansiPrinter(w io.Writer, profile termenv.Profile) *InteractivePrinter {
+	return &InteractivePrinter{
+		writer:    w,
+		profile:   profile,
+		checkMark: termenv.String("* ").Foreground(profile.Color("2")).String(),
+		bangMark:  termenv.String("! ").Foreground(profile.Color("1")).String(),
+		crossMark: termenv.String("x ").Foreground(profile.Color("1")).String(),
+		arrow:     termenv.String("> ").Foreground(profile.Color("2")),
+	}
+}
+
+func NewInteractivePrinter(w io.Writer) *InteractivePrinter {
+	enableLegacyWindowsANSI()
+	profile := termenv.EnvColorProfile()
+	if runtime.GOOS == "windows" {
+		return ansiPrinter(w, profile)
+	}
+	return fancyPrinter(w, profile)
 }
 
 func (p *InteractivePrinter) GreenArrow() *InteractivePrinter {

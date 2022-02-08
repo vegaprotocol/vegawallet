@@ -15,10 +15,7 @@ import (
 
 var (
 	generateKeyLong = cli.LongDesc(`
-		Generate a new Ed25519 key pair in a given wallet.
-
-		DEPRECATED:
-		If the targeted wallet doesn't exist, it will be automatically generated.
+		Generate a new Ed25519 key pair in the specified wallet.
 	`)
 
 	generateKeyExample = cli.Examples(`
@@ -33,22 +30,14 @@ var (
 	`)
 )
 
-type GenerateKeyHandler func(flags.PassphraseGetterWithOps, *wallet.GenerateKeyRequest) (*wallet.GenerateKeyResponse, error)
+type GenerateKeyHandler func(*wallet.GenerateKeyRequest) (*wallet.GenerateKeyResponse, error)
 
 func NewCmdGenerateKey(w io.Writer, rf *RootFlags) *cobra.Command {
-	h := func(passphraseGetter flags.PassphraseGetterWithOps, req *wallet.GenerateKeyRequest) (*wallet.GenerateKeyResponse, error) {
+	h := func(req *wallet.GenerateKeyRequest) (*wallet.GenerateKeyResponse, error) {
 		s, err := wallets.InitialiseStore(rf.Home)
 		if err != nil {
 			return nil, fmt.Errorf("couldn't initialise wallets store: %w", err)
 		}
-
-		// Because the passphrase needs to be retrieved based on the state of the
-		// specified wallet, we get it here and fill the request with it.
-		passphrase, err := passphraseGetter(!s.WalletExists(req.Wallet))
-		if err != nil {
-			return nil, err
-		}
-		req.Passphrase = passphrase
 
 		return wallet.GenerateKey(s, req)
 	}
@@ -70,28 +59,14 @@ func BuildCmdGenerateKey(w io.Writer, handler GenerateKeyHandler, rf *RootFlags)
 				return err
 			}
 
-			// If the specified wallet doesn't exist yet, we need to ask for
-			// passphrase confirmation. However, this information is only available
-			// to the handler, which means we can't retrieve the passphrase during
-			// the flag validation step.
-			//
-			// As a result, we need to delegate the retrieval of the passphrase
-			// to the handler. This is why we build a function that takes care
-			// of this task based on the flags set, and pass it to the handler.
-			//
-			// With this method, the handler can get the passphrase in isolation,
-			// without knowledge of the command line flags nor the retrieval
-			// process.
-			pg := flags.BuildPassphraseGetterWithOps(f.PassphraseFile)
-
-			resp, err := handler(pg, req)
+			resp, err := handler(req)
 			if err != nil {
 				return err
 			}
 
 			switch rf.Output {
 			case flags.InteractiveOutput:
-				PrintGenerateKeyResponse(w, resp)
+				PrintGenerateKeyResponse(w, req, resp)
 			case flags.JSONOutput:
 				return printer.FprintJSON(w, resp)
 			}
@@ -141,38 +116,26 @@ func (f *GenerateKeyFlags) Validate() (*wallet.GenerateKeyRequest, error) {
 	}
 	req.Metadata = metadata
 
+	passphrase, err := flags.GetPassphrase(f.PassphraseFile)
+	if err != nil {
+		return nil, err
+	}
+	req.Passphrase = passphrase
+
 	return req, nil
 }
 
-func PrintGenerateKeyResponse(w io.Writer, resp *wallet.GenerateKeyResponse) {
-	walletHasBeenCreated := len(resp.Wallet.Mnemonic) != 0
-
+func PrintGenerateKeyResponse(w io.Writer, req *wallet.GenerateKeyRequest, resp *wallet.GenerateKeyResponse) {
 	p := printer.NewInteractivePrinter(w)
 
-	if walletHasBeenCreated {
-		p.CheckMark().Text("Wallet ").Bold(resp.Wallet.Name).Text(" has been created at: ").SuccessText(resp.Wallet.FilePath).NextLine()
-	}
-	p.CheckMark().Text("Key pair has been generated for wallet ").Bold(resp.Wallet.Name).Text(" at: ").SuccessText(resp.Wallet.FilePath).NextLine()
+	p.CheckMark().Text("Key pair has been generated in wallet ").Bold(req.Wallet).NextLine()
 	p.CheckMark().SuccessText("Generating a key pair succeeded").NextSection()
 
-	if walletHasBeenCreated {
-		p.Text("Wallet recovery phrase:").NextLine()
-		p.WarningText(resp.Wallet.Mnemonic).NextLine()
-		p.Text("Wallet version:").NextLine()
-		p.WarningText(fmt.Sprintf("%d", resp.Wallet.Version)).NextLine()
-	}
 	p.Text("Public key:").NextLine()
-	p.WarningText(resp.Key.PublicKey).NextLine()
+	p.WarningText(resp.PublicKey).NextLine()
 	p.Text("Metadata:").NextLine()
-	printMeta(p, resp.Key.Meta)
+	printMeta(p, resp.Meta)
 	p.NextSection()
-
-	if walletHasBeenCreated {
-		p.RedArrow().DangerText("Important").NextLine()
-		p.DangerText("Write down the ").DangerBold("recovery phrase").DangerText(" and the ").DangerBold("wallet's version").DangerText(", and store it somewhere safe and secure, now.").NextLine()
-		p.DangerText("The recovery phrase will not be displayed ever again, nor will you be able to retrieve it!").NextSection()
-		p.DangerText("Also, creating a wallet through this command is DEPRECATED. Please, use the `create` command.").NextSection()
-	}
 
 	p.BlueArrow().InfoText("Run the service").NextLine()
 	p.Text("Now, you can run the service. See the following command:").NextSection()

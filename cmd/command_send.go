@@ -8,11 +8,11 @@ import (
 
 	api "code.vegaprotocol.io/protos/vega/api/v1"
 	walletpb "code.vegaprotocol.io/protos/vega/wallet/v1"
+	vglog "code.vegaprotocol.io/shared/libs/zap"
 	"code.vegaprotocol.io/vegawallet/cmd/cli"
 	"code.vegaprotocol.io/vegawallet/cmd/flags"
 	"code.vegaprotocol.io/vegawallet/cmd/printer"
 	wcommands "code.vegaprotocol.io/vegawallet/commands"
-	vglog "code.vegaprotocol.io/vegawallet/libs/zap"
 	"code.vegaprotocol.io/vegawallet/network"
 	"code.vegaprotocol.io/vegawallet/node"
 	"code.vegaprotocol.io/vegawallet/wallets"

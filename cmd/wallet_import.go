@@ -90,11 +90,6 @@ func BuildCmdImportWallet(w io.Writer, handler ImportWalletHandler, rf *RootFlag
 		"",
 		"Path to the file containing the passphrase to access the wallet",
 	)
-	cmd.Flags().StringVarP(&f.RecoveryPhraseFile,
-		"mnemonic-file", "m",
-		"",
-		"Path to the file containing the recovery phrase of the wallet (DEPRECATED, use --recovery-phrase-file instead)",
-	)
 	cmd.Flags().StringVar(&f.RecoveryPhraseFile,
 		"recovery-phrase-file",
 		"",

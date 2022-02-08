@@ -187,7 +187,7 @@ func testSendCommandFlagsMalformedRequestFails(t *testing.T) {
 
 	// given
 	f := newSendCommandFlags(t, testDir)
-	f.RawCommand = `<request>Not gonna support that</request>`
+	f.RawCommand = vgrand.RandomStr(5)
 
 	// when
 	req, err := f.Validate()

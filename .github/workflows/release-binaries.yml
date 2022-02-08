@@ -1,0 +1,251 @@
+name: Release binaries
+
+on:
+  push:
+    # Sequence of patterns matched against refs/tags
+    tags:
+      - "v*" # Push events to matching v*, i.e. v1.0, v20.15.10
+
+jobs:
+  check-version:
+    name: Verify hard-coded version
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+
+      - name: Verify hard-coded version matches the tag
+        run: |
+          # Filter the content version/version.go to find the `defaultVersion`
+          # constant with its line number. It should look like this:
+          #     13: defaultVersion = v0.12.0+dev
+          #     ^ the line number in version/version.go
+          #         ^ the constant
+          #                          ^ the hard-coded version
+          version_info=$(grep -n "defaultVersion\s*=" version/version.go | xargs)
+
+          echo "Found info: ${version_info}"
+
+          # Extract the version from the version_info found.
+          #   - awk '{print $4}'
+          #       get the 4th segment in the version_info output, the hard-coded
+          #       version.
+          #   - xargs
+          #       trim the output of spaces and quotes.
+          version=$(echo $version_info | awk '{print $4}' | xargs )
+
+          echo "Found version: ${version}"
+
+          # Get the line at which the version is set in version.go
+          #   - awk '{print $1}'
+          #       get the 1st segment in the version_info output, the line number.
+          #   - cut -d: -f1
+          #       get rid of the colon (`:`)
+          line=$(echo $version_info | awk '{print $1}' | cut -d: -f1)
+
+          echo "Found line: ${line}"
+          
+          if [ "$version" = "${{github.ref_name}}" ]; then
+            echo "The hard-coded version matches the tag."
+          else
+            echo "::error file=version/version.go,line=$line::The hard-coded version \"$version\" does not match the tag \"${{github.ref_name}}\". Please, update the hard-coded version."
+            exit 1
+          fi
+
+  release-linux:
+    needs: check-version
+    name: Release on Linux ${{ matrix.arch }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        arch:
+          - amd64
+          - arm64
+    env:
+      GOOS: linux
+      GOARCH: ${{ matrix.arch }}
+      CGO_ENABLED: 0
+    steps:
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.17
+        id: go
+
+      - name: Check out code
+        uses: actions/checkout@v2
+
+      - name: Get dependencies
+        run: go get -v -t -d ./...
+
+      - name: Run tests
+        if: ${{ env.GOARCH == 'amd64' }}
+        run: go test -v ./...
+
+      - name: Build binary
+        run: |
+          hash=$(echo ${{ github.sha }} | cut -b1-8)
+          go build -o build/vegawallet -ldflags "-X code.vegaprotocol.io/vegawallet/version.VersionHash=$hash"
+
+      - name: Bundle binary in archive
+        uses: thedoctor0/zip-release@master
+        with:
+          type: zip
+          directory: build
+          filename: vegawallet-${{ env.GOOS }}-${{ env.GOARCH }}.zip
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: build/*.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  release-macos:
+    needs: check-version
+    name: Release on MacOS ${{ matrix.arch }}
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        arch:
+          - amd64
+          - arm64
+    env:
+      GOOS: darwin
+      GOARCH: ${{ matrix.arch }}
+      CGO_ENABLED: 0
+    steps:
+      - name: Set up Go
+        uses: actions/setup-go@v2
+
+        with:
+          go-version: 1.17
+        id: go
+
+      - name: Check out code
+        uses: actions/checkout@v2
+
+      - name: Get dependencies
+        run: go get -v -t -d ./...
+
+      - name: Run tests
+        if: ${{ env.GOARCH == 'amd64' }}
+        run: go test -v ./...
+
+      - name: Build binary
+        run: |
+          hash=$(echo ${{ github.sha }} | cut -b1-8)
+          go build -o build/vegawallet -ldflags "-X code.vegaprotocol.io/vegawallet/version.VersionHash=$hash"
+
+      - name: Import DeveloperID Certificate
+        uses: apple-actions/import-codesign-certs@v1
+        with:
+          keychain: vega
+          create-keychain: true
+          p12-file-base64: ${{ secrets.MACOS_CERTIFICATE }}
+          p12-password: ${{ secrets.MACOS_CERTIFICATE_PASS }}
+
+      - name: Sign binary
+        working-directory: build
+        # --timestamp
+        #     During signing, requests that a timestamp authority server be contacted to authenticate the time of
+        #     signing.
+        # --deep
+        #     When signing a bundle, specifies that nested code content such as helpers, frameworks, and plug-ins,
+        #     should be recursively signed in turn.
+        # --options runtime
+        #     On macOS versions >= 10.14.0, opts signed processes into a hardened runtime environment which includes
+        #     runtime code signing enforcement, library validation, hard, kill, and debugging restrictions.
+        run: codesign --verbose --sign "${{ secrets.MACOS_CERTIFICATE_IDENTITY_ID }}" --timestamp --options runtime --deep --force vegawallet
+
+      - name: Verify signature
+        working-directory: build
+        run: codesign --verbose --verify --strict --deep vegawallet
+
+      - name: Bundle binary in archive
+        uses: thedoctor0/zip-release@master
+        with:
+          type: zip
+          directory: build
+          filename: vegawallet-${{ env.GOOS }}-${{ env.GOARCH }}.zip
+
+      - name: Store notarization credentials
+        run: |
+          xcrun notarytool store-credentials vega \
+            --apple-id "${{ secrets.MACOS_NOTARIZATION_APPLE_ID }}" \
+            --team-id "${{ secrets.MACOS_NOTARIZATION_TEAM_ID }}" \
+            --password "${{ secrets.MACOS_NOTARIZATION_PASS }}"
+
+      - name: Notarize app
+        working-directory: build
+        run: |
+          xcrun notarytool submit vegawallet-${{ env.GOOS }}-${{ env.GOARCH }}.zip \
+            --keychain-profile vega \
+            --output-format json \
+            --timeout "90m" \
+            --wait
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: build/*.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  release-windows:
+    needs: check-version
+    name: Release on Windows ${{ matrix.arch }}
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        arch:
+          - amd64
+          - arm64
+    env:
+      GOOS: windows
+      GOARCH: ${{ matrix.arch }}
+      CGO_ENABLED: 0
+    steps:
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.17
+        id: go
+
+      - name: Check out code
+        uses: actions/checkout@v2
+
+      - name: Get dependencies
+        run: go get -v -t -d ./...
+
+      - name: Run tests
+        if: ${{ env.GOARCH == 'amd64' }}
+        run: go test -v ./...
+
+      - name: Build binary
+        run: |
+          $hash= "${{ github.sha }}".substring(0,8)
+          go build -o build/vegawallet.exe -ldflags "-X code.vegaprotocol.io/vegawallet/version.VersionHash=$hash"
+
+      - name: "Sign binary"
+        uses: Dana-Prajea/code-sign-action@98c79121b376beab8d6a9484f445089db4461bca
+        with:
+          certificate: ${{ secrets.WINDOWS_CERTIFICATE }}
+          password: ${{ secrets.WINDOWS_CERTIFICATE_PASS }}
+          certificatesha1: ${{ secrets.WINDOWS_CERTIFICATE_HASH }}
+          folder: "build"
+          timestampUrl: "http://timestamp.sectigo.com"
+
+      - name: Bundle binary in archive
+        uses: thedoctor0/zip-release@master
+        with:
+          type: zip
+          directory: build
+          filename: vegawallet-${{ env.GOOS }}-${{ env.GOARCH }}.zip
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: build/*.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
