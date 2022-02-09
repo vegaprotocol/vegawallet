@@ -10,14 +10,8 @@ cloud.google.com/go/datastore v1.0.0/go.mod h1:LXYbyblFSglQ5pkeyhO+Qmw7ukd3C+pD7
 cloud.google.com/go/firestore v1.1.0/go.mod h1:ulACoGHTpvq5r8rxGJ4ddJZBZqakUQqClKRT5SZwBmk=
 cloud.google.com/go/pubsub v1.0.1/go.mod h1:R0Gpsv3s54REJCy4fxDixWD93lHJMoZTyQ2kNxGRt3I=
 cloud.google.com/go/storage v1.0.0/go.mod h1:IhtSnM/ZTZV8YYJWCY8RULGVqBDmpoyjwiyrjsg+URw=
-code.vegaprotocol.io/protos v0.47.1-0.20220128102417-182c89e00442 h1:0jBV7Ltp2SpUzmO1u1JStgVoF1vbuBvIkd7pVg9cqdM=
-code.vegaprotocol.io/protos v0.47.1-0.20220128102417-182c89e00442/go.mod h1:KqJcg62sUHV0qEhlZIZojEypzk3V1ZE3tBS+wdqjddU=
-code.vegaprotocol.io/protos v0.48.0 h1:5yfLnh7xZrkQWiNOdYQI3GqJIs12G1Gjy/Uf3uyvDao=
-code.vegaprotocol.io/protos v0.48.0/go.mod h1:KqJcg62sUHV0qEhlZIZojEypzk3V1ZE3tBS+wdqjddU=
-code.vegaprotocol.io/shared v0.0.0-20220128163854-7eab67fa60d2 h1:GKg+68ulAI0UPhru2FgGE+qGuqoTQbnNDF31LU8e+jA=
-code.vegaprotocol.io/shared v0.0.0-20220128163854-7eab67fa60d2/go.mod h1:pNHKwqRDkotUN0s6jErl7Eb2EpZa2HAf03lyPMTCUT0=
-code.vegaprotocol.io/shared v0.0.0-20220202144944-ab85fdc4d546 h1:R2f7lxYmQ7mkc7L6wcNpe0gN/zBsCDRERK3yMPjFFfM=
-code.vegaprotocol.io/shared v0.0.0-20220202144944-ab85fdc4d546/go.mod h1:pNHKwqRDkotUN0s6jErl7Eb2EpZa2HAf03lyPMTCUT0=
+code.vegaprotocol.io/protos v0.48.1-0.20220209133852-0f31e2fef5ff h1:wi3bbzwfV4bvGuBkBbZX0E1S1aa8a2IMQEGKO/q7iu4=
+code.vegaprotocol.io/protos v0.48.1-0.20220209133852-0f31e2fef5ff/go.mod h1:KqJcg62sUHV0qEhlZIZojEypzk3V1ZE3tBS+wdqjddU=
 code.vegaprotocol.io/shared v0.0.0-20220202150846-b6aba31dcdb0 h1:vDjKTd508FwIwoSdZBEvtEfmBeaYdodgLM96v253zKI=
 code.vegaprotocol.io/shared v0.0.0-20220202150846-b6aba31dcdb0/go.mod h1:pNHKwqRDkotUN0s6jErl7Eb2EpZa2HAf03lyPMTCUT0=
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=
