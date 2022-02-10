@@ -9,7 +9,7 @@
 - [](https://github.com/vegaprotocol/vegawallet/pull/) -
 
 ### 🛠  Improvements
-- [](https://github.com/vegaprotocol/vegawallet/pull/) -
+- [484](https://github.com/vegaprotocol/vegawallet/pull/484) - Add JSON structure tags to handler requests, to match responses format
 
 ### 🔥 Removal
 - [](https://github.com/vegaprotocol/vegawallet/pull/) -

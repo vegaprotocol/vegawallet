@@ -22,18 +22,15 @@ type Store interface {
 }
 
 type GenerateKeyRequest struct {
-	Wallet     string
-	Metadata   []Meta
-	Passphrase string
+	Wallet     string `json:"wallet"`
+	Metadata   []Meta `json:"metadata"`
+	Passphrase string `json:"passphrase"`
 }
 
 type GenerateKeyResponse struct {
-	PublicKey string `json:"publicKey"`
-	Algorithm struct {
-		Name    string `json:"name"`
-		Version uint32 `json:"version"`
-	} `json:"algorithm"`
-	Meta []Meta `json:"meta"`
+	PublicKey string    `json:"publicKey"`
+	Algorithm Algorithm `json:"algorithm"`
+	Meta      []Meta    `json:"meta"`
 }
 
 func GenerateKey(store Store, req *GenerateKeyRequest) (*GenerateKeyResponse, error) {
@@ -64,10 +61,10 @@ func GenerateKey(store Store, req *GenerateKeyRequest) (*GenerateKeyResponse, er
 }
 
 type AnnotateKeyRequest struct {
-	Wallet     string
-	PubKey     string
-	Metadata   []Meta
-	Passphrase string
+	Wallet     string `json:"wallet"`
+	PubKey     string `json:"pubKey"`
+	Metadata   []Meta `json:"metadata"`
+	Passphrase string `json:"passphrase"`
 }
 
 func AnnotateKey(store Store, req *AnnotateKeyRequest) error {
@@ -88,9 +85,9 @@ func AnnotateKey(store Store, req *AnnotateKeyRequest) error {
 }
 
 type TaintKeyRequest struct {
-	Wallet     string
-	PubKey     string
-	Passphrase string
+	Wallet     string `json:"wallet"`
+	PubKey     string `json:"pubKey"`
+	Passphrase string `json:"passphrase"`
 }
 
 func TaintKey(store Store, req *TaintKeyRequest) error {
@@ -111,9 +108,9 @@ func TaintKey(store Store, req *TaintKeyRequest) error {
 }
 
 type UntaintKeyRequest struct {
-	Wallet     string
-	PubKey     string
-	Passphrase string
+	Wallet     string `json:"wallet"`
+	PubKey     string `json:"pubKey"`
+	Passphrase string `json:"passphrase"`
 }
 
 func UntaintKey(store Store, req *UntaintKeyRequest) error {
@@ -134,9 +131,9 @@ func UntaintKey(store Store, req *UntaintKeyRequest) error {
 }
 
 type IsolateKeyRequest struct {
-	Wallet     string
-	PubKey     string
-	Passphrase string
+	Wallet     string `json:"wallet"`
+	PubKey     string `json:"pubKey"`
+	Passphrase string `json:"passphrase"`
 }
 
 type IsolateKeyResponse struct {
@@ -166,8 +163,8 @@ func IsolateKey(store Store, req *IsolateKeyRequest) (*IsolateKeyResponse, error
 }
 
 type ListKeysRequest struct {
-	Wallet     string
-	Passphrase string
+	Wallet     string `json:"wallet"`
+	Passphrase string `json:"passphrase"`
 }
 
 type ListKeysResponse struct {
@@ -175,19 +172,16 @@ type ListKeysResponse struct {
 }
 
 type DescribeKeyRequest struct {
-	Wallet     string
-	Passphrase string
-	PubKey     string
+	Wallet     string `json:"wallet"`
+	Passphrase string `json:"passphrase"`
+	PubKey     string `json:"pubKey"`
 }
 
 type DescribeKeyResponse struct {
-	PublicKey string `json:"publicKey"`
-	Algorithm struct {
-		Name    string `json:"name"`
-		Version uint32 `json:"version"`
-	} `json:"algorithm"`
-	Meta      []Meta `json:"meta"`
-	IsTainted bool   `json:"isTainted"`
+	PublicKey string    `json:"publicKey"`
+	Algorithm Algorithm `json:"algorithm"`
+	Meta      []Meta    `json:"meta"`
+	IsTainted bool      `json:"isTainted"`
 }
 
 type NamedPubKey struct {
@@ -236,12 +230,12 @@ func DescribeKey(store Store, req *DescribeKeyRequest) (*DescribeKeyResponse, er
 }
 
 type RotateKeyRequest struct {
-	Wallet            string
-	Passphrase        string
-	NewPublicKey      string
-	CurrentPublicKey  string
-	TxBlockHeight     uint64
-	TargetBlockHeight uint64
+	Wallet            string `json:"wallet"`
+	Passphrase        string `json:"passphrase"`
+	NewPublicKey      string `json:"newPublicKey"`
+	CurrentPublicKey  string `json:"currentPublicKey"`
+	TxBlockHeight     uint64 `json:"txBlockHeight"`
+	TargetBlockHeight uint64 `json:"targetBlockHeight"`
 }
 
 type RotateKeyResponse struct {
@@ -321,8 +315,8 @@ func RotateKey(store Store, req *RotateKeyRequest) (*RotateKeyResponse, error) {
 }
 
 type GetWalletInfoRequest struct {
-	Wallet     string
-	Passphrase string
+	Wallet     string `json:"wallet"`
+	Passphrase string `json:"passphrase"`
 }
 
 type GetWalletInfoResponse struct {
@@ -345,25 +339,26 @@ func GetWalletInfo(store Store, req *GetWalletInfoRequest) (*GetWalletInfoRespon
 }
 
 type CreateWalletRequest struct {
-	Wallet     string
-	Passphrase string
+	Wallet     string `json:"wallet"`
+	Passphrase string `json:"passphrase"`
 }
 
 type CreateWalletResponse struct {
-	Wallet struct {
-		Name           string `json:"name"`
-		Version        uint32 `json:"version"`
-		FilePath       string `json:"filePath"`
-		RecoveryPhrase string `json:"recoveryPhrase"`
-	} `json:"wallet"`
-	Key struct {
-		PublicKey string `json:"publicKey"`
-		Algorithm struct {
-			Name    string `json:"name"`
-			Version uint32 `json:"version"`
-		} `json:"algorithm"`
-		Meta []Meta `json:"meta"`
-	} `json:"key"`
+	Wallet CreatedWallet  `json:"wallet"`
+	Key    FirstPublicKey `json:"key"`
+}
+
+type CreatedWallet struct {
+	Name           string `json:"name"`
+	Version        uint32 `json:"version"`
+	FilePath       string `json:"filePath"`
+	RecoveryPhrase string `json:"recoveryPhrase"`
+}
+
+type FirstPublicKey struct {
+	PublicKey string    `json:"publicKey"`
+	Algorithm Algorithm `json:"algorithm"`
+	Meta      []Meta    `json:"meta"`
 }
 
 func CreateWallet(store Store, req *CreateWalletRequest) (*CreateWalletResponse, error) {
@@ -400,26 +395,21 @@ func CreateWallet(store Store, req *CreateWalletRequest) (*CreateWalletResponse,
 }
 
 type ImportWalletRequest struct {
-	Wallet         string
-	RecoveryPhrase string
-	Version        uint32
-	Passphrase     string
+	Wallet         string `json:"wallet"`
+	RecoveryPhrase string `json:"recoveryPhrase"`
+	Version        uint32 `json:"version"`
+	Passphrase     string `json:"passphrase"`
 }
 
 type ImportWalletResponse struct {
-	Wallet struct {
-		Name     string `json:"name"`
-		Version  uint32 `json:"version"`
-		FilePath string `json:"filePath"`
-	} `json:"wallet"`
-	Key struct {
-		PublicKey string `json:"publicKey"`
-		Algorithm struct {
-			Name    string `json:"name"`
-			Version uint32 `json:"version"`
-		} `json:"algorithm"`
-		Meta []Meta `json:"meta"`
-	} `json:"key"`
+	Wallet ImportedWallet `json:"wallet"`
+	Key    FirstPublicKey `json:"key"`
+}
+
+type ImportedWallet struct {
+	Name     string `json:"name"`
+	Version  uint32 `json:"version"`
+	FilePath string `json:"filePath"`
 }
 
 func ImportWallet(store Store, req *ImportWalletRequest) (*ImportWalletResponse, error) {
@@ -471,10 +461,11 @@ func ListWallets(store Store) (*ListWalletsResponse, error) {
 }
 
 type SignCommandRequest struct {
-	Wallet        string
-	Passphrase    string
-	TxBlockHeight uint64
-	Request       *walletpb.SubmitTransactionRequest
+	Wallet        string `json:"wallet"`
+	Passphrase    string `json:"passphrase"`
+	TxBlockHeight uint64 `json:"txBlockHeight"`
+
+	Request *walletpb.SubmitTransactionRequest `json:"request"`
 }
 
 type SignCommandResponse struct {
@@ -517,10 +508,10 @@ func SignCommand(store Store, req *SignCommandRequest) (*SignCommandResponse, er
 }
 
 type SignMessageRequest struct {
-	Wallet     string
-	PubKey     string
-	Message    []byte
-	Passphrase string
+	Wallet     string `json:"wallet"`
+	PubKey     string `json:"pubKey"`
+	Message    []byte `json:"message"`
+	Passphrase string `json:"passphrase"`
 }
 
 type SignMessageResponse struct {
