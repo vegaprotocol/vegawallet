@@ -51,6 +51,7 @@
 - [449](https://github.com/vegaprotocol/vegawallet/pull/449) - Don't use unicode glyphs on windows
 - [444](https://github.com/vegaprotocol/vegawallet/pull/444) - Fail gracefully when trying to get password input on msys
 - [455](https://github.com/vegaprotocol/vegawallet/pull/455) - New Liquidity Provisioning commands removed requirement for Id field
+- [485](https://github.com/vegaprotocol/vegawallet/pull/485) - Update Windows VM version to fix code signing
 
 ## 0.11.0
 
