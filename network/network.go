@@ -15,43 +15,43 @@ var (
 )
 
 type Network struct {
-	Name        string
-	Level       encoding.LogLevel
-	TokenExpiry encoding.Duration
-	Port        int
-	Host        string
-	API         APIConfig
-	TokenDApp   TokenDAppConfig
-	Console     ConsoleConfig
+	Name        string            `json:"name"`
+	Level       encoding.LogLevel `json:"level"`
+	TokenExpiry encoding.Duration `json:"tokenExpiry"`
+	Port        int               `json:"port"`
+	Host        string            `json:"host"`
+	API         APIConfig         `json:"api"`
+	TokenDApp   TokenDAppConfig   `json:"tokenDApp"`
+	Console     ConsoleConfig     `json:"console"`
 }
 
 type APIConfig struct {
-	GRPC    GRPCConfig
-	REST    RESTConfig
-	GraphQL GraphQLConfig
+	GRPC    GRPCConfig    `json:"grpc"`
+	REST    RESTConfig    `json:"rest"`
+	GraphQL GraphQLConfig `json:"graphQl"`
 }
 
 type GRPCConfig struct {
-	Hosts   []string
-	Retries uint64
+	Hosts   []string `json:"hosts"`
+	Retries uint64   `json:"retries"`
 }
 
 type RESTConfig struct {
-	Hosts []string
+	Hosts []string `json:"hosts"`
 }
 
 type GraphQLConfig struct {
-	Hosts []string
+	Hosts []string `json:"hosts"`
 }
 
 type ConsoleConfig struct {
-	URL       string
-	LocalPort int
+	URL       string `json:"url"`
+	LocalPort int    `json:"localPort"`
 }
 
 type TokenDAppConfig struct {
-	URL       string
-	LocalPort int
+	URL       string `json:"url"`
+	LocalPort int    `json:"localPort"`
 }
 
 func (n *Network) EnsureCanConnectGRPCNode() error {
