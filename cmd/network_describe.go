@@ -99,7 +99,7 @@ func PrintDescribeNetworkResponse(w io.Writer, resp *network.DescribeNetworkResp
 	p := printer.NewInteractivePrinter(w)
 	p.NextLine().Text("Network").NextLine()
 	p.Text("  Name:         ").WarningText(resp.Name).NextLine()
-	p.Text("  Address:      ").WarningText(resp.Host).Text(":").WarningText(fmt.Sprint(resp.Port)).NextLine()
+	p.Text("  Address:      ").WarningText(resp.Host).WarningText(":").WarningText(fmt.Sprint(resp.Port)).NextLine()
 	p.Text("  Token expiry: ").WarningText(resp.TokenExpiry).NextLine()
 	p.Text("  Level:        ").WarningText(resp.Level)
 	p.NextSection()
@@ -127,6 +127,6 @@ func PrintDescribeNetworkResponse(w io.Writer, resp *network.DescribeNetworkResp
 	p.NextLine()
 
 	p.Text("Console").NextLine()
-	p.Text("  Address: ").WarningText(resp.Console.URL).Text(":").WarningText(fmt.Sprint(resp.Console.LocalPort))
+	p.Text("  Address: ").WarningText(resp.Console.URL).WarningText(":").WarningText(fmt.Sprint(resp.Console.LocalPort))
 	p.NextSection()
 }
