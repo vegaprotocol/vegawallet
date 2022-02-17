@@ -1,6 +1,7 @@
 package cmd_test
 
 import (
+	"encoding/json"
 	"testing"
 
 	commandspb "code.vegaprotocol.io/protos/vega/commands/v1"
@@ -58,7 +59,9 @@ func testSendTxFlagsValidFlagsSucceeds(t *testing.T) {
 	// then
 	require.NoError(t, err)
 	require.NotNil(t, req)
-	assert.Equal(t, expectedReq, req)
+	expectedJson, _ := json.Marshal(expectedReq)
+	actualJson, _ := json.Marshal(req)
+	assert.Equal(t, expectedJson, actualJson)
 }
 
 func testSendTxFlagsMissingLogLevelFails(t *testing.T) {
