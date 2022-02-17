@@ -15,8 +15,7 @@
 - [](https://github.com/vegaprotocol/vegawallet/pull/) -
 
 ### 🐛 Fixes
-- [](https://github.com/vegaprotocol/vegawallet/pull/) -
-
+- [487](https://github.com/vegaprotocol/vegawallet/pull/487) - Update to work with changes in `protos`
 
 ## 0.12.0
 

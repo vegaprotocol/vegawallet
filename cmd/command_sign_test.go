@@ -1,6 +1,7 @@
 package cmd_test
 
 import (
+	"encoding/json"
 	"testing"
 
 	"code.vegaprotocol.io/protos/vega"
@@ -63,7 +64,10 @@ func testSignCommandFlagsValidFlagsSucceeds(t *testing.T) {
 	// then
 	require.NoError(t, err)
 	require.NotNil(t, req)
-	assert.Equal(t, expectedReq, req)
+
+	expectedJSON, _ := json.Marshal(expectedReq)
+	actualJSON, _ := json.Marshal(req)
+	assert.Equal(t, expectedJSON, actualJSON)
 }
 
 func testSignCommandFlagsMissingWalletFails(t *testing.T) {
