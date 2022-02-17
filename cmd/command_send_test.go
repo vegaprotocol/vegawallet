@@ -74,9 +74,9 @@ func testSendCommandFlagsValidFlagsSucceeds(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, req)
 
-	expectedJson, _ := json.Marshal(expectedReq)
-	actualJson, _ := json.Marshal(req)
-	assert.Equal(t, expectedJson, actualJson)
+	expectedJSON, _ := json.Marshal(expectedReq)
+	actualJSON, _ := json.Marshal(req)
+	assert.Equal(t, expectedJSON, actualJSON)
 }
 
 func testSendCommandFlagsMissingWalletFails(t *testing.T) {
