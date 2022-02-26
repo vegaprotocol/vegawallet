@@ -16,6 +16,7 @@
 
 ### 🐛 Fixes
 - [487](https://github.com/vegaprotocol/vegawallet/pull/487) - Update to work with changes in `protos`
+- [491](https://github.com/vegaprotocol/vegawallet/pull/491) - Ensure the node to which we send the transaction is the node we got the height from
 
 ## 0.12.0
 

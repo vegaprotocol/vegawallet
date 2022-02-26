@@ -63,7 +63,7 @@ func (n *Forwarder) HealthCheck(ctx context.Context) error {
 	req := api.GetVegaTimeRequest{}
 	return backoff.Retry(
 		func() error {
-			clt := n.nextClt()
+			clt, _ := n.nextClt()
 			resp, err := clt.GetVegaTime(ctx, &req)
 			if err != nil {
 				return err
@@ -75,12 +75,14 @@ func (n *Forwarder) HealthCheck(ctx context.Context) error {
 	)
 }
 
-func (n *Forwarder) LastBlockHeight(ctx context.Context) (uint64, error) {
+func (n *Forwarder) LastBlockHeight(ctx context.Context) (uint64, int, error) {
 	req := api.LastBlockHeightRequest{}
 	var height uint64
+	var cltIdx int
+	var clt api.CoreServiceClient
 	err := backoff.Retry(
 		func() error {
-			clt := n.nextClt()
+			clt, cltIdx = n.nextClt()
 			resp, err := clt.LastBlockHeight(ctx, &req)
 			if err != nil {
 				n.log.Debug("Couldn't get last block", zap.Error(err))
@@ -101,10 +103,14 @@ func (n *Forwarder) LastBlockHeight(ctx context.Context) (uint64, error) {
 		)
 	}
 
-	return height, err
+	return height, cltIdx, err
 }
 
-func (n *Forwarder) SendTx(ctx context.Context, tx *commandspb.Transaction, ty api.SubmitTransactionRequest_Type) (string, error) {
+func (n *Forwarder) SendTx(ctx context.Context, tx *commandspb.Transaction, ty api.SubmitTransactionRequest_Type, cltIdx int) (string, error) {
+	if cltIdx < 0 {
+		_, cltIdx = n.nextClt()
+	}
+
 	req := api.SubmitTransactionRequest{
 		Tx:   tx,
 		Type: ty,
@@ -112,7 +118,7 @@ func (n *Forwarder) SendTx(ctx context.Context, tx *commandspb.Transaction, ty a
 	var resp *api.SubmitTransactionResponse
 	err := backoff.Retry(
 		func() error {
-			clt := n.nextClt()
+			clt := n.clts[cltIdx]
 			r, err := clt.SubmitTransaction(ctx, &req)
 			if err != nil {
 				n.log.Error("Couldn't send transaction", zap.Error(err))
@@ -133,10 +139,11 @@ func (n *Forwarder) SendTx(ctx context.Context, tx *commandspb.Transaction, ty a
 	return resp.TxHash, nil
 }
 
-func (n *Forwarder) nextClt() api.CoreServiceClient {
+func (n *Forwarder) nextClt() (api.CoreServiceClient, int) {
 	i := atomic.AddUint64(&n.next, 1)
 	n.log.Info("Sending transaction to Vega node",
 		zap.String("host", n.nodeCfgs.Hosts[(int(i)-1)%len(n.clts)]),
 	)
-	return n.clts[(int(i)-1)%len(n.clts)]
+	idx := (int(i) - 1) % len(n.clts)
+	return n.clts[idx], idx
 }

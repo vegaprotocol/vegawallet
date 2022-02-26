@@ -404,9 +404,9 @@ type Auth interface {
 // NodeForward ...
 //go:generate go run github.com/golang/mock/mockgen -destination mocks/node_forward_mock.go -package mocks code.vegaprotocol.io/vegawallet/service NodeForward
 type NodeForward interface {
-	SendTx(context.Context, *commandspb.Transaction, api.SubmitTransactionRequest_Type) (string, error)
+	SendTx(context.Context, *commandspb.Transaction, api.SubmitTransactionRequest_Type, int) (string, error)
 	HealthCheck(context.Context) error
-	LastBlockHeight(context.Context) (uint64, error)
+	LastBlockHeight(context.Context) (uint64, int, error)
 }
 
 func NewService(log *zap.Logger, net *network.Network, h WalletHandler, a Auth, n NodeForward) (*Service, error) {
@@ -725,7 +725,7 @@ func (s *Service) signTx(token string, w http.ResponseWriter, r *http.Request, _
 		return
 	}
 
-	height, err := s.nodeForward.LastBlockHeight(r.Context())
+	height, cltIdx, err := s.nodeForward.LastBlockHeight(r.Context())
 	if err != nil {
 		s.writeInternalError(w, ErrCouldNotGetBlockHeight)
 		return
@@ -748,7 +748,7 @@ func (s *Service) signTx(token string, w http.ResponseWriter, r *http.Request, _
 		return
 	}
 
-	txHash, err := s.nodeForward.SendTx(r.Context(), tx, ty)
+	txHash, err := s.nodeForward.SendTx(r.Context(), tx, ty, cltIdx)
 	if err != nil {
 		if st, ok := status.FromError(err); ok {
 			var details []string

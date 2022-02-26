@@ -260,7 +260,9 @@ func SendCommand(w io.Writer, rf *RootFlags, req *SendCommandRequest) error {
 	defer cancelFn()
 
 	log.Info("retrieving block height")
-	blockHeight, err := forwarder.LastBlockHeight(ctx)
+	// to make sure that the block height and the transaction are from the same node,
+	// capture the index of the node we got the height from and pass it to the send tx.
+	blockHeight, cltIdx, err := forwarder.LastBlockHeight(ctx)
 	if err != nil {
 		return fmt.Errorf("couldn't get last block height: %w", err)
 	}
@@ -274,7 +276,7 @@ func SendCommand(w io.Writer, rf *RootFlags, req *SendCommandRequest) error {
 
 	log.Info("transaction successfully signed", zap.String("signature", tx.Signature.Value))
 
-	txHash, err := forwarder.SendTx(ctx, tx, api.SubmitTransactionRequest_TYPE_ASYNC)
+	txHash, err := forwarder.SendTx(ctx, tx, api.SubmitTransactionRequest_TYPE_ASYNC, cltIdx)
 	if err != nil {
 		log.Error("couldn't send transaction", zap.Error(err))
 		return fmt.Errorf("couldn't send transaction: %w", err)

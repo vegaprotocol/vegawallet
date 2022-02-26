@@ -687,8 +687,8 @@ func testSigningTransactionSucceeds(t *testing.T) {
 	// setup
 	s.auth.EXPECT().VerifyToken(token).Times(1).Return(walletName, nil)
 	s.handler.EXPECT().SignTx(walletName, gomock.Any(), gomock.Any()).Times(1).Return(&commandspb.Transaction{}, nil)
-	s.nodeForward.EXPECT().SendTx(gomock.Any(), &commandspb.Transaction{}, api.SubmitTransactionRequest_TYPE_ASYNC).Times(0)
-	s.nodeForward.EXPECT().LastBlockHeight(gomock.Any()).Times(1).Return(uint64(42), nil)
+	s.nodeForward.EXPECT().SendTx(gomock.Any(), &commandspb.Transaction{}, api.SubmitTransactionRequest_TYPE_ASYNC, 0).Times(0)
+	s.nodeForward.EXPECT().LastBlockHeight(gomock.Any()).Times(1).Return(uint64(42), 0, nil)
 
 	// when
 	statusCode, _ := serveHTTP(t, s, signTxRequest(t, payload, headers))
@@ -710,8 +710,8 @@ func testSigningTransactionWithPropagationSucceeds(t *testing.T) {
 	// setup
 	s.auth.EXPECT().VerifyToken(token).Times(1).Return(walletName, nil)
 	s.handler.EXPECT().SignTx(walletName, gomock.Any(), gomock.Any()).Times(1).Return(&commandspb.Transaction{}, nil)
-	s.nodeForward.EXPECT().SendTx(gomock.Any(), &commandspb.Transaction{}, api.SubmitTransactionRequest_TYPE_ASYNC).Times(1)
-	s.nodeForward.EXPECT().LastBlockHeight(gomock.Any()).Times(1).Return(uint64(42), nil)
+	s.nodeForward.EXPECT().SendTx(gomock.Any(), &commandspb.Transaction{}, api.SubmitTransactionRequest_TYPE_ASYNC, 0).Times(1)
+	s.nodeForward.EXPECT().LastBlockHeight(gomock.Any()).Times(1).Return(uint64(42), 0, nil)
 
 	// when
 	statusCode, _ := serveHTTP(t, s, signTxRequest(t, payload, headers))
@@ -733,8 +733,8 @@ func testSigningTransactionWithFailedPropagationFails(t *testing.T) {
 	// setup
 	s.auth.EXPECT().VerifyToken(token).Times(1).Return(walletName, nil)
 	s.handler.EXPECT().SignTx(walletName, gomock.Any(), gomock.Any()).Times(1).Return(&commandspb.Transaction{}, nil)
-	s.nodeForward.EXPECT().SendTx(gomock.Any(), &commandspb.Transaction{}, api.SubmitTransactionRequest_TYPE_ASYNC).Times(1).Return("", assert.AnError)
-	s.nodeForward.EXPECT().LastBlockHeight(gomock.Any()).Times(1).Return(uint64(42), nil)
+	s.nodeForward.EXPECT().SendTx(gomock.Any(), &commandspb.Transaction{}, api.SubmitTransactionRequest_TYPE_ASYNC, 0).Times(1).Return("", assert.AnError)
+	s.nodeForward.EXPECT().LastBlockHeight(gomock.Any()).Times(1).Return(uint64(42), 0, nil)
 
 	// when
 	statusCode, _ := serveHTTP(t, s, signTxRequest(t, payload, headers))
@@ -756,8 +756,8 @@ func testFailedTransactionSigningFails(t *testing.T) {
 	// setup
 	s.auth.EXPECT().VerifyToken(token).Times(1).Return(walletName, nil)
 	s.handler.EXPECT().SignTx(walletName, gomock.Any(), gomock.Any()).Times(1).Return(nil, assert.AnError)
-	s.nodeForward.EXPECT().SendTx(gomock.Any(), &commandspb.Transaction{}, api.SubmitTransactionRequest_TYPE_ASYNC).Times(0)
-	s.nodeForward.EXPECT().LastBlockHeight(gomock.Any()).Times(1).Return(uint64(42), nil)
+	s.nodeForward.EXPECT().SendTx(gomock.Any(), &commandspb.Transaction{}, api.SubmitTransactionRequest_TYPE_ASYNC, 0).Times(0)
+	s.nodeForward.EXPECT().LastBlockHeight(gomock.Any()).Times(1).Return(uint64(42), 0, nil)
 
 	// when
 	statusCode, _ := serveHTTP(t, s, signTxRequest(t, payload, headers))
