@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased (0.13.0)
+## Unreleased (0.14.0)
 
 ### 🚨 Breaking changes
 - [](https://github.com/vegaprotocol/vegawallet/pull/) -
@@ -17,6 +17,14 @@
 ### 🐛 Fixes
 - [](https://github.com/vegaprotocol/vegawallet/pull/) -
 
+
+## 0.13.0
+
+### 🛠  Improvements
+- [484](https://github.com/vegaprotocol/vegawallet/pull/484) - Add JSON structure tags to handler requests, to match responses format
+
+### 🐛 Fixes
+- [487](https://github.com/vegaprotocol/vegawallet/pull/487) - Update to work with changes in `protos`
 
 ## 0.12.0
 
@@ -51,6 +59,7 @@
 - [449](https://github.com/vegaprotocol/vegawallet/pull/449) - Don't use unicode glyphs on windows
 - [444](https://github.com/vegaprotocol/vegawallet/pull/444) - Fail gracefully when trying to get password input on msys
 - [455](https://github.com/vegaprotocol/vegawallet/pull/455) - New Liquidity Provisioning commands removed requirement for Id field
+- [485](https://github.com/vegaprotocol/vegawallet/pull/485) - Update Windows VM version to fix code signing
 
 ## 0.11.0
 

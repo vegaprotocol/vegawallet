@@ -64,10 +64,10 @@ func ImportNetwork(store Store, net *Network, overwrite bool) error {
 }
 
 type ImportNetworkFromSourceRequest struct {
-	FilePath string
-	URL      string
-	Name     string
-	Force    bool
+	FilePath string `json:"filePath"`
+	URL      string `json:"url"`
+	Name     string `json:"name"`
+	Force    bool   `json:"force"`
 }
 
 type ImportNetworkFromSourceResponse struct {
@@ -140,7 +140,7 @@ func DescribeNetwork(store Store, req *DescribeNetworkRequest) (*DescribeNetwork
 }
 
 type DescribeNetworkRequest struct {
-	Name string
+	Name string `json:"name"`
 }
 
 type DescribeNetworkResponse struct {
@@ -168,7 +168,7 @@ type DescribeNetworkResponse struct {
 }
 
 type DeleteNetworkRequest struct {
-	Name string
+	Name string `json:"name"`
 }
 
 func DeleteNetwork(store Store, req *DeleteNetworkRequest) error {
