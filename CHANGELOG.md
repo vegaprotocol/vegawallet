@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased (0.13.0)
+## Unreleased (0.14.0)
 
 ### 🚨 Breaking changes
 - [](https://github.com/vegaprotocol/vegawallet/pull/) -
@@ -9,10 +9,19 @@
 - [](https://github.com/vegaprotocol/vegawallet/pull/) -
 
 ### 🛠  Improvements
-- [484](https://github.com/vegaprotocol/vegawallet/pull/484) - Add JSON structure tags to handler requests, to match responses format
+- [](https://github.com/vegaprotocol/vegawallet/pull/) -
 
 ### 🔥 Removal
 - [](https://github.com/vegaprotocol/vegawallet/pull/) -
+
+### 🐛 Fixes
+- [](https://github.com/vegaprotocol/vegawallet/pull/) -
+
+
+## 0.13.0
+
+### 🛠  Improvements
+- [484](https://github.com/vegaprotocol/vegawallet/pull/484) - Add JSON structure tags to handler requests, to match responses format
 
 ### 🐛 Fixes
 - [487](https://github.com/vegaprotocol/vegawallet/pull/487) - Update to work with changes in `protos`
