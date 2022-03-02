@@ -1,0 +1,342 @@
+---
+
+name: Manage Project Board
+
+"on":
+  pull_request:
+    branches: [develop, master]
+    types: [edited, synchronize, opened, reopened, labeled, unlabeled, ready_for_review, review_requested]
+
+jobs:
+  verify-conventional-commits:
+    if: startsWith(github.head_ref, 'renovate/') != true
+    name: Verify Conventional Commits
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Commitsar conventional commits check
+        uses: aevea/commitsar@v0.18.0
+
+  verify-linked-issue:
+    if: |
+      ((startsWith(github.head_ref, 'renovate/') != true) && (contains(github.event.*.name, 'labeled')
+      || contains(github.event.*.name, 'unlabeled') || !contains(github.event.pull_request.labels.*.name, 'no-changelog') == true))
+    runs-on: ubuntu-latest
+    name: Verify Linked Issue
+    steps:
+      - name: Verify linked issue
+        uses: hattan/verify-linked-issue-action@v1.1.5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  verify-changelog-updated:
+    if: |
+      ((startsWith(github.head_ref, 'renovate/') != true) && (contains(github.event.*.name, 'labeled')
+      || contains(github.event.*.name, 'unlabeled') || !contains(github.event.pull_request.labels.*.name, 'no-changelog') == true)
+      && (github.event.pull_request.draft != true))
+    name: Verify CHANGELOG Updated
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Check changelog entry
+        uses: Zomzog/changelog-checker@v1.2.0
+        with:
+          fileName: CHANGELOG.md
+          noChangelogLabel: "no-changelog"
+          checkNotification: Simple
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  skip-changelog-and-issue-checks:
+    if: |
+      ((startsWith(github.head_ref, 'renovate/') != true) && (contains(github.event.*.name, 'labeled')
+      || contains(github.event.*.name, 'unlabeled') || contains(github.event.pull_request.labels.*.name, 'no-changelog') == true)
+      && (github.event.pull_request.draft != true))
+    name: Skip Changelog And Issue Checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get project data
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_NEW_CARD_TO_PROJECT }}
+          ORGANIZATION: vegaprotocol
+          PROJECT_NUMBER: 106
+          # yamllint disable rule:line-length
+        run: |
+          gh api graphql -f query='
+            query($org: String!, $number: Int!) {
+              organization(login: $org){
+                projectNext(number: $number) {
+                  id
+                  fields(first:20) {
+                    nodes {
+                      id
+                      name
+                      settings
+                    }
+                  }
+                }
+              }
+            }' -f org=$ORGANIZATION -F number=$PROJECT_NUMBER > project_data.json
+          echo 'PROJECT_ID='$(jq '.data.organization.projectNext.id' project_data.json) >> $GITHUB_ENV
+          echo 'STATUS_FIELD_ID='$(jq '.data.organization.projectNext.fields.nodes[] | select(.name== "Status") | .id' project_data.json) >> $GITHUB_ENV
+          echo 'PR_REVIEW_OPTION_ID='$(jq '.data.organization.projectNext.fields.nodes[] | select(.name== "Status") |.settings | fromjson.options[] | select(.name=="Waiting Review") |.id' project_data.json) >> $GITHUB_ENV
+          echo 'ITER_FIELD_ID='$(jq '.data.organization.projectNext.fields.nodes[] | select(.name== "Sprint") | .id' project_data.json) >> $GITHUB_ENV
+          echo 'ITER_OPTION_ID='$(jq '.data.organization.projectNext.fields.nodes[] | select(.name== "Sprint") |.settings | fromjson.configuration.iterations[0] | .id' project_data.json) >> $GITHUB_ENV
+# yamllint enable rule:line-length
+
+      - name: Add pr to project
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_NEW_CARD_TO_PROJECT }}
+          PR_ID: ${{ github.event.pull_request.node_id }}
+        run: |
+          item_id="$( gh api graphql -f query='
+            mutation($project:ID!, $pr:ID!) {
+              addProjectNextItem(input: {projectId: $project, contentId: $pr}) {
+                projectNextItem {
+                  id
+                }
+              }
+            }' -f project=$PROJECT_ID -f pr=$PR_ID --jq '.data.addProjectNextItem.projectNextItem.id')"
+          echo 'ITEM_ID='$item_id >> $GITHUB_ENV
+
+      - name: Set pr project status fields
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_NEW_CARD_TO_PROJECT }}
+        run: |
+          gh api graphql -f query='
+            mutation (
+              $project: ID!
+              $item: ID!
+              $status_field: ID!
+              $status_value: String!
+              $iteration_field: ID!
+              $iteration_value: String!
+            ) {
+              set_status: updateProjectNextItemField(input: {
+                projectId: $project
+                itemId: $item
+                fieldId: $status_field
+                value: $status_value
+              }) {
+                projectNextItem {
+                  id
+                  }
+              }
+              set_iteration: updateProjectNextItemField(input: {
+                projectId: $project
+                itemId: $item
+                fieldId: $iteration_field
+                value: $iteration_value
+              }) {
+                projectNextItem {
+                  id
+                }
+              }
+            }' -f project=$PROJECT_ID \
+              -f item=$ITEM_ID \
+              -f status_field=$STATUS_FIELD_ID \
+              -f status_value=${{ env.PR_REVIEW_OPTION_ID }} \
+              -f iteration_field=$ITER_FIELD_ID \
+              -f iteration_value=${{ env.ITER_OPTION_ID }}
+
+  update-issues-when-pr-linked:
+    needs: verify-linked-issue
+    name: Update Issue When PR Linked
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      checks: write
+      contents: write
+      issues: write
+      pull-requests: write
+      repository-projects: write
+      statuses: write
+    steps:
+      - name: Get project data
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_NEW_CARD_TO_PROJECT }}
+          ORGANIZATION: vegaprotocol
+          PROJECT_NUMBER: 106
+          # yamllint disable rule:line-length
+        run: |
+          gh api graphql -f query='
+            query($org: String!, $number: Int!) {
+              organization(login: $org){
+                projectNext(number: $number) {
+                  id
+                  fields(first:20) {
+                    nodes {
+                      id
+                      name
+                      settings
+                    }
+                  }
+                }
+              }
+            }' -f org=$ORGANIZATION -F number=$PROJECT_NUMBER > project_data1.json
+          echo 'PROJECT_ID='$(jq '.data.organization.projectNext.id' project_data1.json) >> $GITHUB_ENV
+          echo 'STATUS_FIELD_ID='$(jq '.data.organization.projectNext.fields.nodes[] | select(.name== "Status") | .id' project_data1.json) >> $GITHUB_ENV
+          # yamllint disable-line rule:line-length
+          echo 'INPROG_OPTION_ID='$(jq '.data.organization.projectNext.fields.nodes[] | select(.name== "Status") |.settings | fromjson.options[] | select(.name=="In Progress") |.id' project_data1.json) >> $GITHUB_ENV
+          echo 'REVIEW_OPTION_ID='$(jq '.data.organization.projectNext.fields.nodes[] | select(.name== "Status") |.settings | fromjson.options[] | select(.name=="Waiting Review") |.id' project_data1.json) >> $GITHUB_ENV
+          echo 'ITER_FIELD_ID='$(jq '.data.organization.projectNext.fields.nodes[] | select(.name== "Sprint") | .id' project_data1.json) >> $GITHUB_ENV
+          # yamllint disable-line rule:line-length
+          echo 'ITER_OPTION_ID='$(jq '.data.organization.projectNext.fields.nodes[] | select(.name== "Sprint") |.settings | fromjson.configuration.iterations[0] | .id' project_data1.json) >> $GITHUB_ENV
+# yamllint enable rule:line-length
+
+      - name: Get linked issue nodeid
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_NEW_CARD_TO_PROJECT }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          # yamllint disable rule:line-length
+        run: |
+          gh api graphql -f query='
+            query($pr_url: URI!) {
+              resource(url: $pr_url) {
+                ... on PullRequest {
+                  closingIssuesReferences(first: 1) {
+                    nodes {
+                      id
+                      number
+                      projectNextItems(first: 5) {
+                        edges {
+                          node {
+                            id
+                            project {
+                              id
+                              number
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }'  -f pr_url=$PR_URL > linked_issue_data.json
+            echo 'LINKED_ISSUE='$(jq -r '.data.resource.closingIssuesReferences.nodes[] | .id' linked_issue_data.json) >> $GITHUB_ENV
+            echo 'ISSUES_PROJ_ID='$(jq '.data.resource.closingIssuesReferences.nodes[] | .projectNextItems.edges[].node |select(.project.number == 106) | .id' linked_issue_data.json) >> $GITHUB_ENV
+# yamllint enable rule:line-length
+
+      - name: Get issues current status
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_NEW_CARD_TO_PROJECT }}
+        run: |
+          gh api graphql -f query='
+            query ($issue_proj_id: ID!) {
+              node(id: $issue_proj_id) {
+                ... on ProjectNextItem {
+                  fieldValues(first: 10) {
+                    nodes {
+                      value
+                      projectField {
+                        name
+                      }
+                    }
+                  }
+                }
+              }
+            }' -f issue_proj_id=$ISSUES_PROJ_ID > current_col.json
+            echo 'CURRENT_COL='$(jq '.data.node.fieldValues.nodes[] | select(.projectField.name == "Status") | .value' current_col.json) >> $GITHUB_ENV
+            echo 'CURRENT_ITER='$(jq '.data.node.fieldValues.nodes[] | select(.projectField.name == "Sprint") | .value' current_col.json) >> $GITHUB_ENV
+
+      - name: Add issue to the project
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_NEW_CARD_TO_PROJECT }}
+        run: |
+          item_id="$( gh api graphql -f query='
+            mutation($project:ID!, $issue:ID!) {
+              addProjectNextItem(input: {projectId: $project, contentId: $issue}) {
+                projectNextItem {
+                  id
+                }
+              }
+            }' -f project=$PROJECT_ID -f issue=$LINKED_ISSUE --jq '.data.addProjectNextItem.projectNextItem.id')"
+          echo 'ITEM_ID='$item_id >> $GITHUB_ENV
+
+      - name: Set wip issue project status fields
+        if: (env.CURRENT_COL != env.REVIEW_OPTION_ID)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_NEW_CARD_TO_PROJECT }}
+        run: |
+          gh api graphql -f query='
+            mutation (
+              $project: ID!
+              $item: ID!
+              $status_field: ID!
+              $status_value: String!
+              $iteration_field: ID!
+              $iteration_value: String!
+            ) {
+              set_status: updateProjectNextItemField(input: {
+                projectId: $project
+                itemId: $item
+                fieldId: $status_field
+                value: $status_value
+              }) {
+                projectNextItem {
+                  id
+                  }
+              }
+              set_iteration: updateProjectNextItemField(input: {
+                projectId: $project
+                itemId: $item
+                fieldId: $iteration_field
+                value: $iteration_value
+              }) {
+                projectNextItem {
+                  id
+                }
+              }
+            }' -f project=$PROJECT_ID \
+              -f item=$ITEM_ID \
+              -f status_field=$STATUS_FIELD_ID \
+              -f status_value=${{ env.INPROG_OPTION_ID }} \
+              -f iteration_field=$ITER_FIELD_ID \
+              -f iteration_value=${{ env.ITER_OPTION_ID }}
+
+      - name: Set in review issue project status fields
+        if: (env.CURRENT_COL == env.REVIEW_OPTION_ID)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_NEW_CARD_TO_PROJECT }}
+        run: |
+          gh api graphql -f query='
+            mutation (
+              $project: ID!
+              $item: ID!
+              $status_field: ID!
+              $status_value: String!
+              $iteration_field: ID!
+              $iteration_value: String!
+            ) {
+              set_status: updateProjectNextItemField(input: {
+                projectId: $project
+                itemId: $item
+                fieldId: $status_field
+                value: $status_value
+              }) {
+                projectNextItem {
+                  id
+                  }
+              }
+              set_iteration: updateProjectNextItemField(input: {
+                projectId: $project
+                itemId: $item
+                fieldId: $iteration_field
+                value: $iteration_value
+              }) {
+                projectNextItem {
+                  id
+                }
+              }
+            }' -f project=$PROJECT_ID \
+              -f item=$ITEM_ID \
+              -f status_field=$STATUS_FIELD_ID \
+              -f status_value=${{ env.REVIEW_OPTION_ID }} \
+              -f iteration_field=$ITER_FIELD_ID \
+              -f iteration_value=${{ env.ITER_OPTION_ID }}
