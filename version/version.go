@@ -10,7 +10,7 @@ const (
 	ReleasesAPI        = "https://api.github.com/repos/vegaprotocol/vegawallet/releases"
 	ReleasesURL        = "https://github.com/vegaprotocol/vegawallet/releases"
 	defaultVersionHash = "unknown"
-	defaultVersion     = "v0.13.0"
+	defaultVersion     = "v0.13.1"
 )
 
 var (

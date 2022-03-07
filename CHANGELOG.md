@@ -9,13 +9,18 @@
 - [](https://github.com/vegaprotocol/vegawallet/pull/) -
 
 ### 🛠  Improvements
-- [](https://github.com/vegaprotocol/vegawallet/pull/) -
+- [496](https://github.com/vegaprotocol/vegawallet/pull/496) - Return tx in /api/v1/command response
 
 ### 🔥 Removal
 - [](https://github.com/vegaprotocol/vegawallet/pull/) -
 
 ### 🐛 Fixes
 - [](https://github.com/vegaprotocol/vegawallet/pull/) -
+
+## 0.13.1
+
+### 🛠  Improvements
+- [496](https://github.com/vegaprotocol/vegawallet/pull/496) - Return tx in /api/v1/command response
 
 
 ## 0.13.0
