@@ -9,13 +9,13 @@
 - [](https://github.com/vegaprotocol/vegawallet/pull/) -
 
 ### 🛠  Improvements
-- [496](https://github.com/vegaprotocol/vegawallet/pull/496) - Return tx in /api/v1/command response
+- [](https://github.com/vegaprotocol/vegawallet/pull/) -
 
 ### 🔥 Removal
 - [](https://github.com/vegaprotocol/vegawallet/pull/) -
 
 ### 🐛 Fixes
-- [](https://github.com/vegaprotocol/vegawallet/pull/) -
+- [502](https://github.com/vegaprotocol/vegawallet/pull/502) - Unwrap properly transfer and cancel transfer commands
 
 ## 0.13.1
 
