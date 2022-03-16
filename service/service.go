@@ -725,6 +725,9 @@ func (s *Service) signTx(token string, w http.ResponseWriter, r *http.Request, _
 		return
 	}
 
+	// Ask user confirmation
+	ExplicitConsentPolicy.Ask(req.GetCommand())
+
 	height, err := s.nodeForward.LastBlockHeight(r.Context())
 	if err != nil {
 		s.writeInternalError(w, ErrCouldNotGetBlockHeight)
