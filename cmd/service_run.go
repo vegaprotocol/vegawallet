@@ -332,11 +332,34 @@ func waitSig(ctx context.Context, cfunc func(), log *zap.Logger) {
 	signal.Notify(gracefulStop, syscall.SIGINT)
 	signal.Notify(gracefulStop, syscall.SIGQUIT)
 
+	for {
+		select {
+		case sig := <-gracefulStop:
+			log.Info("caught signal", zap.String("signal", fmt.Sprintf("%+v", sig)))
+			cfunc()
+			return
+		case <-ctx.Done():
+			// nothing to do
+			return
+		case ev := <-pendingEvents:
+			p.PrintEvent(ev)
+			answer := io.ReadStd()
+			// validate
+			confirmations<- answer
+		}
+	}
+}
+
+type ExplicitConsentPolicy struct {
+	pendingEvents chan
+	confirmations chan
+}
+
+func (ExplicitConsentPolicy) Ask(tx interface{}) bool {
+	pendingEvents <- tx
+
 	select {
-	case sig := <-gracefulStop:
-		log.Info("caught signal", zap.String("signal", fmt.Sprintf("%+v", sig)))
-		cfunc()
-	case <-ctx.Done():
-		// nothing to do
+	case c := <-confirmations:
+		return c
 	}
 }
