@@ -9,8 +9,7 @@
 - [](https://github.com/vegaprotocol/vegawallet/pull/) -
 
 ### 🛠  Improvements
-- [](https://github.com/vegaprotocol/vegawallet/pull/) -
-- [511](https://github.com/vegaprotocol/vegawallet/pull/511) - Separate logger and interactive outputs 
+- [511](https://github.com/vegaprotocol/vegawallet/pull/511) - Redirect logs from command service run to a file
 
 
 ### 🔥 Removal
