@@ -13,7 +13,6 @@ import (
 func TestRunServiceFlags(t *testing.T) {
 	t.Run("Valid flags succeeds", testRunServiceFlagsValidFlagsSucceeds)
 	t.Run("Missing network fails", testRunServiceFlagsMissingNetworkFails)
-	t.Run("Unsupported log level fails", testRunServiceFlagsUnsupportedLogLevelFails)
 	t.Run("No browser without console nor token dApp fails", testRunServiceFlagsNoBrowserWithoutConsoleNorTokenDAppFails)
 }
 
@@ -26,7 +25,6 @@ func testRunServiceFlagsValidFlagsSucceeds(t *testing.T) {
 		WithConsole:   true,
 		WithTokenDApp: true,
 		NoBrowser:     true,
-		LogLevel:      "debug",
 	}
 
 	// when
@@ -46,18 +44,6 @@ func testRunServiceFlagsMissingNetworkFails(t *testing.T) {
 
 	// then
 	assert.ErrorIs(t, err, flags.FlagMustBeSpecifiedError("network"))
-}
-
-func testRunServiceFlagsUnsupportedLogLevelFails(t *testing.T) {
-	// given
-	f := newRunServiceFlags(t)
-	f.LogLevel = vgrand.RandomStr(2)
-
-	// when
-	err := f.Validate()
-
-	// then
-	assert.ErrorIs(t, err, cmd.NewUnsupportedFlagValueError(f.LogLevel))
 }
 
 func testRunServiceFlagsNoBrowserWithoutConsoleNorTokenDAppFails(t *testing.T) {
@@ -84,6 +70,5 @@ func newRunServiceFlags(t *testing.T) *cmd.RunServiceFlags {
 		WithConsole:   true,
 		WithTokenDApp: true,
 		NoBrowser:     true,
-		LogLevel:      "debug",
 	}
 }
