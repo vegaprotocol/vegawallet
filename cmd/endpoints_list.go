@@ -1,11 +1,12 @@
 package cmd
 
 import (
-	"code.vegaprotocol.io/vegawallet/cmd/cli"
 	"fmt"
 	"io"
 	"os"
 	"text/template"
+
+	"code.vegaprotocol.io/vegawallet/cmd/cli"
 
 	"code.vegaprotocol.io/shared/paths"
 	"code.vegaprotocol.io/vegawallet/cmd/flags"

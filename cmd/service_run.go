@@ -1,6 +1,15 @@
 package cmd
 
 import (
+	"context"
+	"errors"
+	"fmt"
+	"io"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+
 	vglog "code.vegaprotocol.io/shared/libs/zap"
 	"code.vegaprotocol.io/shared/paths"
 	"code.vegaprotocol.io/vegawallet/cmd/cli"
@@ -13,14 +22,6 @@ import (
 	"code.vegaprotocol.io/vegawallet/service"
 	svcstore "code.vegaprotocol.io/vegawallet/service/store/v1"
 	"code.vegaprotocol.io/vegawallet/wallets"
-	"context"
-	"errors"
-	"fmt"
-	"io"
-	"net/http"
-	"os"
-	"os/signal"
-	"syscall"
 
 	"github.com/skratchdot/open-golang/open"
 	"github.com/spf13/cobra"
