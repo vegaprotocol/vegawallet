@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -324,9 +323,9 @@ func startConsole(log *zap.Logger, rf *RootFlags, openBrowser bool, cfg *network
 	consoleLocalHost := fmt.Sprintf("http://127.0.0.1:%v", cfg.Console.LocalPort)
 	if rf.Output == flags.InteractiveOutput {
 		p.CheckMark().Text("Console proxy pointing to ").Bold(cfg.Console.URL).Text(" started at: ").SuccessText(consoleLocalHost).NextLine()
-	} else {
-		log.Info(fmt.Sprintf("console proxy pointing to %s started at: %s", cfg.Console.URL, consoleLocalHost))
 	}
+	log.Info(fmt.Sprintf("console proxy pointing to %s started at: %s", cfg.Console.URL, consoleLocalHost))
+
 	if openBrowser {
 		if err := open.Run(cs.GetBrowserURL()); err != nil {
 			log.Error("unable to open the application in the default browser", zap.Error(err))
@@ -348,9 +347,9 @@ func startTokenDApp(log *zap.Logger, rf *RootFlags, openBrowser bool, cfg *netwo
 	tokenDAppLocalHost := fmt.Sprintf("http://127.0.0.1:%v", cfg.TokenDApp.LocalPort)
 	if rf.Output == flags.InteractiveOutput {
 		p.CheckMark().Text("token dApp proxy pointing to ").Bold(cfg.TokenDApp.URL).Text(" started at: ").SuccessText(tokenDAppLocalHost).NextLine()
-	} else {
-		log.Info(fmt.Sprintf("token dApp proxy pointing to %s started at: %s", cfg.TokenDApp.URL, tokenDAppLocalHost))
 	}
+	log.Info(fmt.Sprintf("token dApp proxy pointing to %s started at: %s", cfg.TokenDApp.URL, tokenDAppLocalHost))
+
 	if openBrowser {
 		if err := open.Run(tokenDApp.GetBrowserURL()); err != nil {
 			log.Error("unable to open the token dApp in the default browser", zap.Error(err))
@@ -390,8 +389,6 @@ func printServiceEndpoints(serviceHost string) {
 	if err != nil {
 		panic(err)
 	}
-	var tpl bytes.Buffer
-	err = tmpl.Execute(&tpl, params)
 	if err != nil {
 		panic(err)
 	}
