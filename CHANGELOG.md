@@ -10,6 +10,8 @@
 
 ### 🛠  Improvements
 - [](https://github.com/vegaprotocol/vegawallet/pull/) -
+- [511](https://github.com/vegaprotocol/vegawallet/pull/511) - Separate logger and interactive outputs 
+
 
 ### 🔥 Removal
 - [](https://github.com/vegaprotocol/vegawallet/pull/) -

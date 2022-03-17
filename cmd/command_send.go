@@ -127,6 +127,7 @@ func BuildCmdCommandSend(w io.Writer, handler SendCommandHandler, rf *RootFlags)
 
 	autoCompleteNetwork(cmd, rf.Home)
 	autoCompleteWallet(cmd, rf.Home)
+	autoCompleteLogLevel(cmd)
 
 	return cmd
 }

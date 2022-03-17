@@ -110,3 +110,12 @@ func autoCompleteNetwork(cmd *cobra.Command, vegaHome string) {
 		panic(err)
 	}
 }
+
+func autoCompleteLogLevel(cmd *cobra.Command) {
+	err := cmd.RegisterFlagCompletionFunc("level", func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
+		return SupportedLogLevels, cobra.ShellCompDirectiveDefault
+	})
+	if err != nil {
+		panic(err)
+	}
+}
