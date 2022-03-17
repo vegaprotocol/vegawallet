@@ -210,7 +210,7 @@ type SendCommandRequest struct {
 }
 
 func SendCommand(w io.Writer, rf *RootFlags, req *SendCommandRequest) error {
-	log, err := Build(rf.Output, req.LogLevel)
+	log, err := BuildLogger(rf.Output, req.LogLevel)
 	if err != nil {
 		return err
 	}

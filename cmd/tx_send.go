@@ -102,7 +102,6 @@ func BuildCmdTxSend(w io.Writer, handler SendTxHandler, rf *RootFlags) *cobra.Co
 
 	autoCompleteNetwork(cmd, rf.Home)
 	autoCompleteLogLevel(cmd)
-
 	return cmd
 }
 
@@ -161,7 +160,7 @@ type SendTxRequest struct {
 }
 
 func SendTx(w io.Writer, rf *RootFlags, req *SendTxRequest) error {
-	log, err := Build(rf.Output, req.LogLevel)
+	log, err := BuildLogger(rf.Output, req.LogLevel)
 	if err != nil {
 		return err
 	}
