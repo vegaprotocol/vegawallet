@@ -56,7 +56,7 @@ func DefaultConfig() zap.Config {
 	}
 }
 
-func BuildJSONLogger(level, home string) (*zap.Logger, error) {
+func BuildJSONLogger(level string, logsDir paths.StatePath) (*zap.Logger, error) {
 	cfg := DefaultConfig()
 
 	l, err := getLevel(level)
@@ -70,12 +70,14 @@ func BuildJSONLogger(level, home string) (*zap.Logger, error) {
 	date := time.Now().UTC().Format("2006-01-02-15-04-05")
 	pathSuffix := fmt.Sprintf("%d-%s.log", pid, date)
 
-	appLogPath, err := paths.CreateDefaultStatePathFor(paths.JoinStatePath(paths.WalletAppLogsHome, pathSuffix))
+	logFile := paths.JoinStatePath(logsDir, pathSuffix)
+	appLogPath, err := paths.CreateDefaultStatePathFor(logFile)
 	if err != nil {
-		return nil, fmt.Errorf("failed getting path for %s: %w", paths.WalletAppDefaultConfigFile, err)
+		return nil, fmt.Errorf("failed getting path for %s: %w", logFile, err)
 	}
 
 	cfg.OutputPaths = []string{appLogPath}
+	cfg.ErrorOutputPaths = []string{appLogPath}
 
 	log, err := cfg.Build()
 	if err != nil {

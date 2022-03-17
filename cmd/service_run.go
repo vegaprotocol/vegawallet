@@ -95,15 +95,6 @@ func NewCmdRunService(w io.Writer, rf *RootFlags) *cobra.Command {
 	return BuildCmdRunService(w, RunService, rf)
 }
 
-// NO TTY - Mandatory Auto validation | Infos terminal vers fichier json, infos service vers  fichier json
-// $(vegawallet service run > output.txt)
-
-// TTY - Auto validation | Infos terminal output sur le terminal + fichier json, infos service output vers fichier json
-// $(vegawallet service run > output.txt)
-
-// TTY - Manual validation | Infos terminal output sur le terminal + fichier json, infos service output vers fichier json
-// $(vegawallet service run > output.txt)
-
 func BuildCmdRunService(w io.Writer, handler RunServiceHandler, rf *RootFlags) *cobra.Command {
 	f := &RunServiceFlags{}
 
@@ -203,12 +194,7 @@ func RunService(w io.Writer, rf *RootFlags, f *RunServiceFlags) error {
 		return err
 	}
 
-	svcLogsHome, err := vegaPaths.CreateStatePathFor(paths.WalletServiceLogsHome)
-	if err != nil {
-		return fmt.Errorf("couldn't get wallets data home path: %w", err)
-	}
-
-	svcLog, err := BuildJSONLogger(cfg.Level.String(), svcLogsHome)
+	svcLog, err := BuildJSONLogger(cfg.Level.String(), paths.WalletServiceLogsHome)
 	if err != nil {
 		return err
 	}
@@ -245,62 +231,54 @@ func RunService(w io.Writer, rf *RootFlags, f *RunServiceFlags) error {
 		return err
 	}
 
-	appLogsHome, err := vegaPaths.CreateStatePathFor(paths.WalletServiceLogsHome)
-	if err != nil {
-		return fmt.Errorf("couldn't get wallets data home path: %w", err)
-	}
-
-	appLog, err := BuildJSONLogger(cfg.Level.String(), appLogsHome)
+	cliLog, err := BuildJSONLogger(cfg.Level.String(), paths.WalletCLILogsHome)
 	if err != nil {
 		return err
 	}
-	defer vglog.Sync(appLog)
+	defer vglog.Sync(cliLog)
 
-	appLog = appLog.Named("command")
-	p.SetSideLogger(appLog)
+	cliLog = cliLog.Named("command")
 
 	go func() {
 		defer cancel()
 		if err := srv.Start(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			appLog.Error("error while starting HTTP server", zap.Error(err))
+			cliLog.Error("Error while starting HTTP server", zap.Error(err))
 		}
 	}()
 
 	serviceHost := fmt.Sprintf("http://%v:%v", cfg.Host, cfg.Port)
 	if rf.Output == flags.InteractiveOutput {
 		p.CheckMark().Text("HTTP service started at: ").SuccessText(serviceHost).NextLine()
-	} else {
-		appLog.Info(fmt.Sprintf("HTTP service started at: %s", serviceHost))
 	}
+	cliLog.Info(fmt.Sprintf("HTTP service started at: %s", serviceHost))
 
 	defer func() {
 		if err = srv.Stop(); err != nil {
-			appLog.Error("error while stopping HTTP server", zap.Error(err))
-		} else {
-			appLog.Info("HTTP server stopped with success")
+			cliLog.Error("Error while stopping HTTP server", zap.Error(err))
+			cliLog.Info("HTTP server stopped with success")
 		}
 	}()
 
 	var cs *proxy.Proxy
 	if f.WithConsole {
-		cs = startConsole(appLog, rf, !f.NoBrowser, cfg, cancel, p)
+		cs = startConsole(cliLog, rf, !f.NoBrowser, cfg, cancel, p)
 		defer func() {
 			if err = cs.Stop(); err != nil {
-				appLog.Error("error while stopping console proxy", zap.Error(err))
+				cliLog.Error("Error while stopping console proxy", zap.Error(err))
 			} else {
-				appLog.Info("console proxy stopped with success")
+				cliLog.Info("Console proxy stopped with success")
 			}
 		}()
 	}
 
 	var tokenDApp *proxy.Proxy
 	if f.WithTokenDApp {
-		tokenDApp = startTokenDApp(appLog, rf, !f.NoBrowser, cfg, cancel, p)
+		tokenDApp = startTokenDApp(cliLog, rf, !f.NoBrowser, cfg, cancel, p)
 		defer func() {
 			if err = tokenDApp.Stop(); err != nil {
-				appLog.Error("error while stopping token dApp proxy", zap.Error(err))
+				cliLog.Error("Error while stopping token dApp proxy", zap.Error(err))
 			} else {
-				appLog.Info("token dApp proxy stopped with success")
+				cliLog.Info("Token dApp proxy stopped with success")
 			}
 		}()
 	}
@@ -308,13 +286,11 @@ func RunService(w io.Writer, rf *RootFlags, f *RunServiceFlags) error {
 	if rf.Output == flags.InteractiveOutput {
 		p.CheckMark().SuccessText("Starting successful").NextSection()
 		p.BlueArrow().InfoText("Available endpoints").NextLine()
-		printed := printServiceEndpoints(serviceHost)
+		printServiceEndpoints(serviceHost)
 		p.NextLine()
-		appLog.Info(printed)
-
 	}
 
-	waitSig(ctx, cancel, appLog)
+	waitSig(ctx, cancel, cliLog)
 
 	return nil
 }
@@ -399,7 +375,7 @@ func waitSig(ctx context.Context, cfunc func(), log *zap.Logger) {
 	}
 }
 
-func printServiceEndpoints(serviceHost string) string {
+func printServiceEndpoints(serviceHost string) {
 	params := struct {
 		WalletServiceLocalAddress string
 	}{
@@ -419,6 +395,4 @@ func printServiceEndpoints(serviceHost string) string {
 	if err != nil {
 		panic(err)
 	}
-
-	return tpl.String()
 }

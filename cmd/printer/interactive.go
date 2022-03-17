@@ -6,17 +6,15 @@ import (
 	"runtime"
 
 	"github.com/muesli/termenv"
-	"go.uber.org/zap"
 )
 
 type InteractivePrinter struct {
-	writer     io.Writer
-	profile    termenv.Profile
-	checkMark  string
-	bangMark   string
-	crossMark  string
-	arrow      termenv.Style
-	sideLogger *zap.Logger
+	writer    io.Writer
+	profile   termenv.Profile
+	checkMark string
+	bangMark  string
+	crossMark string
+	arrow     termenv.Style
 }
 
 func fancyPrinter(w io.Writer, profile termenv.Profile) *InteractivePrinter {
@@ -48,11 +46,6 @@ func NewInteractivePrinter(w io.Writer) *InteractivePrinter {
 		return ansiPrinter(w, profile)
 	}
 	return fancyPrinter(w, profile)
-}
-
-func (p *InteractivePrinter) SetSideLogger(logger *zap.Logger) *InteractivePrinter {
-	p.sideLogger = logger
-	return p
 }
 
 func (p *InteractivePrinter) GreenArrow() *InteractivePrinter {
@@ -146,9 +139,6 @@ func (p *InteractivePrinter) Underline(name string) *InteractivePrinter {
 }
 
 func (p *InteractivePrinter) printOut(s string) {
-	if p.sideLogger != nil {
-		p.sideLogger.Info(s)
-	}
 	if _, err := fmt.Fprint(p.writer, s); err != nil {
 		panic(fmt.Sprintf("couldn't write to %v: %v", p.writer, err))
 	}
