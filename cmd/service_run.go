@@ -389,7 +389,4 @@ func printServiceEndpoints(serviceHost string) {
 	if err != nil {
 		panic(err)
 	}
-	if err != nil {
-		panic(err)
-	}
 }
