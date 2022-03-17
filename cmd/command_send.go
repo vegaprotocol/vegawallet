@@ -127,7 +127,6 @@ func BuildCmdCommandSend(w io.Writer, handler SendCommandHandler, rf *RootFlags)
 
 	autoCompleteNetwork(cmd, rf.Home)
 	autoCompleteWallet(cmd, rf.Home)
-	autoCompleteLogLevel(cmd)
 
 	return cmd
 }
@@ -210,7 +209,7 @@ type SendCommandRequest struct {
 }
 
 func SendCommand(w io.Writer, rf *RootFlags, req *SendCommandRequest) error {
-	log, err := Build(rf.Output, req.LogLevel)
+	log, err := BuildLogger(rf.Output, req.LogLevel)
 	if err != nil {
 		return err
 	}
