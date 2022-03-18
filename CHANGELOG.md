@@ -3,6 +3,7 @@
 ## Unreleased (0.14.0)
 
 ### 🚨 Breaking changes
+- [504](https://github.com/vegaprotocol/vegawallet/pull/504) - Add support for proof of work sent from the wallet as part of a transaction
 - [507](https://github.com/vegaprotocol/vegawallet/issues/507) - Flag `--level` in service run removed
 
 ### 🗑️  Deprecation
@@ -11,6 +12,7 @@
 ### 🛠  Improvements
 - [508](https://github.com/vegaprotocol/vegawallet/issues/508) - Introduce a command to list the service endpoints
 - [507](https://github.com/vegaprotocol/vegawallet/issues/507) - Redirect logs from command service run to a file
+- [516](https://github.com/vegaprotocol/vegawallet/issues/516) - Update protos for market update proposal
 
 ### 🔥 Removal
 - [](https://github.com/vegaprotocol/vegawallet/pull/) -

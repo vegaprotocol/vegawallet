@@ -63,7 +63,7 @@ func (n *Forwarder) HealthCheck(ctx context.Context) error {
 	req := api.GetVegaTimeRequest{}
 	return backoff.Retry(
 		func() error {
-			clt := n.nextClt()
+			clt := n.clts[n.nextClt()]
 			resp, err := clt.GetVegaTime(ctx, &req)
 			if err != nil {
 				return err
@@ -75,18 +75,21 @@ func (n *Forwarder) HealthCheck(ctx context.Context) error {
 	)
 }
 
-func (n *Forwarder) LastBlockHeight(ctx context.Context) (uint64, error) {
+// LastBlockHeightAndHash returns information about the last block from vega and the node it used to fetch it.
+func (n *Forwarder) LastBlockHeightAndHash(ctx context.Context) (*api.LastBlockHeightResponse, int, error) {
 	req := api.LastBlockHeightRequest{}
-	var height uint64
+	var resp *api.LastBlockHeightResponse
+	clt := -1
 	err := backoff.Retry(
 		func() error {
-			clt := n.nextClt()
-			resp, err := clt.LastBlockHeight(ctx, &req)
+			clt = n.nextClt()
+			r, err := n.clts[clt].LastBlockHeight(ctx, &req)
 			if err != nil {
 				n.log.Debug("Couldn't get last block", zap.Error(err))
 				return err
 			}
-			height = resp.Height
+			resp = r
+			n.log.Info("", zap.Uint64("block-height", r.Height), zap.String("block-hash", r.Hash), zap.Uint32("difficulty", r.SpamPowDifficulty), zap.String("function", r.SpamPowHashFunction))
 			return nil
 		},
 		backoff.WithMaxRetries(backoff.NewExponentialBackOff(), n.nodeCfgs.Retries),
@@ -94,25 +97,29 @@ func (n *Forwarder) LastBlockHeight(ctx context.Context) (uint64, error) {
 
 	if err != nil {
 		n.log.Error("Couldn't get last block", zap.Error(err))
+		clt = -1
 	} else {
 		n.log.Debug("Last block when sending transaction",
 			zap.Time("request.time", time.Now()),
-			zap.Uint64("block.height", height),
+			zap.Uint64("block.height", resp.Height),
 		)
 	}
 
-	return height, err
+	return resp, clt, err
 }
 
-func (n *Forwarder) SendTx(ctx context.Context, tx *commandspb.Transaction, ty api.SubmitTransactionRequest_Type) (string, error) {
+func (n *Forwarder) SendTx(ctx context.Context, tx *commandspb.Transaction, ty api.SubmitTransactionRequest_Type, cltIdx int) (string, error) {
 	req := api.SubmitTransactionRequest{
 		Tx:   tx,
 		Type: ty,
 	}
 	var resp *api.SubmitTransactionResponse
+	if cltIdx < 0 {
+		cltIdx = n.nextClt()
+	}
 	err := backoff.Retry(
 		func() error {
-			clt := n.nextClt()
+			clt := n.clts[cltIdx]
 			r, err := clt.SubmitTransaction(ctx, &req)
 			if err != nil {
 				n.log.Error("Couldn't send transaction", zap.Error(err))
@@ -133,10 +140,10 @@ func (n *Forwarder) SendTx(ctx context.Context, tx *commandspb.Transaction, ty a
 	return resp.TxHash, nil
 }
 
-func (n *Forwarder) nextClt() api.CoreServiceClient {
+func (n *Forwarder) nextClt() int {
 	i := atomic.AddUint64(&n.next, 1)
 	n.log.Info("Sending transaction to Vega node",
 		zap.String("host", n.nodeCfgs.Hosts[(int(i)-1)%len(n.clts)]),
 	)
-	return n.clts[(int(i)-1)%len(n.clts)]
+	return (int(i) - 1) % len(n.clts)
 }

@@ -7,7 +7,9 @@ import (
 	"io"
 
 	api "code.vegaprotocol.io/protos/vega/api/v1"
+	commandspb "code.vegaprotocol.io/protos/vega/commands/v1"
 	walletpb "code.vegaprotocol.io/protos/vega/wallet/v1"
+	"code.vegaprotocol.io/shared/libs/crypto"
 	vglog "code.vegaprotocol.io/shared/libs/zap"
 	"code.vegaprotocol.io/vegawallet/cmd/cli"
 	"code.vegaprotocol.io/vegawallet/cmd/flags"
@@ -260,13 +262,14 @@ func SendCommand(w io.Writer, rf *RootFlags, req *SendCommandRequest) error {
 	defer cancelFn()
 
 	log.Info("retrieving block height")
-	blockHeight, err := forwarder.LastBlockHeight(ctx)
+	blockData, cltIdx, err := forwarder.LastBlockHeightAndHash(ctx)
 	if err != nil {
 		return fmt.Errorf("couldn't get last block height: %w", err)
 	}
-	log.Info(fmt.Sprintf("last block height found: %d", blockHeight))
 
-	tx, err := handler.SignTx(req.Wallet, req.Request, blockHeight)
+	log.Info(fmt.Sprintf("last block height found: %d", blockData.Height))
+
+	tx, err := handler.SignTx(req.Wallet, req.Request, blockData.Height)
 	if err != nil {
 		log.Error("couldn't sign transaction", zap.Error(err))
 		return fmt.Errorf("couldn't sign transaction: %w", err)
@@ -274,7 +277,22 @@ func SendCommand(w io.Writer, rf *RootFlags, req *SendCommandRequest) error {
 
 	log.Info("transaction successfully signed", zap.String("signature", tx.Signature.Value))
 
-	txHash, err := forwarder.SendTx(ctx, tx, api.SubmitTransactionRequest_TYPE_ASYNC)
+	// generate a random transaction hash
+	tid := crypto.RandomHash()
+
+	// generate proof of work for the block hash, transaction id and given difficulty required and supported hash function
+	powNonce, _, err := crypto.PoW(blockData.Hash, tid, uint(blockData.SpamPowDifficulty), blockData.SpamPowHashFunction)
+	if err != nil {
+		return fmt.Errorf("couldn't generate proof of work for last block height: %w", err)
+	}
+	tx.Pow = &commandspb.ProofOfWork{
+		Tid:   tid,
+		Nonce: powNonce,
+	}
+
+	log.Info("calculated proof of work for transaction with signature", zap.String("signature", tx.Signature.Value))
+
+	txHash, err := forwarder.SendTx(ctx, tx, api.SubmitTransactionRequest_TYPE_ASYNC, cltIdx)
 	if err != nil {
 		log.Error("couldn't send transaction", zap.Error(err))
 		return fmt.Errorf("couldn't send transaction: %w", err)

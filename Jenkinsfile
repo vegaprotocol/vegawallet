@@ -17,7 +17,7 @@ pipeline {
     options {
         skipDefaultCheckout true
         timestamps()
-        timeout(time: 30, unit: 'MINUTES')
+        timeout(time: 45, unit: 'MINUTES')
     }
     parameters {
         string( name: 'VEGA_CORE_BRANCH', defaultValue: '',
@@ -48,8 +48,12 @@ pipeline {
             steps {
                 cleanWs()
                 sh 'printenv'
-                echo "${params}"
+                echo "params=${params}"
                 echo "isPRBuild=${isPRBuild()}"
+                script {
+                    params = pr.injectPRParams()
+                }
+                echo "params (after injection)=${params}"
             }
         }
 

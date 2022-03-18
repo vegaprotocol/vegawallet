@@ -14,6 +14,7 @@ var (
 	ErrCouldNotGetBlockHeight = errors.New("couldn't get last block height")
 	ErrShouldBeBase64Encoded  = errors.New("should be base64 encoded")
 	ErrRSAKeysAlreadyExists   = errors.New("RSA keys already exist")
+	ErrCouldNotGetPoW         = errors.New("could not get proof of work")
 )
 
 type ErrorsResponse struct {
