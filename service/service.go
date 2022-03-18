@@ -728,7 +728,7 @@ func (s *Service) signTx(token string, w http.ResponseWriter, r *http.Request, _
 	}
 
 	if response := s.policy.Ask(req); !response {
-		s.log.Info("User rejected transaction")
+		s.log.Info("transaction reject")
 		s.writeError(w, errors.New("user rejected transaction"), http.StatusNotAcceptable) // TODO find appropriate code
 		return
 	}
