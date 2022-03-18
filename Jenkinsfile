@@ -17,7 +17,7 @@ pipeline {
     options {
         skipDefaultCheckout true
         timestamps()
-        timeout(time: 30, unit: 'MINUTES')
+        timeout(time: 45, unit: 'MINUTES')
     }
     parameters {
         string( name: 'VEGA_CORE_BRANCH', defaultValue: '',
