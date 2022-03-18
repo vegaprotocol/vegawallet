@@ -3,6 +3,7 @@
 ## Unreleased (0.14.0)
 
 ### 🚨 Breaking changes
+- [504](https://github.com/vegaprotocol/vegawallet/pull/504) - Add support for proof of work sent from the wallet as part of a transaction
 - [507](https://github.com/vegaprotocol/vegawallet/issues/507) - Flag `--level` in service run removed
 
 ### 🗑️  Deprecation

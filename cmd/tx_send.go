@@ -197,7 +197,7 @@ func SendTx(w io.Writer, rf *RootFlags, req *SendTxRequest) error {
 	ctx, cancelFn := context.WithTimeout(context.Background(), ForwarderRequestTimeout)
 	defer cancelFn()
 
-	txHash, err := forwarder.SendTx(ctx, req.Tx, api.SubmitTransactionRequest_TYPE_ASYNC)
+	txHash, err := forwarder.SendTx(ctx, req.Tx, api.SubmitTransactionRequest_TYPE_ASYNC, -1)
 	if err != nil {
 		log.Error("Couldn't send transaction", zap.Error(err))
 		return fmt.Errorf("couldn't send transaction: %w", err)

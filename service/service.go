@@ -15,6 +15,7 @@ import (
 	api "code.vegaprotocol.io/protos/vega/api/v1"
 	commandspb "code.vegaprotocol.io/protos/vega/commands/v1"
 	walletpb "code.vegaprotocol.io/protos/vega/wallet/v1"
+	"code.vegaprotocol.io/shared/libs/crypto"
 	wcommands "code.vegaprotocol.io/vegawallet/commands"
 	"code.vegaprotocol.io/vegawallet/network"
 	"code.vegaprotocol.io/vegawallet/version"
@@ -404,9 +405,9 @@ type Auth interface {
 // NodeForward ...
 //go:generate go run github.com/golang/mock/mockgen -destination mocks/node_forward_mock.go -package mocks code.vegaprotocol.io/vegawallet/service NodeForward
 type NodeForward interface {
-	SendTx(context.Context, *commandspb.Transaction, api.SubmitTransactionRequest_Type) (string, error)
+	SendTx(context.Context, *commandspb.Transaction, api.SubmitTransactionRequest_Type, int) (string, error)
 	HealthCheck(context.Context) error
-	LastBlockHeight(context.Context) (uint64, error)
+	LastBlockHeightAndHash(context.Context) (*api.LastBlockHeightResponse, int, error)
 }
 
 func NewService(log *zap.Logger, net *network.Network, h WalletHandler, a Auth, n NodeForward) (*Service, error) {
@@ -725,7 +726,7 @@ func (s *Service) signTx(token string, w http.ResponseWriter, r *http.Request, _
 		return
 	}
 
-	height, err := s.nodeForward.LastBlockHeight(r.Context())
+	blockData, cltIdx, err := s.nodeForward.LastBlockHeightAndHash(r.Context())
 	if err != nil {
 		s.writeInternalError(w, ErrCouldNotGetBlockHeight)
 		return
@@ -737,7 +738,7 @@ func (s *Service) signTx(token string, w http.ResponseWriter, r *http.Request, _
 		return
 	}
 
-	tx, err := s.handler.SignTx(name, req, height)
+	tx, err := s.handler.SignTx(name, req, blockData.Height)
 	if err != nil {
 		s.writeInternalError(w, err)
 		return
@@ -748,7 +749,19 @@ func (s *Service) signTx(token string, w http.ResponseWriter, r *http.Request, _
 		return
 	}
 
-	txHash, err := s.nodeForward.SendTx(r.Context(), tx, ty)
+	// generate proof of work for the transaction
+	tid := crypto.RandomHash()
+	powNonce, _, err := crypto.PoW(blockData.Hash, tid, uint(blockData.SpamPowDifficulty), crypto.Sha3)
+	if err != nil {
+		s.writeInternalError(w, err)
+		return
+	}
+	tx.Pow = &commandspb.ProofOfWork{
+		Tid:   tid,
+		Nonce: powNonce,
+	}
+
+	txHash, err := s.nodeForward.SendTx(r.Context(), tx, ty, cltIdx)
 	if err != nil {
 		if st, ok := status.FromError(err); ok {
 			var details []string
