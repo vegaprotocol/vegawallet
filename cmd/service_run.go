@@ -9,7 +9,6 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"text/template"
 
 	vglog "code.vegaprotocol.io/shared/libs/zap"
 	"code.vegaprotocol.io/shared/paths"
@@ -28,36 +27,6 @@ import (
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 )
-
-const startupT = ` # Authentication
- - login:                   POST   {{.WalletServiceLocalAddress}}/api/v1/auth/token
- - logout:                  DELETE {{.WalletServiceLocalAddress}}/api/v1/auth/token
-
- # Network management
- - network:                 GET    {{.WalletServiceLocalAddress}}/api/v1/network
-
- # Wallet management
- - create a wallet:         POST   {{.WalletServiceLocalAddress}}/api/v1/wallets
- - import a wallet:         POST   {{.WalletServiceLocalAddress}}/api/v1/wallets/import
-
- # Key pair management
- - generate a key pair:     POST   {{.WalletServiceLocalAddress}}/api/v1/keys
- - list keys:               GET    {{.WalletServiceLocalAddress}}/api/v1/keys
- - describe a key pair:     GET    {{.WalletServiceLocalAddress}}/api/v1/keys/:keyid
- - taint a key pair:        PUT    {{.WalletServiceLocalAddress}}/api/v1/keys/:keyid/taint
- - annotate a key pair:     PUT    {{.WalletServiceLocalAddress}}/api/v1/keys/:keyid/metadata
-
- # Commands
- - sign a command:          POST   {{.WalletServiceLocalAddress}}/api/v1/command
- - sign a command (sync):   POST   {{.WalletServiceLocalAddress}}/api/v1/command/sync
- - sign a command (commit): POST   {{.WalletServiceLocalAddress}}/api/v1/command/commit
- - sign data:               POST   {{.WalletServiceLocalAddress}}/api/v1/sign
- - verify data:             POST   {{.WalletServiceLocalAddress}}/api/v1/verify
-
- # Information
- - get service status:      GET    {{.WalletServiceLocalAddress}}/api/v1/status
- - get the version:         GET    {{.WalletServiceLocalAddress}}/api/v1/version
-`
 
 var (
 	ErrProgramIsNotInitialised = errors.New("first, you need initialise the program, using the `init` command")
@@ -284,8 +253,6 @@ func RunService(w io.Writer, rf *RootFlags, f *RunServiceFlags) error {
 
 	if rf.Output == flags.InteractiveOutput {
 		p.CheckMark().SuccessText("Starting successful").NextSection()
-		p.BlueArrow().InfoText("Available endpoints").NextLine()
-		printServiceEndpoints(serviceHost)
 		p.NextLine()
 	}
 
@@ -371,22 +338,5 @@ func waitSig(ctx context.Context, cfunc func(), log *zap.Logger) {
 		cfunc()
 	case <-ctx.Done():
 		// nothing to do
-	}
-}
-
-func printServiceEndpoints(serviceHost string) {
-	params := struct {
-		WalletServiceLocalAddress string
-	}{
-		WalletServiceLocalAddress: serviceHost,
-	}
-
-	tmpl, err := template.New("wallet-cmdline").Parse(startupT)
-	if err != nil {
-		panic(err)
-	}
-	err = tmpl.Execute(os.Stdout, params)
-	if err != nil {
-		panic(err)
 	}
 }
