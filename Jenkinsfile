@@ -48,8 +48,12 @@ pipeline {
             steps {
                 cleanWs()
                 sh 'printenv'
-                echo "${params}"
+                echo "params=${params}"
                 echo "isPRBuild=${isPRBuild()}"
+                script {
+                    params = pr.injectPRParams()
+                }
+                echo "params (after injection)=${params}"
             }
         }
 
