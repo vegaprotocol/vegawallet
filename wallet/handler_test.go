@@ -111,11 +111,9 @@ func testGenerateKeyInExistingWalletSucceeds(t *testing.T) {
 	}
 
 	// setup
-	fakePath := fmt.Sprintf("/path/to/wallets/%s", req.Wallet)
 	store := handlerMocks(t)
 	store.EXPECT().WalletExists(req.Wallet).Times(1).Return(true)
 	store.EXPECT().GetWallet(req.Wallet, req.Passphrase).Times(1).Return(w, nil)
-	store.EXPECT().GetWalletPath(req.Wallet).Times(1).Return(fakePath)
 	store.EXPECT().SaveWallet(gomock.Any(), req.Passphrase).Times(1).Return(nil)
 
 	// when

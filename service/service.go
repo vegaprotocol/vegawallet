@@ -15,7 +15,7 @@ import (
 	api "code.vegaprotocol.io/protos/vega/api/v1"
 	commandspb "code.vegaprotocol.io/protos/vega/commands/v1"
 	walletpb "code.vegaprotocol.io/protos/vega/wallet/v1"
-	"code.vegaprotocol.io/shared/libs/crypto"
+	vgcrypto "code.vegaprotocol.io/shared/libs/crypto"
 	wcommands "code.vegaprotocol.io/vegawallet/commands"
 	"code.vegaprotocol.io/vegawallet/network"
 	"code.vegaprotocol.io/vegawallet/version"
@@ -750,8 +750,8 @@ func (s *Service) signTx(token string, w http.ResponseWriter, r *http.Request, _
 	}
 
 	// generate proof of work for the transaction
-	tid := crypto.RandomHash()
-	powNonce, _, err := crypto.PoW(blockData.Hash, tid, uint(blockData.SpamPowDifficulty), crypto.Sha3)
+	tid := vgcrypto.RandomHash()
+	powNonce, _, err := vgcrypto.PoW(blockData.Hash, tid, uint(blockData.SpamPowDifficulty), vgcrypto.Sha3)
 	if err != nil {
 		s.writeInternalError(w, err)
 		return
