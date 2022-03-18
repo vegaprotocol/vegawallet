@@ -36,6 +36,7 @@ type Service struct {
 	handler     WalletHandler
 	auth        Auth
 	nodeForward NodeForward
+	policy      Policy
 }
 
 // CreateWalletRequest describes the request for CreateWallet.
@@ -409,7 +410,7 @@ type NodeForward interface {
 	LastBlockHeight(context.Context) (uint64, error)
 }
 
-func NewService(log *zap.Logger, net *network.Network, h WalletHandler, a Auth, n NodeForward) (*Service, error) {
+func NewService(log *zap.Logger, net *network.Network, h WalletHandler, a Auth, n NodeForward, policy Policy) (*Service, error) {
 	s := &Service{
 		Router:      httprouter.New(),
 		log:         log,
@@ -417,6 +418,7 @@ func NewService(log *zap.Logger, net *network.Network, h WalletHandler, a Auth, 
 		auth:        a,
 		nodeForward: n,
 		network:     net,
+		policy:      policy,
 	}
 
 	s.server = &http.Server{
@@ -725,8 +727,12 @@ func (s *Service) signTx(token string, w http.ResponseWriter, r *http.Request, _
 		return
 	}
 
-	// Ask user confirmation
-	ExplicitConsentPolicy.Ask(req.GetCommand())
+	if response := s.policy.Ask(req); !response {
+		s.log.Info("User rejected transaction")
+		s.writeError(w, errors.New("user rejected transaction"), http.StatusNotAcceptable) // TODO find appropriate code
+		return
+	}
+	s.log.Info("user approved transaction signing request")
 
 	height, err := s.nodeForward.LastBlockHeight(r.Context())
 	if err != nil {

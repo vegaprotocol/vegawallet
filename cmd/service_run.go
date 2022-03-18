@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"bufio"
 	"context"
 	"errors"
 	"fmt"
@@ -194,7 +195,12 @@ func RunService(w io.Writer, rf *RootFlags, f *RunServiceFlags) error {
 		return fmt.Errorf("couldn't initialise the node forwarder: %w", err)
 	}
 
-	srv, err := service.NewService(svcLog.Named("api"), cfg, handler, auth, forwarder)
+	pendingConsents := make(chan service.ConsentRequest, 1)
+	consentConfirmations := make(chan service.ConsentConfirmation, 1)
+
+	policy := service.NewExplicitConsentPolicy(pendingConsents, consentConfirmations)
+
+	srv, err := service.NewService(svcLog.Named("api"), cfg, handler, auth, forwarder, &policy)
 	if err != nil {
 		return err
 	}
@@ -256,7 +262,7 @@ func RunService(w io.Writer, rf *RootFlags, f *RunServiceFlags) error {
 		p.NextLine()
 	}
 
-	waitSig(ctx, cancel, cliLog)
+	waitSig(ctx, cancel, cliLog, pendingConsents, consentConfirmations, p)
 
 	return nil
 }
@@ -326,8 +332,9 @@ func startTokenDApp(log *zap.Logger, rf *RootFlags, openBrowser bool, cfg *netwo
 }
 
 // waitSig will wait for a sigterm or sigint interrupt.
-func waitSig(ctx context.Context, cfunc func(), log *zap.Logger) {
+func waitSig(ctx context.Context, cfunc func(), log *zap.Logger, pendingSigRequests chan service.ConsentRequest, sigRequestsResponses chan service.ConsentConfirmation, p *printer.InteractivePrinter) {
 	gracefulStop := make(chan os.Signal, 1)
+
 	signal.Notify(gracefulStop, syscall.SIGTERM)
 	signal.Notify(gracefulStop, syscall.SIGINT)
 	signal.Notify(gracefulStop, syscall.SIGQUIT)
@@ -341,25 +348,28 @@ func waitSig(ctx context.Context, cfunc func(), log *zap.Logger) {
 		case <-ctx.Done():
 			// nothing to do
 			return
-		case ev := <-pendingEvents:
-			p.PrintEvent(ev)
-			answer := io.ReadStd()
-			// validate
-			confirmations<- answer
+		case ev := <-pendingSigRequests:
+			txStr := ev.String()
+			p.CheckMark().Text("Received TX sign request: ").WarningText(txStr).NextLine()
+			reader := bufio.NewReader(os.Stdin)
+			fmt.Print("Enter your city: ")
+			answer, err := reader.ReadString('\n')
+			if err != nil {
+				log.Info("failed to read user input")
+				cfunc()
+				return
+			}
+			if answer == "y" || answer == "Y" {
+				log.Info("user approved signature for transaction", zap.String("transaction", txStr))
+				sigRequestsResponses <- service.ConsentConfirmation{Decision: true, TxStr: txStr}
+				p.CheckMark().WarningText("Sign request accepted").NextLine()
+
+			} else {
+				log.Info("user declined signature for transaction", zap.String("transaction", txStr))
+				sigRequestsResponses <- service.ConsentConfirmation{Decision: false, TxStr: txStr}
+				p.CheckMark().WarningText("Sign request rejected").NextLine()
+
+			}
 		}
-	}
-}
-
-type ExplicitConsentPolicy struct {
-	pendingEvents chan
-	confirmations chan
-}
-
-func (ExplicitConsentPolicy) Ask(tx interface{}) bool {
-	pendingEvents <- tx
-
-	select {
-	case c := <-confirmations:
-		return c
 	}
 }
