@@ -8,7 +8,21 @@ type Policy interface {
 	Ask(tx *v1.SubmitTransactionRequest) bool
 }
 
-type AutomaticConsentPolicy struct{}
+type AutomaticConsentPolicy struct {
+	pendingEvents chan ConsentRequest
+	confirmations chan ConsentConfirmation
+}
+
+func NewAutomaticConsentPolicy(pending chan ConsentRequest, response chan ConsentConfirmation) AutomaticConsentPolicy {
+	return AutomaticConsentPolicy{
+		pendingEvents: pending,
+		confirmations: response,
+	}
+}
+
+func (p *AutomaticConsentPolicy) Ask(tx *v1.SubmitTransactionRequest) bool {
+	return true
+}
 
 type ConsentConfirmation struct {
 	TxStr    string
@@ -21,10 +35,6 @@ type ConsentRequest struct {
 
 func (r *ConsentRequest) String() string {
 	return r.tx.String()
-}
-
-func (p *AutomaticConsentPolicy) Ask(tx *v1.SubmitTransactionRequest) bool {
-	return true
 }
 
 type ExplicitConsentPolicy struct {

@@ -46,8 +46,13 @@ func getTestService(t *testing.T) *testService {
 	handler := mocks.NewMockWalletHandler(ctrl)
 	auth := mocks.NewMockAuth(ctrl)
 	nodeForward := mocks.NewMockNodeForward(ctrl)
+
+	pendingConsents := make(chan service.ConsentRequest, 1)
+	consentConfirmations := make(chan service.ConsentConfirmation, 1)
+
+	policy := service.NewExplicitConsentPolicy(pendingConsents, consentConfirmations)
 	// no needs of the conf or path as we do not run an actual service
-	s, err := service.NewService(zap.NewNop(), &network.Network{}, handler, auth, nodeForward)
+	s, err := service.NewService(zap.NewNop(), &network.Network{}, handler, auth, nodeForward, &policy)
 	if err != nil {
 		t.Fatalf("couldn't create service: %v", err)
 	}
