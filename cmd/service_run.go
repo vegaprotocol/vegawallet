@@ -352,7 +352,7 @@ func waitSig(ctx context.Context, cfunc func(), log *zap.Logger, pendingSigReque
 			txStr := ev.String()
 			p.CheckMark().Text("Received TX sign request: ").WarningText(txStr).NextLine()
 			reader := bufio.NewReader(os.Stdin)
-			fmt.Print("Enter your city: ")
+			p.CheckMark().WarningText("Please accept or decline sign request: (y/n)").NextLine()
 			answer, err := reader.ReadString('\n')
 			if err != nil {
 				log.Info("failed to read user input")
