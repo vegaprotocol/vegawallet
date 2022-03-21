@@ -4,7 +4,7 @@ go 1.17
 
 require (
 	code.vegaprotocol.io/protos v0.49.3-0.20220318134118-b50784501b9d
-	code.vegaprotocol.io/shared v0.0.0-20220316120021-93b67baf439a
+	code.vegaprotocol.io/shared v0.0.0-20220321185018-3b5684b00533
 	github.com/blang/semver/v4 v4.0.0
 	github.com/cenkalti/backoff/v4 v4.1.2
 	github.com/dgrijalva/jwt-go/v4 v4.0.0-preview1
