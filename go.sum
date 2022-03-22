@@ -33,8 +33,8 @@ cloud.google.com/go/storage v1.8.0/go.mod h1:Wv1Oy7z6Yz3DshWRJFhqM/UCfaWIRTdp0RX
 cloud.google.com/go/storage v1.10.0/go.mod h1:FLPqc6j+Ki4BU591ie1oL6qBQGu2Bl/tZ9ullr3+Kg0=
 code.vegaprotocol.io/protos v0.49.3-0.20220318134118-b50784501b9d h1:Kh7GQgO/OMyG5CxJM/Znb4gy7yKLQDZriWaCrzoU9TY=
 code.vegaprotocol.io/protos v0.49.3-0.20220318134118-b50784501b9d/go.mod h1:K6FWDdxWzEgZjz2G1f8gmrSPMey720ryHnzNRn1pW7w=
-code.vegaprotocol.io/shared v0.0.0-20220316120021-93b67baf439a h1:yXjs1EerIfaQ7soXgLcoapLR+Y1J8OUFlmIBaYS2URc=
-code.vegaprotocol.io/shared v0.0.0-20220316120021-93b67baf439a/go.mod h1:pNHKwqRDkotUN0s6jErl7Eb2EpZa2HAf03lyPMTCUT0=
+code.vegaprotocol.io/shared v0.0.0-20220321185018-3b5684b00533 h1:IxTWvyF0i0AgUAS+FTgQKIpbsS6Ki/Y9Ug0GSlgChJw=
+code.vegaprotocol.io/shared v0.0.0-20220321185018-3b5684b00533/go.mod h1:pNHKwqRDkotUN0s6jErl7Eb2EpZa2HAf03lyPMTCUT0=
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/BurntSushi/toml v1.0.0 h1:dtDWrepsVPfW9H/4y7dDgFc2MBUSeJhlaDtK13CxFlU=
