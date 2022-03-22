@@ -1,8 +1,6 @@
 package service
 
 import (
-	"fmt"
-
 	v1 "code.vegaprotocol.io/protos/vega/wallet/v1"
 )
 
@@ -54,13 +52,11 @@ func NewExplicitConsentPolicy(pending chan ConsentRequest, response chan Consent
 func (p *ExplicitConsentPolicy) Ask(tx *v1.SubmitTransactionRequest) bool {
 	p.pendingEvents <- ConsentRequest{tx}
 	txStr := tx.String()
-	fmt.Println("Received ask for tx:", txStr)
 
 	for c := range p.confirmations {
 		if c.TxStr == txStr {
 			return c.Decision
 		}
-		fmt.Println("txstr does not match", c.TxStr)
 	}
 
 	return true
