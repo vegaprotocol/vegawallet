@@ -363,12 +363,10 @@ func waitSig(ctx context.Context, cfunc func(), log *zap.Logger, pendingSigReque
 				log.Info("user approved signature for transaction", zap.String("transaction", txStr))
 				sigRequestsResponses <- service.ConsentConfirmation{Decision: true, TxStr: txStr}
 				p.CheckMark().WarningText("Sign request accepted").NextLine()
-
 			} else {
 				log.Info("user declined signature for transaction", zap.String("transaction", txStr))
 				sigRequestsResponses <- service.ConsentConfirmation{Decision: false, TxStr: txStr}
 				p.CheckMark().WarningText("Sign request rejected").NextLine()
-
 			}
 		}
 	}
