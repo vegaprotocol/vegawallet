@@ -102,7 +102,6 @@ func BuildCmdTxSend(w io.Writer, handler SendTxHandler, rf *RootFlags) *cobra.Co
 
 	autoCompleteNetwork(cmd, rf.Home)
 	autoCompleteLogLevel(cmd)
-
 	return cmd
 }
 
@@ -161,7 +160,7 @@ type SendTxRequest struct {
 }
 
 func SendTx(w io.Writer, rf *RootFlags, req *SendTxRequest) error {
-	log, err := Build(rf.Output, req.LogLevel)
+	log, err := BuildLogger(rf.Output, req.LogLevel)
 	if err != nil {
 		return err
 	}
@@ -198,7 +197,7 @@ func SendTx(w io.Writer, rf *RootFlags, req *SendTxRequest) error {
 	ctx, cancelFn := context.WithTimeout(context.Background(), ForwarderRequestTimeout)
 	defer cancelFn()
 
-	txHash, err := forwarder.SendTx(ctx, req.Tx, api.SubmitTransactionRequest_TYPE_ASYNC)
+	txHash, err := forwarder.SendTx(ctx, req.Tx, api.SubmitTransactionRequest_TYPE_ASYNC, -1)
 	if err != nil {
 		log.Error("Couldn't send transaction", zap.Error(err))
 		return fmt.Errorf("couldn't send transaction: %w", err)

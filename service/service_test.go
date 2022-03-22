@@ -687,8 +687,13 @@ func testSigningTransactionSucceeds(t *testing.T) {
 	// setup
 	s.auth.EXPECT().VerifyToken(token).Times(1).Return(walletName, nil)
 	s.handler.EXPECT().SignTx(walletName, gomock.Any(), gomock.Any()).Times(1).Return(&commandspb.Transaction{}, nil)
-	s.nodeForward.EXPECT().SendTx(gomock.Any(), &commandspb.Transaction{}, api.SubmitTransactionRequest_TYPE_ASYNC).Times(0)
-	s.nodeForward.EXPECT().LastBlockHeight(gomock.Any()).Times(1).Return(uint64(42), nil)
+	s.nodeForward.EXPECT().SendTx(gomock.Any(), &commandspb.Transaction{}, api.SubmitTransactionRequest_TYPE_ASYNC, gomock.Any()).Times(0)
+	s.nodeForward.EXPECT().LastBlockHeightAndHash(gomock.Any()).Times(1).Return(&api.LastBlockHeightResponse{
+		Height:              42,
+		Hash:                "0292041e2f0cf741894503fb3ead4cb817bca2375e543aa70f7c4d938157b5a6",
+		SpamPowDifficulty:   2,
+		SpamPowHashFunction: "sha3_24_rounds",
+	}, 0, nil)
 
 	// when
 	statusCode, _ := serveHTTP(t, s, signTxRequest(t, payload, headers))
@@ -710,8 +715,13 @@ func testSigningTransactionWithPropagationSucceeds(t *testing.T) {
 	// setup
 	s.auth.EXPECT().VerifyToken(token).Times(1).Return(walletName, nil)
 	s.handler.EXPECT().SignTx(walletName, gomock.Any(), gomock.Any()).Times(1).Return(&commandspb.Transaction{}, nil)
-	s.nodeForward.EXPECT().SendTx(gomock.Any(), &commandspb.Transaction{}, api.SubmitTransactionRequest_TYPE_ASYNC).Times(1)
-	s.nodeForward.EXPECT().LastBlockHeight(gomock.Any()).Times(1).Return(uint64(42), nil)
+	s.nodeForward.EXPECT().SendTx(gomock.Any(), gomock.Any(), api.SubmitTransactionRequest_TYPE_ASYNC, gomock.Any()).Times(1)
+	s.nodeForward.EXPECT().LastBlockHeightAndHash(gomock.Any()).Times(1).Return(&api.LastBlockHeightResponse{
+		Height:              42,
+		Hash:                "0292041e2f0cf741894503fb3ead4cb817bca2375e543aa70f7c4d938157b5a6",
+		SpamPowDifficulty:   2,
+		SpamPowHashFunction: "sha3_24_rounds",
+	}, 0, nil)
 
 	// when
 	statusCode, _ := serveHTTP(t, s, signTxRequest(t, payload, headers))
@@ -733,8 +743,13 @@ func testSigningTransactionWithFailedPropagationFails(t *testing.T) {
 	// setup
 	s.auth.EXPECT().VerifyToken(token).Times(1).Return(walletName, nil)
 	s.handler.EXPECT().SignTx(walletName, gomock.Any(), gomock.Any()).Times(1).Return(&commandspb.Transaction{}, nil)
-	s.nodeForward.EXPECT().SendTx(gomock.Any(), &commandspb.Transaction{}, api.SubmitTransactionRequest_TYPE_ASYNC).Times(1).Return("", assert.AnError)
-	s.nodeForward.EXPECT().LastBlockHeight(gomock.Any()).Times(1).Return(uint64(42), nil)
+	s.nodeForward.EXPECT().SendTx(gomock.Any(), gomock.Any(), api.SubmitTransactionRequest_TYPE_ASYNC, gomock.Any()).Times(1).Return("", assert.AnError)
+	s.nodeForward.EXPECT().LastBlockHeightAndHash(gomock.Any()).Times(1).Return(&api.LastBlockHeightResponse{
+		Height:              42,
+		Hash:                "0292041e2f0cf741894503fb3ead4cb817bca2375e543aa70f7c4d938157b5a6",
+		SpamPowDifficulty:   2,
+		SpamPowHashFunction: "sha3_24_rounds",
+	}, 0, nil)
 
 	// when
 	statusCode, _ := serveHTTP(t, s, signTxRequest(t, payload, headers))
@@ -756,8 +771,13 @@ func testFailedTransactionSigningFails(t *testing.T) {
 	// setup
 	s.auth.EXPECT().VerifyToken(token).Times(1).Return(walletName, nil)
 	s.handler.EXPECT().SignTx(walletName, gomock.Any(), gomock.Any()).Times(1).Return(nil, assert.AnError)
-	s.nodeForward.EXPECT().SendTx(gomock.Any(), &commandspb.Transaction{}, api.SubmitTransactionRequest_TYPE_ASYNC).Times(0)
-	s.nodeForward.EXPECT().LastBlockHeight(gomock.Any()).Times(1).Return(uint64(42), nil)
+	s.nodeForward.EXPECT().SendTx(gomock.Any(), &commandspb.Transaction{}, api.SubmitTransactionRequest_TYPE_ASYNC, gomock.Any()).Times(0)
+	s.nodeForward.EXPECT().LastBlockHeightAndHash(gomock.Any()).Times(1).Return(&api.LastBlockHeightResponse{
+		Height:              42,
+		Hash:                "0292041e2f0cf741894503fb3ead4cb817bca2375e543aa70f7c4d938157b5a6",
+		SpamPowDifficulty:   2,
+		SpamPowHashFunction: "sha3_24_rounds",
+	}, 0, nil)
 
 	// when
 	statusCode, _ := serveHTTP(t, s, signTxRequest(t, payload, headers))

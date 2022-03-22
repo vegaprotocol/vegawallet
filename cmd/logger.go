@@ -2,7 +2,10 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+	"time"
 
+	"code.vegaprotocol.io/shared/paths"
 	"code.vegaprotocol.io/vegawallet/cmd/flags"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -53,7 +56,37 @@ func DefaultConfig() zap.Config {
 	}
 }
 
-func Build(output, level string) (*zap.Logger, error) {
+func BuildJSONLogger(level string, logsDir paths.StatePath) (*zap.Logger, error) {
+	cfg := DefaultConfig()
+
+	l, err := getLevel(level)
+	if err != nil {
+		return nil, err
+	}
+
+	cfg.Level = zap.NewAtomicLevelAt(*l)
+
+	pid := os.Getpid()
+	date := time.Now().UTC().Format("2006-01-02-15-04-05")
+	pathSuffix := fmt.Sprintf("%d-%s.log", pid, date)
+
+	logFile := paths.JoinStatePath(logsDir, pathSuffix)
+	appLogPath, err := paths.CreateDefaultStatePathFor(logFile)
+	if err != nil {
+		return nil, fmt.Errorf("failed getting path for %s: %w", logFile, err)
+	}
+
+	cfg.OutputPaths = []string{appLogPath}
+	cfg.ErrorOutputPaths = []string{appLogPath}
+
+	log, err := cfg.Build()
+	if err != nil {
+		return nil, fmt.Errorf("couldn't create logger: %w", err)
+	}
+	return log, nil
+}
+
+func BuildLogger(output, level string) (*zap.Logger, error) {
 	cfg := DefaultConfig()
 
 	l, err := getLevel(level)
