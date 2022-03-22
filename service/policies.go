@@ -53,12 +53,11 @@ func (p *ExplicitConsentPolicy) Ask(tx *v1.SubmitTransactionRequest) bool {
 	p.pendingEvents <- ConsentRequest{tx}
 	txStr := tx.String()
 
-	for {
-		select {
-		case c := <-p.confirmations:
-			if c.TxStr == txStr {
-				return c.Decision
-			}
+	for c := range p.confirmations {
+		if c.TxStr == txStr {
+			return c.Decision
 		}
 	}
+
+	return false
 }

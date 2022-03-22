@@ -730,7 +730,7 @@ func (s *Service) signTx(token string, w http.ResponseWriter, r *http.Request, _
 
 	if response := s.policy.Ask(req); !response {
 		s.log.Info("transaction reject")
-		s.writeError(w, errors.New("user rejected transaction"), http.StatusUnauthorized)
+		s.writeError(w, ErrRejectedSignRequest, http.StatusUnauthorized)
 		return
 	}
 	s.log.Info("user approved transaction signing request")

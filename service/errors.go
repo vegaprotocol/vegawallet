@@ -15,6 +15,7 @@ var (
 	ErrShouldBeBase64Encoded  = errors.New("should be base64 encoded")
 	ErrRSAKeysAlreadyExists   = errors.New("RSA keys already exist")
 	ErrCouldNotGetPoW         = errors.New("could not get proof of work")
+	ErrRejectedSignRequest    = errors.New("user rejected sign request")
 )
 
 type ErrorsResponse struct {
