@@ -50,12 +50,13 @@ func getTestService(t *testing.T) *testService {
 	pendingConsents := make(chan service.ConsentRequest, 1)
 	consentConfirmations := make(chan service.ConsentConfirmation, 1)
 
-	policy := service.NewExplicitConsentPolicy(pendingConsents, consentConfirmations)
+	policy := service.NewAutomaticConsentPolicy(pendingConsents, consentConfirmations)
 	// no needs of the conf or path as we do not run an actual service
 	s, err := service.NewService(zap.NewNop(), &network.Network{}, handler, auth, nodeForward, &policy)
 	if err != nil {
 		t.Fatalf("couldn't create service: %v", err)
 	}
+
 	return &testService{
 		Service:     s,
 		ctrl:        ctrl,
