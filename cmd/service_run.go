@@ -198,9 +198,15 @@ func RunService(w io.Writer, rf *RootFlags, f *RunServiceFlags) error {
 	pendingConsents := make(chan service.ConsentRequest, 1)
 	consentConfirmations := make(chan service.ConsentConfirmation, 1)
 
-	policy := service.NewExplicitConsentPolicy(pendingConsents, consentConfirmations)
+	var policy service.Policy
+	switch rf.Output {
+	case flags.InteractiveOutput:
+		policy = service.NewExplicitConsentPolicy(pendingConsents, consentConfirmations)
+	case flags.JSONOutput:
+		policy = service.NewAutomaticConsentPolicy(pendingConsents, consentConfirmations)
+	}
 
-	srv, err := service.NewService(svcLog.Named("api"), cfg, handler, auth, forwarder, &policy)
+	srv, err := service.NewService(svcLog.Named("api"), cfg, handler, auth, forwarder, policy)
 	if err != nil {
 		return err
 	}
