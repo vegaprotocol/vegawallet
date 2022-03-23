@@ -266,6 +266,8 @@ func RunService(w io.Writer, rf *RootFlags, f *RunServiceFlags) error {
 	if rf.Output == flags.InteractiveOutput {
 		p.CheckMark().SuccessText("Starting successful").NextSection()
 		p.NextLine()
+		p.CheckMark().SuccessText("Logs output to:").Bold(paths.WalletServiceLogsHome.String()).NextSection()
+		p.NextLine()
 	}
 
 	waitSig(ctx, cancel, cliLog, pendingConsents, consentConfirmations, p)
