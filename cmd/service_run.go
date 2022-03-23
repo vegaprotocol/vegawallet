@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 
 	vglog "code.vegaprotocol.io/shared/libs/zap"
@@ -362,6 +363,7 @@ func waitSig(ctx context.Context, cfunc func(), log *zap.Logger, pendingSigReque
 			reader := bufio.NewReader(os.Stdin)
 			p.CheckMark().WarningText("Please accept or decline sign request: (y/n)").NextLine()
 			answer, err := reader.ReadString('\n')
+			answer = strings.TrimSuffix(answer, "\n")
 			if err != nil {
 				log.Info("failed to read user input")
 				cfunc()
@@ -374,7 +376,7 @@ func waitSig(ctx context.Context, cfunc func(), log *zap.Logger, pendingSigReque
 			} else {
 				log.Info("user declined signature for transaction", zap.String("transaction", txStr))
 				sigRequestsResponses <- service.ConsentConfirmation{Decision: false, TxStr: txStr}
-				p.CheckMark().WarningText("Sign request rejected").NextLine()
+				p.CheckMark().WarningText("Sign request rejected").Bold(answer).NextLine()
 			}
 		}
 	}

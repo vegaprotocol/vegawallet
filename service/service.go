@@ -722,6 +722,12 @@ func (s *Service) SignTx(token string, w http.ResponseWriter, r *http.Request, p
 func (s *Service) signTx(token string, w http.ResponseWriter, r *http.Request, _ httprouter.Params, ty api.SubmitTransactionRequest_Type) {
 	defer r.Body.Close()
 
+	name, err := s.auth.VerifyToken(token)
+	if err != nil {
+		s.writeForbiddenError(w, err)
+		return
+	}
+
 	req, errs := ParseSubmitTransactionRequest(r)
 	if !errs.Empty() {
 		s.writeBadRequest(w, errs)
@@ -738,12 +744,6 @@ func (s *Service) signTx(token string, w http.ResponseWriter, r *http.Request, _
 	blockData, cltIdx, err := s.nodeForward.LastBlockHeightAndHash(r.Context())
 	if err != nil {
 		s.writeInternalError(w, ErrCouldNotGetBlockHeight)
-		return
-	}
-
-	name, err := s.auth.VerifyToken(token)
-	if err != nil {
-		s.writeForbiddenError(w, err)
 		return
 	}
 
