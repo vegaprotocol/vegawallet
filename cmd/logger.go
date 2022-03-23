@@ -56,12 +56,12 @@ func DefaultConfig() zap.Config {
 	}
 }
 
-func BuildJSONLogger(level string, logsDir paths.StatePath) (*zap.Logger, error) {
+func BuildJSONLogger(level string, logsDir paths.StatePath) (*zap.Logger, string, error) {
 	cfg := DefaultConfig()
 
 	l, err := getLevel(level)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
 	cfg.Level = zap.NewAtomicLevelAt(*l)
@@ -73,7 +73,7 @@ func BuildJSONLogger(level string, logsDir paths.StatePath) (*zap.Logger, error)
 	logFile := paths.JoinStatePath(logsDir, pathSuffix)
 	appLogPath, err := paths.CreateDefaultStatePathFor(logFile)
 	if err != nil {
-		return nil, fmt.Errorf("failed getting path for %s: %w", logFile, err)
+		return nil, "", fmt.Errorf("failed getting path for %s: %w", logFile, err)
 	}
 
 	cfg.OutputPaths = []string{appLogPath}
@@ -81,9 +81,9 @@ func BuildJSONLogger(level string, logsDir paths.StatePath) (*zap.Logger, error)
 
 	log, err := cfg.Build()
 	if err != nil {
-		return nil, fmt.Errorf("couldn't create logger: %w", err)
+		return nil, "", fmt.Errorf("couldn't create logger: %w", err)
 	}
-	return log, nil
+	return log, appLogPath, nil
 }
 
 func BuildLogger(output, level string) (*zap.Logger, error) {

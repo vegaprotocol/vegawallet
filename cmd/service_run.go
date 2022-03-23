@@ -163,7 +163,7 @@ func RunService(w io.Writer, rf *RootFlags, f *RunServiceFlags) error {
 		return err
 	}
 
-	svcLog, err := BuildJSONLogger(cfg.Level.String(), paths.WalletServiceLogsHome)
+	svcLog, svcLogPath, err := BuildJSONLogger(cfg.Level.String(), paths.WalletServiceLogsHome)
 	if err != nil {
 		return err
 	}
@@ -211,7 +211,7 @@ func RunService(w io.Writer, rf *RootFlags, f *RunServiceFlags) error {
 		return err
 	}
 
-	cliLog, err := BuildJSONLogger(cfg.Level.String(), paths.WalletCLILogsHome)
+	cliLog, cliLogPath, err := BuildJSONLogger(cfg.Level.String(), paths.WalletCLILogsHome)
 	if err != nil {
 		return err
 	}
@@ -265,8 +265,8 @@ func RunService(w io.Writer, rf *RootFlags, f *RunServiceFlags) error {
 
 	if rf.Output == flags.InteractiveOutput {
 		p.CheckMark().SuccessText("Starting successful").NextSection()
-		p.NextLine()
-		p.CheckMark().SuccessText("Logs output to:").Bold(paths.WalletServiceLogsHome.String()).NextSection()
+		p.CheckMark().SuccessText("Service logs output to: ").Bold(svcLogPath).NextSection()
+		p.CheckMark().SuccessText("CLI logs output to: ").Bold(cliLogPath).NextSection()
 		p.NextLine()
 	}
 
