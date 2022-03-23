@@ -4,22 +4,34 @@
 
 ### 🚨 Breaking changes
 - [497](https://github.com/vegaprotocol/vegawallet/issues/497) - Add ability to confirm the signing of a transaction
-- [504](https://github.com/vegaprotocol/vegawallet/pull/504) - Add support for proof of work sent from the wallet as part of a transaction
-- [507](https://github.com/vegaprotocol/vegawallet/issues/507) - Flag `--level` in service run removed
 
 ### 🗑️  Deprecation
 - [](https://github.com/vegaprotocol/vegawallet/pull/) -
+
+### 🛠  Improvements
+- [](https://github.com/vegaprotocol/vegawallet/pull/) -
+
+### 🔥 Removal
+- [](https://github.com/vegaprotocol/vegawallet/pull/) -
+
+### 🐛 Fixes
+- [](https://github.com/vegaprotocol/vegawallet/pull/) -
+
+
+## 0.13.2
+
+### 🚨 Breaking changes
+- [504](https://github.com/vegaprotocol/vegawallet/pull/504) - Add support for proof of work sent from the wallet as part of a transaction
+- [507](https://github.com/vegaprotocol/vegawallet/issues/507) - Flag `--level` in service run removed
 
 ### 🛠  Improvements
 - [508](https://github.com/vegaprotocol/vegawallet/issues/508) - Introduce a command to list the service endpoints
 - [507](https://github.com/vegaprotocol/vegawallet/issues/507) - Redirect logs from command service run to a file
 - [516](https://github.com/vegaprotocol/vegawallet/issues/516) - Update protos for market update proposal
 
-### 🔥 Removal
-- [](https://github.com/vegaprotocol/vegawallet/pull/) -
-
 ### 🐛 Fixes
 - [502](https://github.com/vegaprotocol/vegawallet/pull/502) - Unwrap properly transfer and cancel transfer commands
+
 
 ## 0.13.1
 
