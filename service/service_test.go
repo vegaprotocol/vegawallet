@@ -895,9 +895,11 @@ func testSigningTransactionWithInvalidRequestFails(t *testing.T) {
 				s.ctrl.Finish()
 			})
 
+			walletName := vgrand.RandomStr(5)
+			s.auth.EXPECT().VerifyToken(token).Times(1).Return(walletName, nil)
+
 			// when
 			statusCode, _ := serveHTTP(tt, s, signTxRequest(tt, tc.payload, tc.headers))
-
 			// then
 			assert.Equal(tt, http.StatusBadRequest, statusCode)
 		})
