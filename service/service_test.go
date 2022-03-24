@@ -861,7 +861,6 @@ func testFailedTransactionSigningFails(t *testing.T) {
 
 func testSigningTransactionWithInvalidRequestFails(t *testing.T) {
 	token := vgrand.RandomStr(5)
-	walletName := vgrand.RandomStr(5)
 
 	tcs := []struct {
 		name    string
@@ -898,7 +897,7 @@ func testSigningTransactionWithInvalidRequestFails(t *testing.T) {
 				s.ctrl.Finish()
 			})
 
-			s.auth.EXPECT().VerifyToken(token).Times(1).Return(walletName, nil)
+			s.auth.EXPECT().VerifyToken(token).Times(1)
 
 			// when
 			statusCode, _ := serveHTTP(tt, s, signTxRequest(tt, tc.payload, tc.headers))
