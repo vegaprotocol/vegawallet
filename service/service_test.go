@@ -729,26 +729,29 @@ func testAcceptSigningTransactionManuallySucceeds(t *testing.T) {
 	token := vgrand.RandomStr(5)
 	headers := authHeaders(t, token)
 	pubKey := vgrand.RandomStr(5)
-	payload := fmt.Sprintf(`{"pubKey": "%s", "orderCancellation": {}}`, pubKey)
-	txStr := fmt.Sprintf(`pub_key:"%s" order_cancellation:{}`, pubKey)
+	payload := fmt.Sprintf(`{"propagate": true, "pubKey": "%s", "orderCancellation": {}}`, pubKey)
 
 	// setup
 	s.auth.EXPECT().VerifyToken(token).Times(1).Return(walletName, nil)
-	s.handler.EXPECT().SignTx(walletName, gomock.Any(), gomock.Any()).Times(1).Return(&commandspb.Transaction{}, nil)
-	s.nodeForward.EXPECT().SendTx(gomock.Any(), &commandspb.Transaction{}, api.SubmitTransactionRequest_TYPE_ASYNC, gomock.Any()).Times(0)
+	s.handler.EXPECT().SignTx(gomock.Any(), gomock.Any(), gomock.Any()).Times(1).Return(&commandspb.Transaction{}, nil)
+	s.nodeForward.EXPECT().SendTx(gomock.Any(), gomock.Any(), api.SubmitTransactionRequest_TYPE_ASYNC, gomock.Any()).Times(1)
 	s.nodeForward.EXPECT().LastBlockHeightAndHash(gomock.Any()).Times(1).Return(&api.LastBlockHeightResponse{
 		Height:              42,
 		Hash:                "0292041e2f0cf741894503fb3ead4cb817bca2375e543aa70f7c4d938157b5a6",
 		SpamPowDifficulty:   2,
 		SpamPowHashFunction: "sha3_24_rounds",
 	}, 0, nil)
-
+	result := make(chan int)
 	// when
-	s.ConsentConfirmations <- service.ConsentConfirmation{TxStr: txStr, Decision: true}
-	statusCode, _ := serveHTTP(t, s, signTxRequest(t, payload, headers))
+	go func(respond chan int) {
+		statusCode, _ := serveHTTP(t, s, signTxRequest(t, payload, headers))
+		respond <- statusCode
+	}(result)
 
 	// then
-	assert.Equal(t, http.StatusOK, statusCode)
+	s.ConsentConfirmations <- service.ConsentConfirmation{TxStr: payload, Decision: true}
+	code := <-result
+	assert.Equal(t, http.StatusOK, code)
 }
 
 func testDeclineSigningTransactionManuallySucceeds(t *testing.T) {
@@ -760,19 +763,24 @@ func testDeclineSigningTransactionManuallySucceeds(t *testing.T) {
 	walletName := vgrand.RandomStr(5)
 	headers := authHeaders(t, token)
 	pubKey := vgrand.RandomStr(5)
-	payload := fmt.Sprintf(`{"pubKey": "%s", "orderCancellation": {}}`, pubKey)
-	txStr := fmt.Sprintf(`pub_key:"%s" order_cancellation:{}`, pubKey)
+	payload := fmt.Sprintf(`{"propagate": true, "pubKey": "%s", "orderCancellation": {}}`, pubKey)
 
 	// setup
 	s.auth.EXPECT().VerifyToken(token).Times(1).Return(walletName, nil)
-	s.nodeForward.EXPECT().SendTx(gomock.Any(), &commandspb.Transaction{}, api.SubmitTransactionRequest_TYPE_ASYNC, gomock.Any()).Times(0)
-
+	s.handler.EXPECT().SignTx(walletName, gomock.Any(), gomock.Any()).Times(0).Return(&commandspb.Transaction{}, nil)
+	s.nodeForward.EXPECT().SendTx(gomock.Any(), gomock.Any(), api.SubmitTransactionRequest_TYPE_ASYNC, gomock.Any()).Times(0)
+	s.nodeForward.EXPECT().LastBlockHeightAndHash(gomock.Any()).Times(0)
+	result := make(chan int)
 	// when
-	s.ConsentConfirmations <- service.ConsentConfirmation{TxStr: txStr, Decision: false}
-	statusCode, _ := serveHTTP(t, s, signTxRequest(t, payload, headers))
-
+	go func(respond chan int) {
+		// when
+		statusCode, _ := serveHTTP(t, s, signTxRequest(t, payload, headers))
+		respond <- statusCode
+	}(result)
+	s.ConsentConfirmations <- service.ConsentConfirmation{TxStr: payload, Decision: false}
+	code := <-result
 	// then
-	assert.Equal(t, http.StatusUnauthorized, statusCode)
+	assert.Equal(t, http.StatusUnauthorized, code)
 }
 
 func testSigningTransactionWithPropagationSucceeds(t *testing.T) {
@@ -873,7 +881,7 @@ func testSigningTransactionWithInvalidRequestFails(t *testing.T) {
 			payload: `{"propagate": true, "pubKey": "0xCAFEDUDE", "orderCancellation": {}}`,
 		}, {
 			name:    "no token",
-			headers: authHeaders(t, token),
+			headers: authHeaders(t, ""),
 			payload: `{"propagate": true, "pubKey": "0xCAFEDUDE", "orderCancellation": {}}`,
 		}, {
 			name:    "misspelled pubKey property",
@@ -896,9 +904,9 @@ func testSigningTransactionWithInvalidRequestFails(t *testing.T) {
 			tt.Cleanup(func() {
 				s.ctrl.Finish()
 			})
-
-			s.auth.EXPECT().VerifyToken(token).Times(1)
-
+			if tc.name != "no header" && tc.name != "no token" {
+				s.auth.EXPECT().VerifyToken(token).Times(1)
+			}
 			// when
 			statusCode, _ := serveHTTP(tt, s, signTxRequest(tt, tc.payload, tc.headers))
 			// then

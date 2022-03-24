@@ -1,7 +1,12 @@
 package service
 
 import (
+	"reflect"
+
 	v1 "code.vegaprotocol.io/protos/vega/wallet/v1"
+	walletpb "code.vegaprotocol.io/protos/vega/wallet/v1"
+	"github.com/golang/protobuf/jsonpb"
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
 type ConsentConfirmation struct {
@@ -13,8 +18,9 @@ type ConsentRequest struct {
 	tx *v1.SubmitTransactionRequest
 }
 
-func (r *ConsentRequest) String() string {
-	return r.tx.String()
+func (r *ConsentRequest) String() (string, error) {
+	data, err := protojson.Marshal(r.tx)
+	return string(data), err
 }
 
 type Policy interface {
@@ -51,12 +57,17 @@ func NewExplicitConsentPolicy(pending chan ConsentRequest, response chan Consent
 
 func (p *ExplicitConsentPolicy) Ask(tx *v1.SubmitTransactionRequest) bool {
 	p.pendingEvents <- ConsentRequest{tx}
-	txStr := tx.String()
 
 	for c := range p.confirmations {
-		if c.TxStr == txStr {
+		req := &walletpb.SubmitTransactionRequest{}
+		if err := jsonpb.UnmarshalString(c.TxStr, req); err != nil {
+			continue
+		}
+
+		if reflect.DeepEqual(req, tx) {
 			return c.Decision
 		}
+
 	}
 
 	return true

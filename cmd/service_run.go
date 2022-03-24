@@ -358,23 +358,28 @@ func waitSig(ctx context.Context, cfunc func(), log *zap.Logger, pendingSigReque
 			// nothing to do
 			return
 		case ev := <-pendingSigRequests:
-			txStr := ev.String()
-			p.CheckMark().Text("Received TX sign request: ").WarningText(txStr).NextLine()
+			txStr, err := ev.String()
+			if err != nil {
+				log.Info("failed to marshall signature request content")
+				cfunc()
+				return
+			}
+			p.CheckMark().Text("Received TX sign request: ").WarningText(string(txStr)).NextLine()
 			reader := bufio.NewReader(os.Stdin)
 			p.CheckMark().WarningText("Please accept or decline sign request: (y/n)").NextLine()
 			answer, err := reader.ReadString('\n')
 			answer = strings.TrimSuffix(answer, "\n")
 			if err != nil {
-				log.Info("failed to read user input")
+				log.Error("failed to read user input", zap.Error(err))
 				cfunc()
 				return
 			}
 			if answer == "y" || answer == "Y" {
-				log.Info("user approved signature for transaction", zap.String("transaction", txStr))
+				log.Info("user approved signature for transaction", zap.Any("transaction", txStr))
 				sigRequestsResponses <- service.ConsentConfirmation{Decision: true, TxStr: txStr}
 				p.CheckMark().WarningText("Sign request accepted").NextLine()
 			} else {
-				log.Info("user declined signature for transaction", zap.String("transaction", txStr))
+				log.Info("user declined signature for transaction", zap.Any("transaction", txStr))
 				sigRequestsResponses <- service.ConsentConfirmation{Decision: false, TxStr: txStr}
 				p.CheckMark().WarningText("Sign request rejected").Bold(answer).NextLine()
 			}
