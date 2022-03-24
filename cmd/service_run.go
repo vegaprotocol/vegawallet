@@ -364,7 +364,7 @@ func waitSig(ctx context.Context, cfunc func(), log *zap.Logger, pendingSigReque
 				cfunc()
 				return
 			}
-			p.CheckMark().Text("Received TX sign request: ").WarningText(string(txStr)).NextLine()
+			p.CheckMark().Text("Received TX sign request: ").WarningText(txStr).NextLine()
 			reader := bufio.NewReader(os.Stdin)
 			p.CheckMark().WarningText("Please accept or decline sign request: (y/n)").NextLine()
 			answer, err := reader.ReadString('\n')
