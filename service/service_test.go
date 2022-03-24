@@ -757,12 +757,14 @@ func testDeclineSigningTransactionManuallySucceeds(t *testing.T) {
 
 	// given
 	token := vgrand.RandomStr(5)
+	walletName := vgrand.RandomStr(5)
 	headers := authHeaders(t, token)
 	pubKey := vgrand.RandomStr(5)
 	payload := fmt.Sprintf(`{"pubKey": "%s", "orderCancellation": {}}`, pubKey)
 	txStr := fmt.Sprintf(`pub_key:"%s" order_cancellation:{}`, pubKey)
 
 	// setup
+	s.auth.EXPECT().VerifyToken(token).Times(1).Return(walletName, nil)
 	s.nodeForward.EXPECT().SendTx(gomock.Any(), &commandspb.Transaction{}, api.SubmitTransactionRequest_TYPE_ASYNC, gomock.Any()).Times(0)
 
 	// when
