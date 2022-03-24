@@ -4,7 +4,6 @@ import (
 	"reflect"
 
 	v1 "code.vegaprotocol.io/protos/vega/wallet/v1"
-	walletpb "code.vegaprotocol.io/protos/vega/wallet/v1"
 	"github.com/golang/protobuf/jsonpb"
 	"google.golang.org/protobuf/encoding/protojson"
 )
@@ -59,7 +58,7 @@ func (p *ExplicitConsentPolicy) Ask(tx *v1.SubmitTransactionRequest) bool {
 	p.pendingEvents <- ConsentRequest{tx}
 
 	for c := range p.confirmations {
-		req := &walletpb.SubmitTransactionRequest{}
+		req := &v1.SubmitTransactionRequest{}
 		if err := jsonpb.UnmarshalString(c.TxStr, req); err != nil {
 			continue
 		}
