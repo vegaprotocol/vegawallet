@@ -860,6 +860,9 @@ func testFailedTransactionSigningFails(t *testing.T) {
 }
 
 func testSigningTransactionWithInvalidRequestFails(t *testing.T) {
+	token := vgrand.RandomStr(5)
+	walletName := vgrand.RandomStr(5)
+
 	tcs := []struct {
 		name    string
 		headers map[string]string
@@ -871,19 +874,19 @@ func testSigningTransactionWithInvalidRequestFails(t *testing.T) {
 			payload: `{"propagate": true, "pubKey": "0xCAFEDUDE", "orderCancellation": {}}`,
 		}, {
 			name:    "no token",
-			headers: authHeaders(t, ""),
+			headers: authHeaders(t, token),
 			payload: `{"propagate": true, "pubKey": "0xCAFEDUDE", "orderCancellation": {}}`,
 		}, {
 			name:    "misspelled pubKey property",
-			headers: authHeaders(t, vgrand.RandomStr(5)),
+			headers: authHeaders(t, token),
 			payload: `{"propagate": true, "puey": "0xCAFEDUDE", "orderCancellation": {}}`,
 		}, {
 			name:    "without command",
-			headers: authHeaders(t, vgrand.RandomStr(5)),
+			headers: authHeaders(t, token),
 			payload: `{"propagate": true, "pubKey": "0xCAFEDUDE", "robMoney": {}}`,
 		}, {
 			name:    "with unknown command",
-			headers: authHeaders(t, vgrand.RandomStr(5)),
+			headers: authHeaders(t, token),
 			payload: `{"propagate": true, "pubKey": "0xCAFEDUDE"}`,
 		},
 	}
@@ -894,9 +897,6 @@ func testSigningTransactionWithInvalidRequestFails(t *testing.T) {
 			tt.Cleanup(func() {
 				s.ctrl.Finish()
 			})
-
-			walletName := vgrand.RandomStr(5)
-			token := vgrand.RandomStr(5)
 
 			s.auth.EXPECT().VerifyToken(token).Times(1).Return(walletName, nil)
 
