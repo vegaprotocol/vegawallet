@@ -66,8 +66,6 @@ func (p *ExplicitConsentPolicy) Ask(tx *v1.SubmitTransactionRequest) bool {
 		if reflect.DeepEqual(req, tx) {
 			return c.Decision
 		}
-
 	}
-
 	return true
 }
