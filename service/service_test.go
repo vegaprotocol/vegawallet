@@ -896,6 +896,8 @@ func testSigningTransactionWithInvalidRequestFails(t *testing.T) {
 			})
 
 			walletName := vgrand.RandomStr(5)
+			token := vgrand.RandomStr(5)
+
 			s.auth.EXPECT().VerifyToken(token).Times(1).Return(walletName, nil)
 
 			// when
