@@ -360,7 +360,7 @@ func waitSig(ctx context.Context, cfunc func(), log *zap.Logger, pendingSigReque
 		case ev := <-pendingSigRequests:
 			txStr, err := ev.String()
 			if err != nil {
-				log.Info("failed to marshall signature request content")
+				log.Info("failed to marshall sign request content")
 				cfunc()
 				return
 			}
@@ -375,11 +375,11 @@ func waitSig(ctx context.Context, cfunc func(), log *zap.Logger, pendingSigReque
 				return
 			}
 			if answer == "y" || answer == "Y" {
-				log.Info("user approved signature for transaction", zap.Any("transaction", txStr))
+				log.Info("user approved sign request for transaction", zap.Any("transaction", txStr))
 				sigRequestsResponses <- service.ConsentConfirmation{Decision: true, TxStr: txStr}
 				p.CheckMark().WarningText("Sign request accepted").NextLine()
 			} else {
-				log.Info("user declined signature for transaction", zap.Any("transaction", txStr))
+				log.Info("user declined sign request for transaction", zap.Any("transaction", txStr))
 				sigRequestsResponses <- service.ConsentConfirmation{Decision: false, TxStr: txStr}
 				p.CheckMark().WarningText("Sign request rejected: ").Bold(answer).NextLine()
 			}
