@@ -381,7 +381,7 @@ func waitSig(ctx context.Context, cfunc func(), log *zap.Logger, pendingSigReque
 			} else {
 				log.Info("user declined signature for transaction", zap.Any("transaction", txStr))
 				sigRequestsResponses <- service.ConsentConfirmation{Decision: false, TxStr: txStr}
-				p.CheckMark().WarningText("Sign request rejected").Bold(answer).NextLine()
+				p.CheckMark().WarningText("Sign request rejected: ").Bold(answer).NextLine()
 			}
 		}
 	}
