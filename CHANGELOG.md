@@ -15,7 +15,7 @@
 - [](https://github.com/vegaprotocol/vegawallet/pull/) -
 
 ### 🐛 Fixes
-- [](https://github.com/vegaprotocol/vegawallet/pull/) -
+- [521](https://github.com/vegaprotocol/vegawallet/pull/521) - Update `protos` repository to get last validation updates on commands
 
 
 ## 0.13.2
