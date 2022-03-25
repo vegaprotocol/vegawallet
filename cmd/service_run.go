@@ -163,7 +163,7 @@ func RunService(w io.Writer, rf *RootFlags, f *RunServiceFlags) error {
 	if err := verifyNetworkConfig(cfg, f); err != nil {
 		return err
 	}
-
+	vegaPaths.CreateStatePathFor(paths.WalletServiceStateHome)
 	svcLog, svcLogPath, err := BuildJSONLogger(cfg.Level.String(), paths.WalletServiceLogsHome)
 	if err != nil {
 		return err
@@ -368,7 +368,7 @@ func waitSig(ctx context.Context, cfunc func(), log *zap.Logger, pendingSigReque
 			reader := bufio.NewReader(os.Stdin)
 			p.CheckMark().WarningText("Please accept or decline sign request: (y/n)").NextLine()
 			answer, err := reader.ReadString('\n')
-			answer = strings.TrimSuffix(answer, "\n")
+			answer = strings.TrimSuffix(strings.TrimSuffix(answer, "\r\n"), "\n")
 			if err != nil {
 				log.Error("failed to read user input", zap.Error(err))
 				cfunc()
