@@ -1,10 +1,10 @@
 package service
 
 import (
-	"reflect"
-
 	v1 "code.vegaprotocol.io/protos/vega/wallet/v1"
+	"code.vegaprotocol.io/vegawallet/crypto"
 	"github.com/golang/protobuf/jsonpb"
+
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
@@ -62,8 +62,7 @@ func (p *ExplicitConsentPolicy) Ask(tx *v1.SubmitTransactionRequest) bool {
 		if err := jsonpb.UnmarshalString(c.TxStr, req); err != nil {
 			continue
 		}
-
-		if reflect.DeepEqual(req, tx) {
+		if crypto.AsSha256(req) == crypto.AsSha256(tx) {
 			return c.Decision
 		}
 	}
