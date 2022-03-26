@@ -163,7 +163,6 @@ func RunService(w io.Writer, rf *RootFlags, f *RunServiceFlags) error {
 	if err := verifyNetworkConfig(cfg, f); err != nil {
 		return err
 	}
-	vegaPaths.CreateStatePathFor(paths.WalletServiceStateHome)
 	svcLog, svcLogPath, err := BuildJSONLogger(cfg.Level.String(), paths.WalletServiceLogsHome)
 	if err != nil {
 		return err
