@@ -756,6 +756,7 @@ func testAcceptSigningTransactionManuallySucceeds(t *testing.T) {
 
 	time.Sleep(1 * time.Millisecond)
 	confirmations := s.GetSignRequestsConfirmations(txHash)
+	assert.NotNil(t, confirmations)
 
 	confirmations <- service.ConsentConfirmation{TxStr: payload, Decision: true}
 	code := <-result
@@ -794,6 +795,8 @@ func testDeclineSigningTransactionManuallySucceeds(t *testing.T) {
 
 	time.Sleep(1 * time.Millisecond)
 	confirmations := s.GetSignRequestsConfirmations(txHash)
+	assert.NotNil(t, confirmations)
+
 	confirmations <- service.ConsentConfirmation{TxStr: payload, Decision: false}
 	code := <-result
 	// then
