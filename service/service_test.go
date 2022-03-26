@@ -11,6 +11,8 @@ import (
 	"testing"
 	"time"
 
+	v1 "code.vegaprotocol.io/protos/vega/wallet/v1"
+
 	api "code.vegaprotocol.io/protos/vega/api/v1"
 	commandspb "code.vegaprotocol.io/protos/vega/commands/v1"
 	vgrand "code.vegaprotocol.io/shared/libs/rand"
@@ -20,6 +22,7 @@ import (
 	"code.vegaprotocol.io/vegawallet/service/mocks"
 	"code.vegaprotocol.io/vegawallet/wallet"
 	"github.com/golang/mock/gomock"
+	"github.com/golang/protobuf/jsonpb"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap"
 )
@@ -33,11 +36,10 @@ const (
 type testService struct {
 	*service.Service
 
-	ctrl                 *gomock.Controller
-	handler              *mocks.MockWalletHandler
-	nodeForward          *mocks.MockNodeForward
-	auth                 *mocks.MockAuth
-	ConsentConfirmations chan service.ConsentConfirmation
+	ctrl        *gomock.Controller
+	handler     *mocks.MockWalletHandler
+	nodeForward *mocks.MockNodeForward
+	auth        *mocks.MockAuth
 }
 
 func getTestService(t *testing.T, consentPolicy string) *testService {
@@ -49,14 +51,13 @@ func getTestService(t *testing.T, consentPolicy string) *testService {
 	nodeForward := mocks.NewMockNodeForward(ctrl)
 
 	pendingConsents := make(chan service.ConsentRequest, 1)
-	consentConfirmations := make(chan service.ConsentConfirmation, 1)
 
 	var policy service.Policy
 	switch consentPolicy {
 	case "automatic":
-		policy = service.NewAutomaticConsentPolicy(pendingConsents, consentConfirmations)
+		policy = service.NewAutomaticConsentPolicy(pendingConsents)
 	case "manual":
-		policy = service.NewExplicitConsentPolicy(pendingConsents, consentConfirmations)
+		policy = service.NewExplicitConsentPolicy(pendingConsents)
 	default:
 		t.Fatalf("unknown consent policy: %s", consentPolicy)
 	}
@@ -67,12 +68,11 @@ func getTestService(t *testing.T, consentPolicy string) *testService {
 	}
 
 	return &testService{
-		Service:              s,
-		ctrl:                 ctrl,
-		handler:              handler,
-		auth:                 auth,
-		nodeForward:          nodeForward,
-		ConsentConfirmations: consentConfirmations,
+		Service:     s,
+		ctrl:        ctrl,
+		handler:     handler,
+		auth:        auth,
+		nodeForward: nodeForward,
 	}
 }
 
@@ -749,7 +749,15 @@ func testAcceptSigningTransactionManuallySucceeds(t *testing.T) {
 	}(result)
 
 	// then
-	s.ConsentConfirmations <- service.ConsentConfirmation{TxStr: payload, Decision: true}
+	req := &v1.SubmitTransactionRequest{}
+	err := jsonpb.UnmarshalString(payload, req)
+	assert.Nil(t, err)
+	txHash := crypto.AsSha256(req)
+
+	time.Sleep(1 * time.Millisecond)
+	confirmations := s.GetSignRequestsConfirmations(txHash)
+
+	confirmations <- service.ConsentConfirmation{TxStr: payload, Decision: true}
 	code := <-result
 	assert.Equal(t, http.StatusOK, code)
 }
@@ -777,7 +785,16 @@ func testDeclineSigningTransactionManuallySucceeds(t *testing.T) {
 		statusCode, _ := serveHTTP(t, s, signTxRequest(t, payload, headers))
 		respond <- statusCode
 	}(result)
-	s.ConsentConfirmations <- service.ConsentConfirmation{TxStr: payload, Decision: false}
+
+	// then
+	req := &v1.SubmitTransactionRequest{}
+	err := jsonpb.UnmarshalString(payload, req)
+	assert.Nil(t, err)
+	txHash := crypto.AsSha256(req)
+
+	time.Sleep(1 * time.Millisecond)
+	confirmations := s.GetSignRequestsConfirmations(txHash)
+	confirmations <- service.ConsentConfirmation{TxStr: payload, Decision: false}
 	code := <-result
 	// then
 	assert.Equal(t, http.StatusUnauthorized, code)

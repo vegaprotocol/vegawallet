@@ -461,6 +461,10 @@ func (s *Service) Stop() error {
 	return s.server.Shutdown(context.Background())
 }
 
+func (s *Service) GetSignRequestsConfirmations(hash string) chan ConsentConfirmation {
+	return s.policy.GetSignRequestsConfirmations(hash)
+}
+
 func (s *Service) CreateWallet(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	req, errs := ParseCreateWalletRequest(r)
 	if !errs.Empty() {

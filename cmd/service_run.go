@@ -197,14 +197,13 @@ func RunService(w io.Writer, rf *RootFlags, f *RunServiceFlags) error {
 	}
 
 	pendingConsents := make(chan service.ConsentRequest, 1)
-	consentConfirmations := make(chan service.ConsentConfirmation, 1)
 
 	var policy service.Policy
 	switch rf.Output {
 	case flags.InteractiveOutput:
-		policy = service.NewExplicitConsentPolicy(pendingConsents, consentConfirmations)
+		policy = service.NewExplicitConsentPolicy(pendingConsents)
 	case flags.JSONOutput:
-		policy = service.NewAutomaticConsentPolicy(pendingConsents, consentConfirmations)
+		policy = service.NewAutomaticConsentPolicy(pendingConsents)
 	}
 
 	srv, err := service.NewService(svcLog.Named("api"), cfg, handler, auth, forwarder, policy)
@@ -271,7 +270,7 @@ func RunService(w io.Writer, rf *RootFlags, f *RunServiceFlags) error {
 		p.NextLine()
 	}
 
-	waitSig(ctx, cancel, cliLog, pendingConsents, consentConfirmations, p)
+	waitSig(ctx, cancel, cliLog, pendingConsents, p)
 
 	return nil
 }
@@ -341,7 +340,7 @@ func startTokenDApp(log *zap.Logger, rf *RootFlags, openBrowser bool, cfg *netwo
 }
 
 // waitSig will wait for a sigterm or sigint interrupt.
-func waitSig(ctx context.Context, cfunc func(), log *zap.Logger, pendingSigRequests chan service.ConsentRequest, sigRequestsResponses chan service.ConsentConfirmation, p *printer.InteractivePrinter) {
+func waitSig(ctx context.Context, cfunc func(), log *zap.Logger, pendingSigRequests chan service.ConsentRequest, p *printer.InteractivePrinter) {
 	gracefulStop := make(chan os.Signal, 1)
 
 	signal.Notify(gracefulStop, syscall.SIGTERM)
@@ -357,8 +356,8 @@ func waitSig(ctx context.Context, cfunc func(), log *zap.Logger, pendingSigReque
 		case <-ctx.Done():
 			// nothing to do
 			return
-		case ev := <-pendingSigRequests:
-			txStr, err := ev.String()
+		case signRequest := <-pendingSigRequests:
+			txStr, err := signRequest.String()
 			if err != nil {
 				log.Info("failed to marshall sign request content")
 				cfunc()
@@ -376,11 +375,11 @@ func waitSig(ctx context.Context, cfunc func(), log *zap.Logger, pendingSigReque
 			}
 			if answer == "y" || answer == "Y" {
 				log.Info("user approved sign request for transaction", zap.Any("transaction", txStr))
-				sigRequestsResponses <- service.ConsentConfirmation{Decision: true, TxStr: txStr}
+				signRequest.Confirmations <- service.ConsentConfirmation{Decision: true, TxStr: txStr}
 				p.CheckMark().WarningText("Sign request accepted").NextLine()
 			} else {
 				log.Info("user declined sign request for transaction", zap.Any("transaction", txStr))
-				sigRequestsResponses <- service.ConsentConfirmation{Decision: false, TxStr: txStr}
+				signRequest.Confirmations <- service.ConsentConfirmation{Decision: false, TxStr: txStr}
 				p.CheckMark().WarningText("Sign request rejected: ").Bold(answer).NextLine()
 			}
 		}

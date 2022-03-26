@@ -4,8 +4,6 @@ import (
 	v1 "code.vegaprotocol.io/protos/vega/wallet/v1"
 	"code.vegaprotocol.io/vegawallet/crypto"
 	"github.com/golang/protobuf/jsonpb"
-
-	"google.golang.org/protobuf/encoding/protojson"
 )
 
 type ConsentConfirmation struct {
@@ -14,27 +12,28 @@ type ConsentConfirmation struct {
 }
 
 type ConsentRequest struct {
-	tx *v1.SubmitTransactionRequest
+	tx            *v1.SubmitTransactionRequest
+	Confirmations chan ConsentConfirmation
 }
 
 func (r *ConsentRequest) String() (string, error) {
-	data, err := protojson.Marshal(r.tx)
-	return string(data), err
+	m := jsonpb.Marshaler{Indent: "    "}
+	marshalledRequest, err := m.MarshalToString(r.tx)
+	return marshalledRequest, err
 }
 
 type Policy interface {
 	Ask(tx *v1.SubmitTransactionRequest) bool
+	GetSignRequestsConfirmations(hash string) chan ConsentConfirmation
 }
 
 type AutomaticConsentPolicy struct {
 	pendingEvents chan ConsentRequest
-	confirmations chan ConsentConfirmation
 }
 
-func NewAutomaticConsentPolicy(pending chan ConsentRequest, response chan ConsentConfirmation) Policy {
+func NewAutomaticConsentPolicy(pending chan ConsentRequest) Policy {
 	return &AutomaticConsentPolicy{
 		pendingEvents: pending,
-		confirmations: response,
 	}
 }
 
@@ -42,27 +41,38 @@ func (p *AutomaticConsentPolicy) Ask(tx *v1.SubmitTransactionRequest) bool {
 	return true
 }
 
-type ExplicitConsentPolicy struct {
-	pendingEvents chan ConsentRequest
-	confirmations chan ConsentConfirmation
+func (p *AutomaticConsentPolicy) GetSignRequestsConfirmations(hash string) chan ConsentConfirmation {
+	return nil
 }
 
-func NewExplicitConsentPolicy(pending chan ConsentRequest, response chan ConsentConfirmation) Policy {
+type ExplicitConsentPolicy struct {
+	pendingEvents    chan ConsentRequest
+	AllConfirmations map[string]chan ConsentConfirmation
+}
+
+func NewExplicitConsentPolicy(pending chan ConsentRequest) Policy {
 	return &ExplicitConsentPolicy{
-		pendingEvents: pending,
-		confirmations: response,
+		pendingEvents:    pending,
+		AllConfirmations: make(map[string]chan ConsentConfirmation),
 	}
 }
 
-func (p *ExplicitConsentPolicy) Ask(tx *v1.SubmitTransactionRequest) bool {
-	p.pendingEvents <- ConsentRequest{tx}
+func (p *ExplicitConsentPolicy) GetSignRequestsConfirmations(hash string) chan ConsentConfirmation {
+	return p.AllConfirmations[hash]
+}
 
-	for c := range p.confirmations {
+func (p *ExplicitConsentPolicy) Ask(tx *v1.SubmitTransactionRequest) bool {
+	txHash := crypto.AsSha256(tx)
+	p.AllConfirmations[txHash] = make(chan ConsentConfirmation)
+
+	p.pendingEvents <- ConsentRequest{tx: tx, Confirmations: p.AllConfirmations[txHash]}
+
+	for c := range p.AllConfirmations[txHash] {
 		req := &v1.SubmitTransactionRequest{}
 		if err := jsonpb.UnmarshalString(c.TxStr, req); err != nil {
 			continue
 		}
-		if crypto.AsSha256(req) == crypto.AsSha256(tx) {
+		if crypto.AsSha256(req) == txHash {
 			return c.Decision
 		}
 	}
