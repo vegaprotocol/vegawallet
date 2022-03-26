@@ -1,10 +1,11 @@
 package service
 
 import (
+	"sync"
+
 	v1 "code.vegaprotocol.io/protos/vega/wallet/v1"
 	"code.vegaprotocol.io/vegawallet/crypto"
 	"github.com/golang/protobuf/jsonpb"
-	"sync"
 )
 
 type ConsentConfirmation struct {
