@@ -51,7 +51,6 @@ func NewExplicitConsentPolicy(pending chan ConsentRequest) Policy {
 }
 
 func (p *ExplicitConsentPolicy) Ask(tx *v1.SubmitTransactionRequest) (bool, error) {
-	txHash := crypto.AsSha256(tx)
 	confirmations := make(chan ConsentConfirmation)
 	p.pendingEvents <- ConsentRequest{tx: tx, Confirmations: confirmations}
 
@@ -60,7 +59,7 @@ func (p *ExplicitConsentPolicy) Ask(tx *v1.SubmitTransactionRequest) (bool, erro
 	if err := jsonpb.UnmarshalString(c.TxStr, req); err != nil {
 		return false, ErrInvalidSignRequestConfirm
 	}
-	if crypto.AsSha256(req) != txHash {
+	if crypto.AsSha256(req) != crypto.AsSha256(tx) {
 		return false, ErrUnexpectedSignRequestConfirm
 	}
 
