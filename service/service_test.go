@@ -100,7 +100,7 @@ func TestService(t *testing.T) {
 	t.Run("update metadata invalid request", testServiceUpdateMetaFailInvalidRequest)
 	t.Run("Signing transaction automatically succeeds", testSigningTransactionSucceeds)
 	t.Run("Signing transaction manually succeeds", testAcceptSigningTransactionManuallySucceeds)
-	t.Run("using ask function in policy succeeds", testThing)
+	t.Run("using ask function in policy succeeds", testAskingConsentPolicySucceeds)
 	t.Run("Decline signing transaction manually succeeds", testDeclineSigningTransactionManuallySucceeds)
 	t.Run("Signing transaction with propagation succeeds", testSigningTransactionWithPropagationSucceeds)
 	t.Run("Signing transaction with failed propagation fails", testSigningTransactionWithFailedPropagationFails)
@@ -749,7 +749,7 @@ func testAcceptSigningTransactionManuallySucceeds(t *testing.T) {
 	assert.Equal(t, http.StatusOK, statusCode)
 }
 
-func testThing(t *testing.T) {
+func testAskingConsentPolicySucceeds(t *testing.T) {
 	txn := &v1.SubmitTransactionRequest{}
 
 	pendingConsents := make(chan service.ConsentRequest, 1)
