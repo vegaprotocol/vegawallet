@@ -381,6 +381,7 @@ func waitSig(ctx context.Context, cfunc func(), log *zap.Logger, pendingSigReque
 				signRequest.Confirmations <- service.ConsentConfirmation{Decision: false, TxStr: txStr}
 				p.CheckMark().WarningText("Sign request rejected: ").Bold(answer).NextLine()
 			}
+			close(signRequest.Confirmations)
 		}
 	}
 }

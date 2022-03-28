@@ -25,7 +25,7 @@ func (r *ConsentRequest) String() (string, error) {
 }
 
 type Policy interface {
-	Ask(tx *v1.SubmitTransactionRequest) bool
+	Ask(tx *v1.SubmitTransactionRequest) (bool, error)
 	GetSignRequestsConfirmations(hash string) chan ConsentConfirmation
 }
 
@@ -39,8 +39,8 @@ func NewAutomaticConsentPolicy(pending chan ConsentRequest) Policy {
 	}
 }
 
-func (p *AutomaticConsentPolicy) Ask(tx *v1.SubmitTransactionRequest) bool {
-	return true
+func (p *AutomaticConsentPolicy) Ask(tx *v1.SubmitTransactionRequest) (bool, error) {
+	return true, nil
 }
 
 func (p *AutomaticConsentPolicy) GetSignRequestsConfirmations(hash string) chan ConsentConfirmation {
@@ -67,20 +67,20 @@ func (p *ExplicitConsentPolicy) GetSignRequestsConfirmations(hash string) chan C
 	return nil
 }
 
-func (p *ExplicitConsentPolicy) Ask(tx *v1.SubmitTransactionRequest) bool {
+func (p *ExplicitConsentPolicy) Ask(tx *v1.SubmitTransactionRequest) (bool, error) {
 	txHash := crypto.AsSha256(tx)
 	confirmations := make(chan ConsentConfirmation)
 	p.AllConfirmations.Store(txHash, confirmations)
 	p.pendingEvents <- ConsentRequest{tx: tx, Confirmations: confirmations}
 
-	for c := range confirmations {
-		req := &v1.SubmitTransactionRequest{}
-		if err := jsonpb.UnmarshalString(c.TxStr, req); err != nil {
-			continue
-		}
-		if crypto.AsSha256(req) == txHash {
-			return c.Decision
-		}
+	c := <-confirmations
+	req := &v1.SubmitTransactionRequest{}
+	if err := jsonpb.UnmarshalString(c.TxStr, req); err != nil {
+		return false, ErrInvalidSignRequestConfirm
 	}
-	return true
+	if crypto.AsSha256(req) != txHash {
+		return false, ErrUnexpectedSignRequestConfirm
+	}
+
+	return c.Decision, nil
 }
