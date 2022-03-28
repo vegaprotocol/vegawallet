@@ -3,7 +3,7 @@
 ## Unreleased (0.14.0)
 
 ### 🚨 Breaking changes
-- [](https://github.com/vegaprotocol/vegawallet/pull/) -
+- [497](https://github.com/vegaprotocol/vegawallet/issues/497) - Add ability to confirm the signing of a transaction
 
 ### 🗑️  Deprecation
 - [](https://github.com/vegaprotocol/vegawallet/pull/) -

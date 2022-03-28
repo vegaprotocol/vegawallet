@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"bufio"
 	"context"
 	"errors"
 	"fmt"
@@ -8,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 
 	vglog "code.vegaprotocol.io/shared/libs/zap"
@@ -161,8 +163,7 @@ func RunService(w io.Writer, rf *RootFlags, f *RunServiceFlags) error {
 	if err := verifyNetworkConfig(cfg, f); err != nil {
 		return err
 	}
-
-	svcLog, err := BuildJSONLogger(cfg.Level.String(), paths.WalletServiceLogsHome)
+	svcLog, svcLogPath, err := BuildJSONLogger(cfg.Level.String(), paths.WalletServiceLogsHome)
 	if err != nil {
 		return err
 	}
@@ -194,12 +195,22 @@ func RunService(w io.Writer, rf *RootFlags, f *RunServiceFlags) error {
 		return fmt.Errorf("couldn't initialise the node forwarder: %w", err)
 	}
 
-	srv, err := service.NewService(svcLog.Named("api"), cfg, handler, auth, forwarder)
+	pendingConsents := make(chan service.ConsentRequest, 1)
+
+	var policy service.Policy
+	switch rf.Output {
+	case flags.InteractiveOutput:
+		policy = service.NewExplicitConsentPolicy(pendingConsents)
+	case flags.JSONOutput:
+		policy = service.NewAutomaticConsentPolicy(pendingConsents)
+	}
+
+	srv, err := service.NewService(svcLog.Named("api"), cfg, handler, auth, forwarder, policy)
 	if err != nil {
 		return err
 	}
 
-	cliLog, err := BuildJSONLogger(cfg.Level.String(), paths.WalletCLILogsHome)
+	cliLog, cliLogPath, err := BuildJSONLogger(cfg.Level.String(), paths.WalletCLILogsHome)
 	if err != nil {
 		return err
 	}
@@ -253,10 +264,12 @@ func RunService(w io.Writer, rf *RootFlags, f *RunServiceFlags) error {
 
 	if rf.Output == flags.InteractiveOutput {
 		p.CheckMark().SuccessText("Starting successful").NextSection()
+		p.CheckMark().SuccessText("Service logs output to: ").Bold(svcLogPath).NextSection()
+		p.CheckMark().SuccessText("CLI logs output to: ").Bold(cliLogPath).NextSection()
 		p.NextLine()
 	}
 
-	waitSig(ctx, cancel, cliLog)
+	waitSig(ctx, cancel, cliLog, pendingConsents, p)
 
 	return nil
 }
@@ -326,17 +339,49 @@ func startTokenDApp(log *zap.Logger, rf *RootFlags, openBrowser bool, cfg *netwo
 }
 
 // waitSig will wait for a sigterm or sigint interrupt.
-func waitSig(ctx context.Context, cfunc func(), log *zap.Logger) {
+func waitSig(ctx context.Context, cfunc func(), log *zap.Logger, pendingSigRequests chan service.ConsentRequest, p *printer.InteractivePrinter) {
 	gracefulStop := make(chan os.Signal, 1)
+
 	signal.Notify(gracefulStop, syscall.SIGTERM)
 	signal.Notify(gracefulStop, syscall.SIGINT)
 	signal.Notify(gracefulStop, syscall.SIGQUIT)
 
-	select {
-	case sig := <-gracefulStop:
-		log.Info("caught signal", zap.String("signal", fmt.Sprintf("%+v", sig)))
-		cfunc()
-	case <-ctx.Done():
-		// nothing to do
+	for {
+		select {
+		case sig := <-gracefulStop:
+			log.Info("caught signal", zap.String("signal", fmt.Sprintf("%+v", sig)))
+			cfunc()
+			return
+		case <-ctx.Done():
+			// nothing to do
+			return
+		case signRequest := <-pendingSigRequests:
+			txStr, err := signRequest.String()
+			if err != nil {
+				log.Info("failed to marshall sign request content")
+				cfunc()
+				return
+			}
+			p.CheckMark().Text("Received TX sign request: ").WarningText(txStr).NextLine()
+			reader := bufio.NewReader(os.Stdin)
+			p.CheckMark().WarningText("Please accept or decline sign request: (y/n)").NextLine()
+			answer, err := reader.ReadString('\n')
+			answer = strings.TrimSuffix(strings.TrimSuffix(answer, "\r\n"), "\n")
+			if err != nil {
+				log.Error("failed to read user input", zap.Error(err))
+				cfunc()
+				return
+			}
+			if answer == "y" || answer == "Y" {
+				log.Info("user approved sign request for transaction", zap.Any("transaction", txStr))
+				signRequest.Confirmations <- service.ConsentConfirmation{Decision: true, TxStr: txStr}
+				p.CheckMark().WarningText("Sign request accepted").NextLine()
+			} else {
+				log.Info("user declined sign request for transaction", zap.Any("transaction", txStr))
+				signRequest.Confirmations <- service.ConsentConfirmation{Decision: false, TxStr: txStr}
+				p.CheckMark().WarningText("Sign request rejected: ").Bold(answer).NextLine()
+			}
+			close(signRequest.Confirmations)
+		}
 	}
 }

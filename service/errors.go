@@ -7,14 +7,17 @@ import (
 )
 
 var (
-	ErrInvalidToken           = errors.New("invalid token")
-	ErrInvalidClaims          = errors.New("invalid claims")
-	ErrInvalidOrMissingToken  = newErrorResponse("invalid or missing token")
-	ErrCouldNotReadRequest    = errors.New("couldn't read request")
-	ErrCouldNotGetBlockHeight = errors.New("couldn't get last block height")
-	ErrShouldBeBase64Encoded  = errors.New("should be base64 encoded")
-	ErrRSAKeysAlreadyExists   = errors.New("RSA keys already exist")
-	ErrCouldNotGetPoW         = errors.New("could not get proof of work")
+	ErrInvalidToken                 = errors.New("invalid token")
+	ErrInvalidClaims                = errors.New("invalid claims")
+	ErrInvalidOrMissingToken        = newErrorResponse("invalid or missing token")
+	ErrCouldNotReadRequest          = errors.New("couldn't read request")
+	ErrCouldNotGetBlockHeight       = errors.New("couldn't get last block height")
+	ErrShouldBeBase64Encoded        = errors.New("should be base64 encoded")
+	ErrRSAKeysAlreadyExists         = errors.New("RSA keys already exist")
+	ErrCouldNotGetPoW               = errors.New("could not get proof of work")
+	ErrRejectedSignRequest          = errors.New("user rejected sign request")
+	ErrInvalidSignRequestConfirm    = errors.New("invalid sign request confirmation")
+	ErrUnexpectedSignRequestConfirm = errors.New("unexpected sign request confirmation")
 )
 
 type ErrorsResponse struct {

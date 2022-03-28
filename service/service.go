@@ -37,6 +37,7 @@ type Service struct {
 	handler     WalletHandler
 	auth        Auth
 	nodeForward NodeForward
+	policy      Policy
 }
 
 // CreateWalletRequest describes the request for CreateWallet.
@@ -410,7 +411,7 @@ type NodeForward interface {
 	LastBlockHeightAndHash(context.Context) (*api.LastBlockHeightResponse, int, error)
 }
 
-func NewService(log *zap.Logger, net *network.Network, h WalletHandler, a Auth, n NodeForward) (*Service, error) {
+func NewService(log *zap.Logger, net *network.Network, h WalletHandler, a Auth, n NodeForward, policy Policy) (*Service, error) {
 	s := &Service{
 		Router:      httprouter.New(),
 		log:         log,
@@ -418,6 +419,7 @@ func NewService(log *zap.Logger, net *network.Network, h WalletHandler, a Auth, 
 		auth:        a,
 		nodeForward: n,
 		network:     net,
+		policy:      policy,
 	}
 
 	s.server = &http.Server{
@@ -720,21 +722,33 @@ func (s *Service) SignTx(token string, w http.ResponseWriter, r *http.Request, p
 func (s *Service) signTx(token string, w http.ResponseWriter, r *http.Request, _ httprouter.Params, ty api.SubmitTransactionRequest_Type) {
 	defer r.Body.Close()
 
+	name, err := s.auth.VerifyToken(token)
+	if err != nil {
+		s.writeForbiddenError(w, err)
+		return
+	}
+
 	req, errs := ParseSubmitTransactionRequest(r)
 	if !errs.Empty() {
 		s.writeBadRequest(w, errs)
 		return
 	}
 
+	response, err := s.policy.Ask(req)
+	if err != nil {
+		s.log.Panic("failed getting transaction sign request answer", zap.Error(err))
+	}
+
+	if !response {
+		s.log.Info("transaction signature rejected", zap.Any("request", req))
+		s.writeError(w, ErrRejectedSignRequest, http.StatusUnauthorized)
+		return
+	}
+	s.log.Info("user approved transaction signing request")
+
 	blockData, cltIdx, err := s.nodeForward.LastBlockHeightAndHash(r.Context())
 	if err != nil {
 		s.writeInternalError(w, ErrCouldNotGetBlockHeight)
-		return
-	}
-
-	name, err := s.auth.VerifyToken(token)
-	if err != nil {
-		s.writeForbiddenError(w, err)
 		return
 	}
 
