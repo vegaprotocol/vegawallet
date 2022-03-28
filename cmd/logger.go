@@ -56,7 +56,7 @@ func DefaultConfig() zap.Config {
 	}
 }
 
-func BuildJSONLogger(level string, logsDir paths.StatePath) (*zap.Logger, string, error) {
+func BuildJSONLogger(level string, vegaPaths paths.Paths, logsDir paths.StatePath) (*zap.Logger, string, error) {
 	cfg := DefaultConfig()
 
 	l, err := getLevel(level)
@@ -71,7 +71,7 @@ func BuildJSONLogger(level string, logsDir paths.StatePath) (*zap.Logger, string
 	pathSuffix := fmt.Sprintf("%d-%s.log", pid, date)
 
 	logFile := paths.JoinStatePath(logsDir, pathSuffix)
-	appLogPath, err := paths.CreateDefaultStatePathFor(logFile)
+	appLogPath, err := vegaPaths.CreateStatePathFor(logFile)
 	if err != nil {
 		return nil, "", fmt.Errorf("failed getting path for %s: %w", logFile, err)
 	}

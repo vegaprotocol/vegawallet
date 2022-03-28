@@ -163,7 +163,7 @@ func RunService(w io.Writer, rf *RootFlags, f *RunServiceFlags) error {
 	if err := verifyNetworkConfig(cfg, f); err != nil {
 		return err
 	}
-	svcLog, svcLogPath, err := BuildJSONLogger(cfg.Level.String(), paths.WalletServiceLogsHome)
+	svcLog, svcLogPath, err := BuildJSONLogger(cfg.Level.String(), vegaPaths, paths.WalletServiceLogsHome)
 	if err != nil {
 		return err
 	}
@@ -210,7 +210,7 @@ func RunService(w io.Writer, rf *RootFlags, f *RunServiceFlags) error {
 		return err
 	}
 
-	cliLog, cliLogPath, err := BuildJSONLogger(cfg.Level.String(), paths.WalletCLILogsHome)
+	cliLog, cliLogPath, err := BuildJSONLogger(cfg.Level.String(), vegaPaths, paths.WalletCLILogsHome)
 	if err != nil {
 		return err
 	}
