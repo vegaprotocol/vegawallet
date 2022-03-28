@@ -11,6 +11,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
+
 	v1 "code.vegaprotocol.io/protos/vega/wallet/v1"
 
 	api "code.vegaprotocol.io/protos/vega/api/v1"
@@ -22,7 +24,6 @@ import (
 	"code.vegaprotocol.io/vegawallet/service/mocks"
 	"code.vegaprotocol.io/vegawallet/wallet"
 	"github.com/golang/mock/gomock"
-	"github.com/golang/protobuf/jsonpb"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap"
 )
@@ -57,7 +58,7 @@ func getTestService(t *testing.T, consentPolicy string) *testService {
 	case "automatic":
 		policy = service.NewAutomaticConsentPolicy(pendingConsents)
 	case "manual":
-		policy = service.NewExplicitConsentPolicy(pendingConsents)
+		policy = mocks.NewMockConsentPolicy(pendingConsents)
 	default:
 		t.Fatalf("unknown consent policy: %s", consentPolicy)
 	}
@@ -99,6 +100,7 @@ func TestService(t *testing.T) {
 	t.Run("update metadata invalid request", testServiceUpdateMetaFailInvalidRequest)
 	t.Run("Signing transaction automatically succeeds", testSigningTransactionSucceeds)
 	t.Run("Signing transaction manually succeeds", testAcceptSigningTransactionManuallySucceeds)
+	t.Run("using ask function in policy succeeds", testThing)
 	t.Run("Decline signing transaction manually succeeds", testDeclineSigningTransactionManuallySucceeds)
 	t.Run("Signing transaction with propagation succeeds", testSigningTransactionWithPropagationSucceeds)
 	t.Run("Signing transaction with failed propagation fails", testSigningTransactionWithFailedPropagationFails)
@@ -741,26 +743,28 @@ func testAcceptSigningTransactionManuallySucceeds(t *testing.T) {
 		SpamPowDifficulty:   2,
 		SpamPowHashFunction: "sha3_24_rounds",
 	}, 0, nil)
-	result := make(chan int)
 	// when
-	go func(respond chan int) {
-		statusCode, _ := serveHTTP(t, s, signTxRequest(t, payload, headers))
-		respond <- statusCode
-	}(result)
 
-	// then
-	req := &v1.SubmitTransactionRequest{}
-	err := jsonpb.UnmarshalString(payload, req)
-	assert.Nil(t, err)
-	txHash := crypto.AsSha256(req)
+	statusCode, _ := serveHTTP(t, s, signTxRequest(t, payload, headers))
+	assert.Equal(t, http.StatusOK, statusCode)
+}
 
-	time.Sleep(1 * time.Millisecond)
-	confirmations := s.GetSignRequestsConfirmations(txHash)
-	assert.NotNil(t, confirmations)
+func testThing(t *testing.T) {
+	txn := &v1.SubmitTransactionRequest{}
 
-	confirmations <- service.ConsentConfirmation{TxStr: payload, Decision: true}
-	code := <-result
-	assert.Equal(t, http.StatusOK, code)
+	pendingConsents := make(chan service.ConsentRequest, 1)
+	p := service.NewExplicitConsentPolicy(pendingConsents)
+
+	go func() {
+		req := <-pendingConsents
+		st, _ := req.String()
+		d := service.ConsentConfirmation{TxStr: st, Decision: false}
+		req.Confirmations <- d
+	}()
+
+	answer, err := p.Ask(txn)
+	require.Nil(t, err)
+	require.False(t, answer)
 }
 
 func testDeclineSigningTransactionManuallySucceeds(t *testing.T) {
@@ -771,7 +775,7 @@ func testDeclineSigningTransactionManuallySucceeds(t *testing.T) {
 	token := vgrand.RandomStr(5)
 	walletName := vgrand.RandomStr(5)
 	headers := authHeaders(t, token)
-	pubKey := vgrand.RandomStr(5)
+	pubKey := "toBeDeclined"
 	payload := fmt.Sprintf(`{"propagate": true, "pubKey": "%s", "orderCancellation": {}}`, pubKey)
 
 	// setup
@@ -779,28 +783,10 @@ func testDeclineSigningTransactionManuallySucceeds(t *testing.T) {
 	s.handler.EXPECT().SignTx(walletName, gomock.Any(), gomock.Any()).Times(0).Return(&commandspb.Transaction{}, nil)
 	s.nodeForward.EXPECT().SendTx(gomock.Any(), gomock.Any(), api.SubmitTransactionRequest_TYPE_ASYNC, gomock.Any()).Times(0)
 	s.nodeForward.EXPECT().LastBlockHeightAndHash(gomock.Any()).Times(0)
-	result := make(chan int)
 	// when
-	go func(respond chan int) {
-		// when
-		statusCode, _ := serveHTTP(t, s, signTxRequest(t, payload, headers))
-		respond <- statusCode
-	}(result)
 
-	// then
-	req := &v1.SubmitTransactionRequest{}
-	err := jsonpb.UnmarshalString(payload, req)
-	assert.Nil(t, err)
-	txHash := crypto.AsSha256(req)
-
-	time.Sleep(1 * time.Millisecond)
-	confirmations := s.GetSignRequestsConfirmations(txHash)
-	assert.NotNil(t, confirmations)
-
-	confirmations <- service.ConsentConfirmation{TxStr: payload, Decision: false}
-	code := <-result
-	// then
-	assert.Equal(t, http.StatusUnauthorized, code)
+	statusCode, _ := serveHTTP(t, s, signTxRequest(t, payload, headers))
+	assert.Equal(t, http.StatusUnauthorized, statusCode)
 }
 
 func testSigningTransactionWithPropagationSucceeds(t *testing.T) {

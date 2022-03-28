@@ -1,8 +1,6 @@
 package service
 
 import (
-	"sync"
-
 	v1 "code.vegaprotocol.io/protos/vega/wallet/v1"
 	"code.vegaprotocol.io/vegawallet/crypto"
 	"github.com/golang/protobuf/jsonpb"
@@ -26,7 +24,6 @@ func (r *ConsentRequest) String() (string, error) {
 
 type Policy interface {
 	Ask(tx *v1.SubmitTransactionRequest) (bool, error)
-	GetSignRequestsConfirmations(hash string) chan ConsentConfirmation
 }
 
 type AutomaticConsentPolicy struct {
@@ -43,34 +40,19 @@ func (p *AutomaticConsentPolicy) Ask(tx *v1.SubmitTransactionRequest) (bool, err
 	return true, nil
 }
 
-func (p *AutomaticConsentPolicy) GetSignRequestsConfirmations(hash string) chan ConsentConfirmation {
-	return nil
-}
-
 type ExplicitConsentPolicy struct {
-	pendingEvents    chan ConsentRequest
-	AllConfirmations sync.Map
+	pendingEvents chan ConsentRequest
 }
 
 func NewExplicitConsentPolicy(pending chan ConsentRequest) Policy {
 	return &ExplicitConsentPolicy{
-		pendingEvents:    pending,
-		AllConfirmations: sync.Map{},
+		pendingEvents: pending,
 	}
-}
-
-func (p *ExplicitConsentPolicy) GetSignRequestsConfirmations(hash string) chan ConsentConfirmation {
-	confirmations, ok := p.AllConfirmations.Load(hash)
-	if ok {
-		return confirmations.(chan ConsentConfirmation)
-	}
-	return nil
 }
 
 func (p *ExplicitConsentPolicy) Ask(tx *v1.SubmitTransactionRequest) (bool, error) {
 	txHash := crypto.AsSha256(tx)
 	confirmations := make(chan ConsentConfirmation)
-	p.AllConfirmations.Store(txHash, confirmations)
 	p.pendingEvents <- ConsentRequest{tx: tx, Confirmations: confirmations}
 
 	c := <-confirmations
