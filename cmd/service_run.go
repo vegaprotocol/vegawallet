@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"bufio"
 	"context"
 	"errors"
 	"fmt"
@@ -9,7 +8,6 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"strings"
 	"syscall"
 
 	vglog "code.vegaprotocol.io/shared/libs/zap"
@@ -263,9 +261,9 @@ func RunService(w io.Writer, rf *RootFlags, f *RunServiceFlags) error {
 	}
 
 	if rf.Output == flags.InteractiveOutput {
+		p.CheckMark().Text("Service logs located at: ").SuccessText(svcLogPath).NextLine()
+		p.CheckMark().Text("CLI logs located at: ").SuccessText(cliLogPath).NextLine()
 		p.CheckMark().SuccessText("Starting successful").NextSection()
-		p.CheckMark().SuccessText("Service logs output to: ").Bold(svcLogPath).NextSection()
-		p.CheckMark().SuccessText("CLI logs output to: ").Bold(cliLogPath).NextSection()
 		p.NextLine()
 	}
 
@@ -362,24 +360,17 @@ func waitSig(ctx context.Context, cfunc func(), log *zap.Logger, pendingSigReque
 				cfunc()
 				return
 			}
-			p.CheckMark().Text("Received TX sign request: ").WarningText(txStr).NextLine()
-			reader := bufio.NewReader(os.Stdin)
-			p.CheckMark().WarningText("Please accept or decline sign request: (y/n)").NextLine()
-			answer, err := reader.ReadString('\n')
-			answer = strings.TrimSuffix(strings.TrimSuffix(answer, "\r\n"), "\n")
-			if err != nil {
-				log.Error("failed to read user input", zap.Error(err))
-				cfunc()
-				return
-			}
-			if answer == "y" || answer == "Y" {
-				log.Info("user approved sign request for transaction", zap.Any("transaction", txStr))
+			p.BlueArrow().Text("New transaction received: ").NextLine()
+			p.InfoText(txStr).NextLine()
+
+			if flags.DoYouApproveTx() {
+				log.Info("user approved the signing of the transaction", zap.Any("transaction", txStr))
 				signRequest.Confirmations <- service.ConsentConfirmation{Decision: true, TxStr: txStr}
-				p.CheckMark().WarningText("Sign request accepted").NextLine()
+				p.CheckMark().SuccessText("Transaction approved").NextSection()
 			} else {
-				log.Info("user declined sign request for transaction", zap.Any("transaction", txStr))
+				log.Info("user rejected the signing of the transaction", zap.Any("transaction", txStr))
 				signRequest.Confirmations <- service.ConsentConfirmation{Decision: false, TxStr: txStr}
-				p.CheckMark().WarningText("Sign request rejected: ").Bold(answer).NextLine()
+				p.BangMark().DangerText("Transaction rejected").NextSection()
 			}
 			close(signRequest.Confirmations)
 		}

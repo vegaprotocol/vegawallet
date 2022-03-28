@@ -9,22 +9,24 @@ import (
 )
 
 type InteractivePrinter struct {
-	writer    io.Writer
-	profile   termenv.Profile
-	checkMark string
-	bangMark  string
-	crossMark string
-	arrow     termenv.Style
+	writer       io.Writer
+	profile      termenv.Profile
+	checkMark    string
+	bangMark     string
+	crossMark    string
+	questionMark string
+	arrow        termenv.Style
 }
 
 func fancyPrinter(w io.Writer, profile termenv.Profile) *InteractivePrinter {
 	return &InteractivePrinter{
-		writer:    w,
-		profile:   profile,
-		checkMark: termenv.String("✓ ").Foreground(profile.Color("2")).String(),
-		bangMark:  termenv.String("! ").Foreground(profile.Color("1")).String(),
-		crossMark: termenv.String("✗ ").Foreground(profile.Color("1")).String(),
-		arrow:     termenv.String("➜ ").Foreground(profile.Color("2")),
+		writer:       w,
+		profile:      profile,
+		checkMark:    termenv.String("✓ ").Foreground(profile.Color("2")).String(),
+		bangMark:     termenv.String("! ").Foreground(profile.Color("1")).String(),
+		questionMark: termenv.String("? ").Foreground(profile.Color("2")).String(),
+		crossMark:    termenv.String("✗ ").Foreground(profile.Color("1")).String(),
+		arrow:        termenv.String("➜ ").Foreground(profile.Color("2")),
 	}
 }
 
@@ -70,6 +72,11 @@ func (p *InteractivePrinter) CheckMark() *InteractivePrinter {
 
 func (p *InteractivePrinter) BangMark() *InteractivePrinter {
 	p.printOut(p.bangMark)
+	return p
+}
+
+func (p *InteractivePrinter) QuestionMark() *InteractivePrinter {
+	p.printOut(p.questionMark)
 	return p
 }
 

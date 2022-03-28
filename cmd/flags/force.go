@@ -2,31 +2,38 @@ package flags
 
 import (
 	"bufio"
-	"errors"
 	"fmt"
 	"os"
 	"strings"
 )
 
-var ErrExpectYesOrNo = errors.New("invalid answer, expect \"yes\" or \"no\"")
+func AreYouSure() bool {
+	return YesOrNo("Are you sure?")
+}
 
-func DoYouConfirm() (bool, error) {
+func DoYouApproveTx() bool {
+	return YesOrNo("Do you approve this transaction?")
+}
+
+func YesOrNo(question string) bool {
 	reader := bufio.NewReader(os.Stdin)
-	fmt.Print("Are you sure? (y/n) ") //nolint:forbidigo
-	answer, err := reader.ReadString('\n')
-	if err != nil {
-		return false, fmt.Errorf("couldn't read password input: %w", err)
-	}
-	fmt.Println() //nolint:forbidigo
 
-	answer = strings.ToLower(strings.Trim(answer, " \r\n\t"))
+	for {
+		fmt.Print(question + " (y/n) ") //nolint:forbidigo
+		answer, err := reader.ReadString('\n')
+		if err != nil {
+			panic(fmt.Errorf("couldn't read input: %w", err))
+		}
 
-	switch answer {
-	case "yes", "y":
-		return true, nil
-	case "no", "n":
-		return false, nil
-	default:
-		return false, ErrExpectYesOrNo
+		answer = strings.ToLower(strings.Trim(answer, " \r\n\t"))
+
+		switch answer {
+		case "yes", "y":
+			return true
+		case "no", "n":
+			return false
+		default:
+			fmt.Printf("invalid answer \"%s\", expect \"yes\" or \"no\"\n", answer) //nolint:forbidigo
+		}
 	}
 }

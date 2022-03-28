@@ -59,11 +59,7 @@ func BuildCmdDeleteNetwork(w io.Writer, handler DeleteNetworkHandler, rf *RootFl
 			}
 
 			if !f.Force && vgterm.HasTTY() {
-				confirm, err := flags.DoYouConfirm()
-				if err != nil {
-					return err
-				}
-				if !confirm {
+				if !flags.AreYouSure() {
 					return nil
 				}
 			}
