@@ -17,9 +17,9 @@ func DoYouApproveTx() bool {
 
 func YesOrNo(question string) bool {
 	reader := bufio.NewReader(os.Stdin)
-
 	for {
 		fmt.Print(question + " (y/n) ") //nolint:forbidigo
+
 		answer, err := reader.ReadString('\n')
 		if err != nil {
 			panic(fmt.Errorf("couldn't read input: %w", err))
