@@ -740,11 +740,11 @@ func (s *Service) signTx(token string, w http.ResponseWriter, r *http.Request, _
 	}
 
 	if !approved {
-		s.log.Info("transaction signature rejected", zap.Any("request", req))
+		s.log.Info("user rejected transaction signing request", zap.Any("request", req))
 		s.writeError(w, ErrRejectedSignRequest, http.StatusUnauthorized)
 		return
 	}
-	s.log.Info("user approved transaction signing request")
+	s.log.Info("user approved transaction signing request", zap.Any("request", req))
 
 	blockData, cltIdx, err := s.nodeForward.LastBlockHeightAndHash(r.Context())
 	if err != nil {

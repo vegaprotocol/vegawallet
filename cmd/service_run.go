@@ -10,6 +10,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	vgterm "code.vegaprotocol.io/shared/libs/term"
 	vglog "code.vegaprotocol.io/shared/libs/zap"
 	"code.vegaprotocol.io/shared/paths"
 	"code.vegaprotocol.io/vegawallet/cmd/cli"
@@ -28,11 +29,16 @@ import (
 	"go.uber.org/zap"
 )
 
+var ErrEnableAutomaticConsentFlagIsRequiredWithoutTTY = errors.New("--automatic-consent flag is required without TTY")
+
 var (
 	ErrProgramIsNotInitialised = errors.New("first, you need initialise the program, using the `init` command")
 
 	runServiceLong = cli.LongDesc(`
 		Start a Vega wallet service behind an HTTP server.
+
+		By default, every incoming transactions will have to be reviewed in the
+		terminal.
 
 		To terminate the service, hit ctrl+c. 
 
@@ -54,6 +60,9 @@ var (
 
 		# Start the service without opening the token dApp
 		vegawallet service run --network NETWORK --with-token-dapp --no-browser
+
+		# Start the service with automatic consent of incoming transactions
+		vegawallet service run --network NETWORK --automatic-consent
 	`)
 )
 
@@ -104,6 +113,11 @@ func BuildCmdRunService(w io.Writer, handler RunServiceHandler, rf *RootFlags) *
 		false,
 		"Do not open the default browser when starting applications",
 	)
+	cmd.Flags().BoolVar(&f.EnableAutomaticConsent,
+		"automatic-consent",
+		false,
+		"Automatically approve incoming transaction. Only use this flag when you have absolute trust in incoming transactions! No logs on standard output.",
+	)
 
 	autoCompleteNetwork(cmd, rf.Home)
 
@@ -111,10 +125,11 @@ func BuildCmdRunService(w io.Writer, handler RunServiceHandler, rf *RootFlags) *
 }
 
 type RunServiceFlags struct {
-	Network       string
-	WithConsole   bool
-	WithTokenDApp bool
-	NoBrowser     bool
+	Network                string
+	WithConsole            bool
+	WithTokenDApp          bool
+	NoBrowser              bool
+	EnableAutomaticConsent bool
 }
 
 func (f *RunServiceFlags) Validate() error {
@@ -195,19 +210,6 @@ func RunService(w io.Writer, rf *RootFlags, f *RunServiceFlags) error {
 
 	pendingConsents := make(chan service.ConsentRequest, 1)
 
-	var policy service.Policy
-	switch rf.Output {
-	case flags.InteractiveOutput:
-		policy = service.NewExplicitConsentPolicy(pendingConsents)
-	case flags.JSONOutput:
-		policy = service.NewAutomaticConsentPolicy(pendingConsents)
-	}
-
-	srv, err := service.NewService(svcLog.Named("api"), cfg, handler, auth, forwarder, policy)
-	if err != nil {
-		return err
-	}
-
 	cliLog, cliLogPath, err := BuildJSONLogger(cfg.Level.String(), vegaPaths, paths.WalletCLILogsHome)
 	if err != nil {
 		return err
@@ -215,6 +217,31 @@ func RunService(w io.Writer, rf *RootFlags, f *RunServiceFlags) error {
 	defer vglog.Sync(cliLog)
 
 	cliLog = cliLog.Named("command")
+
+	var policy service.Policy
+	if vgterm.HasTTY() {
+		cliLog.Info("TTY detected")
+		if f.EnableAutomaticConsent {
+			cliLog.Info("Automatic consent enabled")
+			policy = service.NewAutomaticConsentPolicy(pendingConsents)
+		} else {
+			cliLog.Info("Explicit consent enabled")
+			policy = service.NewExplicitConsentPolicy(pendingConsents)
+		}
+
+	} else {
+		if !f.EnableAutomaticConsent {
+			cliLog.Error("Explicit consent can't be used when no TTY is attached to the process")
+			return ErrEnableAutomaticConsentFlagIsRequiredWithoutTTY
+		}
+		cliLog.Info("Automatic consent enabled")
+		policy = service.NewAutomaticConsentPolicy(pendingConsents)
+	}
+
+	srv, err := service.NewService(svcLog.Named("api"), cfg, handler, auth, forwarder, policy)
+	if err != nil {
+		return err
+	}
 
 	go func() {
 		defer cancel()
@@ -224,7 +251,7 @@ func RunService(w io.Writer, rf *RootFlags, f *RunServiceFlags) error {
 	}()
 
 	serviceHost := fmt.Sprintf("http://%v:%v", cfg.Host, cfg.Port)
-	if rf.Output == flags.InteractiveOutput {
+	if !f.EnableAutomaticConsent {
 		p.CheckMark().Text("HTTP service started at: ").SuccessText(serviceHost).NextLine()
 	}
 	cliLog.Info(fmt.Sprintf("HTTP service started at: %s", serviceHost))
@@ -238,7 +265,7 @@ func RunService(w io.Writer, rf *RootFlags, f *RunServiceFlags) error {
 
 	var cs *proxy.Proxy
 	if f.WithConsole {
-		cs = startConsole(cliLog, rf, !f.NoBrowser, cfg, cancel, p)
+		cs = startConsole(cliLog, f, cfg, cancel, p)
 		defer func() {
 			if err = cs.Stop(); err != nil {
 				cliLog.Error("Error while stopping console proxy", zap.Error(err))
@@ -250,7 +277,7 @@ func RunService(w io.Writer, rf *RootFlags, f *RunServiceFlags) error {
 
 	var tokenDApp *proxy.Proxy
 	if f.WithTokenDApp {
-		tokenDApp = startTokenDApp(cliLog, rf, !f.NoBrowser, cfg, cancel, p)
+		tokenDApp = startTokenDApp(cliLog, f, cfg, cancel, p)
 		defer func() {
 			if err = tokenDApp.Stop(); err != nil {
 				cliLog.Error("Error while stopping token dApp proxy", zap.Error(err))
@@ -260,7 +287,7 @@ func RunService(w io.Writer, rf *RootFlags, f *RunServiceFlags) error {
 		}()
 	}
 
-	if rf.Output == flags.InteractiveOutput {
+	if !f.EnableAutomaticConsent {
 		p.CheckMark().Text("Service logs located at: ").SuccessText(svcLogPath).NextLine()
 		p.CheckMark().Text("CLI logs located at: ").SuccessText(cliLogPath).NextLine()
 		p.CheckMark().SuccessText("Starting successful").NextSection()
@@ -289,7 +316,7 @@ func verifyNetworkConfig(cfg *network.Network, f *RunServiceFlags) error {
 	return nil
 }
 
-func startConsole(log *zap.Logger, rf *RootFlags, openBrowser bool, cfg *network.Network, cancel context.CancelFunc, p *printer.InteractivePrinter) *proxy.Proxy {
+func startConsole(log *zap.Logger, f *RunServiceFlags, cfg *network.Network, cancel context.CancelFunc, p *printer.InteractivePrinter) *proxy.Proxy {
 	cs := proxy.NewProxy(cfg.Console.LocalPort, cfg.Console.URL, cfg.API.GRPC.Hosts[0])
 	go func() {
 		defer cancel()
@@ -299,12 +326,12 @@ func startConsole(log *zap.Logger, rf *RootFlags, openBrowser bool, cfg *network
 	}()
 
 	consoleLocalHost := fmt.Sprintf("http://127.0.0.1:%v", cfg.Console.LocalPort)
-	if rf.Output == flags.InteractiveOutput {
+	if !f.EnableAutomaticConsent {
 		p.CheckMark().Text("Console proxy pointing to ").Bold(cfg.Console.URL).Text(" started at: ").SuccessText(consoleLocalHost).NextLine()
 	}
 	log.Info(fmt.Sprintf("console proxy pointing to %s started at: %s", cfg.Console.URL, consoleLocalHost))
 
-	if openBrowser {
+	if !f.NoBrowser {
 		if err := open.Run(cs.GetBrowserURL()); err != nil {
 			log.Error("unable to open the application in the default browser", zap.Error(err))
 		}
@@ -313,7 +340,7 @@ func startConsole(log *zap.Logger, rf *RootFlags, openBrowser bool, cfg *network
 	return cs
 }
 
-func startTokenDApp(log *zap.Logger, rf *RootFlags, openBrowser bool, cfg *network.Network, cancel context.CancelFunc, p *printer.InteractivePrinter) *proxy.Proxy {
+func startTokenDApp(log *zap.Logger, f *RunServiceFlags, cfg *network.Network, cancel context.CancelFunc, p *printer.InteractivePrinter) *proxy.Proxy {
 	tokenDApp := proxy.NewProxy(cfg.TokenDApp.LocalPort, cfg.TokenDApp.URL, cfg.API.GRPC.Hosts[0])
 	go func() {
 		defer cancel()
@@ -323,12 +350,12 @@ func startTokenDApp(log *zap.Logger, rf *RootFlags, openBrowser bool, cfg *netwo
 	}()
 
 	tokenDAppLocalHost := fmt.Sprintf("http://127.0.0.1:%v", cfg.TokenDApp.LocalPort)
-	if rf.Output == flags.InteractiveOutput {
+	if !f.EnableAutomaticConsent {
 		p.CheckMark().Text("token dApp proxy pointing to ").Bold(cfg.TokenDApp.URL).Text(" started at: ").SuccessText(tokenDAppLocalHost).NextLine()
 	}
 	log.Info(fmt.Sprintf("token dApp proxy pointing to %s started at: %s", cfg.TokenDApp.URL, tokenDAppLocalHost))
 
-	if openBrowser {
+	if !f.NoBrowser {
 		if err := open.Run(tokenDApp.GetBrowserURL()); err != nil {
 			log.Error("unable to open the token dApp in the default browser", zap.Error(err))
 		}
