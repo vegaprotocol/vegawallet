@@ -25,14 +25,10 @@ type Policy interface {
 	Ask(tx *v1.SubmitTransactionRequest) (bool, error)
 }
 
-type AutomaticConsentPolicy struct {
-	pendingEvents chan ConsentRequest
-}
+type AutomaticConsentPolicy struct{}
 
-func NewAutomaticConsentPolicy(pending chan ConsentRequest) Policy {
-	return &AutomaticConsentPolicy{
-		pendingEvents: pending,
-	}
+func NewAutomaticConsentPolicy() Policy {
+	return &AutomaticConsentPolicy{}
 }
 
 func (p *AutomaticConsentPolicy) Ask(_ *v1.SubmitTransactionRequest) (bool, error) {
