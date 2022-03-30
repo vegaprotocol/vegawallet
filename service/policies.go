@@ -2,7 +2,6 @@ package service
 
 import (
 	v1 "code.vegaprotocol.io/protos/vega/wallet/v1"
-	"code.vegaprotocol.io/vegawallet/crypto"
 	"github.com/golang/protobuf/jsonpb"
 )
 
@@ -36,7 +35,7 @@ func NewAutomaticConsentPolicy(pending chan ConsentRequest) Policy {
 	}
 }
 
-func (p *AutomaticConsentPolicy) Ask(tx *v1.SubmitTransactionRequest) (bool, error) {
+func (p *AutomaticConsentPolicy) Ask(_ *v1.SubmitTransactionRequest) (bool, error) {
 	return true, nil
 }
 
@@ -55,13 +54,5 @@ func (p *ExplicitConsentPolicy) Ask(tx *v1.SubmitTransactionRequest) (bool, erro
 	p.pendingEvents <- ConsentRequest{tx: tx, Confirmations: confirmations}
 
 	c := <-confirmations
-	req := &v1.SubmitTransactionRequest{}
-	if err := jsonpb.UnmarshalString(c.TxStr, req); err != nil {
-		return false, ErrInvalidSignRequestConfirm
-	}
-	if crypto.AsSha256(req) != crypto.AsSha256(tx) {
-		return false, ErrUnexpectedSignRequestConfirm
-	}
-
 	return c.Decision, nil
 }

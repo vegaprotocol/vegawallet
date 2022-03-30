@@ -734,12 +734,12 @@ func (s *Service) signTx(token string, w http.ResponseWriter, r *http.Request, _
 		return
 	}
 
-	response, err := s.policy.Ask(req)
+	approved, err := s.policy.Ask(req)
 	if err != nil {
 		s.log.Panic("failed getting transaction sign request answer", zap.Error(err))
 	}
 
-	if !response {
+	if !approved {
 		s.log.Info("transaction signature rejected", zap.Any("request", req))
 		s.writeError(w, ErrRejectedSignRequest, http.StatusUnauthorized)
 		return

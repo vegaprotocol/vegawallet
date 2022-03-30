@@ -65,11 +65,7 @@ func BuildCmdDeleteWallet(w io.Writer, handler DeleteWalletHandler, rf *RootFlag
 			}
 
 			if !f.Force && vgterm.HasTTY() {
-				confirm, err := flags.DoYouConfirm()
-				if err != nil {
-					return err
-				}
-				if !confirm {
+				if !flags.AreYouSure() {
 					return nil
 				}
 			}
