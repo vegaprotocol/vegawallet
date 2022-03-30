@@ -223,19 +223,19 @@ func RunService(w io.Writer, rf *RootFlags, f *RunServiceFlags) error {
 		cliLog.Info("TTY detected")
 		if f.EnableAutomaticConsent {
 			cliLog.Info("Automatic consent enabled")
-			policy = service.NewAutomaticConsentPolicy(pendingConsents)
+			policy = service.NewAutomaticConsentPolicy()
 		} else {
 			cliLog.Info("Explicit consent enabled")
 			policy = service.NewExplicitConsentPolicy(pendingConsents)
 		}
-
 	} else {
+		cliLog.Info("No TTY detected")
 		if !f.EnableAutomaticConsent {
 			cliLog.Error("Explicit consent can't be used when no TTY is attached to the process")
 			return ErrEnableAutomaticConsentFlagIsRequiredWithoutTTY
 		}
 		cliLog.Info("Automatic consent enabled")
-		policy = service.NewAutomaticConsentPolicy(pendingConsents)
+		policy = service.NewAutomaticConsentPolicy()
 	}
 
 	srv, err := service.NewService(svcLog.Named("api"), cfg, handler, auth, forwarder, policy)

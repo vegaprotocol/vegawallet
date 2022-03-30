@@ -56,7 +56,7 @@ func getTestService(t *testing.T, consentPolicy string) *testService {
 	var policy service.Policy
 	switch consentPolicy {
 	case "automatic":
-		policy = service.NewAutomaticConsentPolicy(pendingConsents)
+		policy = service.NewAutomaticConsentPolicy()
 	case "manual":
 		policy = mocks.NewMockConsentPolicy(pendingConsents)
 	default:
