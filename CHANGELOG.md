@@ -3,7 +3,7 @@
 ## Unreleased (0.14.0)
 
 ### 🚨 Breaking changes
-- [497](https://github.com/vegaprotocol/vegawallet/issues/497) - Add ability to confirm the signing of a transaction
+- [497](https://github.com/vegaprotocol/vegawallet/issues/497) - Add ability to confirm the signing of a transaction. To keep running the service with automatic consent, `--automatic-consent` flag is now required.
 
 ### 🗑️  Deprecation
 - [](https://github.com/vegaprotocol/vegawallet/pull/) -
