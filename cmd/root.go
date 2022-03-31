@@ -24,9 +24,6 @@ var (
 		# Specify a custom Vega home directory
 		vegawallet --home PATH_TO_DIR COMMAND
 
-		# Change the output to JSON
-		vegawallet --output json COMMAND
-
 		# Disable colors on output using environment variable
 		NO_COLOR=1 vegawallet COMMAND
 
@@ -71,10 +68,6 @@ func BuildCmdRoot(w io.Writer, vh CheckVersionHandler) *cobra.Command {
 				return nil
 			}
 
-			if err := f.Validate(); err != nil {
-				return err
-			}
-
 			if !f.NoVersionCheck && f.Output == flags.InteractiveOutput {
 				p := printer.NewInteractivePrinter(w)
 				if version.IsUnreleased() {
@@ -96,11 +89,6 @@ func BuildCmdRoot(w io.Writer, vh CheckVersionHandler) *cobra.Command {
 		},
 	}
 
-	cmd.PersistentFlags().StringVarP(&f.Output,
-		"output", "o",
-		flags.InteractiveOutput,
-		fmt.Sprintf("Specify the output format: %v", flags.AvailableOutputs),
-	)
 	cmd.PersistentFlags().StringVar(&f.Home,
 		"home",
 		"",
@@ -120,7 +108,7 @@ func BuildCmdRoot(w io.Writer, vh CheckVersionHandler) *cobra.Command {
 	// Root commands
 	cmd.AddCommand(NewCmdInit(w, f))
 	cmd.AddCommand(NewCmdCompletion(w))
-	cmd.AddCommand(NewCmdVersion(w, f))
+	cmd.AddCommand(NewCmdVersion(w))
 
 	// Sub-commands
 	cmd.AddCommand(NewCmdCommand(w, f))
@@ -142,11 +130,6 @@ func BuildCmdRoot(w io.Writer, vh CheckVersionHandler) *cobra.Command {
 }
 
 type RootFlags struct {
-	Output         string
 	Home           string
 	NoVersionCheck bool
-}
-
-func (f *RootFlags) Validate() error {
-	return flags.ValidateOutput(f.Output)
 }

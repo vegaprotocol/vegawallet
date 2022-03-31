@@ -60,7 +60,7 @@ func BuildCmdTaintKey(w io.Writer, handler TaintKeyHandler, rf *RootFlags) *cobr
 				return err
 			}
 
-			switch rf.Output {
+			switch f.Output {
 			case flags.InteractiveOutput:
 				PrintTaintKeyResponse(w)
 			case flags.JSONOutput:
@@ -87,6 +87,8 @@ func BuildCmdTaintKey(w io.Writer, handler TaintKeyHandler, rf *RootFlags) *cobr
 		"Path to the file containing the wallet's passphrase",
 	)
 
+	addOutputFlag(cmd, &f.Output)
+
 	autoCompleteWallet(cmd, rf.Home)
 
 	return cmd
@@ -96,10 +98,15 @@ type TaintKeyFlags struct {
 	Wallet         string
 	PubKey         string
 	PassphraseFile string
+	Output         string
 }
 
 func (f *TaintKeyFlags) Validate() (*wallet.TaintKeyRequest, error) {
 	req := &wallet.TaintKeyRequest{}
+
+	if err := flags.ValidateOutput(f.Output); err != nil {
+		return nil, err
+	}
 
 	if len(f.Wallet) == 0 {
 		return nil, flags.FlagMustBeSpecifiedError("wallet")

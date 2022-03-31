@@ -68,7 +68,7 @@ func BuildCmdIsolateKey(w io.Writer, handler IsolateKeyHandler, rf *RootFlags) *
 				return err
 			}
 
-			switch rf.Output {
+			switch f.Output {
 			case flags.InteractiveOutput:
 				PrintIsolateKeyResponse(w, resp)
 			case flags.JSONOutput:
@@ -95,6 +95,8 @@ func BuildCmdIsolateKey(w io.Writer, handler IsolateKeyHandler, rf *RootFlags) *
 		"Path to the file containing the wallet's passphrase",
 	)
 
+	addOutputFlag(cmd, &f.Output)
+
 	autoCompleteWallet(cmd, rf.Home)
 
 	return cmd
@@ -104,10 +106,15 @@ type IsolateKeyFlags struct {
 	Wallet         string
 	PubKey         string
 	PassphraseFile string
+	Output         string
 }
 
 func (f *IsolateKeyFlags) Validate() (*wallet.IsolateKeyRequest, error) {
 	req := &wallet.IsolateKeyRequest{}
+
+	if err := flags.ValidateOutput(f.Output); err != nil {
+		return nil, err
+	}
 
 	if len(f.Wallet) == 0 {
 		return nil, flags.FlagMustBeSpecifiedError("wallet")

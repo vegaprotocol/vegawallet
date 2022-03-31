@@ -62,7 +62,7 @@ func BuildCmdCreateWallet(w io.Writer, handler CreateWalletHandler, rf *RootFlag
 				return err
 			}
 
-			switch rf.Output {
+			switch f.Output {
 			case flags.InteractiveOutput:
 				PrintCreateWalletResponse(w, resp)
 			case flags.JSONOutput:
@@ -84,16 +84,23 @@ func BuildCmdCreateWallet(w io.Writer, handler CreateWalletHandler, rf *RootFlag
 		"Path to the file containing the wallet's passphrase",
 	)
 
+	addOutputFlag(cmd, &f.Output)
+
 	return cmd
 }
 
 type CreateWalletFlags struct {
 	Wallet         string
 	PassphraseFile string
+	Output         string
 }
 
 func (f *CreateWalletFlags) Validate() (*wallet.CreateWalletRequest, error) {
 	req := &wallet.CreateWalletRequest{}
+
+	if err := flags.ValidateOutput(f.Output); err != nil {
+		return nil, err
+	}
 
 	if len(f.Wallet) == 0 {
 		return nil, flags.FlagMustBeSpecifiedError("wallet")

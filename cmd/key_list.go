@@ -57,7 +57,7 @@ func BuildCmdListKeys(w io.Writer, handler ListKeysHandler, rf *RootFlags) *cobr
 				return err
 			}
 
-			switch rf.Output {
+			switch f.Output {
 			case flags.InteractiveOutput:
 				PrintListKeysResponse(w, resp)
 			case flags.JSONOutput:
@@ -79,6 +79,8 @@ func BuildCmdListKeys(w io.Writer, handler ListKeysHandler, rf *RootFlags) *cobr
 		"Path to the file containing the wallet's passphrase",
 	)
 
+	addOutputFlag(cmd, &f.Output)
+
 	autoCompleteWallet(cmd, rf.Home)
 
 	return cmd
@@ -87,10 +89,15 @@ func BuildCmdListKeys(w io.Writer, handler ListKeysHandler, rf *RootFlags) *cobr
 type ListKeysFlags struct {
 	Wallet         string
 	PassphraseFile string
+	Output         string
 }
 
 func (f *ListKeysFlags) Validate() (*wallet.ListKeysRequest, error) {
 	req := &wallet.ListKeysRequest{}
+
+	if err := flags.ValidateOutput(f.Output); err != nil {
+		return nil, err
+	}
 
 	if len(f.Wallet) == 0 {
 		return nil, flags.FlagMustBeSpecifiedError("wallet")

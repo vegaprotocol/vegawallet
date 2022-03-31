@@ -29,20 +29,26 @@ var (
 
 type GetVersionHandler func() *version.GetVersionResponse
 
-func NewCmdVersion(w io.Writer, rf *RootFlags) *cobra.Command {
-	return BuildCmdGetVersion(w, version.GetVersionInfo, rf)
+func NewCmdVersion(w io.Writer) *cobra.Command {
+	return BuildCmdGetVersion(w, version.GetVersionInfo)
 }
 
-func BuildCmdGetVersion(w io.Writer, handler GetVersionHandler, rf *RootFlags) *cobra.Command {
+func BuildCmdGetVersion(w io.Writer, handler GetVersionHandler) *cobra.Command {
+	f := &GetVersionFlags{}
+
 	cmd := &cobra.Command{
 		Use:     "version",
 		Short:   "Get the version of the software",
 		Long:    versionLong,
 		Example: versionExample,
 		RunE: func(_ *cobra.Command, _ []string) error {
+			if err := f.Validate(); err != nil {
+				return err
+			}
+
 			resp := handler()
 
-			switch rf.Output {
+			switch f.Output {
 			case flags.InteractiveOutput:
 				PrintGetVersionResponse(w, resp)
 			case flags.JSONOutput:
@@ -54,6 +60,14 @@ func BuildCmdGetVersion(w io.Writer, handler GetVersionHandler, rf *RootFlags) *
 	}
 
 	return cmd
+}
+
+type GetVersionFlags struct {
+	Output string
+}
+
+func (f *GetVersionFlags) Validate() error {
+	return flags.ValidateOutput(f.Output)
 }
 
 func PrintGetVersionResponse(w io.Writer, resp *version.GetVersionResponse) {

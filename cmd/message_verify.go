@@ -51,7 +51,7 @@ func BuildCmdVerifyMessage(w io.Writer, handler VerifyMessageHandler, rf *RootFl
 				return err
 			}
 
-			switch rf.Output {
+			switch f.Output {
 			case flags.InteractiveOutput:
 				PrintVerifyMessageResponse(w, isValid)
 			case flags.JSONOutput:
@@ -82,6 +82,8 @@ func BuildCmdVerifyMessage(w io.Writer, handler VerifyMessageHandler, rf *RootFl
 		"Signature of the message (base64-encoded)",
 	)
 
+	addOutputFlag(cmd, &f.Output)
+
 	return cmd
 }
 
@@ -89,10 +91,15 @@ type VerifyMessageFlags struct {
 	Signature string
 	Message   string
 	PubKey    string
+	Output    string
 }
 
 func (f *VerifyMessageFlags) Validate() (*crypto.VerifyMessageRequest, error) {
 	req := &crypto.VerifyMessageRequest{}
+
+	if err := flags.ValidateOutput(f.Output); err != nil {
+		return nil, err
+	}
 
 	if len(f.PubKey) == 0 {
 		return nil, flags.FlagMustBeSpecifiedError("pubkey")

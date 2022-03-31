@@ -43,10 +43,15 @@ func NewCmdDescribeNetwork(w io.Writer, rf *RootFlags) *cobra.Command {
 
 type DescribeNetworkFlags struct {
 	Network string
+	Output  string
 }
 
 func (f *DescribeNetworkFlags) Validate() (*network.DescribeNetworkRequest, error) {
 	req := &network.DescribeNetworkRequest{}
+
+	if err := flags.ValidateOutput(f.Output); err != nil {
+		return nil, err
+	}
 
 	if len(f.Network) == 0 {
 		return nil, flags.FlagMustBeSpecifiedError("network")
@@ -73,7 +78,7 @@ func BuildCmdDescribeNetwork(w io.Writer, handler DescribeNetworkHandler, rf *Ro
 				return err
 			}
 
-			switch rf.Output {
+			switch f.Output {
 			case flags.InteractiveOutput:
 				PrintDescribeNetworkResponse(w, resp)
 			case flags.JSONOutput:
@@ -89,6 +94,8 @@ func BuildCmdDescribeNetwork(w io.Writer, handler DescribeNetworkHandler, rf *Ro
 		"",
 		"Network to describe",
 	)
+
+	addOutputFlag(cmd, &f.Output)
 
 	autoCompleteNetwork(cmd, rf.Home)
 

@@ -64,7 +64,7 @@ func BuildCmdGenerateKey(w io.Writer, handler GenerateKeyHandler, rf *RootFlags)
 				return err
 			}
 
-			switch rf.Output {
+			switch f.Output {
 			case flags.InteractiveOutput:
 				PrintGenerateKeyResponse(w, req, resp)
 			case flags.JSONOutput:
@@ -91,6 +91,8 @@ func BuildCmdGenerateKey(w io.Writer, handler GenerateKeyHandler, rf *RootFlags)
 		`Metadata to add to the generated key-pair: "my-key1:my-value1,my-key2:my-value2"`,
 	)
 
+	addOutputFlag(cmd, &f.Output)
+
 	autoCompleteWallet(cmd, rf.Home)
 
 	return cmd
@@ -100,10 +102,15 @@ type GenerateKeyFlags struct {
 	Wallet         string
 	PassphraseFile string
 	RawMetadata    []string
+	Output         string
 }
 
 func (f *GenerateKeyFlags) Validate() (*wallet.GenerateKeyRequest, error) {
 	req := &wallet.GenerateKeyRequest{}
+
+	if err := flags.ValidateOutput(f.Output); err != nil {
+		return nil, err
+	}
 
 	if len(f.Wallet) == 0 {
 		return nil, flags.FlagMustBeSpecifiedError("wallet")

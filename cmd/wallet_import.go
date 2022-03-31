@@ -69,7 +69,7 @@ func BuildCmdImportWallet(w io.Writer, handler ImportWalletHandler, rf *RootFlag
 				return err
 			}
 
-			switch rf.Output {
+			switch f.Output {
 			case flags.InteractiveOutput:
 				PrintImportWalletResponse(w, resp)
 			case flags.JSONOutput:
@@ -101,6 +101,8 @@ func BuildCmdImportWallet(w io.Writer, handler ImportWalletHandler, rf *RootFlag
 		fmt.Sprintf("Version of the wallet to import: %v", wallet.SupportedVersions),
 	)
 
+	addOutputFlag(cmd, &f.Output)
+
 	_ = cmd.RegisterFlagCompletionFunc("version", func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
 		vs := make([]string, 0, len(wallet.SupportedVersions))
 		for i, v := range wallet.SupportedVersions {
@@ -117,11 +119,16 @@ type ImportWalletFlags struct {
 	PassphraseFile     string
 	RecoveryPhraseFile string
 	Version            uint32
+	Output             string
 }
 
 func (f *ImportWalletFlags) Validate() (*wallet.ImportWalletRequest, error) {
 	req := &wallet.ImportWalletRequest{
 		Version: f.Version,
+	}
+
+	if err := flags.ValidateOutput(f.Output); err != nil {
+		return nil, err
 	}
 
 	if len(f.Wallet) == 0 {

@@ -60,7 +60,7 @@ func BuildCmdRotateKey(w io.Writer, handler RotateKeyHandler, rf *RootFlags) *co
 				return err
 			}
 
-			switch rf.Output {
+			switch f.Output {
 			case flags.InteractiveOutput:
 				PrintRotateKeyResponse(w, resp)
 			case flags.JSONOutput:
@@ -102,6 +102,8 @@ func BuildCmdRotateKey(w io.Writer, handler RotateKeyHandler, rf *RootFlags) *co
 		"Height of block where the public key change will take effect",
 	)
 
+	addOutputFlag(cmd, &f.Output)
+
 	autoCompleteWallet(cmd, rf.Home)
 
 	return cmd
@@ -114,10 +116,15 @@ type RotateKeyFlags struct {
 	CurrentPubKey     string
 	TxBlockHeight     uint64
 	TargetBlockHeight uint64
+	Output            string
 }
 
 func (f *RotateKeyFlags) Validate() (*wallet.RotateKeyRequest, error) {
 	req := &wallet.RotateKeyRequest{}
+
+	if err := flags.ValidateOutput(f.Output); err != nil {
+		return nil, err
+	}
 
 	if f.NewPublicKey == "" {
 		return nil, flags.FlagMustBeSpecifiedError("new-pubkey")

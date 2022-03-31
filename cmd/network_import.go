@@ -47,10 +47,10 @@ func NewCmdImportNetwork(w io.Writer, rf *RootFlags) *cobra.Command {
 		return network.ImportNetworkFromSource(s, network.NewReaders(), req)
 	}
 
-	return BuildCmdImportNetwork(w, h, rf)
+	return BuildCmdImportNetwork(w, h)
 }
 
-func BuildCmdImportNetwork(w io.Writer, handler ImportNetworkFromSourceHandler, rf *RootFlags) *cobra.Command {
+func BuildCmdImportNetwork(w io.Writer, handler ImportNetworkFromSourceHandler) *cobra.Command {
 	f := &ImportNetworkFlags{}
 
 	cmd := &cobra.Command{
@@ -69,7 +69,7 @@ func BuildCmdImportNetwork(w io.Writer, handler ImportNetworkFromSourceHandler, 
 				return err
 			}
 
-			switch rf.Output {
+			switch f.Output {
 			case flags.InteractiveOutput:
 				PrintImportNetworkResponse(w, resp)
 			case flags.JSONOutput:
@@ -101,6 +101,8 @@ func BuildCmdImportNetwork(w io.Writer, handler ImportNetworkFromSourceHandler, 
 		"Overwrite the existing network if it has the same name",
 	)
 
+	addOutputFlag(cmd, &f.Output)
+
 	return cmd
 }
 
@@ -109,9 +111,14 @@ type ImportNetworkFlags struct {
 	URL      string
 	Name     string
 	Force    bool
+	Output   string
 }
 
 func (f *ImportNetworkFlags) Validate() (*network.ImportNetworkFromSourceRequest, error) {
+	if err := flags.ValidateOutput(f.Output); err != nil {
+		return nil, err
+	}
+
 	if len(f.FilePath) == 0 && len(f.URL) == 0 {
 		return nil, flags.OneOfFlagsMustBeSpecifiedError("from-file", "from-url")
 	}

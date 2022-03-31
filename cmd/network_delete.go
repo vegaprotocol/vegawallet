@@ -68,7 +68,7 @@ func BuildCmdDeleteNetwork(w io.Writer, handler DeleteNetworkHandler, rf *RootFl
 				return err
 			}
 
-			if rf.Output == flags.InteractiveOutput {
+			if f.Output == flags.InteractiveOutput {
 				PrintDeleteNetworkResponse(w, f.Network)
 			}
 
@@ -87,6 +87,8 @@ func BuildCmdDeleteNetwork(w io.Writer, handler DeleteNetworkHandler, rf *RootFl
 		"Do not ask for confirmation",
 	)
 
+	addOutputFlag(cmd, &f.Output)
+
 	autoCompleteNetwork(cmd, rf.Home)
 
 	return cmd
@@ -95,10 +97,15 @@ func BuildCmdDeleteNetwork(w io.Writer, handler DeleteNetworkHandler, rf *RootFl
 type DeleteNetworkFlags struct {
 	Network string
 	Force   bool
+	Output  string
 }
 
 func (f *DeleteNetworkFlags) Validate() (*network.DeleteNetworkRequest, error) {
 	req := &network.DeleteNetworkRequest{}
+
+	if err := flags.ValidateOutput(f.Output); err != nil {
+		return nil, err
+	}
 
 	if len(f.Network) == 0 {
 		return nil, flags.FlagMustBeSpecifiedError("network")

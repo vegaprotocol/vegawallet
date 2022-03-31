@@ -57,7 +57,7 @@ func BuildCmdDescribeKey(w io.Writer, handler DescribeKeyHandler, rf *RootFlags)
 				return err
 			}
 
-			switch rf.Output {
+			switch f.Output {
 			case flags.InteractiveOutput:
 				PrintDescribeKeyResponse(w, resp)
 			case flags.JSONOutput:
@@ -84,6 +84,8 @@ func BuildCmdDescribeKey(w io.Writer, handler DescribeKeyHandler, rf *RootFlags)
 		"Path to the file containing the wallet's passphrase",
 	)
 
+	addOutputFlag(cmd, &f.Output)
+
 	autoCompleteWallet(cmd, rf.Home)
 
 	return cmd
@@ -93,10 +95,15 @@ type DescribeKeyFlags struct {
 	Wallet         string
 	PassphraseFile string
 	PubKey         string
+	Output         string
 }
 
 func (f *DescribeKeyFlags) Validate() (*wallet.DescribeKeyRequest, error) {
 	req := &wallet.DescribeKeyRequest{}
+
+	if err := flags.ValidateOutput(f.Output); err != nil {
+		return nil, err
+	}
 
 	if len(f.Wallet) == 0 {
 		return nil, flags.FlagMustBeSpecifiedError("wallet")

@@ -39,18 +39,24 @@ func NewCmdListWallets(w io.Writer, rf *RootFlags) *cobra.Command {
 }
 
 func BuildCmdListWallets(w io.Writer, handler ListWalletsHandler, rf *RootFlags) *cobra.Command {
+	f := &ListWalletsFlags{}
+
 	cmd := &cobra.Command{
 		Use:     "list",
 		Short:   "List all registered wallets",
 		Long:    listWalletsLong,
 		Example: listWalletsExample,
 		RunE: func(_ *cobra.Command, _ []string) error {
+			if err := f.Validate(); err != nil {
+				return err
+			}
+
 			resp, err := handler()
 			if err != nil {
 				return err
 			}
 
-			switch rf.Output {
+			switch f.Output {
 			case flags.InteractiveOutput:
 				PrintListWalletsResponse(w, resp)
 			case flags.JSONOutput:
@@ -61,7 +67,17 @@ func BuildCmdListWallets(w io.Writer, handler ListWalletsHandler, rf *RootFlags)
 		},
 	}
 
+	addOutputFlag(cmd, &f.Output)
+
 	return cmd
+}
+
+type ListWalletsFlags struct {
+	Output string
+}
+
+func (f *ListWalletsFlags) Validate() error {
+	return flags.ValidateOutput(f.Output)
 }
 
 func PrintListWalletsResponse(w io.Writer, resp *wallet.ListWalletsResponse) {

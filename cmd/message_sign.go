@@ -58,7 +58,7 @@ func BuildCmdSignMessage(w io.Writer, handler SignMessageHandler, rf *RootFlags)
 				return err
 			}
 
-			switch rf.Output {
+			switch f.Output {
 			case flags.InteractiveOutput:
 				PrintSignMessageResponse(w, resp)
 			case flags.JSONOutput:
@@ -94,6 +94,8 @@ func BuildCmdSignMessage(w io.Writer, handler SignMessageHandler, rf *RootFlags)
 		"Path to the file containing the wallet's passphrase",
 	)
 
+	addOutputFlag(cmd, &f.Output)
+
 	autoCompleteWallet(cmd, rf.Home)
 
 	return cmd
@@ -104,10 +106,15 @@ type SignMessageFlags struct {
 	PubKey         string
 	Message        string
 	PassphraseFile string
+	Output         string
 }
 
 func (f *SignMessageFlags) Validate() (*wallet.SignMessageRequest, error) {
 	req := &wallet.SignMessageRequest{}
+
+	if err := flags.ValidateOutput(f.Output); err != nil {
+		return nil, err
+	}
 
 	if len(f.Wallet) == 0 {
 		return nil, flags.FlagMustBeSpecifiedError("wallet")

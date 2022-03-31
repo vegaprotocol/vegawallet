@@ -44,7 +44,7 @@ var (
 	`)
 )
 
-type SendTxHandler func(io.Writer, *RootFlags, *SendTxRequest) error
+type SendTxHandler func(io.Writer, *RootFlags, *SendTxFlags, *SendTxRequest) error
 
 func NewCmdTxSend(w io.Writer, rf *RootFlags) *cobra.Command {
 	return BuildCmdTxSend(w, SendTx, rf)
@@ -71,7 +71,7 @@ func BuildCmdTxSend(w io.Writer, handler SendTxHandler, rf *RootFlags) *cobra.Co
 				return err
 			}
 
-			if err := handler(w, rf, req); err != nil {
+			if err := handler(w, rf, f, req); err != nil {
 				return err
 			}
 
@@ -100,6 +100,8 @@ func BuildCmdTxSend(w io.Writer, handler SendTxHandler, rf *RootFlags) *cobra.Co
 		"Number of retries when contacting the Vega node",
 	)
 
+	addOutputFlag(cmd, &f.Output)
+
 	autoCompleteNetwork(cmd, rf.Home)
 	autoCompleteLogLevel(cmd)
 	return cmd
@@ -111,11 +113,16 @@ type SendTxFlags struct {
 	Retries     uint64
 	LogLevel    string
 	RawTx       string
+	Output      string
 }
 
 func (f *SendTxFlags) Validate() (*SendTxRequest, error) {
 	req := &SendTxRequest{
 		Retries: f.Retries,
+	}
+
+	if err := flags.ValidateOutput(f.Output); err != nil {
+		return nil, err
 	}
 
 	if len(f.LogLevel) == 0 {
@@ -159,8 +166,8 @@ type SendTxRequest struct {
 	Tx          *commandspb.Transaction
 }
 
-func SendTx(w io.Writer, rf *RootFlags, req *SendTxRequest) error {
-	log, err := BuildLogger(rf.Output, req.LogLevel)
+func SendTx(w io.Writer, rf *RootFlags, f *SendTxFlags, req *SendTxRequest) error {
+	log, err := BuildLogger(f.Output, req.LogLevel)
 	if err != nil {
 		return err
 	}
@@ -190,7 +197,7 @@ func SendTx(w io.Writer, rf *RootFlags, req *SendTxRequest) error {
 	}()
 
 	p := printer.NewInteractivePrinter(w)
-	if rf.Output == flags.InteractiveOutput {
+	if f.Output == flags.InteractiveOutput {
 		p.BlueArrow().InfoText("Logs").NextLine()
 	}
 

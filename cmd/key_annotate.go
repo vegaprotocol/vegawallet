@@ -70,7 +70,7 @@ func BuildCmdAnnotateKey(w io.Writer, handler AnnotateKeyHandler, rf *RootFlags)
 				return err
 			}
 
-			switch rf.Output {
+			switch f.Output {
 			case flags.InteractiveOutput:
 				PrintAnnotateKeyResponse(w, req)
 			case flags.JSONOutput:
@@ -107,6 +107,8 @@ func BuildCmdAnnotateKey(w io.Writer, handler AnnotateKeyHandler, rf *RootFlags)
 		"Clear the metadata",
 	)
 
+	addOutputFlag(cmd, &f.Output)
+
 	autoCompleteWallet(cmd, rf.Home)
 
 	return cmd
@@ -118,10 +120,15 @@ type AnnotateKeyFlags struct {
 	PassphraseFile string
 	Clear          bool
 	RawMetadata    []string
+	Output         string
 }
 
 func (f *AnnotateKeyFlags) Validate() (*wallet.AnnotateKeyRequest, error) {
 	req := &wallet.AnnotateKeyRequest{}
+
+	if err := flags.ValidateOutput(f.Output); err != nil {
+		return nil, err
+	}
 
 	if len(f.Wallet) == 0 {
 		return nil, flags.FlagMustBeSpecifiedError("wallet")

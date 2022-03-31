@@ -46,12 +46,17 @@ func BuildCmdInit(w io.Writer, handler InitHandler, rf *RootFlags) *cobra.Comman
 		Long:    initLong,
 		Example: initExample,
 		RunE: func(_ *cobra.Command, _ []string) error {
+
+			if err := f.Validate(); err != nil {
+				return err
+			}
+
 			resp, err := handler(rf.Home, f)
 			if err != nil {
 				return err
 			}
 
-			switch rf.Output {
+			switch f.Output {
 			case flags.InteractiveOutput:
 				PrintInitResponse(w, resp)
 			case flags.JSONOutput:
@@ -68,11 +73,18 @@ func BuildCmdInit(w io.Writer, handler InitHandler, rf *RootFlags) *cobra.Comman
 		"Overwrite exiting wallet configuration at the specified path",
 	)
 
+	addOutputFlag(cmd, &f.Output)
+
 	return cmd
 }
 
 type InitFlags struct {
-	Force bool
+	Force  bool
+	Output string
+}
+
+func (f *InitFlags) Validate() error {
+	return flags.ValidateOutput(f.Output)
 }
 
 type InitResponse struct {

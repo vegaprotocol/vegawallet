@@ -73,6 +73,22 @@ func fprintErrorJSON(w io.Writer, err error) {
 	}
 }
 
+func addOutputFlag(cmd *cobra.Command, output *string) {
+	cmd.Flags().StringVarP(output,
+		"output", "o",
+		flags.InteractiveOutput,
+		fmt.Sprintf("Specify the output format: %v", flags.AvailableOutputs),
+	)
+
+	// Add output flag autocompletion.
+	err := cmd.RegisterFlagCompletionFunc("output", func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
+		return flags.AvailableOutputs, cobra.ShellCompDirectiveDefault
+	})
+	if err != nil {
+		panic(err)
+	}
+}
+
 func autoCompleteWallet(cmd *cobra.Command, vegaHome string) {
 	err := cmd.RegisterFlagCompletionFunc("wallet", func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
 		s, err := wallets.InitialiseStore(vegaHome)

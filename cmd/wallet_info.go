@@ -57,7 +57,7 @@ func BuildCmdGetInfoWallet(w io.Writer, handler GetInfoWalletHandler, rf *RootFl
 				return err
 			}
 
-			switch rf.Output {
+			switch f.Output {
 			case flags.InteractiveOutput:
 				PrintGetWalletInfoResponse(w, resp)
 			case flags.JSONOutput:
@@ -79,6 +79,8 @@ func BuildCmdGetInfoWallet(w io.Writer, handler GetInfoWalletHandler, rf *RootFl
 		"Path to the file containing the wallet's passphrase",
 	)
 
+	addOutputFlag(cmd, &f.Output)
+
 	autoCompleteWallet(cmd, rf.Home)
 
 	return cmd
@@ -87,10 +89,15 @@ func BuildCmdGetInfoWallet(w io.Writer, handler GetInfoWalletHandler, rf *RootFl
 type GetWalletInfoFlags struct {
 	Wallet         string
 	PassphraseFile string
+	Output         string
 }
 
 func (f *GetWalletInfoFlags) Validate() (*wallet.GetWalletInfoRequest, error) {
 	req := &wallet.GetWalletInfoRequest{}
+
+	if err := flags.ValidateOutput(f.Output); err != nil {
+		return nil, err
+	}
 
 	if len(f.Wallet) == 0 {
 		return nil, flags.FlagMustBeSpecifiedError("wallet")

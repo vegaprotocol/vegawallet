@@ -83,7 +83,7 @@ func BuildCmdCommandSign(w io.Writer, handler SignCommandHandler, rf *RootFlags)
 				return err
 			}
 
-			switch rf.Output {
+			switch f.Output {
 			case flags.InteractiveOutput:
 				PrintSignCommandResponse(w, resp)
 			case flags.JSONOutput:
@@ -115,6 +115,8 @@ func BuildCmdCommandSign(w io.Writer, handler SignCommandHandler, rf *RootFlags)
 		"It should be close to the current block height when the transaction is applied, with a threshold of ~ - 150 blocks.",
 	)
 
+	addOutputFlag(cmd, &f.Output)
+
 	autoCompleteWallet(cmd, rf.Home)
 
 	return cmd
@@ -126,10 +128,15 @@ type SignCommandFlags struct {
 	PassphraseFile string
 	RawCommand     string
 	TxBlockHeight  uint64
+	Output         string
 }
 
 func (f *SignCommandFlags) Validate() (*wallet.SignCommandRequest, error) {
 	req := &wallet.SignCommandRequest{}
+
+	if err := flags.ValidateOutput(f.Output); err != nil {
+		return nil, err
+	}
 
 	if len(f.Wallet) == 0 {
 		return nil, flags.FlagMustBeSpecifiedError("wallet")

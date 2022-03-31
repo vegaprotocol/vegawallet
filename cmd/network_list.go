@@ -38,10 +38,12 @@ func NewCmdListNetworks(w io.Writer, rf *RootFlags) *cobra.Command {
 		return network.ListNetworks(netStore)
 	}
 
-	return BuildCmdListNetworks(w, h, rf)
+	return BuildCmdListNetworks(w, h)
 }
 
-func BuildCmdListNetworks(w io.Writer, handler ListNetworksHandler, rf *RootFlags) *cobra.Command {
+func BuildCmdListNetworks(w io.Writer, handler ListNetworksHandler) *cobra.Command {
+	f := &ListNetworksFlags{}
+
 	cmd := &cobra.Command{
 		Use:     "list",
 		Short:   "List all registered networks",
@@ -53,7 +55,7 @@ func BuildCmdListNetworks(w io.Writer, handler ListNetworksHandler, rf *RootFlag
 				return err
 			}
 
-			switch rf.Output {
+			switch f.Output {
 			case flags.InteractiveOutput:
 				PrintListNetworksResponse(w, resp)
 			case flags.JSONOutput:
@@ -64,7 +66,17 @@ func BuildCmdListNetworks(w io.Writer, handler ListNetworksHandler, rf *RootFlag
 		},
 	}
 
+	addOutputFlag(cmd, &f.Output)
+
 	return cmd
+}
+
+type ListNetworksFlags struct {
+	Output string
+}
+
+func (f *ListNetworksFlags) Validate() error {
+	return flags.ValidateOutput(f.Output)
 }
 
 func PrintListNetworksResponse(w io.Writer, resp *network.ListNetworksResponse) {

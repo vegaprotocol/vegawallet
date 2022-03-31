@@ -56,7 +56,7 @@ var (
 	`)
 )
 
-type SendCommandHandler func(io.Writer, *RootFlags, *SendCommandRequest) error
+type SendCommandHandler func(io.Writer, *RootFlags, *SendCommandFlags, *SendCommandRequest) error
 
 func NewCmdCommandSend(w io.Writer, rf *RootFlags) *cobra.Command {
 	return BuildCmdCommandSend(w, SendCommand, rf)
@@ -83,7 +83,7 @@ func BuildCmdCommandSend(w io.Writer, handler SendCommandHandler, rf *RootFlags)
 				return err
 			}
 
-			if err := handler(w, rf, req); err != nil {
+			if err := handler(w, rf, f, req); err != nil {
 				return err
 			}
 
@@ -127,6 +127,8 @@ func BuildCmdCommandSend(w io.Writer, handler SendCommandHandler, rf *RootFlags)
 		"Number of retries when contacting the Vega node",
 	)
 
+	addOutputFlag(cmd, &f.Output)
+
 	autoCompleteNetwork(cmd, rf.Home)
 	autoCompleteWallet(cmd, rf.Home)
 	autoCompleteLogLevel(cmd)
@@ -143,11 +145,16 @@ type SendCommandFlags struct {
 	Retries        uint64
 	LogLevel       string
 	RawCommand     string
+	Output         string
 }
 
 func (f *SendCommandFlags) Validate() (*SendCommandRequest, error) {
 	req := &SendCommandRequest{
 		Retries: f.Retries,
+	}
+
+	if err := flags.ValidateOutput(f.Output); err != nil {
+		return nil, err
 	}
 
 	if len(f.Wallet) == 0 {
@@ -211,8 +218,8 @@ type SendCommandRequest struct {
 	Request     *walletpb.SubmitTransactionRequest
 }
 
-func SendCommand(w io.Writer, rf *RootFlags, req *SendCommandRequest) error {
-	log, err := BuildLogger(rf.Output, req.LogLevel)
+func SendCommand(w io.Writer, rf *RootFlags, f *SendCommandFlags, req *SendCommandRequest) error {
+	log, err := BuildLogger(f.Output, req.LogLevel)
 	if err != nil {
 		return err
 	}
@@ -254,7 +261,7 @@ func SendCommand(w io.Writer, rf *RootFlags, req *SendCommandRequest) error {
 	}()
 
 	p := printer.NewInteractivePrinter(w)
-	if rf.Output == flags.InteractiveOutput {
+	if f.Output == flags.InteractiveOutput {
 		p.BlueArrow().InfoText("Logs").NextLine()
 	}
 

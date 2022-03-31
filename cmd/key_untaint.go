@@ -59,7 +59,7 @@ func BuildCmdUntaintKey(w io.Writer, handler UntaintKeyHandler, rf *RootFlags) *
 				return err
 			}
 
-			switch rf.Output {
+			switch f.Output {
 			case flags.InteractiveOutput:
 				PrintUntaintKeyResponse(w)
 			case flags.JSONOutput:
@@ -86,6 +86,8 @@ func BuildCmdUntaintKey(w io.Writer, handler UntaintKeyHandler, rf *RootFlags) *
 		"Path to the file containing the wallet's passphrase",
 	)
 
+	addOutputFlag(cmd, &f.Output)
+
 	autoCompleteWallet(cmd, rf.Home)
 
 	return cmd
@@ -95,10 +97,15 @@ type UntaintKeyFlags struct {
 	Wallet         string
 	PubKey         string
 	PassphraseFile string
+	Output         string
 }
 
 func (f *UntaintKeyFlags) Validate() (*wallet.UntaintKeyRequest, error) {
 	req := &wallet.UntaintKeyRequest{}
+
+	if err := flags.ValidateOutput(f.Output); err != nil {
+		return nil, err
+	}
 
 	if len(f.Wallet) == 0 {
 		return nil, flags.FlagMustBeSpecifiedError("wallet")

@@ -74,7 +74,7 @@ func BuildCmdDeleteWallet(w io.Writer, handler DeleteWalletHandler, rf *RootFlag
 				return err
 			}
 
-			switch rf.Output {
+			switch f.Output {
 			case flags.InteractiveOutput:
 				PrintDeleteWalletResponse(w, f.Wallet)
 			case flags.JSONOutput:
@@ -96,6 +96,8 @@ func BuildCmdDeleteWallet(w io.Writer, handler DeleteWalletHandler, rf *RootFlag
 		"Do not ask for confirmation",
 	)
 
+	addOutputFlag(cmd, &f.Output)
+
 	autoCompleteWallet(cmd, rf.Home)
 
 	return cmd
@@ -104,9 +106,14 @@ func BuildCmdDeleteWallet(w io.Writer, handler DeleteWalletHandler, rf *RootFlag
 type DeleteWalletFlags struct {
 	Wallet string
 	Force  bool
+	Output string
 }
 
 func (f *DeleteWalletFlags) Validate() error {
+	if err := flags.ValidateOutput(f.Output); err != nil {
+		return err
+	}
+
 	if len(f.Wallet) == 0 {
 		return flags.FlagMustBeSpecifiedError("wallet")
 	}
