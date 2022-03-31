@@ -17,6 +17,7 @@
 ### 🐛 Fixes
 - [521](https://github.com/vegaprotocol/vegawallet/pull/521) - Update `protos` repository to get last validation updates on commands
 - [523](https://github.com/vegaprotocol/vegawallet/pull/521) - Add link in `README` to direct people to desktop wallet app
+- [529](https://github.com/vegaprotocol/vegawallet/pull/529) - Ensure log files can be created on Windows.
 
 
 ## 0.13.2
