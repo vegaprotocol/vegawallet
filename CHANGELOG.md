@@ -3,7 +3,7 @@
 ## Unreleased (0.14.0)
 
 ### 🚨 Breaking changes
-- [497](https://github.com/vegaprotocol/vegawallet/issues/497) - Add ability to confirm the signing of a transaction
+- [497](https://github.com/vegaprotocol/vegawallet/issues/497) - Add ability to confirm the signing of a transaction. To keep running the service with automatic consent, `--automatic-consent` flag is now required.
 
 ### 🗑️  Deprecation
 - [](https://github.com/vegaprotocol/vegawallet/pull/) -
@@ -17,6 +17,7 @@
 ### 🐛 Fixes
 - [521](https://github.com/vegaprotocol/vegawallet/pull/521) - Update `protos` repository to get last validation updates on commands
 - [523](https://github.com/vegaprotocol/vegawallet/pull/521) - Add link in `README` to direct people to desktop wallet app
+- [529](https://github.com/vegaprotocol/vegawallet/pull/529) - Ensure log files can be created on Windows.
 
 
 ## 0.13.2

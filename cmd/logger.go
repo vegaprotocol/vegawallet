@@ -163,8 +163,8 @@ func isSupportedLogLevel(level string) bool {
 // newWinFileSink creates a log sink on Windows machines as zap, by default,
 // doesn't support Windows paths. A workaround is to create a fake winfile
 // scheme and register it with zap instead. This workaround is taken from
-// the Github issue at https://github.com/uber-go/zap/issues/621
+// the GitHub issue at https://github.com/uber-go/zap/issues/621.
 func newWinFileSink(u *url.URL) (zap.Sink, error) {
-	// Remove leading slash left by url.Parse()
-	return os.OpenFile(u.Path[1:], os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
+	// Remove leading slash left by url.Parse().
+	return os.OpenFile(u.Path[1:], os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0o644) // nolint:gomnd
 }
