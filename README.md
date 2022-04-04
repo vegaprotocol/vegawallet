@@ -100,7 +100,7 @@ Using the API is documented [here](service/README.md).
 
 ## Support
 
-#### [Nolt][nolt]
+#### [Feedback][feedback]
 Raise issues and see what others have raised.
 
 #### [Discord][discord]
@@ -118,6 +118,6 @@ Read more at [https://vega.xyz][vega-website].
 [vega-documentation-website-create-wallet]: https://docs.vega.xyz/docs/tools/vega-wallet/CLI-wallet/create-wallet
 [vega-wallet-documentation-website]: https://docs.vega.xyz/docs/tools/vega-wallet/
 [vega-wallet-desktop-getting-started]: https://docs.vega.xyz/docs/tools/vega-wallet/desktop-app/latest/getting-started
-[nolt]: https://vega-testnet.nolt.io/
+[feedback]: https://github.com/vegaprotocol/feedback/discussions/
 [discord]: https://vega.xyz/discord
 [github-releases]: https://github.com/vegaprotocol/vegawallet/releases
