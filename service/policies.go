@@ -3,6 +3,7 @@ package service
 import (
 	"crypto/sha256"
 	"fmt"
+	"time"
 
 	v1 "code.vegaprotocol.io/protos/vega/wallet/v1"
 	"github.com/golang/protobuf/jsonpb"
@@ -14,7 +15,9 @@ type ConsentConfirmation struct {
 }
 
 type ConsentRequest struct {
+	TxID          string
 	Tx            *v1.SubmitTransactionRequest
+	ReceivedAt    time.Time
 	Confirmations chan ConsentConfirmation
 }
 
@@ -24,7 +27,7 @@ func (r *ConsentRequest) String() (string, error) {
 	return marshalledRequest, err
 }
 
-func (r *ConsentRequest) TxHash() string {
+func (r *ConsentRequest) GetTxID() string {
 	h := sha256.New()
 	h.Write([]byte(fmt.Sprintf("%s%v%t", r.Tx.PubKey, r.Tx.Command, r.Tx.Propagate)))
 
@@ -57,7 +60,9 @@ func NewExplicitConsentPolicy(pending chan ConsentRequest) Policy {
 
 func (p *ExplicitConsentPolicy) Ask(tx *v1.SubmitTransactionRequest) (bool, error) {
 	confirmations := make(chan ConsentConfirmation)
-	p.pendingEvents <- ConsentRequest{Tx: tx, Confirmations: confirmations}
+	consentReq := ConsentRequest{Tx: tx, Confirmations: confirmations, ReceivedAt: time.Now()}
+	consentReq.TxID = consentReq.GetTxID()
+	p.pendingEvents <- consentReq
 
 	c := <-confirmations
 	return c.Decision, nil
