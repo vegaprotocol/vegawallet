@@ -26,7 +26,7 @@ func (r *ConsentRequest) String() (string, error) {
 
 func (r *ConsentRequest) TxHash() string {
 	h := sha256.New()
-	h.Write([]byte(fmt.Sprintf("%v%v", r.Tx.PubKey, r.Tx.Command)))
+	h.Write([]byte(fmt.Sprintf("%s%v%t", r.Tx.PubKey, r.Tx.Command, r.Tx.Propagate)))
 
 	return fmt.Sprintf("%x", h.Sum(nil))
 }
