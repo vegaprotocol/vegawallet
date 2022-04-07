@@ -59,6 +59,10 @@ func CheckSubmitTransactionRequest(req *walletpb.SubmitTransactionRequest) comma
 		cmdErr = commands.CheckTransfer(cmd.Transfer)
 	case *walletpb.SubmitTransactionRequest_CancelTransfer:
 		cmdErr = commands.CheckCancelTransfer(cmd.CancelTransfer)
+	case *walletpb.SubmitTransactionRequest_KeyRotateSubmission:
+		cmdErr = commands.CheckKeyRotateSubmission(cmd.KeyRotateSubmission)
+	case *walletpb.SubmitTransactionRequest_EthereumKeyRotateSubmission:
+		cmdErr = commands.CheckEthereumKeyRotateSubmission(cmd.EthereumKeyRotateSubmission)
 	default:
 		errs.AddForProperty("input_data.command", commands.ErrIsNotSupported)
 	}
@@ -149,6 +153,14 @@ func wrapRequestCommandIntoInputData(data *commandspb.InputData, req *walletpb.S
 	case *walletpb.SubmitTransactionRequest_CancelTransfer:
 		data.Command = &commandspb.InputData_CancelTransfer{
 			CancelTransfer: req.GetCancelTransfer(),
+		}
+	case *walletpb.SubmitTransactionRequest_KeyRotateSubmission:
+		data.Command = &commandspb.InputData_KeyRotateSubmission{
+			KeyRotateSubmission: req.GetKeyRotateSubmission(),
+		}
+	case *walletpb.SubmitTransactionRequest_EthereumKeyRotateSubmission:
+		data.Command = &commandspb.InputData_EthereumKeyRotateSubmission{
+			EthereumKeyRotateSubmission: req.GetEthereumKeyRotateSubmission(),
 		}
 	default:
 		panic(fmt.Sprintf("command %v is not supported", cmd))
