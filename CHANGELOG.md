@@ -3,6 +3,7 @@
 ## Unreleased (0.14.0)
 
 ### 🚨 Breaking changes
+- [539](https://github.com/vegaprotocol/vegawallet/issues/539) - Add received at timestamp to transaction sign requests
 - [497](https://github.com/vegaprotocol/vegawallet/issues/497) - Add ability to confirm the signing of a transaction. To keep running the service with automatic consent, `--automatic-consent` flag is now required.
 
 ### 🗑️  Deprecation
