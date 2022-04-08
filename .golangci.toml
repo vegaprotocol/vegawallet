@@ -6,15 +6,25 @@ print-linter-name = true
 enable-all = true
 disable = [
     # To be investigate
+    "containedctx",
+    "contextcheck",
     "cyclop",
     "dupl",
+    "errchkjson",
     "exhaustivestruct",
     "funlen",
     "gocognit",
+    "ifshort",
+    "ireturn",
+    "maintidx",
     "nestif",
+    "nilnil",
+    "nolintlint",
     "paralleltest",
+    "predeclared",
     "revive",
     "tagliatelle",
+    "varnamelen",
     "wrapcheck",
     "wsl",
     # Deprecated linters
