@@ -838,10 +838,16 @@ func (s *Service) writeBadRequest(w http.ResponseWriter, errs commands.Errors) {
 func (s *Service) writeErrors(w http.ResponseWriter, statusCode int, errs commands.Errors) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
-	buf, _ := json.Marshal(ErrorsResponse{Errors: errs})
-	if _, err := w.Write(buf); err != nil {
-		s.log.Error("couldn't marshal error", zap.Error(errs))
+	buf, err := json.Marshal(ErrorsResponse{Errors: errs})
+	if err != nil {
+		s.log.Error("couldn't marshal errors", zap.Error(errs))
 		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	if _, err := w.Write(buf); err != nil {
+		s.log.Error("couldn't write errors", zap.Error(errs))
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 	s.log.Info(fmt.Sprintf("%d %s", statusCode, http.StatusText(statusCode)))
 }
