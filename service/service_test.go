@@ -11,6 +11,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
+
+	v1 "code.vegaprotocol.io/protos/vega/wallet/v1"
+
 	api "code.vegaprotocol.io/protos/vega/api/v1"
 	commandspb "code.vegaprotocol.io/protos/vega/commands/v1"
 	vgrand "code.vegaprotocol.io/shared/libs/rand"
@@ -39,18 +43,31 @@ type testService struct {
 	auth        *mocks.MockAuth
 }
 
-func getTestService(t *testing.T) *testService {
+func getTestService(t *testing.T, consentPolicy string) *testService {
 	t.Helper()
 
 	ctrl := gomock.NewController(t)
 	handler := mocks.NewMockWalletHandler(ctrl)
 	auth := mocks.NewMockAuth(ctrl)
 	nodeForward := mocks.NewMockNodeForward(ctrl)
+
+	pendingConsents := make(chan service.ConsentRequest, 1)
+
+	var policy service.Policy
+	switch consentPolicy {
+	case "automatic":
+		policy = service.NewAutomaticConsentPolicy()
+	case "manual":
+		policy = mocks.NewMockConsentPolicy(pendingConsents)
+	default:
+		t.Fatalf("unknown consent policy: %s", consentPolicy)
+	}
 	// no needs of the conf or path as we do not run an actual service
-	s, err := service.NewService(zap.NewNop(), &network.Network{}, handler, auth, nodeForward)
+	s, err := service.NewService(zap.NewNop(), &network.Network{}, handler, auth, nodeForward, policy)
 	if err != nil {
 		t.Fatalf("couldn't create service: %v", err)
 	}
+
 	return &testService{
 		Service:     s,
 		ctrl:        ctrl,
@@ -81,7 +98,10 @@ func TestService(t *testing.T) {
 	t.Run("taint fail invalid request", testServiceTaintFailInvalidRequest)
 	t.Run("update metadata", testServiceUpdateMetaOK)
 	t.Run("update metadata invalid request", testServiceUpdateMetaFailInvalidRequest)
-	t.Run("Signing transaction succeeds", testSigningTransactionSucceeds)
+	t.Run("Signing transaction automatically succeeds", testSigningTransactionSucceeds)
+	t.Run("Signing transaction manually succeeds", testAcceptSigningTransactionManuallySucceeds)
+	t.Run("using ask function in policy succeeds", testAskingConsentPolicySucceeds)
+	t.Run("Decline signing transaction manually succeeds", testDeclineSigningTransactionManuallySucceeds)
 	t.Run("Signing transaction with propagation succeeds", testSigningTransactionWithPropagationSucceeds)
 	t.Run("Signing transaction with failed propagation fails", testSigningTransactionWithFailedPropagationFails)
 	t.Run("Failed signing of transaction fails", testFailedTransactionSigningFails)
@@ -94,7 +114,7 @@ func TestService(t *testing.T) {
 }
 
 func testServiceCreateWalletOK(t *testing.T) {
-	s := getTestService(t)
+	s := getTestService(t, "automatic")
 	t.Cleanup(func() {
 		s.ctrl.Finish()
 	})
@@ -131,7 +151,7 @@ func testServiceCreateWalletFailInvalidRequest(t *testing.T) {
 
 	for _, tc := range tcs {
 		t.Run(tc.name, func(tt *testing.T) {
-			s := getTestService(tt)
+			s := getTestService(tt, "automatic")
 			tt.Cleanup(func() {
 				s.ctrl.Finish()
 			})
@@ -161,7 +181,7 @@ func testServiceImportWalletOK(t *testing.T) {
 
 	for _, tc := range tcs {
 		t.Run(tc.name, func(tt *testing.T) {
-			s := getTestService(tt)
+			s := getTestService(tt, "automatic")
 			tt.Cleanup(func() {
 				s.ctrl.Finish()
 			})
@@ -203,7 +223,7 @@ func testServiceImportWalletFailInvalidRequest(t *testing.T) {
 
 	for _, tc := range tcs {
 		t.Run(tc.name, func(tt *testing.T) {
-			s := getTestService(tt)
+			s := getTestService(tt, "automatic")
 			tt.Cleanup(func() {
 				s.ctrl.Finish()
 			})
@@ -218,7 +238,7 @@ func testServiceImportWalletFailInvalidRequest(t *testing.T) {
 }
 
 func testServiceLoginWalletOK(t *testing.T) {
-	s := getTestService(t)
+	s := getTestService(t, "automatic")
 	t.Cleanup(func() {
 		s.ctrl.Finish()
 	})
@@ -255,7 +275,7 @@ func testServiceLoginWalletFailInvalidRequest(t *testing.T) {
 
 	for _, tc := range tcs {
 		t.Run(tc.name, func(tt *testing.T) {
-			s := getTestService(tt)
+			s := getTestService(tt, "automatic")
 			t.Cleanup(func() {
 				s.ctrl.Finish()
 			})
@@ -274,7 +294,7 @@ func testServiceLoginWalletFailInvalidRequest(t *testing.T) {
 }
 
 func testServiceRevokeTokenOK(t *testing.T) {
-	s := getTestService(t)
+	s := getTestService(t, "automatic")
 	t.Cleanup(func() {
 		s.ctrl.Finish()
 	})
@@ -311,7 +331,7 @@ func testServiceRevokeTokenFailInvalidRequest(t *testing.T) {
 
 	for _, tc := range tcs {
 		t.Run(tc.name, func(tt *testing.T) {
-			s := getTestService(t)
+			s := getTestService(t, "automatic")
 			tt.Cleanup(func() {
 				s.ctrl.Finish()
 			})
@@ -326,7 +346,7 @@ func testServiceRevokeTokenFailInvalidRequest(t *testing.T) {
 }
 
 func testServiceGenKeypairOK(t *testing.T) {
-	s := getTestService(t)
+	s := getTestService(t, "automatic")
 	t.Cleanup(func() {
 		s.ctrl.Finish()
 	})
@@ -382,7 +402,7 @@ func testServiceGenKeypairFailInvalidRequest(t *testing.T) {
 
 	for _, tc := range tcs {
 		t.Run(tc.name, func(tt *testing.T) {
-			s := getTestService(tt)
+			s := getTestService(tt, "automatic")
 			tt.Cleanup(func() {
 				s.ctrl.Finish()
 			})
@@ -397,7 +417,7 @@ func testServiceGenKeypairFailInvalidRequest(t *testing.T) {
 }
 
 func testServiceListPublicKeysOK(t *testing.T) {
-	s := getTestService(t)
+	s := getTestService(t, "automatic")
 	t.Cleanup(func() {
 		s.ctrl.Finish()
 	})
@@ -434,7 +454,7 @@ func testServiceListPublicKeysFailInvalidRequest(t *testing.T) {
 
 	for _, tc := range tcs {
 		t.Run(tc.name, func(tt *testing.T) {
-			s := getTestService(tt)
+			s := getTestService(tt, "automatic")
 			tt.Cleanup(func() {
 				s.ctrl.Finish()
 			})
@@ -449,7 +469,7 @@ func testServiceListPublicKeysFailInvalidRequest(t *testing.T) {
 }
 
 func testServiceGetPublicKeyOK(t *testing.T) {
-	s := getTestService(t)
+	s := getTestService(t, "automatic")
 	defer s.ctrl.Finish()
 
 	// given
@@ -494,7 +514,7 @@ func testServiceGetPublicKeyFailInvalidRequest(t *testing.T) {
 
 	for _, tc := range tcs {
 		t.Run(tc.name, func(tt *testing.T) {
-			s := getTestService(tt)
+			s := getTestService(tt, "automatic")
 			tt.Cleanup(func() {
 				s.ctrl.Finish()
 			})
@@ -509,7 +529,7 @@ func testServiceGetPublicKeyFailInvalidRequest(t *testing.T) {
 }
 
 func testServiceGetPublicKeyFailKeyNotFound(t *testing.T) {
-	s := getTestService(t)
+	s := getTestService(t, "automatic")
 	defer s.ctrl.Finish()
 
 	// given
@@ -530,7 +550,7 @@ func testServiceGetPublicKeyFailKeyNotFound(t *testing.T) {
 }
 
 func testServiceGetPublicKeyFailMiscError(t *testing.T) {
-	s := getTestService(t)
+	s := getTestService(t, "automatic")
 	defer s.ctrl.Finish()
 
 	// given
@@ -551,7 +571,7 @@ func testServiceGetPublicKeyFailMiscError(t *testing.T) {
 }
 
 func testServiceTaintOK(t *testing.T) {
-	s := getTestService(t)
+	s := getTestService(t, "automatic")
 	defer s.ctrl.Finish()
 
 	// given
@@ -596,7 +616,7 @@ func testServiceTaintFailInvalidRequest(t *testing.T) {
 
 	for _, tc := range tcs {
 		t.Run(tc.name, func(tt *testing.T) {
-			s := getTestService(tt)
+			s := getTestService(tt, "automatic")
 			tt.Cleanup(func() {
 				s.ctrl.Finish()
 			})
@@ -611,7 +631,7 @@ func testServiceTaintFailInvalidRequest(t *testing.T) {
 }
 
 func testServiceUpdateMetaOK(t *testing.T) {
-	s := getTestService(t)
+	s := getTestService(t, "automatic")
 	defer s.ctrl.Finish()
 
 	// when
@@ -660,7 +680,7 @@ func testServiceUpdateMetaFailInvalidRequest(t *testing.T) {
 
 	for _, tc := range tcs {
 		t.Run(tc.name, func(tt *testing.T) {
-			s := getTestService(tt)
+			s := getTestService(tt, "automatic")
 			tt.Cleanup(func() {
 				s.ctrl.Finish()
 			})
@@ -675,7 +695,7 @@ func testServiceUpdateMetaFailInvalidRequest(t *testing.T) {
 }
 
 func testSigningTransactionSucceeds(t *testing.T) {
-	s := getTestService(t)
+	s := getTestService(t, "automatic")
 	defer s.ctrl.Finish()
 
 	// given
@@ -702,8 +722,75 @@ func testSigningTransactionSucceeds(t *testing.T) {
 	assert.Equal(t, http.StatusOK, statusCode)
 }
 
+func testAcceptSigningTransactionManuallySucceeds(t *testing.T) {
+	s := getTestService(t, "manual")
+	defer s.ctrl.Finish()
+
+	// given
+	walletName := vgrand.RandomStr(5)
+	token := vgrand.RandomStr(5)
+	headers := authHeaders(t, token)
+	pubKey := vgrand.RandomStr(5)
+	payload := fmt.Sprintf(`{"propagate": true, "pubKey": "%s", "orderCancellation": {}}`, pubKey)
+
+	// setup
+	s.auth.EXPECT().VerifyToken(token).Times(1).Return(walletName, nil)
+	s.handler.EXPECT().SignTx(gomock.Any(), gomock.Any(), gomock.Any()).Times(1).Return(&commandspb.Transaction{}, nil)
+	s.nodeForward.EXPECT().SendTx(gomock.Any(), gomock.Any(), api.SubmitTransactionRequest_TYPE_ASYNC, gomock.Any()).Times(1)
+	s.nodeForward.EXPECT().LastBlockHeightAndHash(gomock.Any()).Times(1).Return(&api.LastBlockHeightResponse{
+		Height:              42,
+		Hash:                "0292041e2f0cf741894503fb3ead4cb817bca2375e543aa70f7c4d938157b5a6",
+		SpamPowDifficulty:   2,
+		SpamPowHashFunction: "sha3_24_rounds",
+	}, 0, nil)
+	// when
+
+	statusCode, _ := serveHTTP(t, s, signTxRequest(t, payload, headers))
+	assert.Equal(t, http.StatusOK, statusCode)
+}
+
+func testAskingConsentPolicySucceeds(t *testing.T) {
+	txn := &v1.SubmitTransactionRequest{}
+
+	pendingConsents := make(chan service.ConsentRequest, 1)
+	p := service.NewExplicitConsentPolicy(pendingConsents)
+
+	go func() {
+		req := <-pendingConsents
+		st, _ := req.String()
+		d := service.ConsentConfirmation{TxStr: st, Decision: false}
+		req.Confirmations <- d
+	}()
+
+	answer, err := p.Ask(txn)
+	require.Nil(t, err)
+	require.False(t, answer)
+}
+
+func testDeclineSigningTransactionManuallySucceeds(t *testing.T) {
+	s := getTestService(t, "manual")
+	defer s.ctrl.Finish()
+
+	// given
+	token := vgrand.RandomStr(5)
+	walletName := vgrand.RandomStr(5)
+	headers := authHeaders(t, token)
+	pubKey := "toBeDeclined"
+	payload := fmt.Sprintf(`{"propagate": true, "pubKey": "%s", "orderCancellation": {}}`, pubKey)
+
+	// setup
+	s.auth.EXPECT().VerifyToken(token).Times(1).Return(walletName, nil)
+	s.handler.EXPECT().SignTx(walletName, gomock.Any(), gomock.Any()).Times(0).Return(&commandspb.Transaction{}, nil)
+	s.nodeForward.EXPECT().SendTx(gomock.Any(), gomock.Any(), api.SubmitTransactionRequest_TYPE_ASYNC, gomock.Any()).Times(0)
+	s.nodeForward.EXPECT().LastBlockHeightAndHash(gomock.Any()).Times(0)
+	// when
+
+	statusCode, _ := serveHTTP(t, s, signTxRequest(t, payload, headers))
+	assert.Equal(t, http.StatusUnauthorized, statusCode)
+}
+
 func testSigningTransactionWithPropagationSucceeds(t *testing.T) {
-	s := getTestService(t)
+	s := getTestService(t, "automatic")
 	defer s.ctrl.Finish()
 
 	// given
@@ -731,7 +818,7 @@ func testSigningTransactionWithPropagationSucceeds(t *testing.T) {
 }
 
 func testSigningTransactionWithFailedPropagationFails(t *testing.T) {
-	s := getTestService(t)
+	s := getTestService(t, "automatic")
 	defer s.ctrl.Finish()
 
 	// given
@@ -759,7 +846,7 @@ func testSigningTransactionWithFailedPropagationFails(t *testing.T) {
 }
 
 func testFailedTransactionSigningFails(t *testing.T) {
-	s := getTestService(t)
+	s := getTestService(t, "automatic")
 	defer s.ctrl.Finish()
 
 	// given
@@ -787,6 +874,8 @@ func testFailedTransactionSigningFails(t *testing.T) {
 }
 
 func testSigningTransactionWithInvalidRequestFails(t *testing.T) {
+	token := vgrand.RandomStr(5)
+
 	tcs := []struct {
 		name    string
 		headers map[string]string
@@ -802,29 +891,30 @@ func testSigningTransactionWithInvalidRequestFails(t *testing.T) {
 			payload: `{"propagate": true, "pubKey": "0xCAFEDUDE", "orderCancellation": {}}`,
 		}, {
 			name:    "misspelled pubKey property",
-			headers: authHeaders(t, vgrand.RandomStr(5)),
+			headers: authHeaders(t, token),
 			payload: `{"propagate": true, "puey": "0xCAFEDUDE", "orderCancellation": {}}`,
 		}, {
 			name:    "without command",
-			headers: authHeaders(t, vgrand.RandomStr(5)),
+			headers: authHeaders(t, token),
 			payload: `{"propagate": true, "pubKey": "0xCAFEDUDE", "robMoney": {}}`,
 		}, {
 			name:    "with unknown command",
-			headers: authHeaders(t, vgrand.RandomStr(5)),
+			headers: authHeaders(t, token),
 			payload: `{"propagate": true, "pubKey": "0xCAFEDUDE"}`,
 		},
 	}
 
 	for _, tc := range tcs {
 		t.Run(tc.name, func(tt *testing.T) {
-			s := getTestService(tt)
+			s := getTestService(tt, "automatic")
 			tt.Cleanup(func() {
 				s.ctrl.Finish()
 			})
-
+			if tc.name != "no header" && tc.name != "no token" {
+				s.auth.EXPECT().VerifyToken(token).Times(1)
+			}
 			// when
 			statusCode, _ := serveHTTP(tt, s, signTxRequest(tt, tc.payload, tc.headers))
-
 			// then
 			assert.Equal(tt, http.StatusBadRequest, statusCode)
 		})
@@ -832,7 +922,7 @@ func testSigningTransactionWithInvalidRequestFails(t *testing.T) {
 }
 
 func testSigningAnythingSucceeds(t *testing.T) {
-	s := getTestService(t)
+	s := getTestService(t, "automatic")
 	defer s.ctrl.Finish()
 
 	// given
@@ -880,7 +970,7 @@ func testSigningAnyDataWithInvalidRequestFails(t *testing.T) {
 
 	for _, tc := range tcs {
 		t.Run(tc.name, func(tt *testing.T) {
-			s := getTestService(tt)
+			s := getTestService(tt, "automatic")
 			tt.Cleanup(func() {
 				s.ctrl.Finish()
 			})
@@ -895,7 +985,7 @@ func testSigningAnyDataWithInvalidRequestFails(t *testing.T) {
 }
 
 func testVerifyingAnythingSucceeds(t *testing.T) {
-	s := getTestService(t)
+	s := getTestService(t, "automatic")
 	defer s.ctrl.Finish()
 
 	// given
@@ -919,7 +1009,7 @@ func testVerifyingAnythingSucceeds(t *testing.T) {
 }
 
 func testVerifyingAnythingFails(t *testing.T) {
-	s := getTestService(t)
+	s := getTestService(t, "automatic")
 	defer s.ctrl.Finish()
 
 	// given
@@ -961,7 +1051,7 @@ func testVerifyingAnyDataWithInvalidRequestFails(t *testing.T) {
 
 	for _, tc := range tcs {
 		t.Run(tc.name, func(tt *testing.T) {
-			s := getTestService(tt)
+			s := getTestService(tt, "automatic")
 			tt.Cleanup(func() {
 				s.ctrl.Finish()
 			})

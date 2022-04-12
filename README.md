@@ -4,8 +4,8 @@
 
 ## Documentation
 
-#### [Getting started with Vega Wallet][vega-documentation-website-create-wallet]
-Learn how to install and run the stable version of Vega Wallet.
+#### [Getting started with the CLI app for Vega Wallet][vega-documentation-website-create-wallet]
+Learn how to install and run the stable version of the Vega Wallet CLI app.
 
 #### [Vega documentation][vega-documentation-website]
 Learn more about how Vega works, and explore sample scripts for API trading
@@ -18,7 +18,9 @@ If you want to know more about Vega Wallet, how it works and how to use it, refe
 
 ### I don't know how to set up a Vega Wallet...
 
-If you want to know more about how to create and use a Vega Wallet, refer to the page ["Create a Vega Wallet"][vega-documentation-website-create-wallet].
+If you want to know more about how to create and use a Vega Wallet with the CLI app, refer to the page ["Create a Vega Wallet"][vega-documentation-website-create-wallet].
+
+If you'd prefer to use a visual interface to interact with a Vega Wallet, you can use the Vega Wallet desktop app. Refer to the [desktop app documentation][vega-wallet-desktop-getting-started].  
 
 ### I want to use the latest stable version...
 
@@ -98,7 +100,7 @@ Using the API is documented [here](service/README.md).
 
 ## Support
 
-#### [Nolt][nolt]
+#### [Feedback][feedback]
 Raise issues and see what others have raised.
 
 #### [Discord][discord]
@@ -112,9 +114,10 @@ generally.
 Read more at [https://vega.xyz][vega-website].
 
 [vega-website]: https://vega.xyz
-[vega-documentation-website]: https://docs.fairground.vega.xyz
-[vega-documentation-website-create-wallet]: https://docs.fairground.vega.xyz/docs/vega-wallet/create-wallet/
-[vega-wallet-documentation-website]: https://docs.fairground.vega.xyz/docs/vega-wallet/
-[nolt]: https://vega-testnet.nolt.io/
+[vega-documentation-website]: https://docs.vega.xyz
+[vega-documentation-website-create-wallet]: https://docs.vega.xyz/docs/tools/vega-wallet/CLI-wallet/create-wallet
+[vega-wallet-documentation-website]: https://docs.vega.xyz/docs/tools/vega-wallet/
+[vega-wallet-desktop-getting-started]: https://docs.vega.xyz/docs/tools/vega-wallet/desktop-app/latest/getting-started
+[feedback]: https://github.com/vegaprotocol/feedback/discussions/
 [discord]: https://vega.xyz/discord
 [github-releases]: https://github.com/vegaprotocol/vegawallet/releases

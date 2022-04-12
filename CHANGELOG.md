@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased (0.14.0)
+## Unreleased (0.15.0)
 
 ### 🚨 Breaking changes
 - [](https://github.com/vegaprotocol/vegawallet/pull/) -
@@ -17,6 +17,27 @@
 ### 🐛 Fixes
 - [](https://github.com/vegaprotocol/vegawallet/pull/) -
 
+
+## 0.14.0
+
+### 🚨 Breaking changes
+- [539](https://github.com/vegaprotocol/vegawallet/issues/539) - Add received at timestamp to transaction sign requests
+- [497](https://github.com/vegaprotocol/vegawallet/issues/497) - Add ability to confirm the signing of a transaction. To keep running the service with automatic consent, `--automatic-consent` flag is now required.
+
+### 🗑️  Deprecation
+- [](https://github.com/vegaprotocol/vegawallet/pull/) -
+
+### 🛠  Improvements
+- [](https://github.com/vegaprotocol/vegawallet/pull/) -
+
+### 🔥 Removal
+- [](https://github.com/vegaprotocol/vegawallet/pull/) -
+
+### 🐛 Fixes
+- [521](https://github.com/vegaprotocol/vegawallet/pull/521) - Update `protos` repository to get last validation updates on commands
+- [523](https://github.com/vegaprotocol/vegawallet/pull/521) - Add link in `README` to direct people to desktop wallet app
+- [529](https://github.com/vegaprotocol/vegawallet/pull/529) - Ensure log files can be created on Windows.
+- [536](https://github.com/vegaprotocol/vegawallet/pull/536) - Docs: replace link for providing feedback
 
 ## 0.13.2
 

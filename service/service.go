@@ -37,6 +37,7 @@ type Service struct {
 	handler     WalletHandler
 	auth        Auth
 	nodeForward NodeForward
+	policy      Policy
 }
 
 // CreateWalletRequest describes the request for CreateWallet.
@@ -410,7 +411,7 @@ type NodeForward interface {
 	LastBlockHeightAndHash(context.Context) (*api.LastBlockHeightResponse, int, error)
 }
 
-func NewService(log *zap.Logger, net *network.Network, h WalletHandler, a Auth, n NodeForward) (*Service, error) {
+func NewService(log *zap.Logger, net *network.Network, h WalletHandler, a Auth, n NodeForward, policy Policy) (*Service, error) {
 	s := &Service{
 		Router:      httprouter.New(),
 		log:         log,
@@ -418,6 +419,7 @@ func NewService(log *zap.Logger, net *network.Network, h WalletHandler, a Auth, 
 		auth:        a,
 		nodeForward: n,
 		network:     net,
+		policy:      policy,
 	}
 
 	s.server = &http.Server{
@@ -720,21 +722,33 @@ func (s *Service) SignTx(token string, w http.ResponseWriter, r *http.Request, p
 func (s *Service) signTx(token string, w http.ResponseWriter, r *http.Request, _ httprouter.Params, ty api.SubmitTransactionRequest_Type) {
 	defer r.Body.Close()
 
+	name, err := s.auth.VerifyToken(token)
+	if err != nil {
+		s.writeForbiddenError(w, err)
+		return
+	}
+
 	req, errs := ParseSubmitTransactionRequest(r)
 	if !errs.Empty() {
 		s.writeBadRequest(w, errs)
 		return
 	}
 
+	approved, err := s.policy.Ask(req)
+	if err != nil {
+		s.log.Panic("failed getting transaction sign request answer", zap.Error(err))
+	}
+
+	if !approved {
+		s.log.Info("user rejected transaction signing request", zap.Any("request", req))
+		s.writeError(w, ErrRejectedSignRequest, http.StatusUnauthorized)
+		return
+	}
+	s.log.Info("user approved transaction signing request", zap.Any("request", req))
+
 	blockData, cltIdx, err := s.nodeForward.LastBlockHeightAndHash(r.Context())
 	if err != nil {
 		s.writeInternalError(w, ErrCouldNotGetBlockHeight)
-		return
-	}
-
-	name, err := s.auth.VerifyToken(token)
-	if err != nil {
-		s.writeForbiddenError(w, err)
 		return
 	}
 
@@ -824,10 +838,16 @@ func (s *Service) writeBadRequest(w http.ResponseWriter, errs commands.Errors) {
 func (s *Service) writeErrors(w http.ResponseWriter, statusCode int, errs commands.Errors) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
-	buf, _ := json.Marshal(ErrorsResponse{Errors: errs})
-	if _, err := w.Write(buf); err != nil {
-		s.log.Error("couldn't marshal error", zap.Error(errs))
+	buf, err := json.Marshal(ErrorsResponse{Errors: errs})
+	if err != nil {
+		s.log.Error("couldn't marshal errors", zap.Error(errs))
 		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	if _, err := w.Write(buf); err != nil {
+		s.log.Error("couldn't write errors", zap.Error(errs))
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 	s.log.Info(fmt.Sprintf("%d %s", statusCode, http.StatusText(statusCode)))
 }
