@@ -1,6 +1,24 @@
 # Changelog
 
-## Unreleased (0.14.0)
+## Unreleased (0.15.0)
+
+### 🚨 Breaking changes
+- [](https://github.com/vegaprotocol/vegawallet/pull/) -
+
+### 🗑️  Deprecation
+- [](https://github.com/vegaprotocol/vegawallet/pull/) -
+
+### 🛠  Improvements
+- [](https://github.com/vegaprotocol/vegawallet/pull/) -
+
+### 🔥 Removal
+- [](https://github.com/vegaprotocol/vegawallet/pull/) -
+
+### 🐛 Fixes
+- [](https://github.com/vegaprotocol/vegawallet/pull/) -
+
+
+## 0.14.0
 
 ### 🚨 Breaking changes
 - [539](https://github.com/vegaprotocol/vegawallet/issues/539) - Add received at timestamp to transaction sign requests
