@@ -17,6 +17,11 @@
 ### 🐛 Fixes
 - [](https://github.com/vegaprotocol/vegawallet/pull/) -
 
+## 0.14.1
+
+### 🐛 Fixes
+- [542](https://github.com/vegaprotocol/vegawallet/pull/542) - Update `protos` to get last version of governance schema
+
 
 ## 0.14.0
 
