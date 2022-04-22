@@ -16,6 +16,7 @@ import (
 	commandspb "code.vegaprotocol.io/protos/vega/commands/v1"
 	walletpb "code.vegaprotocol.io/protos/vega/wallet/v1"
 	vgcrypto "code.vegaprotocol.io/shared/libs/crypto"
+	"code.vegaprotocol.io/vegawallet/cmd/printer"
 	wcommands "code.vegaprotocol.io/vegawallet/commands"
 	"code.vegaprotocol.io/vegawallet/network"
 	"code.vegaprotocol.io/vegawallet/version"
@@ -791,6 +792,11 @@ func (s *Service) signTx(token string, w http.ResponseWriter, r *http.Request, _
 			s.writeInternalError(w, err)
 		}
 		return
+	}
+
+	if s.policy.NeedsInteractiveOutput() {
+		p := printer.NewInteractivePrinter(w)
+		p.CheckMark().InfoText("Transaction sent:").SuccessText(txHash).NextLine()
 	}
 
 	s.writeSuccess(w, struct {

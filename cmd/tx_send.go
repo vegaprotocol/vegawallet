@@ -204,6 +204,9 @@ func SendTx(w io.Writer, rf *RootFlags, req *SendTxRequest) error {
 	}
 
 	log.Info("transaction successfully sent", zap.String("hash", txHash))
+	if rf.Output == flags.InteractiveOutput {
+		p.CheckMark().InfoText("Transaction sent:").SuccessText(txHash).NextLine()
+	}
 
 	return nil
 }
