@@ -21,3 +21,7 @@ func (p *MockConsentPolicy) Ask(tx *v1.SubmitTransactionRequest) (bool, error) {
 	}
 	return true, nil
 }
+
+func (p *MockConsentPolicy) NeedsInteractiveOutput() bool {
+	return true
+}

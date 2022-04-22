@@ -36,6 +36,7 @@ func (r *ConsentRequest) GetTxID() string {
 
 type Policy interface {
 	Ask(tx *v1.SubmitTransactionRequest) (bool, error)
+	NeedsInteractiveOutput() bool
 }
 
 type AutomaticConsentPolicy struct{}
@@ -46,6 +47,10 @@ func NewAutomaticConsentPolicy() Policy {
 
 func (p *AutomaticConsentPolicy) Ask(_ *v1.SubmitTransactionRequest) (bool, error) {
 	return true, nil
+}
+
+func (p *AutomaticConsentPolicy) NeedsInteractiveOutput() bool {
+	return false
 }
 
 type ExplicitConsentPolicy struct {
@@ -66,4 +71,8 @@ func (p *ExplicitConsentPolicy) Ask(tx *v1.SubmitTransactionRequest) (bool, erro
 
 	c := <-confirmations
 	return c.Decision, nil
+}
+
+func (p *ExplicitConsentPolicy) NeedsInteractiveOutput() bool {
+	return true
 }
