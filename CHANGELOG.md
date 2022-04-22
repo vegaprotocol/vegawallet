@@ -9,13 +9,18 @@
 - [](https://github.com/vegaprotocol/vegawallet/pull/) -
 
 ### 🛠  Improvements
-- [544](https://github.com/vegaprotocol/vegawallet/issues/544) - Display transaction hash after sending transaction
+- [](https://github.com/vegaprotocol/vegawallet/pull/) -
 
 ### 🔥 Removal
 - [](https://github.com/vegaprotocol/vegawallet/pull/) -
 
 ### 🐛 Fixes
 - [](https://github.com/vegaprotocol/vegawallet/pull/) -
+
+## 0.14.2
+
+### 🛠  Improvements
+- [544](https://github.com/vegaprotocol/vegawallet/issues/544) - Display transaction hash after sending transaction
 
 ## 0.14.1
 
