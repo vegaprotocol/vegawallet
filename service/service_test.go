@@ -52,13 +52,14 @@ func getTestService(t *testing.T, consentPolicy string) *testService {
 	nodeForward := mocks.NewMockNodeForward(ctrl)
 
 	pendingConsents := make(chan service.ConsentRequest, 1)
+	sentTxs := make(chan service.SentTransaction, 1)
 
 	var policy service.Policy
 	switch consentPolicy {
 	case "automatic":
 		policy = service.NewAutomaticConsentPolicy()
 	case "manual":
-		policy = mocks.NewMockConsentPolicy(pendingConsents)
+		policy = mocks.NewMockConsentPolicy(pendingConsents, sentTxs)
 	default:
 		t.Fatalf("unknown consent policy: %s", consentPolicy)
 	}
@@ -98,8 +99,7 @@ func TestService(t *testing.T) {
 	t.Run("taint fail invalid request", testServiceTaintFailInvalidRequest)
 	t.Run("update metadata", testServiceUpdateMetaOK)
 	t.Run("update metadata invalid request", testServiceUpdateMetaFailInvalidRequest)
-	t.Run("Signing transaction automatically succeeds", testSigningTransactionSucceeds)
-	t.Run("Signing transaction manually succeeds", testAcceptSigningTransactionManuallySucceeds)
+	t.Run("Signing transaction succeeds", testAcceptSigningTransactionSucceeds)
 	t.Run("using ask function in policy succeeds", testAskingConsentPolicySucceeds)
 	t.Run("Decline signing transaction manually succeeds", testDeclineSigningTransactionManuallySucceeds)
 	t.Run("Signing transaction with propagation succeeds", testSigningTransactionWithPropagationSucceeds)
@@ -694,35 +694,7 @@ func testServiceUpdateMetaFailInvalidRequest(t *testing.T) {
 	}
 }
 
-func testSigningTransactionSucceeds(t *testing.T) {
-	s := getTestService(t, "automatic")
-	defer s.ctrl.Finish()
-
-	// given
-	walletName := vgrand.RandomStr(5)
-	token := vgrand.RandomStr(5)
-	headers := authHeaders(t, token)
-	payload := fmt.Sprintf(`{"pubKey": "%s", "orderCancellation": {}}`, vgrand.RandomStr(5))
-
-	// setup
-	s.auth.EXPECT().VerifyToken(token).Times(1).Return(walletName, nil)
-	s.handler.EXPECT().SignTx(walletName, gomock.Any(), gomock.Any()).Times(1).Return(&commandspb.Transaction{}, nil)
-	s.nodeForward.EXPECT().SendTx(gomock.Any(), &commandspb.Transaction{}, api.SubmitTransactionRequest_TYPE_ASYNC, gomock.Any()).Times(0)
-	s.nodeForward.EXPECT().LastBlockHeightAndHash(gomock.Any()).Times(1).Return(&api.LastBlockHeightResponse{
-		Height:              42,
-		Hash:                "0292041e2f0cf741894503fb3ead4cb817bca2375e543aa70f7c4d938157b5a6",
-		SpamPowDifficulty:   2,
-		SpamPowHashFunction: "sha3_24_rounds",
-	}, 0, nil)
-
-	// when
-	statusCode, _ := serveHTTP(t, s, signTxRequest(t, payload, headers))
-
-	// then
-	assert.Equal(t, http.StatusOK, statusCode)
-}
-
-func testAcceptSigningTransactionManuallySucceeds(t *testing.T) {
+func testAcceptSigningTransactionSucceeds(t *testing.T) {
 	s := getTestService(t, "manual")
 	defer s.ctrl.Finish()
 
@@ -731,7 +703,7 @@ func testAcceptSigningTransactionManuallySucceeds(t *testing.T) {
 	token := vgrand.RandomStr(5)
 	headers := authHeaders(t, token)
 	pubKey := vgrand.RandomStr(5)
-	payload := fmt.Sprintf(`{"propagate": true, "pubKey": "%s", "orderCancellation": {}}`, pubKey)
+	payload := fmt.Sprintf(`{"pubKey": "%s", "orderCancellation": {}}`, pubKey)
 
 	// setup
 	s.auth.EXPECT().VerifyToken(token).Times(1).Return(walletName, nil)
@@ -753,7 +725,8 @@ func testAskingConsentPolicySucceeds(t *testing.T) {
 	txn := &v1.SubmitTransactionRequest{}
 
 	pendingConsents := make(chan service.ConsentRequest, 1)
-	p := service.NewExplicitConsentPolicy(pendingConsents)
+	sentTxs := make(chan service.SentTransaction, 1)
+	p := service.NewExplicitConsentPolicy(pendingConsents, sentTxs)
 
 	go func() {
 		req := <-pendingConsents

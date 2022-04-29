@@ -15,12 +15,12 @@
 - [](https://github.com/vegaprotocol/vegawallet/pull/) -
 
 ### 🐛 Fixes
-- [](https://github.com/vegaprotocol/vegawallet/pull/) -
+- [548](https://github.com/vegaprotocol/vegawallet/pull/548) - Printer utility shouldn't write in service response
 
 ## 0.14.2
 
 ### 🛠  Improvements
-- [544](https://github.com/vegaprotocol/vegawallet/issues/544) - Display transaction hash after sending transaction
+- [544](https://github.com/vegaprotocol/vegagwallet/issues/544) - Display transaction hash after sending transaction
 
 ## 0.14.1
 

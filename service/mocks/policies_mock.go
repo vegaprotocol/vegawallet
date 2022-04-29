@@ -7,11 +7,17 @@ import (
 
 type MockConsentPolicy struct {
 	pendingEvents chan service.ConsentRequest
+	sentTxs       chan service.SentTransaction
 }
 
-func NewMockConsentPolicy(pending chan service.ConsentRequest) service.Policy {
+func (p *MockConsentPolicy) Report(tx service.SentTransaction) {
+	p.sentTxs <- tx
+}
+
+func NewMockConsentPolicy(pending chan service.ConsentRequest, sentTxs chan service.SentTransaction) *MockConsentPolicy {
 	return &MockConsentPolicy{
 		pendingEvents: pending,
+		sentTxs:       sentTxs,
 	}
 }
 

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	commandspb "code.vegaprotocol.io/protos/vega/commands/v1"
 	v1 "code.vegaprotocol.io/protos/vega/wallet/v1"
 	"github.com/golang/protobuf/jsonpb"
 )
@@ -34,8 +35,16 @@ func (r *ConsentRequest) GetTxID() string {
 	return fmt.Sprintf("%x", h.Sum(nil))
 }
 
+type SentTransaction struct {
+	TxHash       string
+	Tx           *commandspb.Transaction
+	Error        error
+	ErrorDetails []string
+}
+
 type Policy interface {
 	Ask(tx *v1.SubmitTransactionRequest) (bool, error)
+	Report(tx SentTransaction)
 	NeedsInteractiveOutput() bool
 }
 
@@ -49,17 +58,23 @@ func (p *AutomaticConsentPolicy) Ask(_ *v1.SubmitTransactionRequest) (bool, erro
 	return true, nil
 }
 
+func (p *AutomaticConsentPolicy) Report(_ SentTransaction) {
+	// Nothing to report as we expect this policy to be non-interactive.
+}
+
 func (p *AutomaticConsentPolicy) NeedsInteractiveOutput() bool {
 	return false
 }
 
 type ExplicitConsentPolicy struct {
 	pendingEvents chan ConsentRequest
+	sentTxs       chan SentTransaction
 }
 
-func NewExplicitConsentPolicy(pending chan ConsentRequest) Policy {
+func NewExplicitConsentPolicy(pending chan ConsentRequest, sentTxs chan SentTransaction) Policy {
 	return &ExplicitConsentPolicy{
 		pendingEvents: pending,
+		sentTxs:       sentTxs,
 	}
 }
 
@@ -71,6 +86,10 @@ func (p *ExplicitConsentPolicy) Ask(tx *v1.SubmitTransactionRequest) (bool, erro
 
 	c := <-confirmations
 	return c.Decision, nil
+}
+
+func (p *ExplicitConsentPolicy) Report(tx SentTransaction) {
+	p.sentTxs <- tx
 }
 
 func (p *ExplicitConsentPolicy) NeedsInteractiveOutput() bool {

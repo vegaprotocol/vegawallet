@@ -16,7 +16,6 @@ import (
 	commandspb "code.vegaprotocol.io/protos/vega/commands/v1"
 	walletpb "code.vegaprotocol.io/protos/vega/wallet/v1"
 	vgcrypto "code.vegaprotocol.io/shared/libs/crypto"
-	"code.vegaprotocol.io/vegawallet/cmd/printer"
 	wcommands "code.vegaprotocol.io/vegawallet/commands"
 	"code.vegaprotocol.io/vegawallet/network"
 	"code.vegaprotocol.io/vegawallet/version"
@@ -325,7 +324,9 @@ func ParseVerifyAnyRequest(r *http.Request) (*VerifyAnyRequest, commands.Errors)
 func ParseSubmitTransactionRequest(r *http.Request) (*walletpb.SubmitTransactionRequest, commands.Errors) {
 	errs := commands.NewErrors()
 
-	req := &walletpb.SubmitTransactionRequest{}
+	req := &walletpb.SubmitTransactionRequest{
+		Propagate: true,
+	}
 	if err := jsonpb.Unmarshal(r.Body, req); err != nil {
 		return nil, errs.FinalAdd(err)
 	}
@@ -759,11 +760,6 @@ func (s *Service) signTx(token string, w http.ResponseWriter, r *http.Request, _
 		return
 	}
 
-	if !req.Propagate {
-		s.writeSuccess(w, nil)
-		return
-	}
-
 	// generate proof of work for the transaction
 	tid := vgcrypto.RandomHash()
 	powNonce, _, err := vgcrypto.PoW(blockData.Hash, tid, uint(blockData.SpamPowDifficulty), vgcrypto.Sha3)
@@ -787,17 +783,26 @@ func (s *Service) signTx(token string, w http.ResponseWriter, r *http.Request, _
 				}
 				details = append(details, v.Message)
 			}
+			s.policy.Report(SentTransaction{
+				Tx:           tx,
+				Error:        err,
+				ErrorDetails: details,
+			})
 			s.writeError(w, newErrorWithDetails(err.Error(), details), http.StatusInternalServerError)
 		} else {
+			s.policy.Report(SentTransaction{
+				Tx:    tx,
+				Error: err,
+			})
 			s.writeInternalError(w, err)
 		}
 		return
 	}
 
-	if s.policy.NeedsInteractiveOutput() {
-		p := printer.NewInteractivePrinter(w)
-		p.CheckMark().InfoText("Transaction sent:").SuccessText(txHash).NextLine()
-	}
+	s.policy.Report(SentTransaction{
+		TxHash: txHash,
+		Tx:     tx,
+	})
 
 	s.writeSuccess(w, struct {
 		TxHash string                  `json:"txHash"`
