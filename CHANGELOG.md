@@ -9,7 +9,7 @@
 - [](https://github.com/vegaprotocol/vegawallet/pull/) -
 
 ### 🛠  Improvements
-- [](https://github.com/vegaprotocol/vegawallet/pull/) -
+- [551](https://github.com/vegaprotocol/vegawallet/pull/551) - Enable system-tests with Vegacapsule
 
 ### 🔥 Removal
 - [](https://github.com/vegaprotocol/vegawallet/pull/) -
