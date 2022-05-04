@@ -735,7 +735,7 @@ func testAskingConsentPolicySucceeds(t *testing.T) {
 		req.Confirmations <- d
 	}()
 
-	answer, err := p.Ask(txn)
+	answer, err := p.Ask(txn, "testTx", time.Now())
 	require.Nil(t, err)
 	require.False(t, answer)
 }
