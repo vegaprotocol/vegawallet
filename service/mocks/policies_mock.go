@@ -3,6 +3,7 @@ package mocks
 import (
 	v1 "code.vegaprotocol.io/protos/vega/wallet/v1"
 	"code.vegaprotocol.io/vegawallet/service"
+	"time"
 )
 
 type MockConsentPolicy struct {
@@ -21,7 +22,7 @@ func NewMockConsentPolicy(pending chan service.ConsentRequest, sentTxs chan serv
 	}
 }
 
-func (p *MockConsentPolicy) Ask(tx *v1.SubmitTransactionRequest) (bool, error) {
+func (p *MockConsentPolicy) Ask(tx *v1.SubmitTransactionRequest, txID string, receivedAt time.Time) (bool, error) {
 	if tx.PubKey == "toBeDeclined" {
 		return false, nil
 	}

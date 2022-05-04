@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"time"
 
 	"code.vegaprotocol.io/protos/commands"
 	typespb "code.vegaprotocol.io/protos/vega"
@@ -738,8 +739,8 @@ func (s *Service) signTx(token string, w http.ResponseWriter, r *http.Request, _
 	}
 
 	txID := vgrand.RandomStr(20)
-
-	approved, err := s.policy.Ask(req, txID)
+	receivedAt := time.Now()
+	approved, err := s.policy.Ask(req, txID, receivedAt)
 	if err != nil {
 		s.log.Panic("failed getting transaction sign request answer", zap.Error(err))
 	}
@@ -788,6 +789,7 @@ func (s *Service) signTx(token string, w http.ResponseWriter, r *http.Request, _
 			}
 			s.policy.Report(SentTransaction{
 				Tx:           tx,
+				ReceivedAt:   receivedAt,
 				TxID:         txID,
 				Error:        err,
 				ErrorDetails: details,
@@ -795,9 +797,10 @@ func (s *Service) signTx(token string, w http.ResponseWriter, r *http.Request, _
 			s.writeError(w, newErrorWithDetails(err.Error(), details), http.StatusInternalServerError)
 		} else {
 			s.policy.Report(SentTransaction{
-				Tx:    tx,
-				TxID:  txID,
-				Error: err,
+				Tx:         tx,
+				ReceivedAt: receivedAt,
+				TxID:       txID,
+				Error:      err,
 			})
 			s.writeInternalError(w, err)
 		}
@@ -805,19 +808,22 @@ func (s *Service) signTx(token string, w http.ResponseWriter, r *http.Request, _
 	}
 
 	s.policy.Report(SentTransaction{
-		TxHash: txHash,
-		TxID:   txID,
-		Tx:     tx,
+		TxHash:     txHash,
+		ReceivedAt: receivedAt,
+		TxID:       txID,
+		Tx:         tx,
 	})
 
 	s.writeSuccess(w, struct {
-		TxHash string                  `json:"txHash"`
-		TxID   string                  `json:"txId"`
-		Tx     *commandspb.Transaction `json:"tx"`
+		TxHash     string                  `json:"txHash"`
+		ReceivedAt time.Time               `json:"receivedAt"`
+		TxID       string                  `json:"txId"`
+		Tx         *commandspb.Transaction `json:"tx"`
 	}{
-		TxHash: txHash,
-		TxID:   txID,
-		Tx:     tx,
+		TxHash:     txHash,
+		ReceivedAt: receivedAt,
+		TxID:       txID,
+		Tx:         tx,
 	})
 }
 
