@@ -1,9 +1,10 @@
 package mocks
 
 import (
+	"time"
+
 	v1 "code.vegaprotocol.io/protos/vega/wallet/v1"
 	"code.vegaprotocol.io/vegawallet/service"
-	"time"
 )
 
 type MockConsentPolicy struct {

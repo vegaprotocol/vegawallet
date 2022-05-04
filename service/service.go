@@ -1,7 +1,6 @@
 package service
 
 import (
-	vgrand "code.vegaprotocol.io/shared/libs/rand"
 	"context"
 	"encoding/base64"
 	"encoding/hex"
@@ -11,6 +10,8 @@ import (
 	"io/ioutil"
 	"net/http"
 	"time"
+
+	vgrand "code.vegaprotocol.io/shared/libs/rand"
 
 	"code.vegaprotocol.io/protos/commands"
 	typespb "code.vegaprotocol.io/protos/vega"
