@@ -812,7 +812,7 @@ func (s *Service) signTx(token string, w http.ResponseWriter, r *http.Request, _
 
 	s.writeSuccess(w, struct {
 		TxHash string                  `json:"txHash"`
-		TxID   string                  `json:"txID"`
+		TxID   string                  `json:"txId"`
 		Tx     *commandspb.Transaction `json:"tx"`
 	}{
 		TxHash: txHash,
