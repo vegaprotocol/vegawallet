@@ -1,6 +1,7 @@
 package service
 
 import (
+	vgrand "code.vegaprotocol.io/shared/libs/rand"
 	"context"
 	"encoding/base64"
 	"encoding/hex"
@@ -736,7 +737,9 @@ func (s *Service) signTx(token string, w http.ResponseWriter, r *http.Request, _
 		return
 	}
 
-	approved, err := s.policy.Ask(req)
+	txID := vgrand.RandomStr(20)
+
+	approved, err := s.policy.Ask(req, txID)
 	if err != nil {
 		s.log.Panic("failed getting transaction sign request answer", zap.Error(err))
 	}
@@ -785,6 +788,7 @@ func (s *Service) signTx(token string, w http.ResponseWriter, r *http.Request, _
 			}
 			s.policy.Report(SentTransaction{
 				Tx:           tx,
+				TxID:         txID,
 				Error:        err,
 				ErrorDetails: details,
 			})
@@ -792,6 +796,7 @@ func (s *Service) signTx(token string, w http.ResponseWriter, r *http.Request, _
 		} else {
 			s.policy.Report(SentTransaction{
 				Tx:    tx,
+				TxID:  txID,
 				Error: err,
 			})
 			s.writeInternalError(w, err)
@@ -801,14 +806,17 @@ func (s *Service) signTx(token string, w http.ResponseWriter, r *http.Request, _
 
 	s.policy.Report(SentTransaction{
 		TxHash: txHash,
+		TxID:   txID,
 		Tx:     tx,
 	})
 
 	s.writeSuccess(w, struct {
 		TxHash string                  `json:"txHash"`
+		TxID   string                  `json:"txID"`
 		Tx     *commandspb.Transaction `json:"tx"`
 	}{
 		TxHash: txHash,
+		TxID:   txID,
 		Tx:     tx,
 	})
 }

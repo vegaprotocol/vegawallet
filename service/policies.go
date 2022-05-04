@@ -28,7 +28,7 @@ func (r *ConsentRequest) String() (string, error) {
 	return marshalledRequest, err
 }
 
-func (r *ConsentRequest) GetTxID() string {
+func (r *ConsentRequest) GenerateTxID() string {
 	h := sha256.New()
 	h.Write([]byte(fmt.Sprintf("%s%v%t", r.Tx.PubKey, r.Tx.Command, r.Tx.Propagate)))
 
@@ -37,13 +37,14 @@ func (r *ConsentRequest) GetTxID() string {
 
 type SentTransaction struct {
 	TxHash       string
+	TxID         string
 	Tx           *commandspb.Transaction
 	Error        error
 	ErrorDetails []string
 }
 
 type Policy interface {
-	Ask(tx *v1.SubmitTransactionRequest) (bool, error)
+	Ask(tx *v1.SubmitTransactionRequest, txID string) (bool, error)
 	Report(tx SentTransaction)
 	NeedsInteractiveOutput() bool
 }
@@ -54,7 +55,7 @@ func NewAutomaticConsentPolicy() Policy {
 	return &AutomaticConsentPolicy{}
 }
 
-func (p *AutomaticConsentPolicy) Ask(_ *v1.SubmitTransactionRequest) (bool, error) {
+func (p *AutomaticConsentPolicy) Ask(_ *v1.SubmitTransactionRequest, txID string) (bool, error) {
 	return true, nil
 }
 
@@ -78,10 +79,10 @@ func NewExplicitConsentPolicy(pending chan ConsentRequest, sentTxs chan SentTran
 	}
 }
 
-func (p *ExplicitConsentPolicy) Ask(tx *v1.SubmitTransactionRequest) (bool, error) {
+func (p *ExplicitConsentPolicy) Ask(tx *v1.SubmitTransactionRequest, txID string) (bool, error) {
 	confirmations := make(chan ConsentConfirmation)
 	consentReq := ConsentRequest{Tx: tx, Confirmations: confirmations, ReceivedAt: time.Now()}
-	consentReq.TxID = consentReq.GetTxID()
+	consentReq.TxID = txID
 	p.pendingEvents <- consentReq
 
 	c := <-confirmations

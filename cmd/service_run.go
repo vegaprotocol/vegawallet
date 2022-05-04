@@ -403,7 +403,7 @@ func waitSig(ctx context.Context, cfunc func(), log *zap.Logger, pendingSigReque
 					p.BangMark().DangerText("Error: ").DangerText(sentTx.Error.Error()).NextLine()
 					p.BangMark().DangerText("Details: ").DangerText(strings.Join(sentTx.ErrorDetails, " ,")).NextSection()
 				} else {
-					p.CheckMark().SuccessText("Transaction sent! ").NextLine()
+					p.CheckMark().SuccessText("Transaction sent! ID:").SuccessText(sentTx.TxID).NextLine()
 					p.CheckMark().Text("Transaction hash: ").SuccessText(sentTx.TxHash).NextSection()
 				}
 			} else {
