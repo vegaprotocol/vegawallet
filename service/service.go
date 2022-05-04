@@ -49,6 +49,8 @@ type CreateWalletRequest struct {
 	Passphrase string `json:"passphrase"`
 }
 
+const TXIDLENGTH = 20
+
 func ParseCreateWalletRequest(r *http.Request) (*CreateWalletRequest, commands.Errors) {
 	errs := commands.NewErrors()
 
@@ -739,7 +741,7 @@ func (s *Service) signTx(token string, w http.ResponseWriter, r *http.Request, _
 		return
 	}
 
-	txID := vgrand.RandomStr(20)
+	txID := vgrand.RandomStr(TXIDLENGTH)
 	receivedAt := time.Now()
 	approved, err := s.policy.Ask(req, txID, receivedAt)
 	if err != nil {
