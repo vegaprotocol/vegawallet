@@ -735,9 +735,22 @@ func testAskingConsentPolicySucceeds(t *testing.T) {
 		req.Confirmations <- d
 	}()
 
-	answer, err := p.Ask(txn)
+	nowTime := time.Now()
+	answer, err := p.Ask(txn, "testTx", nowTime)
 	require.Nil(t, err)
 	require.False(t, answer)
+
+	p.Report(service.SentTransaction{
+		TxHash:     "txHash",
+		ReceivedAt: nowTime,
+		TxID:       "testTx",
+		Tx:         &commandspb.Transaction{},
+	})
+
+	sent := <-sentTxs
+	require.Equal(t, "txHash", sent.TxHash)
+	require.Equal(t, "testTx", sent.TxID)
+	require.Equal(t, nowTime, sent.ReceivedAt)
 }
 
 func testDeclineSigningTransactionManuallySucceeds(t *testing.T) {

@@ -9,6 +9,7 @@
 - [](https://github.com/vegaprotocol/vegawallet/pull/) -
 
 ### 🛠  Improvements
+- [555](https://github.com/vegaprotocol/vegawallet/issues/555) - Now using full transaction structures for event emit
 - [551](https://github.com/vegaprotocol/vegawallet/pull/551) - Enable system-tests with Vegacapsule
 
 ### 🔥 Removal
