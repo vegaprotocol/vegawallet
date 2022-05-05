@@ -8,10 +8,11 @@ import (
 	api "code.vegaprotocol.io/protos/vega/api/v1"
 	commandspb "code.vegaprotocol.io/protos/vega/commands/v1"
 	"code.vegaprotocol.io/vegawallet/network"
-
 	"github.com/cenkalti/backoff/v4"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 type Forwarder struct {
@@ -30,7 +31,7 @@ func NewForwarder(log *zap.Logger, nodeConfigs network.GRPCConfig) (*Forwarder, 
 	clts := make([]api.CoreServiceClient, 0, len(nodeConfigs.Hosts))
 	conns := make([]*grpc.ClientConn, 0, len(nodeConfigs.Hosts))
 	for _, v := range nodeConfigs.Hosts {
-		conn, err := grpc.Dial(v, grpc.WithInsecure())
+		conn, err := grpc.Dial(v, grpc.WithTransportCredentials(insecure.NewCredentials()))
 		if err != nil {
 			log.Debug("Couldn't dial gRPC host", zap.String("address", v))
 			return nil, err
@@ -145,15 +146,14 @@ func (n *Forwarder) SendTx(ctx context.Context, tx *commandspb.Transaction, ty a
 	if cltIdx < 0 {
 		cltIdx = n.nextClt()
 	}
-	err := backoff.Retry(
+	if err := backoff.Retry(
 		func() error {
 			clt := n.clts[cltIdx]
 			r, err := clt.SubmitTransaction(ctx, &req)
 			if err != nil {
-				n.log.Error("Couldn't send transaction", zap.Error(err))
-				return err
+				return n.handleSubmissionError(err)
 			}
-			n.log.Debug("Response from SubmitTransaction",
+			n.log.Debug("Transaction successfully submitted",
 				zap.Bool("success", r.Success),
 				zap.String("hash", r.TxHash),
 			)
@@ -161,11 +161,36 @@ func (n *Forwarder) SendTx(ctx context.Context, tx *commandspb.Transaction, ty a
 			return nil
 		},
 		backoff.WithMaxRetries(backoff.NewExponentialBackOff(), n.nodeCfgs.Retries),
-	)
-	if err != nil {
+	); err != nil {
 		return "", err
 	}
+
 	return resp.TxHash, nil
+}
+
+func (n *Forwarder) handleSubmissionError(err error) error {
+	statusErr := intoStatusError(err)
+
+	if statusErr == nil {
+		n.log.Error("couldn't submit transaction",
+			zap.Error(err),
+		)
+		return err
+	}
+
+	if statusErr.Code == codes.InvalidArgument {
+		n.log.Error(
+			"transaction has been rejected because of an invalid argument or state, skipping retry...",
+			zap.Error(statusErr),
+		)
+		// Returning a permanent error kills the retry loop.
+		return backoff.Permanent(statusErr)
+	}
+
+	n.log.Error("couldn't submit transaction",
+		zap.Error(statusErr),
+	)
+	return statusErr
 }
 
 func (n *Forwarder) nextClt() int {
