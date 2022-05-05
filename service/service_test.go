@@ -101,6 +101,7 @@ func TestService(t *testing.T) {
 	t.Run("update metadata invalid request", testServiceUpdateMetaFailInvalidRequest)
 	t.Run("Signing transaction succeeds", testAcceptSigningTransactionSucceeds)
 	t.Run("using ask function in policy succeeds", testAskingConsentPolicySucceeds)
+	t.Run("Checking transaction succeeds", testCheckTransactionSucceeds)
 	t.Run("Decline signing transaction manually succeeds", testDeclineSigningTransactionManuallySucceeds)
 	t.Run("Signing transaction with propagation succeeds", testSigningTransactionWithPropagationSucceeds)
 	t.Run("Signing transaction with failed propagation fails", testSigningTransactionWithFailedPropagationFails)
@@ -694,6 +695,34 @@ func testServiceUpdateMetaFailInvalidRequest(t *testing.T) {
 	}
 }
 
+func testCheckTransactionSucceeds(t *testing.T) {
+	s := getTestService(t, "manual")
+	defer s.ctrl.Finish()
+
+	// given
+	walletName := vgrand.RandomStr(5)
+	token := vgrand.RandomStr(5)
+	headers := authHeaders(t, token)
+	pubKey := vgrand.RandomStr(5)
+	payload := fmt.Sprintf(`{"pubKey": "%s", "orderCancellation": {}}`, pubKey)
+
+	// setup
+	s.auth.EXPECT().VerifyToken(token).Times(1).Return(walletName, nil)
+	s.handler.EXPECT().SignTx(gomock.Any(), gomock.Any(), gomock.Any()).Times(1).Return(&commandspb.Transaction{}, nil)
+	//s.handler.EXPECT().CheckTx(gomock.Any(), gomock.Any(), gomock.Any()).Times(1).Return(&commandspb.Transaction{}, nil)
+	s.nodeForward.EXPECT().CheckTx(gomock.Any(), gomock.Any(), gomock.Any()).Times(1)
+	s.nodeForward.EXPECT().LastBlockHeightAndHash(gomock.Any()).Times(1).Return(&api.LastBlockHeightResponse{
+		Height:              42,
+		Hash:                "0292041e2f0cf741894503fb3ead4cb817bca2375e543aa70f7c4d938157b5a6",
+		SpamPowDifficulty:   2,
+		SpamPowHashFunction: "sha3_24_rounds",
+	}, 0, nil)
+	// when
+
+	statusCode, _ := serveHTTP(t, s, checkTxRequest(t, payload, headers))
+	assert.Equal(t, http.StatusOK, statusCode)
+}
+
 func testAcceptSigningTransactionSucceeds(t *testing.T) {
 	s := getTestService(t, "manual")
 	defer s.ctrl.Finish()
@@ -1094,6 +1123,11 @@ func taintKeyRequest(t *testing.T, id, payload string, headers map[string]string
 func annotateKeyRequest(t *testing.T, id, payload string, headers map[string]string) *http.Request {
 	t.Helper()
 	return buildRequest(t, http.MethodPut, fmt.Sprintf("/api/v1/keys/%s/metadata", id), payload, headers)
+}
+
+func checkTxRequest(t *testing.T, payload string, headers map[string]string) *http.Request {
+	t.Helper()
+	return buildRequest(t, http.MethodPost, "/api/v1/command/check", payload, headers)
 }
 
 func signTxRequest(t *testing.T, payload string, headers map[string]string) *http.Request {
