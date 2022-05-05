@@ -1,8 +1,6 @@
 package service
 
 import (
-	"crypto/sha256"
-	"fmt"
 	"time"
 
 	commandspb "code.vegaprotocol.io/protos/vega/commands/v1"
@@ -26,13 +24,6 @@ func (r *ConsentRequest) String() (string, error) {
 	m := jsonpb.Marshaler{Indent: "    "}
 	marshalledRequest, err := m.MarshalToString(r.Tx)
 	return marshalledRequest, err
-}
-
-func (r *ConsentRequest) GenerateTxID() string {
-	h := sha256.New()
-	h.Write([]byte(fmt.Sprintf("%s%v%t", r.Tx.PubKey, r.Tx.Command, r.Tx.Propagate)))
-
-	return fmt.Sprintf("%x", h.Sum(nil))
 }
 
 type SentTransaction struct {

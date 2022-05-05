@@ -398,12 +398,13 @@ func waitSig(ctx context.Context, cfunc func(), log *zap.Logger, pendingSigReque
 				p.CheckMark().SuccessText("Transaction approved").NextLine()
 
 				sentTx := <-sentTxs
+				log.Info("transaction sent", zap.Any("ID", sentTx.TxID), zap.Any("hash", sentTx.TxHash))
 				if sentTx.Error != nil {
 					p.BangMark().DangerText("Transaction failed! ").NextLine()
 					p.BangMark().DangerText("Error: ").DangerText(sentTx.Error.Error()).NextLine()
 					p.BangMark().DangerText("Details: ").DangerText(strings.Join(sentTx.ErrorDetails, " ,")).NextSection()
 				} else {
-					p.CheckMark().SuccessText("Transaction sent! ID:").SuccessText(sentTx.TxID).NextLine()
+					p.CheckMark().SuccessText("Transaction sent! Hash:").SuccessText(sentTx.TxHash).NextLine()
 					p.CheckMark().Text("Transaction hash: ").SuccessText(sentTx.TxHash).NextSection()
 				}
 			} else {
