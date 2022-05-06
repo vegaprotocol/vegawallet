@@ -400,12 +400,13 @@ func waitSig(ctx context.Context, cfunc func(), log *zap.Logger, pendingSigReque
 				sentTx := <-sentTxs
 				log.Info("transaction sent", zap.Any("ID", sentTx.TxID), zap.Any("hash", sentTx.TxHash))
 				if sentTx.Error != nil {
+					log.Error("transaction failed", zap.Any("transaction", txStr))
 					p.BangMark().DangerText("Transaction failed! ").NextLine()
 					p.BangMark().DangerText("Error: ").DangerText(sentTx.Error.Error()).NextLine()
 					p.BangMark().DangerText("Details: ").DangerText(strings.Join(sentTx.ErrorDetails, " ,")).NextSection()
 				} else {
-					p.CheckMark().SuccessText("Transaction sent! Hash:").SuccessText(sentTx.TxHash).NextLine()
-					p.CheckMark().Text("Transaction hash: ").SuccessText(sentTx.TxHash).NextSection()
+					log.Info("transaction sent", zap.Any("hash", sentTx.TxHash))
+					p.CheckMark().Text("Transaction with hash ").SuccessText(sentTx.TxHash).Text(" sent!").NextSection()
 				}
 			} else {
 				log.Info("user rejected the signing of the transaction", zap.Any("transaction", txStr))
