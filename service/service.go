@@ -9,6 +9,9 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"time"
+
+	vgrand "code.vegaprotocol.io/shared/libs/rand"
 
 	"code.vegaprotocol.io/protos/commands"
 	typespb "code.vegaprotocol.io/protos/vega"
@@ -45,6 +48,8 @@ type CreateWalletRequest struct {
 	Wallet     string `json:"wallet"`
 	Passphrase string `json:"passphrase"`
 }
+
+const TXIDLENGTH = 20
 
 func ParseCreateWalletRequest(r *http.Request) (*CreateWalletRequest, commands.Errors) {
 	errs := commands.NewErrors()
@@ -736,7 +741,9 @@ func (s *Service) signTx(token string, w http.ResponseWriter, r *http.Request, _
 		return
 	}
 
-	approved, err := s.policy.Ask(req)
+	txID := vgrand.RandomStr(TXIDLENGTH)
+	receivedAt := time.Now()
+	approved, err := s.policy.Ask(req, txID, receivedAt)
 	if err != nil {
 		s.log.Panic("failed getting transaction sign request answer", zap.Error(err))
 	}
@@ -785,14 +792,18 @@ func (s *Service) signTx(token string, w http.ResponseWriter, r *http.Request, _
 			}
 			s.policy.Report(SentTransaction{
 				Tx:           tx,
+				ReceivedAt:   receivedAt,
+				TxID:         txID,
 				Error:        err,
 				ErrorDetails: details,
 			})
 			s.writeError(w, newErrorWithDetails(err.Error(), details), http.StatusInternalServerError)
 		} else {
 			s.policy.Report(SentTransaction{
-				Tx:    tx,
-				Error: err,
+				Tx:         tx,
+				ReceivedAt: receivedAt,
+				TxID:       txID,
+				Error:      err,
 			})
 			s.writeInternalError(w, err)
 		}
@@ -800,16 +811,22 @@ func (s *Service) signTx(token string, w http.ResponseWriter, r *http.Request, _
 	}
 
 	s.policy.Report(SentTransaction{
-		TxHash: txHash,
-		Tx:     tx,
+		TxHash:     txHash,
+		ReceivedAt: receivedAt,
+		TxID:       txID,
+		Tx:         tx,
 	})
 
 	s.writeSuccess(w, struct {
-		TxHash string                  `json:"txHash"`
-		Tx     *commandspb.Transaction `json:"tx"`
+		TxHash     string                  `json:"txHash"`
+		ReceivedAt time.Time               `json:"receivedAt"`
+		TxID       string                  `json:"txId"`
+		Tx         *commandspb.Transaction `json:"tx"`
 	}{
-		TxHash: txHash,
-		Tx:     tx,
+		TxHash:     txHash,
+		ReceivedAt: receivedAt,
+		TxID:       txID,
+		Tx:         tx,
 	})
 }
 
