@@ -777,12 +777,14 @@ func (s *Service) CheckTx(token string, w http.ResponseWriter, r *http.Request, 
 	s.writeSuccess(w, struct {
 		Success   bool                    `json:"success"`
 		Code      uint32                  `json:"code"`
-		GasWanted int64                   `json:"gasWanted"`
+		GasWanted int64                   `json:"gas_wanted"`
+		GasUsed   int64                   `json:"gas_used"`
 		Tx        *commandspb.Transaction `json:"tx"`
 	}{
 		Success:   result.Success,
 		Code:      result.Code,
 		GasWanted: result.GasWanted,
+		GasUsed:   result.GasUsed,
 		Tx:        tx,
 	})
 }

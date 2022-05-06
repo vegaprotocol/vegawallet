@@ -102,6 +102,8 @@ func TestService(t *testing.T) {
 	t.Run("Signing transaction succeeds", testAcceptSigningTransactionSucceeds)
 	t.Run("using ask function in policy succeeds", testAskingConsentPolicySucceeds)
 	t.Run("Checking transaction succeeds", testCheckTransactionSucceeds)
+	t.Run("Checking transaction with rejected transaction succeeds", testCheckTransactionWithRejectedTransactionSucceeds)
+	t.Run("Checking transaction with failed transaction fails", testCheckTransactionWithFailedTransactionFails)
 	t.Run("Decline signing transaction manually succeeds", testDeclineSigningTransactionManuallySucceeds)
 	t.Run("Signing transaction with propagation succeeds", testSigningTransactionWithPropagationSucceeds)
 	t.Run("Signing transaction with failed propagation fails", testSigningTransactionWithFailedPropagationFails)
@@ -709,8 +711,85 @@ func testCheckTransactionSucceeds(t *testing.T) {
 	// setup
 	s.auth.EXPECT().VerifyToken(token).Times(1).Return(walletName, nil)
 	s.handler.EXPECT().SignTx(gomock.Any(), gomock.Any(), gomock.Any()).Times(1).Return(&commandspb.Transaction{}, nil)
-	//s.handler.EXPECT().CheckTx(gomock.Any(), gomock.Any(), gomock.Any()).Times(1).Return(&commandspb.Transaction{}, nil)
-	s.nodeForward.EXPECT().CheckTx(gomock.Any(), gomock.Any(), gomock.Any()).Times(1)
+	s.nodeForward.EXPECT().CheckTx(gomock.Any(), gomock.Any(), gomock.Any()).Times(1).Return(&api.CheckTransactionResponse{
+		Success:   true,
+		Code:      0,
+		GasWanted: 300,
+		GasUsed:   200,
+	}, nil)
+	s.nodeForward.EXPECT().LastBlockHeightAndHash(gomock.Any()).Times(1).Return(&api.LastBlockHeightResponse{
+		Height:              42,
+		Hash:                "0292041e2f0cf741894503fb3ead4cb817bca2375e543aa70f7c4d938157b5a6",
+		SpamPowDifficulty:   2,
+		SpamPowHashFunction: "sha3_24_rounds",
+	}, 0, nil)
+	// when
+
+	statusCode, body := serveHTTP(t, s, checkTxRequest(t, payload, headers))
+	assert.Equal(t, http.StatusOK, statusCode)
+
+	resp := &api.CheckTransactionResponse{}
+	if err := json.Unmarshal(body, resp); err != nil {
+		t.Fatalf("couldn't unmarshal responde: %v", err)
+	}
+	assert.True(t, resp.Success)
+	assert.Equal(t, uint32(0), resp.Code)
+	assert.Equal(t, int64(300), resp.GasWanted)
+}
+
+func testCheckTransactionWithRejectedTransactionSucceeds(t *testing.T) {
+	s := getTestService(t, "manual")
+	defer s.ctrl.Finish()
+
+	// given
+	walletName := vgrand.RandomStr(5)
+	token := vgrand.RandomStr(5)
+	headers := authHeaders(t, token)
+	pubKey := vgrand.RandomStr(5)
+	payload := fmt.Sprintf(`{"pubKey": "%s", "orderCancellation": {}}`, pubKey)
+
+	// setup
+	s.auth.EXPECT().VerifyToken(token).Times(1).Return(walletName, nil)
+	s.handler.EXPECT().SignTx(gomock.Any(), gomock.Any(), gomock.Any()).Times(1).Return(&commandspb.Transaction{}, nil)
+	s.nodeForward.EXPECT().CheckTx(gomock.Any(), gomock.Any(), gomock.Any()).Times(1).Return(&api.CheckTransactionResponse{
+		Success: false,
+		Code:    4,
+	}, nil)
+	s.nodeForward.EXPECT().LastBlockHeightAndHash(gomock.Any()).Times(1).Return(&api.LastBlockHeightResponse{
+		Height:              42,
+		Hash:                "0292041e2f0cf741894503fb3ead4cb817bca2375e543aa70f7c4d938157b5a6",
+		SpamPowDifficulty:   2,
+		SpamPowHashFunction: "sha3_24_rounds",
+	}, 0, nil)
+	// when
+
+	statusCode, body := serveHTTP(t, s, checkTxRequest(t, payload, headers))
+	assert.Equal(t, http.StatusOK, statusCode)
+
+	resp := &api.CheckTransactionResponse{}
+	if err := json.Unmarshal(body, resp); err != nil {
+		t.Fatalf("couldn't unmarshal responde: %v", err)
+	}
+	assert.False(t, resp.Success)
+	assert.Equal(t, uint32(4), resp.Code)
+	assert.Equal(t, int64(0), resp.GasWanted)
+}
+
+func testCheckTransactionWithFailedTransactionFails(t *testing.T) {
+	s := getTestService(t, "manual")
+	defer s.ctrl.Finish()
+
+	// given
+	walletName := vgrand.RandomStr(5)
+	token := vgrand.RandomStr(5)
+	headers := authHeaders(t, token)
+	pubKey := vgrand.RandomStr(5)
+	payload := fmt.Sprintf(`{"pubKey": "%s", "orderCancellation": {}}`, pubKey)
+
+	// setup
+	s.auth.EXPECT().VerifyToken(token).Times(1).Return(walletName, nil)
+	s.handler.EXPECT().SignTx(gomock.Any(), gomock.Any(), gomock.Any()).Times(1).Return(&commandspb.Transaction{}, nil)
+	s.nodeForward.EXPECT().CheckTx(gomock.Any(), gomock.Any(), gomock.Any()).Times(1).Return(nil, assert.AnError)
 	s.nodeForward.EXPECT().LastBlockHeightAndHash(gomock.Any()).Times(1).Return(&api.LastBlockHeightResponse{
 		Height:              42,
 		Hash:                "0292041e2f0cf741894503fb3ead4cb817bca2375e543aa70f7c4d938157b5a6",
@@ -720,7 +799,7 @@ func testCheckTransactionSucceeds(t *testing.T) {
 	// when
 
 	statusCode, _ := serveHTTP(t, s, checkTxRequest(t, payload, headers))
-	assert.Equal(t, http.StatusOK, statusCode)
+	assert.Equal(t, http.StatusInternalServerError, statusCode)
 }
 
 func testAcceptSigningTransactionSucceeds(t *testing.T) {
