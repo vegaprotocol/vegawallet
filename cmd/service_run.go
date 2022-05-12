@@ -398,6 +398,7 @@ func waitSig(ctx context.Context, cfunc func(), log *zap.Logger, pendingSigReque
 				p.CheckMark().SuccessText("Transaction approved").NextLine()
 
 				sentTx := <-sentTxs
+				log.Info("transaction sent", zap.Any("ID", sentTx.TxID), zap.Any("hash", sentTx.TxHash))
 				if sentTx.Error != nil {
 					log.Error("transaction failed", zap.Any("transaction", txStr))
 					p.BangMark().DangerText("Transaction failed! ").NextLine()

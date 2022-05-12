@@ -414,6 +414,7 @@ type Auth interface {
 //go:generate go run github.com/golang/mock/mockgen -destination mocks/node_forward_mock.go -package mocks code.vegaprotocol.io/vegawallet/service NodeForward
 type NodeForward interface {
 	SendTx(context.Context, *commandspb.Transaction, api.SubmitTransactionRequest_Type, int) (string, error)
+	CheckTx(context.Context, *commandspb.Transaction, int) (*api.CheckTransactionResponse, error)
 	HealthCheck(context.Context) error
 	LastBlockHeightAndHash(context.Context) (*api.LastBlockHeightResponse, int, error)
 }
@@ -450,6 +451,7 @@ func NewService(log *zap.Logger, net *network.Network, h WalletHandler, a Auth, 
 
 	s.handle(http.MethodPost, "/api/v1/command", extractToken(s.SignTx))
 	s.handle(http.MethodPost, "/api/v1/command/sync", extractToken(s.SignTxSync))
+	s.handle(http.MethodPost, "/api/v1/command/check", extractToken(s.CheckTx))
 	s.handle(http.MethodPost, "/api/v1/command/commit", extractToken(s.SignTxCommit))
 	s.handle(http.MethodPost, "/api/v1/sign", extractToken(s.SignAny))
 	s.handle(http.MethodPost, "/api/v1/verify", s.VerifyAny)
@@ -712,6 +714,79 @@ func (s *Service) VerifyAny(w http.ResponseWriter, r *http.Request, _ httprouter
 	}
 
 	s.writeSuccess(w, VerifyAnyResponse{Valid: verified})
+}
+
+func (s *Service) CheckTx(token string, w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	defer r.Body.Close()
+
+	name, err := s.auth.VerifyToken(token)
+	if err != nil {
+		s.writeForbiddenError(w, err)
+		return
+	}
+
+	req, errs := ParseSubmitTransactionRequest(r)
+	if !errs.Empty() {
+		s.writeBadRequest(w, errs)
+		return
+	}
+
+	blockData, cltIdx, err := s.nodeForward.LastBlockHeightAndHash(r.Context())
+	if err != nil {
+		s.writeInternalError(w, ErrCouldNotGetBlockHeight)
+		return
+	}
+
+	tx, err := s.handler.SignTx(name, req, blockData.Height)
+	if err != nil {
+		s.writeInternalError(w, err)
+		return
+	}
+
+	// generate proof of work for the transaction
+	tid := vgcrypto.RandomHash()
+	powNonce, _, err := vgcrypto.PoW(blockData.Hash, tid, uint(blockData.SpamPowDifficulty), vgcrypto.Sha3)
+	if err != nil {
+		s.writeInternalError(w, err)
+		return
+	}
+	tx.Pow = &commandspb.ProofOfWork{
+		Tid:   tid,
+		Nonce: powNonce,
+	}
+
+	result, err := s.nodeForward.CheckTx(r.Context(), tx, cltIdx)
+	if err != nil {
+		if st, ok := status.FromError(err); ok {
+			var details []string
+			for _, v := range st.Details() {
+				v, ok := v.(*typespb.ErrorDetail)
+				if !ok {
+					s.writeError(w, newErrorResponse(fmt.Sprintf("couldn't cast status details to error details: %v", v)), http.StatusInternalServerError)
+				}
+				details = append(details, v.Message)
+			}
+
+			s.writeError(w, newErrorWithDetails(err.Error(), details), http.StatusInternalServerError)
+		} else {
+			s.writeInternalError(w, err)
+		}
+		return
+	}
+
+	s.writeSuccess(w, struct {
+		Success   bool                    `json:"success"`
+		Code      uint32                  `json:"code"`
+		GasWanted int64                   `json:"gas_wanted"`
+		GasUsed   int64                   `json:"gas_used"`
+		Tx        *commandspb.Transaction `json:"tx"`
+	}{
+		Success:   result.Success,
+		Code:      result.Code,
+		GasWanted: result.GasWanted,
+		GasUsed:   result.GasUsed,
+		Tx:        tx,
+	})
 }
 
 func (s *Service) SignTxSync(token string, w http.ResponseWriter, r *http.Request, p httprouter.Params) {

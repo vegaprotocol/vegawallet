@@ -159,6 +159,12 @@ func (m *MockWalletHandler) SignTx(arg0 string, arg1 *v10.SubmitTransactionReque
 	return ret0, ret1
 }
 
+// SignTx indicates an expected call of CheckTx
+func (mr *MockWalletHandlerMockRecorder) CheckTx(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckTx", reflect.TypeOf((*MockWalletHandler)(nil).SignTx), arg0, arg1, arg2)
+}
+
 // SignTx indicates an expected call of SignTx
 func (mr *MockWalletHandlerMockRecorder) SignTx(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()

@@ -108,6 +108,34 @@ func (n *Forwarder) LastBlockHeightAndHash(ctx context.Context) (*api.LastBlockH
 	return resp, clt, err
 }
 
+func (n *Forwarder) CheckTx(ctx context.Context, tx *commandspb.Transaction, cltIdx int) (*api.CheckTransactionResponse, error) {
+	req := api.CheckTransactionRequest{
+		Tx: tx,
+	}
+	var resp *api.CheckTransactionResponse
+	if cltIdx < 0 {
+		cltIdx = n.nextClt()
+	}
+	err := backoff.Retry(
+		func() error {
+			clt := n.clts[cltIdx]
+			r, err := clt.CheckTransaction(ctx, &req)
+			if err != nil {
+				n.log.Error("Couldn't check transaction", zap.Error(err))
+				return err
+			}
+			n.log.Debug("Response from CheckTransaction",
+				zap.Bool("success", r.Success),
+			)
+			resp = r
+			return nil
+		},
+		backoff.WithMaxRetries(backoff.NewExponentialBackOff(), n.nodeCfgs.Retries),
+	)
+
+	return resp, err
+}
+
 func (n *Forwarder) SendTx(ctx context.Context, tx *commandspb.Transaction, ty api.SubmitTransactionRequest_Type, cltIdx int) (string, error) {
 	req := api.SubmitTransactionRequest{
 		Tx:   tx,
