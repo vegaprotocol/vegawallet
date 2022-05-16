@@ -9,6 +9,9 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"time"
+
+	vgrand "code.vegaprotocol.io/shared/libs/rand"
 
 	"code.vegaprotocol.io/protos/commands"
 	typespb "code.vegaprotocol.io/protos/vega"
@@ -16,7 +19,6 @@ import (
 	commandspb "code.vegaprotocol.io/protos/vega/commands/v1"
 	walletpb "code.vegaprotocol.io/protos/vega/wallet/v1"
 	vgcrypto "code.vegaprotocol.io/shared/libs/crypto"
-	"code.vegaprotocol.io/vegawallet/cmd/printer"
 	wcommands "code.vegaprotocol.io/vegawallet/commands"
 	"code.vegaprotocol.io/vegawallet/network"
 	"code.vegaprotocol.io/vegawallet/version"
@@ -46,6 +48,8 @@ type CreateWalletRequest struct {
 	Wallet     string `json:"wallet"`
 	Passphrase string `json:"passphrase"`
 }
+
+const TXIDLENGTH = 20
 
 func ParseCreateWalletRequest(r *http.Request) (*CreateWalletRequest, commands.Errors) {
 	errs := commands.NewErrors()
@@ -325,7 +329,9 @@ func ParseVerifyAnyRequest(r *http.Request) (*VerifyAnyRequest, commands.Errors)
 func ParseSubmitTransactionRequest(r *http.Request) (*walletpb.SubmitTransactionRequest, commands.Errors) {
 	errs := commands.NewErrors()
 
-	req := &walletpb.SubmitTransactionRequest{}
+	req := &walletpb.SubmitTransactionRequest{
+		Propagate: true,
+	}
 	if err := jsonpb.Unmarshal(r.Body, req); err != nil {
 		return nil, errs.FinalAdd(err)
 	}
@@ -408,6 +414,7 @@ type Auth interface {
 //go:generate go run github.com/golang/mock/mockgen -destination mocks/node_forward_mock.go -package mocks code.vegaprotocol.io/vegawallet/service NodeForward
 type NodeForward interface {
 	SendTx(context.Context, *commandspb.Transaction, api.SubmitTransactionRequest_Type, int) (string, error)
+	CheckTx(context.Context, *commandspb.Transaction, int) (*api.CheckTransactionResponse, error)
 	HealthCheck(context.Context) error
 	LastBlockHeightAndHash(context.Context) (*api.LastBlockHeightResponse, int, error)
 }
@@ -444,6 +451,7 @@ func NewService(log *zap.Logger, net *network.Network, h WalletHandler, a Auth, 
 
 	s.handle(http.MethodPost, "/api/v1/command", extractToken(s.SignTx))
 	s.handle(http.MethodPost, "/api/v1/command/sync", extractToken(s.SignTxSync))
+	s.handle(http.MethodPost, "/api/v1/command/check", extractToken(s.CheckTx))
 	s.handle(http.MethodPost, "/api/v1/command/commit", extractToken(s.SignTxCommit))
 	s.handle(http.MethodPost, "/api/v1/sign", extractToken(s.SignAny))
 	s.handle(http.MethodPost, "/api/v1/verify", s.VerifyAny)
@@ -708,6 +716,79 @@ func (s *Service) VerifyAny(w http.ResponseWriter, r *http.Request, _ httprouter
 	s.writeSuccess(w, VerifyAnyResponse{Valid: verified})
 }
 
+func (s *Service) CheckTx(token string, w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	defer r.Body.Close()
+
+	name, err := s.auth.VerifyToken(token)
+	if err != nil {
+		s.writeForbiddenError(w, err)
+		return
+	}
+
+	req, errs := ParseSubmitTransactionRequest(r)
+	if !errs.Empty() {
+		s.writeBadRequest(w, errs)
+		return
+	}
+
+	blockData, cltIdx, err := s.nodeForward.LastBlockHeightAndHash(r.Context())
+	if err != nil {
+		s.writeInternalError(w, ErrCouldNotGetBlockHeight)
+		return
+	}
+
+	tx, err := s.handler.SignTx(name, req, blockData.Height)
+	if err != nil {
+		s.writeInternalError(w, err)
+		return
+	}
+
+	// generate proof of work for the transaction
+	tid := vgcrypto.RandomHash()
+	powNonce, _, err := vgcrypto.PoW(blockData.Hash, tid, uint(blockData.SpamPowDifficulty), vgcrypto.Sha3)
+	if err != nil {
+		s.writeInternalError(w, err)
+		return
+	}
+	tx.Pow = &commandspb.ProofOfWork{
+		Tid:   tid,
+		Nonce: powNonce,
+	}
+
+	result, err := s.nodeForward.CheckTx(r.Context(), tx, cltIdx)
+	if err != nil {
+		if st, ok := status.FromError(err); ok {
+			var details []string
+			for _, v := range st.Details() {
+				v, ok := v.(*typespb.ErrorDetail)
+				if !ok {
+					s.writeError(w, newErrorResponse(fmt.Sprintf("couldn't cast status details to error details: %v", v)), http.StatusInternalServerError)
+				}
+				details = append(details, v.Message)
+			}
+
+			s.writeError(w, newErrorWithDetails(err.Error(), details), http.StatusInternalServerError)
+		} else {
+			s.writeInternalError(w, err)
+		}
+		return
+	}
+
+	s.writeSuccess(w, struct {
+		Success   bool                    `json:"success"`
+		Code      uint32                  `json:"code"`
+		GasWanted int64                   `json:"gas_wanted"`
+		GasUsed   int64                   `json:"gas_used"`
+		Tx        *commandspb.Transaction `json:"tx"`
+	}{
+		Success:   result.Success,
+		Code:      result.Code,
+		GasWanted: result.GasWanted,
+		GasUsed:   result.GasUsed,
+		Tx:        tx,
+	})
+}
+
 func (s *Service) SignTxSync(token string, w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	s.signTx(token, w, r, p, api.SubmitTransactionRequest_TYPE_SYNC)
 }
@@ -735,7 +816,9 @@ func (s *Service) signTx(token string, w http.ResponseWriter, r *http.Request, _
 		return
 	}
 
-	approved, err := s.policy.Ask(req)
+	txID := vgrand.RandomStr(TXIDLENGTH)
+	receivedAt := time.Now()
+	approved, err := s.policy.Ask(req, txID, receivedAt)
 	if err != nil {
 		s.log.Panic("failed getting transaction sign request answer", zap.Error(err))
 	}
@@ -756,11 +839,6 @@ func (s *Service) signTx(token string, w http.ResponseWriter, r *http.Request, _
 	tx, err := s.handler.SignTx(name, req, blockData.Height)
 	if err != nil {
 		s.writeInternalError(w, err)
-		return
-	}
-
-	if !req.Propagate {
-		s.writeSuccess(w, nil)
 		return
 	}
 
@@ -787,24 +865,43 @@ func (s *Service) signTx(token string, w http.ResponseWriter, r *http.Request, _
 				}
 				details = append(details, v.Message)
 			}
+			s.policy.Report(SentTransaction{
+				Tx:           tx,
+				ReceivedAt:   receivedAt,
+				TxID:         txID,
+				Error:        err,
+				ErrorDetails: details,
+			})
 			s.writeError(w, newErrorWithDetails(err.Error(), details), http.StatusInternalServerError)
 		} else {
+			s.policy.Report(SentTransaction{
+				Tx:         tx,
+				ReceivedAt: receivedAt,
+				TxID:       txID,
+				Error:      err,
+			})
 			s.writeInternalError(w, err)
 		}
 		return
 	}
 
-	if s.policy.NeedsInteractiveOutput() {
-		p := printer.NewInteractivePrinter(w)
-		p.CheckMark().InfoText("Transaction sent:").SuccessText(txHash).NextLine()
-	}
+	s.policy.Report(SentTransaction{
+		TxHash:     txHash,
+		ReceivedAt: receivedAt,
+		TxID:       txID,
+		Tx:         tx,
+	})
 
 	s.writeSuccess(w, struct {
-		TxHash string                  `json:"txHash"`
-		Tx     *commandspb.Transaction `json:"tx"`
+		TxHash     string                  `json:"txHash"`
+		ReceivedAt time.Time               `json:"receivedAt"`
+		TxID       string                  `json:"txId"`
+		Tx         *commandspb.Transaction `json:"tx"`
 	}{
-		TxHash: txHash,
-		Tx:     tx,
+		TxHash:     txHash,
+		ReceivedAt: receivedAt,
+		TxID:       txID,
+		Tx:         tx,
 	})
 }
 

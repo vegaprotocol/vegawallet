@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 
 	vgterm "code.vegaprotocol.io/shared/libs/term"
@@ -209,6 +210,7 @@ func RunService(w io.Writer, rf *RootFlags, f *RunServiceFlags) error {
 	}
 
 	pendingConsents := make(chan service.ConsentRequest, 1)
+	sentTxs := make(chan service.SentTransaction)
 
 	cliLog, cliLogPath, err := BuildJSONLogger(cfg.Level.String(), vegaPaths, paths.WalletCLILogsHome)
 	if err != nil {
@@ -226,7 +228,7 @@ func RunService(w io.Writer, rf *RootFlags, f *RunServiceFlags) error {
 			policy = service.NewAutomaticConsentPolicy()
 		} else {
 			cliLog.Info("Explicit consent enabled")
-			policy = service.NewExplicitConsentPolicy(pendingConsents)
+			policy = service.NewExplicitConsentPolicy(pendingConsents, sentTxs)
 		}
 	} else {
 		cliLog.Info("No TTY detected")
@@ -294,7 +296,7 @@ func RunService(w io.Writer, rf *RootFlags, f *RunServiceFlags) error {
 		p.NextLine()
 	}
 
-	waitSig(ctx, cancel, cliLog, pendingConsents, p)
+	waitSig(ctx, cancel, cliLog, pendingConsents, sentTxs, p)
 
 	return nil
 }
@@ -364,7 +366,7 @@ func startTokenDApp(log *zap.Logger, f *RunServiceFlags, cfg *network.Network, c
 }
 
 // waitSig will wait for a sigterm or sigint interrupt.
-func waitSig(ctx context.Context, cfunc func(), log *zap.Logger, pendingSigRequests chan service.ConsentRequest, p *printer.InteractivePrinter) {
+func waitSig(ctx context.Context, cfunc func(), log *zap.Logger, pendingSigRequests chan service.ConsentRequest, sentTxs chan service.SentTransaction, p *printer.InteractivePrinter) {
 	gracefulStop := make(chan os.Signal, 1)
 
 	signal.Notify(gracefulStop, syscall.SIGTERM)
@@ -393,7 +395,19 @@ func waitSig(ctx context.Context, cfunc func(), log *zap.Logger, pendingSigReque
 			if flags.DoYouApproveTx() {
 				log.Info("user approved the signing of the transaction", zap.Any("transaction", txStr))
 				signRequest.Confirmations <- service.ConsentConfirmation{Decision: true, TxStr: txStr}
-				p.CheckMark().SuccessText("Transaction approved").NextSection()
+				p.CheckMark().SuccessText("Transaction approved").NextLine()
+
+				sentTx := <-sentTxs
+				log.Info("transaction sent", zap.Any("ID", sentTx.TxID), zap.Any("hash", sentTx.TxHash))
+				if sentTx.Error != nil {
+					log.Error("transaction failed", zap.Any("transaction", txStr))
+					p.BangMark().DangerText("Transaction failed! ").NextLine()
+					p.BangMark().DangerText("Error: ").DangerText(sentTx.Error.Error()).NextLine()
+					p.BangMark().DangerText("Details: ").DangerText(strings.Join(sentTx.ErrorDetails, " ,")).NextSection()
+				} else {
+					log.Info("transaction sent", zap.Any("hash", sentTx.TxHash))
+					p.CheckMark().Text("Transaction with hash ").SuccessText(sentTx.TxHash).Text(" sent!").NextSection()
+				}
 			} else {
 				log.Info("user rejected the signing of the transaction", zap.Any("transaction", txStr))
 				signRequest.Confirmations <- service.ConsentConfirmation{Decision: false, TxStr: txStr}

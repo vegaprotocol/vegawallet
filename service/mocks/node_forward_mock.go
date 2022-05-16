@@ -66,6 +66,15 @@ func (mr *MockNodeForwardMockRecorder) LastBlockHeightAndHash(arg0 interface{}) 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LastBlockHeightAndHash", reflect.TypeOf((*MockNodeForward)(nil).LastBlockHeightAndHash), arg0)
 }
 
+// CheckTx mocks base method.
+func (m *MockNodeForward) CheckTx(arg0 context.Context, arg1 *v10.Transaction, arg2 int) (*v1.CheckTransactionResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CheckTx", arg0, arg1, arg2)
+	ret0, _ := ret[0].(*v1.CheckTransactionResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
 // SendTx mocks base method.
 func (m *MockNodeForward) SendTx(arg0 context.Context, arg1 *v10.Transaction, arg2 v1.SubmitTransactionRequest_Type, arg3 int) (string, error) {
 	m.ctrl.T.Helper()
@@ -73,6 +82,12 @@ func (m *MockNodeForward) SendTx(arg0 context.Context, arg1 *v10.Transaction, ar
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
+}
+
+// CheckTx indicates an expected call of CheckTx.
+func (mr *MockNodeForwardMockRecorder) CheckTx(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckTx", reflect.TypeOf((*MockNodeForward)(nil).CheckTx), arg0, arg1, arg2)
 }
 
 // SendTx indicates an expected call of SendTx.

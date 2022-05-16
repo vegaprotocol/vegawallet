@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased (0.15.0)
+## Unreleased (0.16.0)
 
 ### 🚨 Breaking changes
 - [](https://github.com/vegaprotocol/vegawallet/pull/) -
@@ -17,10 +17,19 @@
 ### 🐛 Fixes
 - [](https://github.com/vegaprotocol/vegawallet/pull/) -
 
+## 0.15.0
+
+### 🛠  Improvements
+- [555](https://github.com/vegaprotocol/vegawallet/issues/555) - Now using full transaction structures for event emit
+- [551](https://github.com/vegaprotocol/vegawallet/pull/551) - Enable system-tests with Vegacapsule
+
+### 🐛 Fixes
+- [548](https://github.com/vegaprotocol/vegawallet/pull/548) - Printer utility shouldn't write in service response
+
 ## 0.14.2
 
 ### 🛠  Improvements
-- [544](https://github.com/vegaprotocol/vegawallet/issues/544) - Display transaction hash after sending transaction
+- [544](https://github.com/vegaprotocol/vegagwallet/issues/544) - Display transaction hash after sending transaction
 
 ## 0.14.1
 
