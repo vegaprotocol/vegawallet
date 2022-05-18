@@ -861,7 +861,7 @@ func (s *Service) signTx(token string, w http.ResponseWriter, r *http.Request, _
 			for _, v := range st.Details() {
 				v, ok := v.(*typespb.ErrorDetail)
 				if !ok {
-					s.writeError(w, newErrorResponse(fmt.Sprintf("couldn't cast status details to error details: %v", v)), http.StatusInternalServerError)
+					continue
 				}
 				details = append(details, v.Message)
 			}
@@ -872,16 +872,16 @@ func (s *Service) signTx(token string, w http.ResponseWriter, r *http.Request, _
 				Error:        err,
 				ErrorDetails: details,
 			})
-			s.writeError(w, newErrorWithDetails(err.Error(), details), http.StatusInternalServerError)
-		} else {
-			s.policy.Report(SentTransaction{
-				Tx:         tx,
-				ReceivedAt: receivedAt,
-				TxID:       txID,
-				Error:      err,
-			})
-			s.writeInternalError(w, err)
+			s.writeInternalError(w, newErrorWithDetails(err.Error(), details))
+			return
 		}
+		s.policy.Report(SentTransaction{
+			Tx:         tx,
+			ReceivedAt: receivedAt,
+			TxID:       txID,
+			Error:      err,
+		})
+		s.writeInternalError(w, err)
 		return
 	}
 

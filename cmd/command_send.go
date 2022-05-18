@@ -18,11 +18,10 @@ import (
 	"code.vegaprotocol.io/vegawallet/network"
 	"code.vegaprotocol.io/vegawallet/node"
 	"code.vegaprotocol.io/vegawallet/wallets"
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
-
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/spf13/cobra"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 var (
@@ -244,6 +243,9 @@ func SendCommand(w io.Writer, rf *RootFlags, req *SendCommandRequest) error {
 		Hosts:   hosts,
 		Retries: req.Retries,
 	})
+
+	log = log.Named("command")
+
 	if err != nil {
 		return fmt.Errorf("couldn't initialise the node forwarder: %w", err)
 	}
@@ -290,7 +292,7 @@ func SendCommand(w io.Writer, rf *RootFlags, req *SendCommandRequest) error {
 		Nonce: powNonce,
 	}
 
-	log.Info("calculated proof of work for transaction with signature", zap.String("signature", tx.Signature.Value))
+	log.Info("calculated proof of work for transaction", zap.String("signature", tx.Signature.Value))
 
 	txHash, err := forwarder.SendTx(ctx, tx, api.SubmitTransactionRequest_TYPE_ASYNC, cltIdx)
 	if err != nil {
