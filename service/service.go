@@ -14,7 +14,6 @@ import (
 	vgrand "code.vegaprotocol.io/shared/libs/rand"
 
 	"code.vegaprotocol.io/protos/commands"
-	typespb "code.vegaprotocol.io/protos/vega"
 	api "code.vegaprotocol.io/protos/vega/api/v1"
 	commandspb "code.vegaprotocol.io/protos/vega/commands/v1"
 	walletpb "code.vegaprotocol.io/protos/vega/wallet/v1"
@@ -28,7 +27,6 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"github.com/rs/cors"
 	"go.uber.org/zap"
-	"google.golang.org/grpc/status"
 )
 
 type Service struct {
@@ -716,7 +714,7 @@ func (s *Service) VerifyAny(w http.ResponseWriter, r *http.Request, _ httprouter
 	s.writeSuccess(w, VerifyAnyResponse{Valid: verified})
 }
 
-func (s *Service) CheckTx(token string, w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+func (s *Service) CheckTx(token string, w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	defer r.Body.Close()
 
 	name, err := s.auth.VerifyToken(token)
@@ -757,20 +755,7 @@ func (s *Service) CheckTx(token string, w http.ResponseWriter, r *http.Request, 
 
 	result, err := s.nodeForward.CheckTx(r.Context(), tx, cltIdx)
 	if err != nil {
-		if st, ok := status.FromError(err); ok {
-			var details []string
-			for _, v := range st.Details() {
-				v, ok := v.(*typespb.ErrorDetail)
-				if !ok {
-					s.writeError(w, newErrorResponse(fmt.Sprintf("couldn't cast status details to error details: %v", v)), http.StatusInternalServerError)
-				}
-				details = append(details, v.Message)
-			}
-
-			s.writeError(w, newErrorWithDetails(err.Error(), details), http.StatusInternalServerError)
-		} else {
-			s.writeInternalError(w, err)
-		}
+		s.writeInternalError(w, err)
 		return
 	}
 
@@ -832,12 +817,20 @@ func (s *Service) signTx(token string, w http.ResponseWriter, r *http.Request, _
 
 	blockData, cltIdx, err := s.nodeForward.LastBlockHeightAndHash(r.Context())
 	if err != nil {
+		s.policy.Report(SentTransaction{
+			TxID:  txID,
+			Error: ErrCouldNotGetBlockHeight,
+		})
 		s.writeInternalError(w, ErrCouldNotGetBlockHeight)
 		return
 	}
 
 	tx, err := s.handler.SignTx(name, req, blockData.Height)
 	if err != nil {
+		s.policy.Report(SentTransaction{
+			TxID:  txID,
+			Error: err,
+		})
 		s.writeInternalError(w, err)
 		return
 	}
@@ -846,6 +839,11 @@ func (s *Service) signTx(token string, w http.ResponseWriter, r *http.Request, _
 	tid := vgcrypto.RandomHash()
 	powNonce, _, err := vgcrypto.PoW(blockData.Hash, tid, uint(blockData.SpamPowDifficulty), vgcrypto.Sha3)
 	if err != nil {
+		s.policy.Report(SentTransaction{
+			Tx:    tx,
+			TxID:  txID,
+			Error: err,
+		})
 		s.writeInternalError(w, err)
 		return
 	}
@@ -856,40 +854,19 @@ func (s *Service) signTx(token string, w http.ResponseWriter, r *http.Request, _
 
 	txHash, err := s.nodeForward.SendTx(r.Context(), tx, ty, cltIdx)
 	if err != nil {
-		if st, ok := status.FromError(err); ok {
-			var details []string
-			for _, v := range st.Details() {
-				v, ok := v.(*typespb.ErrorDetail)
-				if !ok {
-					continue
-				}
-				details = append(details, v.Message)
-			}
-			s.policy.Report(SentTransaction{
-				Tx:           tx,
-				ReceivedAt:   receivedAt,
-				TxID:         txID,
-				Error:        err,
-				ErrorDetails: details,
-			})
-			s.writeInternalError(w, newErrorWithDetails(err.Error(), details))
-			return
-		}
 		s.policy.Report(SentTransaction{
-			Tx:         tx,
-			ReceivedAt: receivedAt,
-			TxID:       txID,
-			Error:      err,
+			Tx:    tx,
+			TxID:  txID,
+			Error: err,
 		})
 		s.writeInternalError(w, err)
 		return
 	}
 
 	s.policy.Report(SentTransaction{
-		TxHash:     txHash,
-		ReceivedAt: receivedAt,
-		TxID:       txID,
-		Tx:         tx,
+		TxHash: txHash,
+		TxID:   txID,
+		Tx:     tx,
 	})
 
 	s.writeSuccess(w, struct {
@@ -1021,9 +998,9 @@ func (s *Service) writeSuccess(w http.ResponseWriter, data interface{}) {
 
 func (s *Service) handle(method string, path string, handle httprouter.Handle) {
 	loggedEndpoint := func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-		s.log.Info(fmt.Sprintf("--> %s %s", method, path))
+		s.log.Info(fmt.Sprintf("Entering %s %s", method, path))
 		handle(w, r, p)
-		s.log.Info(fmt.Sprintf("<-- %s %s", method, path))
+		s.log.Info(fmt.Sprintf("Leaving %s %s", method, path))
 	}
 	s.Handle(method, path, loggedEndpoint)
 }

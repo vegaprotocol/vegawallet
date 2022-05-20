@@ -29,7 +29,3 @@ func (p *MockConsentPolicy) Ask(tx *v1.SubmitTransactionRequest, txID string, re
 	}
 	return true, nil
 }
-
-func (p *MockConsentPolicy) NeedsInteractiveOutput() bool {
-	return true
-}

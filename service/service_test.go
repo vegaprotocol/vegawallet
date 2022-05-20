@@ -11,10 +11,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/require"
-
-	v1 "code.vegaprotocol.io/protos/vega/wallet/v1"
-
 	api "code.vegaprotocol.io/protos/vega/api/v1"
 	commandspb "code.vegaprotocol.io/protos/vega/commands/v1"
 	vgrand "code.vegaprotocol.io/shared/libs/rand"
@@ -100,7 +96,6 @@ func TestService(t *testing.T) {
 	t.Run("update metadata", testServiceUpdateMetaOK)
 	t.Run("update metadata invalid request", testServiceUpdateMetaFailInvalidRequest)
 	t.Run("Signing transaction succeeds", testAcceptSigningTransactionSucceeds)
-	t.Run("using ask function in policy succeeds", testAskingConsentPolicySucceeds)
 	t.Run("Checking transaction succeeds", testCheckTransactionSucceeds)
 	t.Run("Checking transaction with rejected transaction succeeds", testCheckTransactionWithRejectedTransactionSucceeds)
 	t.Run("Checking transaction with failed transaction fails", testCheckTransactionWithFailedTransactionFails)
@@ -827,38 +822,6 @@ func testAcceptSigningTransactionSucceeds(t *testing.T) {
 
 	statusCode, _ := serveHTTP(t, s, signTxRequest(t, payload, headers))
 	assert.Equal(t, http.StatusOK, statusCode)
-}
-
-func testAskingConsentPolicySucceeds(t *testing.T) {
-	txn := &v1.SubmitTransactionRequest{}
-
-	pendingConsents := make(chan service.ConsentRequest, 1)
-	sentTxs := make(chan service.SentTransaction, 1)
-	p := service.NewExplicitConsentPolicy(pendingConsents, sentTxs)
-
-	go func() {
-		req := <-pendingConsents
-		st, _ := req.String()
-		d := service.ConsentConfirmation{TxStr: st, Decision: false}
-		req.Confirmations <- d
-	}()
-
-	nowTime := time.Now()
-	answer, err := p.Ask(txn, "testTx", nowTime)
-	require.Nil(t, err)
-	require.False(t, answer)
-
-	p.Report(service.SentTransaction{
-		TxHash:     "txHash",
-		ReceivedAt: nowTime,
-		TxID:       "testTx",
-		Tx:         &commandspb.Transaction{},
-	})
-
-	sent := <-sentTxs
-	require.Equal(t, "txHash", sent.TxHash)
-	require.Equal(t, "testTx", sent.TxID)
-	require.Equal(t, nowTime, sent.ReceivedAt)
 }
 
 func testDeclineSigningTransactionManuallySucceeds(t *testing.T) {

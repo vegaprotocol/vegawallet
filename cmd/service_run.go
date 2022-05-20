@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"strings"
 	"syscall"
 
 	vgterm "code.vegaprotocol.io/shared/libs/term"
@@ -24,6 +23,7 @@ import (
 	"code.vegaprotocol.io/vegawallet/service"
 	svcstore "code.vegaprotocol.io/vegawallet/service/store/v1"
 	"code.vegaprotocol.io/vegawallet/wallets"
+	"github.com/golang/protobuf/jsonpb"
 
 	"github.com/skratchdot/open-golang/open"
 	"github.com/spf13/cobra"
@@ -209,9 +209,6 @@ func RunService(w io.Writer, rf *RootFlags, f *RunServiceFlags) error {
 		return fmt.Errorf("couldn't initialise the node forwarder: %w", err)
 	}
 
-	pendingConsents := make(chan service.ConsentRequest, 1)
-	sentTxs := make(chan service.SentTransaction)
-
 	cliLog, cliLogPath, err := BuildJSONLogger(cfg.Level.String(), vegaPaths, paths.WalletCLILogsHome)
 	if err != nil {
 		return err
@@ -219,6 +216,11 @@ func RunService(w io.Writer, rf *RootFlags, f *RunServiceFlags) error {
 	defer vglog.Sync(cliLog)
 
 	cliLog = cliLog.Named("command")
+
+	consentRequests := make(chan service.ConsentRequest, 1)
+	defer close(consentRequests)
+	sentTransactions := make(chan service.SentTransaction)
+	defer close(sentTransactions)
 
 	var policy service.Policy
 	if vgterm.HasTTY() {
@@ -228,7 +230,7 @@ func RunService(w io.Writer, rf *RootFlags, f *RunServiceFlags) error {
 			policy = service.NewAutomaticConsentPolicy()
 		} else {
 			cliLog.Info("Explicit consent enabled")
-			policy = service.NewExplicitConsentPolicy(pendingConsents, sentTxs)
+			policy = service.NewExplicitConsentPolicy(ctx, consentRequests, sentTransactions)
 		}
 	} else {
 		cliLog.Info("No TTY detected")
@@ -296,7 +298,7 @@ func RunService(w io.Writer, rf *RootFlags, f *RunServiceFlags) error {
 		p.NextLine()
 	}
 
-	waitSig(ctx, cancel, cliLog, pendingConsents, sentTxs, p)
+	waitSig(ctx, cancel, cliLog, consentRequests, sentTransactions, p)
 
 	return nil
 }
@@ -366,7 +368,14 @@ func startTokenDApp(log *zap.Logger, f *RunServiceFlags, cfg *network.Network, c
 }
 
 // waitSig will wait for a sigterm or sigint interrupt.
-func waitSig(ctx context.Context, cfunc func(), log *zap.Logger, pendingSigRequests chan service.ConsentRequest, sentTxs chan service.SentTransaction, p *printer.InteractivePrinter) {
+func waitSig(
+	ctx context.Context,
+	cancelFunc context.CancelFunc,
+	log *zap.Logger,
+	consentRequests chan service.ConsentRequest,
+	sentTransactions chan service.SentTransaction,
+	p *printer.InteractivePrinter,
+) {
 	gracefulStop := make(chan os.Signal, 1)
 
 	signal.Notify(gracefulStop, syscall.SIGTERM)
@@ -377,43 +386,43 @@ func waitSig(ctx context.Context, cfunc func(), log *zap.Logger, pendingSigReque
 		select {
 		case sig := <-gracefulStop:
 			log.Info("caught signal", zap.String("signal", fmt.Sprintf("%+v", sig)))
-			cfunc()
+			cancelFunc()
 			return
 		case <-ctx.Done():
 			// nothing to do
 			return
-		case signRequest := <-pendingSigRequests:
-			txStr, err := signRequest.String()
+		case consentRequest := <-consentRequests:
+			m := jsonpb.Marshaler{Indent: "    "}
+			marshalledTx, err := m.MarshalToString(consentRequest.Tx)
 			if err != nil {
-				log.Info("failed to marshall sign request content")
-				cfunc()
+				log.Error("failed to marshall sign request content")
+				cancelFunc()
 				return
 			}
+
 			p.BlueArrow().Text("New transaction received: ").NextLine()
-			p.InfoText(txStr).NextLine()
+			p.InfoText(marshalledTx).NextLine()
 
 			if flags.DoYouApproveTx() {
-				log.Info("user approved the signing of the transaction", zap.Any("transaction", txStr))
-				signRequest.Confirmations <- service.ConsentConfirmation{Decision: true, TxStr: txStr}
+				log.Info("user approved the signing of the transaction", zap.Any("transaction", marshalledTx))
+				consentRequest.Confirmation <- service.ConsentConfirmation{Decision: true}
 				p.CheckMark().SuccessText("Transaction approved").NextLine()
 
-				sentTx := <-sentTxs
+				sentTx := <-sentTransactions
 				log.Info("transaction sent", zap.Any("ID", sentTx.TxID), zap.Any("hash", sentTx.TxHash))
 				if sentTx.Error != nil {
-					log.Error("transaction failed", zap.Any("transaction", txStr))
-					p.BangMark().DangerText("Transaction failed! ").NextLine()
-					p.BangMark().DangerText("Error: ").DangerText(sentTx.Error.Error()).NextLine()
-					p.BangMark().DangerText("Details: ").DangerText(strings.Join(sentTx.ErrorDetails, " ,")).NextSection()
+					log.Error("transaction failed", zap.Any("transaction", marshalledTx))
+					p.BangMark().DangerText("Transaction failed").NextLine()
+					p.BangMark().DangerText("Error: ").DangerText(sentTx.Error.Error()).NextSection()
 				} else {
 					log.Info("transaction sent", zap.Any("hash", sentTx.TxHash))
 					p.CheckMark().Text("Transaction with hash ").SuccessText(sentTx.TxHash).Text(" sent!").NextSection()
 				}
 			} else {
-				log.Info("user rejected the signing of the transaction", zap.Any("transaction", txStr))
-				signRequest.Confirmations <- service.ConsentConfirmation{Decision: false, TxStr: txStr}
+				log.Info("user rejected the signing of the transaction", zap.Any("transaction", marshalledTx))
+				consentRequest.Confirmation <- service.ConsentConfirmation{Decision: false}
 				p.BangMark().DangerText("Transaction rejected").NextSection()
 			}
-			close(signRequest.Confirmations)
 		}
 	}
 }
