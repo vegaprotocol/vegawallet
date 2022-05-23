@@ -15,7 +15,7 @@ var (
 	ErrShouldBeBase64Encoded     = errors.New("should be base64 encoded")
 	ErrRSAKeysAlreadyExists      = errors.New("RSA keys already exist")
 	ErrRejectedSignRequest       = errors.New("user rejected sign request")
-	ErrInterruptedConsentRequest = errors.New("consent request has been interrupted")
+	ErrInterruptedConsentRequest = errors.New("process to request consent has been interrupted")
 )
 
 type ErrorsResponse struct {

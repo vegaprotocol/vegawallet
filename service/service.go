@@ -805,7 +805,9 @@ func (s *Service) signTx(token string, w http.ResponseWriter, r *http.Request, _
 	receivedAt := time.Now()
 	approved, err := s.policy.Ask(req, txID, receivedAt)
 	if err != nil {
-		s.log.Panic("failed getting transaction sign request answer", zap.Error(err))
+		s.log.Error("couldn't get user consent", zap.Error(err))
+		s.writeError(w, err, http.StatusServiceUnavailable)
+		return
 	}
 
 	if !approved {

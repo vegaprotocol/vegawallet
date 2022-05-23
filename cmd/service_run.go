@@ -30,6 +30,8 @@ import (
 	"go.uber.org/zap"
 )
 
+const MaxConsentRequests = 100
+
 var ErrEnableAutomaticConsentFlagIsRequiredWithoutTTY = errors.New("--automatic-consent flag is required without TTY")
 
 var (
@@ -217,7 +219,7 @@ func RunService(w io.Writer, rf *RootFlags, f *RunServiceFlags) error {
 
 	cliLog = cliLog.Named("command")
 
-	consentRequests := make(chan service.ConsentRequest, 1)
+	consentRequests := make(chan service.ConsentRequest, MaxConsentRequests)
 	defer close(consentRequests)
 	sentTransactions := make(chan service.SentTransaction)
 	defer close(sentTransactions)
@@ -377,10 +379,17 @@ func waitSig(
 	p *printer.InteractivePrinter,
 ) {
 	gracefulStop := make(chan os.Signal, 1)
+	defer close(gracefulStop)
 
 	signal.Notify(gracefulStop, syscall.SIGTERM)
 	signal.Notify(gracefulStop, syscall.SIGINT)
 	signal.Notify(gracefulStop, syscall.SIGQUIT)
+
+	go func() {
+		if err := handleConsentRequests(ctx, log, consentRequests, sentTransactions, p); err != nil {
+			cancelFunc()
+		}
+	}()
 
 	for {
 		select {
@@ -391,13 +400,22 @@ func waitSig(
 		case <-ctx.Done():
 			// nothing to do
 			return
+		}
+	}
+}
+
+func handleConsentRequests(ctx context.Context, log *zap.Logger, consentRequests chan service.ConsentRequest, sentTransactions chan service.SentTransaction, p *printer.InteractivePrinter) error {
+	for {
+		select {
+		case <-ctx.Done():
+			// nothing to do
+			return nil
 		case consentRequest := <-consentRequests:
 			m := jsonpb.Marshaler{Indent: "    "}
 			marshalledTx, err := m.MarshalToString(consentRequest.Tx)
 			if err != nil {
-				log.Error("failed to marshall sign request content")
-				cancelFunc()
-				return
+				log.Error("couldn't marshal transaction from consent request", zap.Error(err))
+				return err
 			}
 
 			p.BlueArrow().Text("New transaction received: ").NextLine()
