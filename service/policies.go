@@ -25,6 +25,7 @@ type SentTransaction struct {
 	TxID   string
 	Tx     *commandspb.Transaction
 	Error  error
+	SentAt time.Time
 }
 
 type Policy interface {
