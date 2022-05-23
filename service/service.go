@@ -854,12 +854,14 @@ func (s *Service) signTx(token string, w http.ResponseWriter, r *http.Request, _
 		Nonce: powNonce,
 	}
 
+	sentAt := time.Now()
 	txHash, err := s.nodeForward.SendTx(r.Context(), tx, ty, cltIdx)
 	if err != nil {
 		s.policy.Report(SentTransaction{
-			Tx:    tx,
-			TxID:  txID,
-			Error: err,
+			Tx:     tx,
+			TxID:   txID,
+			Error:  err,
+			SentAt: sentAt,
 		})
 		s.writeInternalError(w, err)
 		return
@@ -869,16 +871,19 @@ func (s *Service) signTx(token string, w http.ResponseWriter, r *http.Request, _
 		TxHash: txHash,
 		TxID:   txID,
 		Tx:     tx,
+		SentAt: sentAt,
 	})
 
 	s.writeSuccess(w, struct {
 		TxHash     string                  `json:"txHash"`
 		ReceivedAt time.Time               `json:"receivedAt"`
+		SentAt     time.Time               `json:"sentAt"`
 		TxID       string                  `json:"txId"`
 		Tx         *commandspb.Transaction `json:"tx"`
 	}{
 		TxHash:     txHash,
 		ReceivedAt: receivedAt,
+		SentAt:     sentAt,
 		TxID:       txID,
 		Tx:         tx,
 	})
