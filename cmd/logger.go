@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/url"
 	"os"
-	"runtime"
 	"time"
 
 	"code.vegaprotocol.io/shared/paths"
@@ -78,15 +77,7 @@ func BuildJSONLogger(level string, vegaPaths paths.Paths, logsDir paths.StatePat
 		return nil, "", fmt.Errorf("failed getting path for %s: %w", logFile, err)
 	}
 
-	zapLogPath := appLogPath
-	if runtime.GOOS == "windows" {
-		err := zap.RegisterSink("winfile", newWinFileSink)
-		if err != nil {
-			return nil, "", fmt.Errorf("couldn't register the windows file sink: %w", err)
-		}
-		zapLogPath = "winfile:///" + appLogPath
-	}
-
+	zapLogPath := toZapLogPath(appLogPath)
 	cfg.OutputPaths = []string{zapLogPath}
 	cfg.ErrorOutputPaths = []string{zapLogPath}
 
