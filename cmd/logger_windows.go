@@ -1,13 +1,17 @@
 package cmd
 
 import (
+	"fmt"
 	"net/url"
+	"os"
+
+	"go.uber.org/zap"
 )
 
 func init() {
 	err := zap.RegisterSink("winfile", newWinFileSink)
 	if err != nil {
-		return nil, "", fmt.Errorf("couldn't register the windows file sink: %w", err)
+		panic(fmt.Errorf("couldn't register the windows file sink: %w", err))
 	}
 }
 
