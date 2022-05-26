@@ -1,44 +1,36 @@
 package service
 
 import (
+	"context"
 	"time"
 
 	commandspb "code.vegaprotocol.io/protos/vega/commands/v1"
 	v1 "code.vegaprotocol.io/protos/vega/wallet/v1"
-	"github.com/golang/protobuf/jsonpb"
 )
 
 type ConsentConfirmation struct {
-	TxStr    string
+	TxID     string
 	Decision bool
 }
 
 type ConsentRequest struct {
-	TxID          string
-	Tx            *v1.SubmitTransactionRequest
-	ReceivedAt    time.Time
-	Confirmations chan ConsentConfirmation
-}
-
-func (r *ConsentRequest) String() (string, error) {
-	m := jsonpb.Marshaler{Indent: "    "}
-	marshalledRequest, err := m.MarshalToString(r.Tx)
-	return marshalledRequest, err
+	TxID         string
+	Tx           *v1.SubmitTransactionRequest
+	ReceivedAt   time.Time
+	Confirmation chan ConsentConfirmation
 }
 
 type SentTransaction struct {
-	TxHash       string
-	TxID         string
-	ReceivedAt   time.Time
-	Tx           *commandspb.Transaction
-	Error        error
-	ErrorDetails []string
+	TxHash string
+	TxID   string
+	Tx     *commandspb.Transaction
+	Error  error
+	SentAt time.Time
 }
 
 type Policy interface {
 	Ask(tx *v1.SubmitTransactionRequest, txID string, receivedAt time.Time) (bool, error)
 	Report(tx SentTransaction)
-	NeedsInteractiveOutput() bool
 }
 
 type AutomaticConsentPolicy struct{}
@@ -47,7 +39,7 @@ func NewAutomaticConsentPolicy() Policy {
 	return &AutomaticConsentPolicy{}
 }
 
-func (p *AutomaticConsentPolicy) Ask(_ *v1.SubmitTransactionRequest, txID string, receivedAt time.Time) (bool, error) {
+func (p *AutomaticConsentPolicy) Ask(_ *v1.SubmitTransactionRequest, _ string, _ time.Time) (bool, error) {
 	return true, nil
 }
 
@@ -55,36 +47,62 @@ func (p *AutomaticConsentPolicy) Report(_ SentTransaction) {
 	// Nothing to report as we expect this policy to be non-interactive.
 }
 
-func (p *AutomaticConsentPolicy) NeedsInteractiveOutput() bool {
-	return false
-}
-
 type ExplicitConsentPolicy struct {
-	pendingEvents chan ConsentRequest
-	sentTxs       chan SentTransaction
+	// ctx is used to interrupt the wait for consent confirmation
+	ctx context.Context
+
+	consentRequestsChan  chan ConsentRequest
+	sentTransactionsChan chan SentTransaction
 }
 
-func NewExplicitConsentPolicy(pending chan ConsentRequest, sentTxs chan SentTransaction) Policy {
+func NewExplicitConsentPolicy(ctx context.Context, consentRequests chan ConsentRequest, sentTransactions chan SentTransaction) Policy {
 	return &ExplicitConsentPolicy{
-		pendingEvents: pending,
-		sentTxs:       sentTxs,
+		ctx:                  ctx,
+		consentRequestsChan:  consentRequests,
+		sentTransactionsChan: sentTransactions,
 	}
 }
 
 func (p *ExplicitConsentPolicy) Ask(tx *v1.SubmitTransactionRequest, txID string, receivedAt time.Time) (bool, error) {
-	confirmations := make(chan ConsentConfirmation)
-	consentReq := ConsentRequest{Tx: tx, Confirmations: confirmations, ReceivedAt: receivedAt}
-	consentReq.TxID = txID
-	p.pendingEvents <- consentReq
+	confirmationChan := make(chan ConsentConfirmation, 1)
+	defer close(confirmationChan)
 
-	c := <-confirmations
-	return c.Decision, nil
+	consentRequest := ConsentRequest{
+		TxID:         txID,
+		Tx:           tx,
+		ReceivedAt:   receivedAt,
+		Confirmation: confirmationChan,
+	}
+
+	if err := p.sendConsentRequest(consentRequest); err != nil {
+		return false, err
+	}
+
+	return p.receiveConsentConfirmation(consentRequest)
+}
+
+func (p *ExplicitConsentPolicy) receiveConsentConfirmation(consentRequest ConsentRequest) (bool, error) {
+	for {
+		select {
+		case <-p.ctx.Done():
+			return false, ErrInterruptedConsentRequest
+		case decision := <-consentRequest.Confirmation:
+			return decision.Decision, nil
+		}
+	}
+}
+
+func (p *ExplicitConsentPolicy) sendConsentRequest(consentRequest ConsentRequest) error {
+	for {
+		select {
+		case <-p.ctx.Done():
+			return ErrInterruptedConsentRequest
+		case p.consentRequestsChan <- consentRequest:
+			return nil
+		}
+	}
 }
 
 func (p *ExplicitConsentPolicy) Report(tx SentTransaction) {
-	p.sentTxs <- tx
-}
-
-func (p *ExplicitConsentPolicy) NeedsInteractiveOutput() bool {
-	return true
+	p.sentTransactionsChan <- tx
 }

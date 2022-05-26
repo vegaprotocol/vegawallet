@@ -17,6 +17,12 @@
 ### 🐛 Fixes
 - [](https://github.com/vegaprotocol/vegawallet/pull/) -
 
+## 0.15.1
+
+### 🐛 Fixes
+- [558](https://github.com/vegaprotocol/vegawallet/pull/558) - Use user-friendly RPC code as error message
+- [569](https://github.com/vegaprotocol/vegawallet/pull/569) - Ensure the winfile scheme for logger is register only once
+
 ## 0.15.0
 
 ### 🛠  Improvements

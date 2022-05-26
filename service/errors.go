@@ -7,14 +7,15 @@ import (
 )
 
 var (
-	ErrInvalidToken           = errors.New("invalid token")
-	ErrInvalidClaims          = errors.New("invalid claims")
-	ErrInvalidOrMissingToken  = newErrorResponse("invalid or missing token")
-	ErrCouldNotReadRequest    = errors.New("couldn't read request")
-	ErrCouldNotGetBlockHeight = errors.New("couldn't get last block height")
-	ErrShouldBeBase64Encoded  = errors.New("should be base64 encoded")
-	ErrRSAKeysAlreadyExists   = errors.New("RSA keys already exist")
-	ErrRejectedSignRequest    = errors.New("user rejected sign request")
+	ErrInvalidToken              = errors.New("invalid token")
+	ErrInvalidClaims             = errors.New("invalid claims")
+	ErrInvalidOrMissingToken     = newErrorResponse("invalid or missing token")
+	ErrCouldNotReadRequest       = errors.New("couldn't read request")
+	ErrCouldNotGetBlockHeight    = errors.New("couldn't get last block height")
+	ErrShouldBeBase64Encoded     = errors.New("should be base64 encoded")
+	ErrRSAKeysAlreadyExists      = errors.New("RSA keys already exist")
+	ErrRejectedSignRequest       = errors.New("user rejected sign request")
+	ErrInterruptedConsentRequest = errors.New("process to request consent has been interrupted")
 )
 
 type ErrorsResponse struct {
@@ -33,12 +34,5 @@ func (e ErrorResponse) Error() string {
 func newErrorResponse(e string) ErrorResponse {
 	return ErrorResponse{
 		ErrorStr: e,
-	}
-}
-
-func newErrorWithDetails(e string, details []string) ErrorResponse {
-	return ErrorResponse{
-		ErrorStr: e,
-		Details:  details,
 	}
 }
