@@ -15,7 +15,7 @@
 - [](https://github.com/vegaprotocol/vegawallet/pull/) -
 
 ### 🐛 Fixes
-- [](https://github.com/vegaprotocol/vegawallet/pull/) -
+- [575](https://github.com/vegaprotocol/vegawallet/pull/575) - Fix broken docs links in readme
 
 ## 0.15.1
 
