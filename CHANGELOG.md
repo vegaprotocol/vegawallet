@@ -16,6 +16,7 @@
 
 ### 🐛 Fixes
 - [575](https://github.com/vegaprotocol/vegawallet/pull/575) - Fix broken docs links in readme
+- [579](https://github.com/vegaprotocol/vegawallet/pull/579) - Ensure the wallet doesn't recommend upgrade to pre-release version
 
 ## 0.15.1
 
