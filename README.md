@@ -115,9 +115,9 @@ Read more at [https://vega.xyz][vega-website].
 
 [vega-website]: https://vega.xyz
 [vega-documentation-website]: https://docs.vega.xyz
-[vega-documentation-website-create-wallet]: https://docs.vega.xyz/docs/tools/vega-wallet/CLI-wallet/create-wallet
-[vega-wallet-documentation-website]: https://docs.vega.xyz/docs/tools/vega-wallet/
-[vega-wallet-desktop-getting-started]: https://docs.vega.xyz/docs/tools/vega-wallet/desktop-app/latest/getting-started
+[vega-documentation-website-create-wallet]: https://docs.vega.xyz/docs/mainnet/tools/vega-wallet/desktop-app/latest/getting-started
+[vega-wallet-documentation-website]: https://docs.vega.xyz/docs/mainnet/tools/vega-wallet/
+[vega-wallet-desktop-getting-started]: https://docs.vega.xyz/docs/mainnet/tools/vega-wallet/desktop-app/latest/getting-started
 [feedback]: https://github.com/vegaprotocol/feedback/discussions/
 [discord]: https://vega.xyz/discord
 [github-releases]: https://github.com/vegaprotocol/vegawallet/releases
