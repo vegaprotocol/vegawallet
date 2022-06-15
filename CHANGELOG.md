@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased (0.16.0)
+## Unreleased (0.17.0)
 
 ### 🚨 Breaking changes
 - [](https://github.com/vegaprotocol/vegawallet/pull/) -
@@ -13,6 +13,11 @@
 
 ### 🔥 Removal
 - [](https://github.com/vegaprotocol/vegawallet/pull/) -
+
+### 🐛 Fixes
+- [](https://github.com/vegaprotocol/vegawallet/pull/) -
+
+## 0.16.0
 
 ### 🐛 Fixes
 - [575](https://github.com/vegaprotocol/vegawallet/pull/575) - Fix broken docs links in readme
