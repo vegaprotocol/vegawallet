@@ -17,6 +17,11 @@
 ### 🐛 Fixes
 - [](https://github.com/vegaprotocol/vegawallet/pull/) -
 
+## 0.16.1
+
+### 🐛 Fixes
+- Fix hardcoded version to match tag and build binaries
+
 ## 0.16.0
 
 ### 🐛 Fixes
