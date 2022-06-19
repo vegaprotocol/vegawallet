@@ -4,7 +4,7 @@ go 1.17
 
 require (
 	code.vegaprotocol.io/protos v0.51.2-0.20220613090029-59599245eb97
-	code.vegaprotocol.io/shared v0.0.0-20220614080106-5c97205b0d92
+	code.vegaprotocol.io/shared v0.0.0-20220619152632-1d411edad8c7
 	github.com/blang/semver/v4 v4.0.0
 	github.com/cenkalti/backoff/v4 v4.1.2
 	github.com/dgrijalva/jwt-go/v4 v4.0.0-preview1
@@ -40,8 +40,11 @@ require (
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.8.0 // indirect
 	golang.org/x/crypto v0.0.0-20220315160706-3147a52a75dd // indirect
+	golang.org/x/mod v0.4.2 // indirect
 	golang.org/x/net v0.0.0-20220225172249-27dd8689420f // indirect
 	golang.org/x/text v0.3.7 // indirect
+	golang.org/x/tools v0.1.5 // indirect
+	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	google.golang.org/genproto v0.0.0-20220317150908-0efb43f6373e // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
