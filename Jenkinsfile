@@ -162,18 +162,17 @@ pipeline {
                         '''
                     }
                 }
-                stage('LNL System Tests') {
+                stage('System Tests Network Smoke') {
                     steps {
                         script {
-                            systemTestsLNL ignoreFailure: !isPRBuild(),
+                            systemTestsCapsule ignoreFailure: !isPRBuild(),
                                 vegaCore: params.VEGA_CORE_BRANCH,
                                 dataNode: params.DATA_NODE_BRANCH,
                                 vegawallet: commitHash,
-                                ethereumEventForwarder: params.ETHEREUM_EVENT_FORWARDER_BRANCH,
-                                devopsInfra: params.DEVOPS_INFRA_BRANCH,
                                 vegatools: params.VEGATOOLS_BRANCH,
                                 systemTests: params.SYSTEM_TESTS_BRANCH,
-                                protos: params.PROTOS_BRANCH
+                                protos: params.PROTOS_BRANCH,
+                                testMark: "network_infra_smoke"
                         }
                     }
                 }
