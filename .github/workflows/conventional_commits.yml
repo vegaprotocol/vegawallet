@@ -1,0 +1,22 @@
+---
+
+
+name: Conventional Commits
+
+"on":
+  pull_request:
+    branches: [develop, master]
+    types: [synchronize, opened]
+
+jobs:
+  verify-conventional-commits:
+    if: startsWith(github.head_ref, 'renovate/') != true
+    name: Verify Conventional Commits
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Commitsar conventional commits check
+        uses: aevea/commitsar@v0.18.0
