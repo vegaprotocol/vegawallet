@@ -2,15 +2,13 @@ package version
 
 import (
 	vgversion "code.vegaprotocol.io/shared/libs/version"
-
-	"github.com/blang/semver/v4"
 )
 
 const (
 	ReleasesAPI        = "https://api.github.com/repos/vegaprotocol/vegawallet/releases"
 	ReleasesURL        = "https://github.com/vegaprotocol/vegawallet/releases"
 	defaultVersionHash = "unknown"
-	defaultVersion     = "v0.16.1"
+	defaultVersion     = "v0.17.0+dev"
 )
 
 var (
@@ -37,8 +35,4 @@ func GetVersionInfo() *GetVersionResponse {
 		Version: Version,
 		GitHash: VersionHash,
 	}
-}
-
-func Check(releasesGetterFn vgversion.ReleasesGetter, currentRelease string) (*semver.Version, error) {
-	return vgversion.Check(releasesGetterFn, currentRelease)
 }
