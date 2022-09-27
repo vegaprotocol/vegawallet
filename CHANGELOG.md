@@ -9,7 +9,7 @@
 - [](https://github.com/vegaprotocol/vegawallet/pull/) -
 
 ### 🛠  Improvements
-- [](https://github.com/vegaprotocol/vegawallet/pull/) -
+- [593](https://github.com/vegaprotocol/vegawallet/issues/593) - Tell users to aim for the core repository
 
 ### 🔥 Removal
 - [](https://github.com/vegaprotocol/vegawallet/pull/) -
