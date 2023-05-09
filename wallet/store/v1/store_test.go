@@ -213,7 +213,7 @@ func initialiseStore(t *testing.T, walletsDir string) *storev1.Store {
 
 func newHDWalletWithKeys(t *testing.T) *wallet.HDWallet {
 	t.Helper()
-	w, _, err := wallet.NewHDWallet(fmt.Sprintf("my-wallet-%v", time.Now().UnixNano()))
+	w, _, err := wallet.NewHDWallet(fmt.Sprintf("my-wallet-%v-%s", time.Now().UnixNano(), vgrand.RandomStr(2)))
 	if err != nil {
 		t.Fatalf("couldn't create wallet: %v", err)
 	}

@@ -1,11 +1,9 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
 	"io"
 	"os"
-	"time"
 
 	"code.vegaprotocol.io/vegawallet/cmd/cli"
 	"code.vegaprotocol.io/vegawallet/cmd/flags"
@@ -17,35 +15,29 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var (
-	requestTimeout = 30 * time.Second
+var rootExamples = cli.Examples(`
+	# Specify a custom Vega home directory
+	vegawallet --home PATH_TO_DIR COMMAND
 
-	rootExamples = cli.Examples(`
-		# Specify a custom Vega home directory
-		vegawallet --home PATH_TO_DIR COMMAND
+	# Change the output to JSON
+	vegawallet --output json COMMAND
 
-		# Change the output to JSON
-		vegawallet --output json COMMAND
+	# Disable colors on output using environment variable
+	NO_COLOR=1 vegawallet COMMAND
 
-		# Disable colors on output using environment variable
-		NO_COLOR=1 vegawallet COMMAND
-
-		# Disable the verification of the software version
-		vegawallet --no-version-check COMMAND
-	`)
-)
+	# Disable the verification of the software version
+	vegawallet --no-version-check COMMAND
+`)
 
 type CheckVersionHandler func() (*semver.Version, error)
 
 func NewCmdRoot(w io.Writer) *cobra.Command {
 	vh := func() (*semver.Version, error) {
-		ctx, cancel := context.WithTimeout(context.Background(), requestTimeout)
-		defer cancel()
-		v, err := version.Check(vgversion.BuildGithubReleasesRequestFrom(ctx, version.ReleasesAPI), version.Version)
+		v, err := vgversion.NewVersionFromString(version.Version)
 		if err != nil {
 			return nil, fmt.Errorf("couldn't check latest releases: %w", err)
 		}
-		return v, nil
+		return v.Version, nil
 	}
 
 	return BuildCmdRoot(w, vh)
@@ -88,8 +80,11 @@ func BuildCmdRoot(w io.Writer, vh CheckVersionHandler) *cobra.Command {
 				}
 
 				if v != nil {
-					p.Text("Version ").SuccessText(v.String()).Text(" is available. Your current version is ").DangerText(version.Version).Text(".").NextLine()
-					p.Text("Download the latest version at: ").Underline(vgversion.GetGithubReleaseURL(version.ReleasesURL, v)).NextSection()
+					p.DangerText("The version ").DangerText(v.String()).DangerText(" is outdated.").NextLine()
+					p.DangerText("The vegawallet repository is no longer updated and won't distribute the software updates anymore.").NextLine()
+					p.DangerText("The vegawallet software in now distributed from the \"vega\" repository.").NextLine()
+					p.DangerText("Download the software matching the current version of mainnet at: ").Underline("https://github.com/vegaprotocol/vega/releases").NextLine()
+					p.DangerBold("If you do not update, the wallet might fail the transaction submissions, due to incompatibilities.").NextSection()
 				}
 			}
 			return nil

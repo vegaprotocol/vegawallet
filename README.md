@@ -1,5 +1,7 @@
 # Vega Wallet
 
+**This repository and software are no longer maintained. See the [core repository](https://github.com/vegaprotocol/vega/releases) instead.**
+
 `vegawallet` is the command line interface for running a Wallet service, implemented in Go. It is used to sign transactions for use on [Vega](#about-vega). Vega Wallet creates and manages HD wallets with ed25519 key pairs.
 
 ## Documentation

@@ -1,21 +1,13 @@
 # Changelog
 
-## Unreleased (0.17.0)
+## 0.17.0
 
-### 🚨 Breaking changes
-- [](https://github.com/vegaprotocol/vegawallet/pull/) -
+**This repository and software are no longer maintained. See the [core repository](https://github.com/vegaprotocol/vega/releases) instead.**
 
-### 🗑️  Deprecation
-- [](https://github.com/vegaprotocol/vegawallet/pull/) -
+Only compatible with 0.53.0. 
 
 ### 🛠  Improvements
-- [](https://github.com/vegaprotocol/vegawallet/pull/) -
-
-### 🔥 Removal
-- [](https://github.com/vegaprotocol/vegawallet/pull/) -
-
-### 🐛 Fixes
-- [](https://github.com/vegaprotocol/vegawallet/pull/) -
+- [593](https://github.com/vegaprotocol/vegawallet/issues/593) - Tell users to aim for the core repository
 
 ## 0.16.1
 
